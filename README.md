@@ -1,4 +1,6 @@
-# NGF (Neon Genesis Framework)
+# 电波足迹 / Airwave Footprints
+
+本仓库是基于 NGF（Neon Genesis Framework）开发的电波足迹 HarmonyOS 应用，同时保留 NGF 框架及其开发文档。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![HarmonyOS SDK](https://img.shields.io/badge/HarmonyOS_SDK-26.0.0_(API_26)-blue.svg)](https://developer.harmonyos.com/)

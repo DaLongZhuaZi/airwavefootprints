@@ -2,15 +2,15 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "NGF framework entry module"
+      "value": "Airwave Footprints application entry module"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "NGF framework main ability"
+      "value": "Airwave Footprints main ability"
     },
     {
       "name": "EntryAbility_label",
-      "value": "NGF Framework"
+      "value": "Airwave Footprints"
     },
     {
       "name": "main_menu_title",
@@ -2242,7 +2242,7 @@
     },
     {
       "name": "auto_str_1415",
-      "value": "NGF Framework Data Storage Test"
+      "value": "Airwave Footprints Data Storage Test"
     },
     {
       "name": "auto_str_1416",
@@ -5282,15 +5282,15 @@
     },
     {
       "name": "widget_title",
-      "value": "NGF Framework Status"
+      "value": "Airwave Footprints Status"
     },
     {
       "name": "widget_desc",
-      "value": "Desktop widget displaying the core status of NGF framework"
+      "value": "Desktop widget displaying the core status of Airwave Footprints"
     },
     {
       "name": "EntryFormAbility_label",
-      "value": "NGF Widget"
+      "value": "Airwave Footprints Widget"
     },
     {
       "name": "EntryFormAbility_desc",

@@ -14,8 +14,8 @@ interface ModuleStatus {
 
 @Component
 export struct AboutSheetContent {
-  @State private appName: string = 'NGF';
-  @State private bundleName: string = 'com.dlzz.ngf';
+  @State private appName: string = '电波足迹';
+  @State private bundleName: string = 'com.dlzz.airwavefootprints';
   @State private versionName: string = '1.0.0';
   @State private versionCode: number = 1000000;
   @State private buildVersion: string = '1';
@@ -282,7 +282,7 @@ export struct AboutSheetContent {
         .fontColor($r('app.color.text_primary'))
         .width('100%')
 
-      this.buildLinkRow('GitHub', 'https://github.com/DaLongZhuaZi/NGF')
+      this.buildLinkRow('GitHub', 'https://github.com/DaLongZhuaZi/airwavefootprints')
       this.buildDivider()
       this.buildLinkRow('GitCode', 'https://gitcode.com/dlzz/NGF')
     }

@@ -61,10 +61,10 @@ export struct NGFDemoSecurityPerfPage {
   @StorageProp('ngf_visual_effects_should_use_system_material_surface') private useSysMat: boolean = true;
   @State private pathStack: NavPathStack = new NavPathStack();
   @State private topInsetVp: number = 108;
-  @State private shaInput: string = 'Hello NGF Framework';
+  @State private shaInput: string = 'Hello Airwave Footprints';
   @State private shaAlgorithmIndexes: Array<number> = [0];
   @State private shaResult: ResourceStr = '';
-  @State private aesInput: string = 'NGF Secret Message';
+  @State private aesInput: string = 'Airwave Footprints Secret Message';
   @State private aesCipher: string = '';
   @State private aesDecrypted: string = '';
   @State private aesKey: string = '';

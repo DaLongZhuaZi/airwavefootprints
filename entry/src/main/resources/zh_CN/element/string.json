@@ -2,15 +2,15 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "NGF 框架入口模块"
+      "value": "电波足迹应用入口模块"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "NGF 框架主能力"
+      "value": "电波足迹应用主能力"
     },
     {
       "name": "EntryAbility_label",
-      "value": "NGF 框架"
+      "value": "电波足迹"
     },
     {
       "name": "main_menu_title",
@@ -2242,7 +2242,7 @@
     },
     {
       "name": "auto_str_1415",
-      "value": "NGF Framework 数据存储测试"
+      "value": "电波足迹数据存储测试"
     },
     {
       "name": "auto_str_1416",
@@ -3630,7 +3630,7 @@
     },
     {
       "name": "ui_str_2231",
-      "value": "NGF Framework 数据存储测试"
+      "value": "电波足迹数据存储测试"
     },
     {
       "name": "ui_str_2232",

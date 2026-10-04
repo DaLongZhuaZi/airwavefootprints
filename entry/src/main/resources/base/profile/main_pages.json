@@ -1,5 +1,6 @@
 {
   "src": [
+    "pages/fieldwatch/FieldwatchPage",
     "pages/ngf/MainMenuPage",
     "pages/ngf/NGFDemoMultitonPage",
     "pages/ngf/NGFDemoSubWindowPage"

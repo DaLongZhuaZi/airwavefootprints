@@ -115,7 +115,7 @@
   - `targetSdkVersion: 26.0.0`
   - `compatibleSdkVersion: 26.0.0`
 - 当前根目录 `oh-package.json5` 的 `modelVersion` 为 `26.0.0`。
-- 当前 `AppScope/app.json5` 的 `bundleName` 为 `com.dlzz.ngf`。
+- 当前 `AppScope/app.json5` 的 `bundleName` 为 `com.dlzz.airwavefootprints`。
 - 当前 `entry/src/main/module.json5` 的主能力为 `EntryAbility`，页面入口通过 `$profile:main_pages` 声明。
 - 当前 `entry/src/main/resources/base/profile/main_pages.json` 中注册的入口页面为 `pages/ngf/MainMenuPage`。
 - 当前页面目录以 `entry/src/main/ets/pages/` 为主，业务页面通常放在该目录下。

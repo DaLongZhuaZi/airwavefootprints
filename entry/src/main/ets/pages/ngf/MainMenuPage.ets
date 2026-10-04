@@ -600,7 +600,7 @@ struct NGFStarterMainMenuPage {
       try {
         const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
         context.startAbility({
-          bundleName: 'com.dlzz.ngf',
+          bundleName: 'com.dlzz.airwavefootprints',
           abilityName: 'MultitonEntryAbility',
           parameters: {
             'targetRouteName': 'SystemResourcePreview',
@@ -617,7 +617,7 @@ struct NGFStarterMainMenuPage {
       try {
         const context = this.getUIContext().getHostContext() as common.UIAbilityContext;
         context.startAbility({
-          bundleName: 'com.dlzz.ngf',
+          bundleName: 'com.dlzz.airwavefootprints',
           abilityName: 'MultitonEntryAbility',
           parameters: {
             'targetRouteName': 'NGFDemoDataStorage',

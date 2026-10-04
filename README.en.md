@@ -1,4 +1,6 @@
-# NGF (Neon Genesis Framework)
+# Airwave Footprints
+
+This repository contains the Airwave Footprints HarmonyOS application built on the NGF (Neon Genesis Framework), together with the NGF framework and its development documentation.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![HarmonyOS SDK](https://img.shields.io/badge/HarmonyOS_SDK-26.0.0_(API_26)-blue.svg)](https://developer.harmonyos.com/)

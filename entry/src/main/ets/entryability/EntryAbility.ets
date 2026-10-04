@@ -81,7 +81,7 @@ export default class EntryAbility extends UIAbility {
     ngfScreenKeepAwakeFacade.onWindowStageCreate();
     ngfDeviceAdaptationFacade.bindWindowStage(windowStage);
 
-    windowStage.loadContent('pages/ngf/MainMenuPage', (err: BusinessError): void => {
+    windowStage.loadContent('pages/fieldwatch/FieldwatchPage', (err: BusinessError): void => {
       if (err.code !== 0) {
         logger.error(TAG, '加载页面内容失败: ' + JSON.stringify(err));
         return;

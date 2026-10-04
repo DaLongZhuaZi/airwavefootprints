@@ -1,7 +1,7 @@
 {
-  "name": "ngf-engineering-tools",
+  "name": "airwavefootprints-engineering-tools",
   "version": "1.0.0",
-  "description": "Node.js engineering tools for NGF Framework",
+  "description": "Node.js engineering tools for Airwave Footprints",
   "scripts": {
     "cli": "node tools/ngf-cli/index.js",
     "docs": "typedoc",
