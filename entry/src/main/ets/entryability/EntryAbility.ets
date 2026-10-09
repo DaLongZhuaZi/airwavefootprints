@@ -6,7 +6,7 @@ import { uiContextManager } from 'ngf_framework';
 import { ngfStarterKernel } from 'ngf_framework';
 
 import { ngfPlatformWindowManagerFacade } from 'ngf_framework';
-import { ngfThemeManagerFacade } from 'ngf_framework';
+import { ngfThemeManagerFacade, NGFThemeMode } from 'ngf_framework';
 import { ngfI18nManagerFacade } from 'ngf_framework';
 import { ngfHoldingAwarenessFacade } from 'ngf_framework';
 import { ngfDeviceAdaptationFacade } from 'ngf_framework';
@@ -15,6 +15,7 @@ import { ngfScreenKeepAwakeFacade } from 'ngf_framework';
 import { logger } from 'ngf_framework';
 import { crashAnalytics } from 'ngf_framework';
 import { ngfContinuationManagerFacade } from 'ngf_framework';
+import { fieldwatchApplication } from '../fieldwatch/application/FieldwatchApplication';
 
 const TAG: string = 'EntryAbility';
 
@@ -42,6 +43,14 @@ export default class EntryAbility extends UIAbility {
     logger.info(TAG, '颜色模式由 ThemeManagerFacade 统一管理，无需手动设置');
 
     ngfThemeManagerFacade.initializeDefaults();
+    // Fieldwatch 是夜战风格：未显式选择主题时强制深色，默认不跟随系统深浅色。
+    if (ngfThemeManagerFacade.getCurrentTheme() === NGFThemeMode.AUTO) {
+      ngfThemeManagerFacade.setThemeOverride(NGFThemeMode.DARK);
+      // setThemeOverride 只写 AppStorage；$r("app.color.*") 的深/浅解析取决于应用颜色模式，
+      // 不调用 setColorMode 会让所有资源引用仍落在 base(浅色) 目录。
+      this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_DARK);
+      logger.info(TAG, '默认主题已设为深色（不跟随系统）');
+    }
     ngfI18nManagerFacade.initializeDefaults();
     void ngfHoldingAwarenessFacade.initialize();
     void ngfVisualEffectsFacade.initialize();
@@ -68,6 +77,7 @@ export default class EntryAbility extends UIAbility {
   }
 
   onDestroy(): void {
+    void fieldwatchApplication.onAbilityDestroy();
     ngfHoldingAwarenessFacade.destroy();
     uiContextManager.clearAbilityContext();
     clearContext();
@@ -102,11 +112,13 @@ export default class EntryAbility extends UIAbility {
     ngfScreenKeepAwakeFacade.onForeground();
     ngfDeviceAdaptationFacade.refresh('ability_foreground');
     void ngfHoldingAwarenessFacade.resume();
+    void fieldwatchApplication.onAbilityForeground();
   }
 
   onBackground(): void {
     logger.lifecycle(TAG, '生命周期: onBackground');
     ngfScreenKeepAwakeFacade.onBackground();
+    void fieldwatchApplication.onAbilityBackground();
   }
 
   onConfigurationUpdate(config: Configuration): void {

@@ -22,6 +22,20 @@ class SystemNotificationManagerFacade implements ISystemNotificationManager {
     }
   }
 
+  /**
+   * 查询通知是否已启用。
+   *
+   * 引导页与设置页需要它来显示真实状态 —— 只记录「申请过」是不够的，
+   * 用户可能在系统设置里随时关掉。
+   */
+  async isEnabled(): Promise<boolean> {
+    try {
+      return await notificationManager.isNotificationEnabled();
+    } catch (e) {
+      logger.warn(TAG, '查询通知开关失败: ' + e);
+      return false;
+    }
+  }
   async publish(request: NGFNotificationRequest): Promise<void> {
     try {
       let notificationContent: notificationManager.NotificationContent;

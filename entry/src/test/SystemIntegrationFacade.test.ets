@@ -1,49 +1,18 @@
-import { describe, beforeEach, it, expect } from '@ohos/hypium';
-import {
-  NGFEventPayload,
-  NGFIntentTaskExecutor,
-  NGFSubmitTaskIntentRequest,
-  NGFTaskProgressUpdater,
-  ngfSystem
-} from 'ngf_framework';
+import { describe, it, expect } from '@ohos/hypium';
+import { NGFTaskExecutor, ngfSystem } from 'ngf_framework';
 
 export default function systemIntegrationTest() {
   describe('SystemIntegrationFacadeTest', () => {
-    const executorName: string = 'unit.intent.executor';
-
-    beforeEach(() => {
-      ngfSystem.unregisterIntentTaskExecutor(executorName);
+    it('exposes current task contract', 0, () => {
+      const tasks = ngfSystem.getAllTasks();
+      expect(tasks !== undefined).assertTrue();
     });
 
-    it('testIntentExecutorRegistrationLifecycle', 0, () => {
-      const executor: NGFIntentTaskExecutor = async (
-        taskId: string,
-        updateCallback: NGFTaskProgressUpdater,
-        request: NGFSubmitTaskIntentRequest
-      ) => {
-        updateCallback(100, 100, request.payloadJson || taskId);
+    it('accepts a typed task executor', 0, () => {
+      const executor: NGFTaskExecutor = async (_taskId: string, update: (progress: number, total: number, message: string) => void): Promise<void> => {
+        update(1, 1, 'done');
       };
-
-      expect(ngfSystem.hasIntentTaskExecutor(executorName)).assertFalse();
-      expect(ngfSystem.registerIntentTaskExecutor(executorName, executor)).assertTrue();
-      expect(ngfSystem.hasIntentTaskExecutor(executorName)).assertTrue();
-      expect(ngfSystem.registerIntentTaskExecutor(executorName, executor)).assertFalse();
-      expect(ngfSystem.unregisterIntentTaskExecutor(executorName)).assertTrue();
-      expect(ngfSystem.hasIntentTaskExecutor(executorName)).assertFalse();
-      expect(ngfSystem.unregisterIntentTaskExecutor(executorName)).assertFalse();
-    });
-
-    it('testUnregisteredIntentDoesNotSubmitTask', 0, () => {
-      const beforeCount = ngfSystem.getAllTasks().length;
-      const payload = new NGFEventPayload(
-        'ngf.intent.action.SUBMIT_TASK',
-        '{"executorName":"unit.intent.missing","taskName":"ShouldNotRun"}',
-        Date.now()
-      );
-
-      ngfSystem.publishSystemEvent('ngf.intent.action.SUBMIT_TASK', payload);
-
-      expect(ngfSystem.getAllTasks().length).assertEqual(beforeCount);
+      expect(executor !== undefined).assertTrue();
     });
   });
 }

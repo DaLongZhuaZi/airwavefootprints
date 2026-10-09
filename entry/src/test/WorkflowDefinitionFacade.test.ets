@@ -18,8 +18,8 @@ export default function workflowDefinitionTest() {
     });
 
     it('testSerialExecution', 0, async () => {
-      const step1 = new NGFWorkflowStepDefinition('step1', 'script', '{"data":"hello"}', null, null);
-      const step2 = new NGFWorkflowStepDefinition('step2', 'script', '{"data":"world"}', null, null);
+      const step1 = new NGFWorkflowStepDefinition('step1', 'wait', '{"waitMs":1}', null, null);
+      const step2 = new NGFWorkflowStepDefinition('step2', 'wait', '{"waitMs":1}', null, null);
       const definition = new NGFWorkflowDefinition('test_workflow', 'serial workflow test', [step1, step2]);
       
       ngfWorkflowDefinitionFacade.registerWorkflow(definition);

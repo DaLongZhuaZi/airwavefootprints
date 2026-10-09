@@ -70,7 +70,14 @@ export class WorkflowDefinitionFacade implements IWorkflowDefinitionManager {
     if (definition.parallelGroups.length > 0) {
       for (let gi = 0; gi < definition.parallelGroups.length; gi++) {
         const group = definition.parallelGroups[gi];
-        const groupResult = await this.executeParallelGroup(group, lastOutput);
+        let groupResult: Array<NGFWorkflowStepResult>;
+        try {
+          groupResult = await this.executeParallelGroup(group, lastOutput);
+        } catch (error) {
+          const message: string = error instanceof Error ? error.message : String(error);
+          logger.warn(TAG, '并行组执行失败: group=' + group.groupName + ', err=' + message);
+          return new NGFWorkflowExecutionResult(name, false, stepResults, lastOutput);
+        }
         for (let ri = 0; ri < groupResult.length; ri++) {
           stepResults.push(groupResult[ri]);
           if (!groupResult[ri].success) {

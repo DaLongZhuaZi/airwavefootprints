@@ -34,3 +34,4 @@ export {
   ngfModuleRegistry,
   ngfModuleBootstrapCoordinator
 } from './starter/index';
+export { DependencyContainer, ContainerLifecycle } from './DependencyContainer';

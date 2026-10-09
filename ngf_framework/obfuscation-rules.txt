@@ -1,0 +1,37 @@
+# Define project specific obfuscation rules here.
+# You can include the obfuscation configuration files in the current module's build-profile.json5.
+#
+# For more details, see
+#   https://developer.huawei.com/consumer/cn/doc/harmonyos-guides/source-obfuscation
+
+# Obfuscation options:
+# -disable-obfuscation: disable all obfuscations
+# -enable-property-obfuscation: obfuscate the property names
+# -enable-toplevel-obfuscation: obfuscate the names in the global scope
+# -compact: remove unnecessary blank spaces and all line feeds
+# -remove-log: remove all console.* statements
+# -print-namecache: print the name cache that contains the mapping from the old names to new names
+# -apply-namecache: reuse the given cache file
+
+# Keep options:
+# -keep-property-name: specifies property names that you want to keep
+# -keep-global-name: specifies names that you want to keep in the global scope
+
+# ── ngf_framework 是 HAR 库，被 entry 按名字导入 ──
+#
+# 这里**刻意不开启** -enable-export-obfuscation / -enable-toplevel-obfuscation /
+# -enable-filename-obfuscation：entry 通过
+#   import { xxxFacade } from 'ngf_framework'
+# 按名字引用本库的导出，一旦重命名而 consumer-rules.txt 又没有对应的 keep 清单，
+# 应用会在运行期找不到符号 —— 而且这类问题只在 release 包上出现，debug 完全测不出来。
+#
+# 如果确实要给本库开混淆，正确顺序是：
+#   1) 先在本目录的 consumer-rules.txt 里用 -keep-global-name 列出 entry 实际用到的导出；
+#   2) 再回来按需打开下面的开关；
+#   3) 必须用 release 包在真机上回归，不能只看 debug。
+#
+# -enable-property-obfuscation
+# -enable-toplevel-obfuscation
+# -enable-filename-obfuscation
+# -enable-export-obfuscation
+

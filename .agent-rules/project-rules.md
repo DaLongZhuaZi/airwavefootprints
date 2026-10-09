@@ -58,6 +58,16 @@
 **验证**：交付前回看本条；HDS 页面涉及 API26 光感/材质/颜色选择器时，实际引用 `.rules/skill-hds-page-design.md` §8 与 `.rules/skill-arkui-knowledge.md` §10。
 **更新时间**：2026-08-28
 
+### PR-005 电波足迹鸿蒙原生能力优先
+
+**状态**：active
+**范围**：`entry` 下 Fieldwatch 应用模块的后续功能设计、迁移和体验优化。
+**指令**：在保持 Fieldwatch 离线、被动观测和隐私边界的前提下，后续功能应优先采用 HarmonyOS 官方能力与 NGF 已有门面，充分利用系统级权限、后台任务、通知、位置、设备感知、窗口/多端流转、文件分享和 HDS/ArkUI 交互能力；跨平台业务逻辑继续保持可替换、低耦合，不把鸿蒙特性硬编码进领域规则。
+**来源**：用户明确要求将 Fieldwatch 重新实现为鸿蒙平台版本，并尽可能结合更多鸿蒙特性提升可用性。
+**证据**：当前 `entry/src/main/module.json5` 已声明蓝牙、手势、运动、后台运行、通知、生物识别、加速度计和位置权限；`ngf_framework` 已提供 `hardware`、`systemTasks`、`deviceAwareness`、`interconnect`、`uiShell`、`data` 等对应能力模块。
+**验证**：新增或迁移功能时，交付前说明使用的 HarmonyOS/NGF 能力、权限与生命周期边界，并确认领域层仍可通过接口替换平台实现；涉及官方 API 时先核对 API 26 官方声明与权限要求。
+**更新时间**：2026-10-04
+
 ## Candidate Rules
 
 当前没有待验证的候选规则。

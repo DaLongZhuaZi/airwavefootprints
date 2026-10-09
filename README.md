@@ -1,137 +1,168 @@
 # 电波足迹 / Airwave Footprints
 
-本仓库是基于 NGF（Neon Genesis Framework）开发的电波足迹 HarmonyOS 应用，同时保留 NGF 框架及其开发文档。
-
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![HarmonyOS SDK](https://img.shields.io/badge/HarmonyOS_SDK-26.0.0_(API_26)-blue.svg)](https://developer.harmonyos.com/)
 [![Language](https://img.shields.io/badge/Language-ArkTS-orange.svg)]()
 
 **🌐 语言 / Language:** 中文 | [English](README.en.md)
 
-欢迎来到 **NGF (Neon Genesis Framework)**！这是一个专为 HarmonyOS Next 打造的**开箱即用的应用开发框架**。
+---
 
-无论你是想从零开始开发一款精美的鸿蒙原生应用，还是想借助 AI 助手（Vibe Coding）极速生成页面，NGF 都为你准备好了坚实的基础设施（主题、多语言、存储、网络、导航等），让你能够**将 90% 的精力集中在业务本身**。
+## 这是什么
+
+电波足迹是一款 **HarmonyOS 被动无线电观测工具**：只接收附近设备主动广播的内容，
+把「谁在广播、叫什么、属于哪一类」显示出来，供现场排查、设备自查和学习研究使用。
+
+它基于本仓库内的 NGF（Neon Genesis Framework）开发：`entry/` 是应用，`ngf_framework/` 是框架。
+
+- **版本**：1.0.0（versionCode 1000000）
+- **包名**：`com.dlzz.airwavefootprints`
+- **目标平台**：HarmonyOS 6.0 / API 26
 
 ---
 
-## 🙋‍♂️ 开发者快速上手 (For Developers)
+## 设计底线
 
-NGF 的设计初衷是**“随时可以变成你自己的 App”**。
+这四条不是宣传语，是代码里真实执行的约束：
 
-1. **克隆项目并运行**：
-   使用 DevEco Studio 打开项目，点击运行，你将看到一个内置了 5 个演示 Tab 的完整框架示例，包含了沉浸式导航、毛玻璃效果和所有核心能力的演示。
-2. **把它变成你的 App**：
-   - 阅读 [业务化与发布指南](.rules/skill-app-release.md)，按照步骤修改 `bundleName`、应用名称和图标。
-   - 删除不需要的演示页面，开始编写你自己的业务逻辑！
-3. **调用开箱即用的能力**：
-   不需要自己造轮子，直接从框架导入你需要的工具：
-   ```typescript
-   import { logger, securityToolkit, FileUtils, ngfNetworkClient } from 'ngf_framework';
-   ```
-
----
-
-## 🤖 AI 助手快速上手 (For AI Agents / Vibe Coding)
-
-本项目极其适合结合 AI 编程助手（如 Cursor、Windsurf、Claude Code 等）进行开发。我们为 Agent 准备了详尽的“行为准则”。
-
-**作为 AI 助手，在开始编写代码前，你必须严格按照以下顺序阅读规则**：
-
-| 优先级 | 文件 | 必读原因 |
-|--------|------|--------|
-| 1️⃣ | [AGENTS.md](AGENTS.md) | **最高优先级**：项目的绝对宪法！包含目录结构解析、导包规则、禁止事项。 |
-| 2️⃣ | [.rules/README.md](.rules/README.md) | **技能索引**：查阅你可以使用的各种“超能力”（如一键生成页面、复用组件等）。 |
-| 3️⃣ | [.rules/skill-scaffold-page.md](.rules/skill-scaffold-page.md) | **极速建页**：收到“新建页面”指令时，直接套用此文件中的模板代码。 |
-| 4️⃣ | [.rules/skill-component-reuse.md](.rules/skill-component-reuse.md) | **复用指南**：开发功能时，查阅如何调用框架里现成的弹窗、标题栏和核心工具。 |
-
-> 💡 **给 Agent 的提示**：本项目是一个模块化工程（`ngf_framework` 为核心库，`entry` 为业务层），在 `entry` 中开发时，必须使用 `import { ... } from 'ngf_framework'` 进行导包。
-
----
-
-## 📦 框架内置了什么？
-
-NGF 采用高内聚低耦合的分层架构，将复杂的能力封装成了简单的 API：
-
-- 🎨 **UI 与主题 (uiTheme & uiShell)**：内置 20 个语义色 Token，完美支持深色模式切换、沉浸式顶部标题栏（HDS）和毛玻璃特效。
-- 🪟 **多窗口、卡片与悬浮窗 (platformOhos)**：不仅支持灵活的应用内悬浮窗 (SubWindow)，还支持系统级桌面快捷方式 (Shortcuts)、桌面服务卡片 (Widgets) 以及独立的宏观多实例 (Multiton)。内置了强大的壳层容器，无论是在应用内还是直接从桌面唤起，通过简单的 AppStorage 和 Want 传参即可极速完成页面的独立挂载，且冷启动多实例时会自动接管框架的全局初始化！
-- 🌍 **国际化 (i18n)**：支持多语言切换、相对时间格式化（“刚刚”、“2小时前”）。
-- 💾 **数据与存储 (data)**：提供真 LRU 内存缓存、偏好设置 (Preferences) 和关系型数据库 (RDB) 的极简封装。
-- ⚙️ **工作流与任务 (workflow & systemTasks)**：支持复杂的异步任务编排，以及带保活锁和常驻系统通知栏的后台长时任务。
-- 📱 **设备感知 (deviceAwareness)**：支持折叠屏适配、单手/双手握持感知、13项硬件能力探测。
-- 🛠️ **全能工具箱 (utils)**：内置性能监控、SHA/AES 加解密安全套件、统一日志系统等。
-
----
-
-## 📁 极简项目结构
-
-```text
-NGF/
- ├── ngf_framework/src/main/ets/  # 🛠️ 框架核心包 (HAR)，所有核心能力都在这里
- ├── entry/src/main/ets/          # 📱 你的业务 App (HAP)，在这里写你的页面和逻辑
- │    └── pages/ngf/              # 框架自带的演示页面（业务化时可删除）
- ├── .rules/                      # 🤖 给 AI 助手看的工作规则和技能库
- ├── AGENTS.md                    # 📜 全局开发约束与 Agent 宪法
- └── build-profile.json5          # ⚙️ 鸿蒙工程配置
-```
-
----
-
-## 🔧 CI 云端构建（GitHub Actions）
-
-本仓库内置三个 workflow（位于 `.github/workflows/`），实现"push 即云端出包"的 HAP 流水线，体验与 Android APK 的 CI 一致。**全程无需 DevEco Studio**，push 即有自动构建与自动发布。详细步骤见 [CI 免 DevEco Studio 构建指南](docs/CI_Guide.md) / [CI Build Guide (EN)](docs/CI_Guide.en.md)：
-
-| Workflow | 触发方式 | 作用 |
-|---|---|---|
-| `docker-image.yml` | 手动（workflow_dispatch） | 已迁至 **[harmonyos-ci](https://github.com/DaLongZhuaZi/harmonyos-ci) 仓库**统一管理（构建 API 23/26 镜像） |
-| `build.yml` | push `main`/`master`、PR | debug 模式构建**未签名** HAP，上传 artifact（`hap-unsigned`），**push 时自动发布/更新滚动 `nightly` Release** |
-| `sign-and-release.yml` | push `v*` tag | 构建 → hap-sign-tool 签名 → 发布 GitHub Release（需配置 Secrets） |
-
-### 首次接入（一次性，约 15 分钟）
-
-1. **准备 CI 镜像**：本工程使用 `ghcr.io/dalongzhuazi/harmonyos-ci:api26`（已构建好、public）。镜像的构建/维护现已统一由 **[harmonyos-ci](https://github.com/DaLongZhuaZi/harmonyos-ci) 仓库**负责（Dockerfile + 构建 workflow + 多 API 版本 tag），需要重建或新增 API 版本时按该仓库说明操作即可；本仓库只需消费该镜像。
-2. **完成**：之后每次 push 主分支都会**自动构建并自动发布 `nightly` 滚动 Release**（PR 仅构建不发布）；在 Action 页面或 Releases 页下载 `hap-unsigned` artifact / 产物（含 `entry-default-unsigned.hap`，可在 DevEco Studio 中重新签名后安装）。
-
-> **签名说明**：`build-profile.json5` 中的 `signingConfigs` 指向开发者本机证书路径，CI 会自动执行 `.github/scripts/strip_signing.py` 剥离该配置并产出**未签名** HAP，不影响本机签名构建。第一阶段 CI 不引入签名；本仓库无 git 子模块，若未来引入，请在 checkout 步骤开启 `submodules: recursive`。
-
-### 配置签名与版本化 Release（可选）
-
-> 未签名 HAP 的**滚动 `nightly` Release 已默认开启**（每次 push 自动更新）；本小节说的是 `v*` tag 触发的**签名 + 版本化**发布。
-
-push `v*` tag 会触发 `sign-and-release.yml`。所需 Secrets（证书/密钥文件 **base64 编码后**存放，绝不入库；`.gitignore` 已拦截所有证书类文件）：
-
-| Secret | 内容 |
+| 底线 | 落地方式 |
 |---|---|
-| `SIGNING_CERT` | `.cer` 公钥证书，base64（建议 `base64 -w 0` 生成单行） |
-| `SIGNING_PROFILE` | `.p7b` 签名 Profile，base64 |
-| `SIGNING_KEY` | `.p12` 密钥库文件，base64 |
-| `SIGNING_KEY_ALIAS` | 密钥别名（明文） |
-| `KEYSTORE_PASSWORD` / `KEY_PASSWORD` | 密钥库 / 密钥口令（明文） |
-| `CLT_ZIP_URL` | （已随镜像构建一并迁移至 harmonyos-ci 仓库） |
+| **只接收，不连接** | 只监听广播；不配对、不注入、不发送探测帧。BLE / 星闪 / Wi-Fi 三条扫描链路均为被动模式。 |
+| **严格离线** | 应用无任何后台网络行为。只有你在「特征库 → 更多 → 更新内置目录」里主动点击时才会访问网络。 |
+| **数据只在本机** | 观测、关注列表、自定义特征、设置全部存在应用沙箱内；卸载即删除，我们没有副本。 |
+| **只申请两项权限** | 「设备发现和连接」与「位置」。位置仅在你打开「记录手机听到设备的位置」后使用，不做后台定位。 |
 
-未配置签名 Secrets 时，tag 构建会**跳过签名并输出指引**，不会报红失败。
+Wi-Fi 扫描由系统自动授予，不需要你操作。
 
 ---
 
-## 📚 更多文档
+## 功能
 
-| 文档 | 说明 |
-|------|------|
-| [框架内部架构详解](ngf_framework/src/main/ets/README.md) | 给想深入了解 NGF 底层实现的硬核开发者阅读 |
-| [框架业务化指南](.rules/skill-app-release.md) | 如何修改包名、申请证书并上架到华为应用市场 |
+### 五个标签页
+
+| 标签 | 内容 |
+|---|---|
+| **实时** | 雷达视图 + 强度 / 时间线 / 信号轨迹 / 分类四种列表视图；暂停显示（不等于停止扫描）；进入设备详情、Hunt。 |
+| **筛选** | 预设、信号种类、与你同行、新出现的、长时间在附近、分类与精细筛选；AND / OR 逻辑；保存与删除预设。 |
+| **特征库** | 浏览、搜索、编辑签名目录；从观测设备反推创建特征；导入导出；更新内置目录。 |
+| **记录** | 命名观测时段（Sit）、轨迹、时段报告、导出（含 AI 导出）、设备对比、日志。 |
+| **设置** | 扫描、权限、实时雷达显示、显示、位置与隐私、通知与语音、关注列表、数据、关于应用。 |
+
+### 子页面
+
+- **设备详情** —— 无线电事实、品牌与类别推断、匹配到的特征、观测统计与趋势、位置标记、备注与自定义名称。
+- **特征编辑器** —— 身份 / 匹配 / 颜色 / 规则 / 解码字段五组配置。
+- **Hunt** —— 单目标追踪，带蜂鸣与语音反馈。
+
+### 首次启动引导
+
+首次启动依次说明：应用用途 → 不需要任何权限也能用的功能 → 逐条解释两项权限的用途。
+**引导完成前不申请任何权限。** 之后可在「设置 → 数据」里重看。
 
 ---
 
-## 📄 许可证 (License)
+## 权限
 
-本项目基于 [MIT License](LICENSE) 开源。
+| 权限 | 用途 | 拒绝后 |
+|---|---|---|
+| **设备发现和连接**<br>`ACCESS_BLUETOOTH` + `ACCESS_NEARLINK` | 接收附近 BLE 与星闪设备的广播（耳机、手环、追踪器、信标等）。只读广播内容，不建立连接、不配对。 | 实时页显示受限卡片，其余功能不受影响。 |
+| **位置**<br>`APPROXIMATELY_LOCATION` | 只在你打开「记录手机听到设备的位置」后使用，给观测打位置标记并绘制本机轨迹。不做后台定位。 | 观测照常进行，只是不带位置。 |
+
+应用商店要求「请求前先说明用途」，因此权限说明写在启动引导与设置页里，而不是直接弹系统框。
+
+---
+
+## 内置特征目录
+
+- `entry/src/main/resources/rawfile/fieldwatch-signatures-v2.json` —— **304 条特征**，`catalogVersion: 89`
+- 厂商前缀（OUI）来自 IEEE 公开注册表，离线打包
+- 目录随应用离线提供，可导出查看，也可用你自己的规则覆盖
+
+---
+
+## 工程结构
 
 ```
-Copyright (c) 2026 DaLongzhuazi
-
-特此免费授予任何获得本软件及相关文档副本的人无限制使用、复制、修改、合并、
-发布、分发、再许可或销售该软件副本的权利，但须满足上述版权声明及本许可证声明。
-本软件按「原样」提供，不作任何形式的保证。
+entry/src/main/ets/
+├── entryability/          EntryAbility（主入口）+ MultitonEntryAbility
+├── pages/
+│   ├── fieldwatch/        应用页面
+│   │   ├── FieldwatchPage.ets                五个标签页 + 实时雷达（主体）
+│   │   ├── FieldwatchDeviceDetailPage.ets    设备详情
+│   │   ├── FieldwatchSignatureEditorPage.ets 特征编辑器
+│   │   ├── FieldwatchSignaturesPage.ets      特征库
+│   │   ├── FieldwatchHuntPage.ets            单目标追踪
+│   │   └── FieldwatchOnboardingPage.ets      首次启动引导
+│   └── ngf/               NGF 框架演示与验证页
+└── fieldwatch/
+    ├── application/       应用状态与用例编排
+    ├── data/              目录 / 观测 / 设置三个仓储
+    ├── domain/            模型、解析、推断、过滤、候选、导出、厂商库
+    │   └── signatures/    特征目录、匹配引擎、模型
+    ├── platform/          文件网关、PDF、Hunt 反馈、关注告警
+    ├── radio/             BLE / 星闪 / Wi-Fi 扫描与协调器
+    └── ui/                调色板、按钮、芯片、雷达聚合、信号行等
 ```
 
 ---
-*本框架由 **DaLongzhuazi** 开发维护，致力于让每一位开发者都能轻松构建卓越的 HarmonyOS 原生应用。*
+
+## 构建与运行
+
+用 DevEco Studio 打开仓库根目录即可。命令行：
+
+```powershell
+# 设置 SDK 根目录（换成你机器上的实际路径）
+$env:DEVECO_SDK_HOME='<DevEco Studio>/sdk'
+
+# 调试包
+& '<DevEco Studio>/tools/hvigor/bin/hvigorw.bat' assembleHap --no-daemon
+
+# 发布包
+& '<DevEco Studio>/tools/hvigor/bin/hvigorw.bat' assembleHap --mode module -p product=default -p buildMode=release --no-daemon
+```
+
+产物：`entry/build/default/outputs/default/entry-default-signed.hap`
+
+> 本机实测路径与设备 target 记录在 `.local-rules/build-commands.local.md` 与
+> `.local-rules/device-hdc.local.md`，不要把机器相关事实写进本文件。
+
+---
+
+## 测试
+
+```powershell
+& '<DevEco Studio>/tools/hvigor/bin/hvigorw.bat' test --no-daemon
+```
+
+测试位于 `entry/src/test/`，共 20 个用例文件；其中 `Fieldwatch*` 覆盖领域逻辑：
+解析、过滤、候选、特征匹配、厂商库、关注告警、隐私导出、设置备份、权限、主题等。
+
+> ⚠️ **重要**：`hvigorw test` 在有用例失败时**仍然输出 `BUILD SUCCESSFUL`**。
+> 必须同时断言 `> hvigor ERROR: Error in ` 的行数为 0，否则会漏掉失败。
+
+---
+
+## 已知边界
+
+- 信号强度、厂商推断、特征匹配与设备解释都是**基于广播内容的推测**，
+  不构成对设备身份、归属或意图的确认，不应作为取证或决策的唯一依据。
+- 内置特征目录整理自公开资料，覆盖面有限；**匹配不到是正常结果**，不代表设备异常。
+- 可用性依赖系统是否向应用暴露广播内容，不同机型与系统版本表现可能不同。
+
+---
+
+## 相关文档
+
+| 文档 | 内容 |
+|---|---|
+| [AGENTS.md](AGENTS.md) | 本仓库的代理工作规范（架构分层、ArkTS 硬性规则、交付流程） |
+| [.rules/README.md](.rules/README.md) | 技能规则索引 |
+| [docs/Fieldwatch功能完整清单.md](docs/Fieldwatch功能完整清单.md) | 功能基线与验收清单 |
+| [docs/Fieldwatch鸿蒙能力映射.md](docs/Fieldwatch鸿蒙能力映射.md) | Android → HarmonyOS 能力映射 |
+| [docs/Fieldwatch鸿蒙验收矩阵.md](docs/Fieldwatch鸿蒙验收矩阵.md) | 验收矩阵 |
+
+---
+
+## License
+
+[MIT](LICENSE)

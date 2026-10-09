@@ -5355,6 +5355,2778 @@
     {
       "name": "settings_keep_screen_on",
       "value": "保持屏幕常亮"
+    },
+    {
+      "name": "wifi_scan_reason",
+      "value": "电波足迹需要 Wi-Fi 信息权限，以被动观察附近接入点。应用不会连接或配置 Wi-Fi。"
+    },
+    {
+      "name": "radio_scan_started",
+      "value": "无线电扫描已启动"
+    },
+    {
+      "name": "radio_scan_restart",
+      "value": "重启无线电扫描"
+    },
+    {
+      "name": "radio_scan_scanning",
+      "value": "无线电扫描中"
+    },
+    {
+      "name": "radio_scan_permission_denied",
+      "value": "无线电扫描权限未授予"
+    },
+    {
+      "name": "live_devices_label",
+      "value": "设备"
+    },
+    {
+      "name": "live_logs_label",
+      "value": "日志"
+    },
+    {
+      "name": "live_unknown_device",
+      "value": "未命名设备"
+    },
+    {
+      "name": "live_seen_count",
+      "value": "出现次数"
+    },
+    {
+      "name": "live_rssi_label",
+      "value": "信号强度"
+    },
+    {
+      "name": "watch_toggle",
+      "value": "关注/取消关注"
+    },
+    {
+      "name": "wifi_status_title",
+      "value": "Wi-Fi 状态"
+    },
+    {
+      "name": "wifi_scanning",
+      "value": "扫描中"
+    },
+    {
+      "name": "wifi_updated",
+      "value": "已更新"
+    },
+    {
+      "name": "wifi_cached",
+      "value": "使用缓存"
+    },
+    {
+      "name": "wifi_waiting_system",
+      "value": "等待系统"
+    },
+    {
+      "name": "wifi_location_disabled",
+      "value": "位置服务未开启"
+    },
+    {
+      "name": "wifi_disabled",
+      "value": "Wi-Fi 未开启"
+    },
+    {
+      "name": "wifi_unsupported",
+      "value": "设备暂不支持 Wi-Fi 扫描"
+    },
+    {
+      "name": "wifi_next_attempt",
+      "value": "下一次尝试"
+    },
+    {
+      "name": "wifi_ap_count",
+      "value": "AP 数量"
+    },
+    {
+      "name": "wifi_retry_now",
+      "value": "立即重试"
+    },
+    {
+      "name": "wifi_location_hint",
+      "value": "Wi-Fi 扫描需要系统位置信息处于开启状态。"
+    },
+    {
+      "name": "wifi_system_rejected",
+      "value": "系统暂时拒绝或限制扫描"
+    },
+    {
+      "name": "wifi_error",
+      "value": "Wi-Fi 扫描异常"
+    },
+    {
+      "name": "wifi_last_success",
+      "value": "最近成功扫描"
+    },
+    {
+      "name": "wifi_permission_denied",
+      "value": "请重新授权 Wi-Fi 信息权限"
+    },
+    {
+      "name": "wifi_scan_intensity",
+      "value": "扫描强度"
+    },
+    {
+      "name": "wifi_scan_basic",
+      "value": "基础 30 秒"
+    },
+    {
+      "name": "wifi_scan_balanced",
+      "value": "平衡 45 秒"
+    },
+    {
+      "name": "wifi_scan_saver",
+      "value": "节能 60 秒"
+    },
+    {
+      "name": "wifi_restore_local",
+      "value": "已恢复本地观测"
+    },
+    {
+      "name": "sit_title",
+      "value": "当前会话"
+    },
+    {
+      "name": "sit_name_placeholder",
+      "value": "输入会话名称"
+    },
+    {
+      "name": "sit_start",
+      "value": "开始会话"
+    },
+    {
+      "name": "sit_finish",
+      "value": "结束会话"
+    },
+    {
+      "name": "sit_active",
+      "value": "进行中"
+    },
+    {
+      "name": "sit_saved_count",
+      "value": "已保存会话"
+    },
+    {
+      "name": "sit_name_required",
+      "value": "请输入会话名称"
+    },
+    {
+      "name": "fieldwatch_app_title",
+      "value": "电波足迹"
+    },
+    {
+      "name": "fieldwatch_app_subtitle",
+      "value": "被动无线电观测"
+    },
+    {
+      "name": "fieldwatch_tab_live",
+      "value": "实时"
+    },
+    {
+      "name": "fieldwatch_tab_filters",
+      "value": "筛选"
+    },
+    {
+      "name": "fieldwatch_tab_reports",
+      "value": "记录"
+    },
+    {
+      "name": "fieldwatch_tab_settings",
+      "value": "设置"
+    },
+    {
+      "name": "fieldwatch_live_title",
+      "value": "实时观测"
+    },
+    {
+      "name": "fieldwatch_view_radar",
+      "value": "雷达"
+    },
+    {
+      "name": "fieldwatch_view_strength",
+      "value": "强度"
+    },
+    {
+      "name": "fieldwatch_view_timeline",
+      "value": "时间线"
+    },
+    {
+      "name": "fieldwatch_view_class",
+      "value": "分类"
+    },
+    {
+      "name": "fieldwatch_view_trail",
+      "value": "信号轨迹"
+    },
+    {
+      "name": "fieldwatch_trail_samples",
+      "value": "%s 个样本"
+    },
+    {
+      "name": "fieldwatch_trail_waiting",
+      "value": "等待更多样本…"
+    },
+    {
+      "name": "fieldwatch_no_observations",
+      "value": "暂无观测"
+    },
+    {
+      "name": "fieldwatch_filters_title",
+      "value": "筛选"
+    },
+    {
+      "name": "fieldwatch_filters_description",
+      "value": "筛选只影响实时显示，不会删除本地观测。"
+    },
+    {
+      "name": "fieldwatch_filter_all",
+      "value": "全部"
+    },
+    {
+      "name": "fieldwatch_filter_wifi",
+      "value": "仅 Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_filter_ble",
+      "value": "仅 BLE"
+    },
+    {
+      "name": "fieldwatch_filter_watch_only",
+      "value": "仅关注目标"
+    },
+    {
+      "name": "fieldwatch_filter_clear",
+      "value": "清除筛选"
+    },
+    {
+      "name": "fieldwatch_reports_title",
+      "value": "记录"
+    },
+    {
+      "name": "fieldwatch_reports_description",
+      "value": "管理采集会话，并准备报告与导出。"
+    },
+    {
+      "name": "fieldwatch_report_debrief",
+      "value": "观测报告"
+    },
+    {
+      "name": "fieldwatch_report_compare",
+      "value": "观测对比"
+    },
+    {
+      "name": "fieldwatch_report_path",
+      "value": "轨迹"
+    },
+    {
+      "name": "fieldwatch_report_export",
+      "value": "导出"
+    },
+    {
+      "name": "fieldwatch_report_pending",
+      "value": "报告和导出能力将在对应数据与系统能力验证后启用。"
+    },
+    {
+      "name": "fieldwatch_settings_title",
+      "value": "设置"
+    },
+    {
+      "name": "fieldwatch_settings_scan",
+      "value": "扫描"
+    },
+    {
+      "name": "fieldwatch_settings_privacy",
+      "value": "位置与隐私"
+    },
+    {
+      "name": "fieldwatch_device_preview_open",
+      "value": "再次点击查看完整详情"
+    },
+    {
+      "name": "fieldwatch_device_detail_title",
+      "value": "设备详情"
+    },
+    {
+      "name": "fieldwatch_detail_type",
+      "value": "信号源"
+    },
+    {
+      "name": "fieldwatch_detail_name",
+      "value": "名称"
+    },
+    {
+      "name": "fieldwatch_detail_address",
+      "value": "地址"
+    },
+    {
+      "name": "fieldwatch_detail_location",
+      "value": "位置"
+    },
+    {
+      "name": "fieldwatch_detail_rssi",
+      "value": "信号强度"
+    },
+    {
+      "name": "fieldwatch_detail_frequency",
+      "value": "频率"
+    },
+    {
+      "name": "fieldwatch_detail_band",
+      "value": "频段"
+    },
+    {
+      "name": "fieldwatch_detail_channel_width",
+      "value": "信道宽度"
+    },
+    {
+      "name": "fieldwatch_detail_security",
+      "value": "安全类型"
+    },
+    {
+      "name": "fieldwatch_detail_seen_count",
+      "value": "出现次数"
+    },
+    {
+      "name": "fieldwatch_detail_signatures",
+      "value": "命中签名"
+    },
+    {
+      "name": "fieldwatch_detail_decoded",
+      "value": "解码字段"
+    },
+    {
+      "name": "fieldwatch_detail_fresh",
+      "value": "数据状态"
+    },
+    {
+      "name": "fieldwatch_detail_fresh_value",
+      "value": "本次刚出现"
+    },
+    {
+      "name": "fieldwatch_detail_cached_value",
+      "value": "早先出现"
+    },
+    {
+      "name": "fieldwatch_detail_not_applicable",
+      "value": "不适用"
+    },
+    {
+      "name": "fieldwatch_sighting_count",
+      "value": "%s 次观测"
+    },
+    {
+      "name": "fieldwatch_signatures_title",
+      "value": "特征库"
+    },
+    {
+      "name": "fieldwatch_signatures_description",
+      "value": "内置 stock 签名与用户自定义规则；命中只代表可能的产品族，不是身份确认。"
+    },
+    {
+      "name": "fieldwatch_signatures_version",
+      "value": "目录版本"
+    },
+    {
+      "name": "fieldwatch_signatures_total",
+      "value": "签名总数"
+    },
+    {
+      "name": "fieldwatch_signatures_search",
+      "value": "搜索名称或规则"
+    },
+    {
+      "name": "fieldwatch_signatures_category_all",
+      "value": "全部类别"
+    },
+    {
+      "name": "fieldwatch_signatures_stock",
+      "value": "内置"
+    },
+    {
+      "name": "fieldwatch_signatures_user",
+      "value": "自定义"
+    },
+    {
+      "name": "fieldwatch_signatures_rules",
+      "value": "匹配规则"
+    },
+    {
+      "name": "fieldwatch_signatures_decode",
+      "value": "解码字段"
+    },
+    {
+      "name": "fieldwatch_signatures_enabled",
+      "value": "已启用"
+    },
+    {
+      "name": "fieldwatch_signatures_disabled",
+      "value": "已停用"
+    },
+    {
+      "name": "fieldwatch_signatures_enable",
+      "value": "启用"
+    },
+    {
+      "name": "fieldwatch_signatures_disable",
+      "value": "停用"
+    },
+    {
+      "name": "fieldwatch_signatures_delete",
+      "value": "删除自定义签名"
+    },
+    {
+      "name": "fieldwatch_signatures_delete_confirm",
+      "value": "删除后无法恢复，确定删除这条自定义签名吗？"
+    },
+    {
+      "name": "fieldwatch_signatures_export",
+      "value": "导出目录到应用沙箱"
+    },
+    {
+      "name": "fieldwatch_signatures_import",
+      "value": "从沙箱导入"
+    },
+    {
+      "name": "fieldwatch_signatures_update",
+      "value": "更新内置目录"
+    },
+    {
+      "name": "fieldwatch_signatures_restore",
+      "value": "恢复默认目录"
+    },
+    {
+      "name": "fieldwatch_signatures_restore_confirm",
+      "value": "恢复默认会清除所有自定义签名与编辑，确定继续吗？"
+    },
+    {
+      "name": "fieldwatch_signatures_empty",
+      "value": "没有匹配的签名"
+    },
+    {
+      "name": "fieldwatch_signatures_offline",
+      "value": "更新内置目录需要联网，且只在你主动点击时发起。"
+    },
+    {
+      "name": "fieldwatch_signatures_import_empty",
+      "value": "没有可导入的新签名"
+    },
+    {
+      "name": "fieldwatch_signatures_import_failed",
+      "value": "导入失败，目录未改变"
+    },
+    {
+      "name": "fieldwatch_signatures_updated",
+      "value": "目录已更新"
+    },
+    {
+      "name": "fieldwatch_signatures_update_failed",
+      "value": "更新失败，保留旧目录"
+    },
+    {
+      "name": "fieldwatch_signatures_export_done",
+      "value": "已导出到应用沙箱"
+    },
+    {
+      "name": "fieldwatch_signatures_share",
+      "value": "分享目录文件"
+    },
+    {
+      "name": "fieldwatch_signatures_no_rules",
+      "value": "无规则"
+    },
+    {
+      "name": "fieldwatch_signatures_detail_signatures",
+      "value": "命中签名"
+    },
+    {
+      "name": "fieldwatch_signatures_detail_decoded",
+      "value": "解码字段"
+    },
+    {
+      "name": "fieldwatch_signatures_create_from_device",
+      "value": "用此设备创建特征"
+    },
+    {
+      "name": "fieldwatch_editor_title_new",
+      "value": "新建特征"
+    },
+    {
+      "name": "fieldwatch_editor_title_edit",
+      "value": "编辑特征"
+    },
+    {
+      "name": "fieldwatch_editor_name",
+      "value": "名称"
+    },
+    {
+      "name": "fieldwatch_editor_category",
+      "value": "类别"
+    },
+    {
+      "name": "fieldwatch_editor_notes",
+      "value": "备注"
+    },
+    {
+      "name": "fieldwatch_editor_attention",
+      "value": "关注提示"
+    },
+    {
+      "name": "fieldwatch_editor_attention_hint",
+      "value": "非空时在实时标记并在详情显示"
+    },
+    {
+      "name": "fieldwatch_editor_match_any",
+      "value": "任一规则命中即可"
+    },
+    {
+      "name": "fieldwatch_editor_match_all",
+      "value": "全部规则都必须命中"
+    },
+    {
+      "name": "fieldwatch_editor_add_rule",
+      "value": "添加规则"
+    },
+    {
+      "name": "fieldwatch_editor_edit_rule",
+      "value": "编辑规则"
+    },
+    {
+      "name": "fieldwatch_editor_rule_kind",
+      "value": "规则类型"
+    },
+    {
+      "name": "fieldwatch_editor_rule_text",
+      "value": "匹配文本"
+    },
+    {
+      "name": "fieldwatch_editor_rule_company",
+      "value": "Company ID"
+    },
+    {
+      "name": "fieldwatch_editor_rule_prefix",
+      "value": "数据前缀（十六进制）"
+    },
+    {
+      "name": "fieldwatch_editor_radio",
+      "value": "无线电"
+    },
+    {
+      "name": "fieldwatch_editor_radio_any",
+      "value": "全部"
+    },
+    {
+      "name": "fieldwatch_editor_delete_rule",
+      "value": "删除规则"
+    },
+    {
+      "name": "fieldwatch_editor_decode_source",
+      "value": "解码来源"
+    },
+    {
+      "name": "fieldwatch_editor_decode_service",
+      "value": "Service UUID"
+    },
+    {
+      "name": "fieldwatch_editor_decode_include_company",
+      "value": "前置 Company ID"
+    },
+    {
+      "name": "fieldwatch_editor_add_field",
+      "value": "添加字段"
+    },
+    {
+      "name": "fieldwatch_editor_edit_field",
+      "value": "编辑字段"
+    },
+    {
+      "name": "fieldwatch_editor_field_id",
+      "value": "字段 ID"
+    },
+    {
+      "name": "fieldwatch_editor_field_label",
+      "value": "字段名称"
+    },
+    {
+      "name": "fieldwatch_editor_field_offset",
+      "value": "偏移"
+    },
+    {
+      "name": "fieldwatch_editor_field_length",
+      "value": "长度"
+    },
+    {
+      "name": "fieldwatch_editor_field_type",
+      "value": "类型"
+    },
+    {
+      "name": "fieldwatch_editor_field_endian",
+      "value": "字节序"
+    },
+    {
+      "name": "fieldwatch_editor_field_unit",
+      "value": "单位"
+    },
+    {
+      "name": "fieldwatch_editor_field_live",
+      "value": "显示在实时行"
+    },
+    {
+      "name": "fieldwatch_editor_save",
+      "value": "保存"
+    },
+    {
+      "name": "fieldwatch_editor_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "fieldwatch_editor_saved",
+      "value": "已保存"
+    },
+    {
+      "name": "fieldwatch_editor_save_failed",
+      "value": "保存失败"
+    },
+    {
+      "name": "fieldwatch_editor_invalid_name",
+      "value": "请填写名称"
+    },
+    {
+      "name": "fieldwatch_editor_invalid_rule",
+      "value": "规则内容不完整"
+    },
+    {
+      "name": "fieldwatch_editor_no_rules",
+      "value": "还没有规则，至少添加一条"
+    },
+    {
+      "name": "fieldwatch_editor_delete_field",
+      "value": "删除字段"
+    },
+    {
+      "name": "fieldwatch_editor_ok",
+      "value": "确定"
+    },
+    {
+      "name": "fieldwatch_editor_new_signature",
+      "value": "新建特征"
+    },
+    {
+      "name": "fieldwatch_editor_edit",
+      "value": "编辑"
+    },
+    {
+      "name": "fieldwatch_editor_decode_fields_hint",
+      "value": "字段按偏移和长度从载荷中读取。"
+    },
+    {
+      "name": "fieldwatch_editor_gate",
+      "value": "门控条件"
+    },
+    {
+      "name": "fieldwatch_editor_gate_op",
+      "value": "比较方式"
+    },
+    {
+      "name": "fieldwatch_editor_gate_value",
+      "value": "比较值（十六进制）"
+    },
+    {
+      "name": "fieldwatch_editor_gate_and",
+      "value": "追加条件（同时满足）"
+    },
+    {
+      "name": "fieldwatch_editor_gate_hint",
+      "value": "len 只比较载荷总长度；eq/neq/mask/nmask 按偏移与长度比较。"
+    },
+    {
+      "name": "fieldwatch_editor_named_values",
+      "value": "命名值"
+    },
+    {
+      "name": "fieldwatch_editor_named_key",
+      "value": "原始值"
+    },
+    {
+      "name": "fieldwatch_editor_named_label",
+      "value": "显示文本"
+    },
+    {
+      "name": "fieldwatch_editor_named_strong",
+      "value": "强提示"
+    },
+    {
+      "name": "fieldwatch_editor_named_note",
+      "value": "说明"
+    },
+    {
+      "name": "fieldwatch_editor_add_named",
+      "value": "添加命名值"
+    },
+    {
+      "name": "fieldwatch_editor_named_hint",
+      "value": "原始值是解码结果的十进制文本；命中后显示文本替代原值，强提示会使用更醒目的实时chip。"
+    },
+    {
+      "name": "fieldwatch_signatures_new",
+      "value": "新建特征"
+    },
+    {
+      "name": "fieldwatch_signatures_edit",
+      "value": "编辑"
+    },
+    {
+      "name": "fieldwatch_class_finder",
+      "value": "查找器标签"
+    },
+    {
+      "name": "fieldwatch_class_beacon",
+      "value": "零售信标"
+    },
+    {
+      "name": "fieldwatch_class_signage",
+      "value": "数字标牌"
+    },
+    {
+      "name": "fieldwatch_class_wearable",
+      "value": "可穿戴"
+    },
+    {
+      "name": "fieldwatch_class_surveillance",
+      "value": "监控"
+    },
+    {
+      "name": "fieldwatch_class_drone",
+      "value": "无人机"
+    },
+    {
+      "name": "fieldwatch_class_hacking",
+      "value": "渗透测试"
+    },
+    {
+      "name": "fieldwatch_class_law_enforcement",
+      "value": "公共安全"
+    },
+    {
+      "name": "fieldwatch_class_vehicle",
+      "value": "车辆"
+    },
+    {
+      "name": "fieldwatch_class_glasses",
+      "value": "智能眼镜"
+    },
+    {
+      "name": "fieldwatch_class_audio",
+      "value": "音频"
+    },
+    {
+      "name": "fieldwatch_class_camera",
+      "value": "摄像机"
+    },
+    {
+      "name": "fieldwatch_class_thermostat",
+      "value": "恒温器"
+    },
+    {
+      "name": "fieldwatch_class_lock",
+      "value": "门禁"
+    },
+    {
+      "name": "fieldwatch_class_health",
+      "value": "健康"
+    },
+    {
+      "name": "fieldwatch_class_home",
+      "value": "家庭 IoT"
+    },
+    {
+      "name": "fieldwatch_class_isp",
+      "value": "运营商 / 路由器"
+    },
+    {
+      "name": "fieldwatch_class_mesh",
+      "value": "网状网络"
+    },
+    {
+      "name": "fieldwatch_class_phone",
+      "value": "手机 / 电脑"
+    },
+    {
+      "name": "fieldwatch_class_other",
+      "value": "其他"
+    },
+    {
+      "name": "fieldwatch_catalog_status_builtin",
+      "value": "内置目录"
+    },
+    {
+      "name": "fieldwatch_catalog_status_updating",
+      "value": "正在更新"
+    },
+    {
+      "name": "fieldwatch_catalog_status_updated",
+      "value": "已更新"
+    },
+    {
+      "name": "fieldwatch_catalog_status_failed",
+      "value": "更新失败，保留旧目录"
+    },
+    {
+      "name": "fieldwatch_filter_min_rssi",
+      "value": "最小信号强度"
+    },
+    {
+      "name": "fieldwatch_filter_logic",
+      "value": "筛选逻辑"
+    },
+    {
+      "name": "fieldwatch_filter_and",
+      "value": "全部满足"
+    },
+    {
+      "name": "fieldwatch_filter_or",
+      "value": "任一满足"
+    },
+    {
+      "name": "fieldwatch_filter_attention_only",
+      "value": "仅需留意"
+    },
+    {
+      "name": "fieldwatch_filter_fresh_only",
+      "value": "仅刚出现"
+    },
+    {
+      "name": "fieldwatch_filter_cached_only",
+      "value": "仅早先出现"
+    },
+    {
+      "name": "fieldwatch_filter_category",
+      "value": "设备类别"
+    },
+    {
+      "name": "fieldwatch_filter_signature",
+      "value": "签名"
+    },
+    {
+      "name": "fieldwatch_filters_count",
+      "value": "当前显示"
+    },
+    {
+      "name": "fieldwatch_reports_current_sit",
+      "value": "当前会话"
+    },
+    {
+      "name": "fieldwatch_reports_saved_sits",
+      "value": "已保存会话"
+    },
+    {
+      "name": "fieldwatch_reports_start_sit",
+      "value": "开始会话"
+    },
+    {
+      "name": "fieldwatch_reports_finish_sit",
+      "value": "结束会话"
+    },
+    {
+      "name": "fieldwatch_reports_clear_logs",
+      "value": "清理本地日志"
+    },
+    {
+      "name": "fieldwatch_reports_no_sits",
+      "value": "还没有保存的会话"
+    },
+    {
+      "name": "fieldwatch_reports_no_data",
+      "value": "还没有可用于生成报告的数据"
+    },
+    {
+      "name": "fieldwatch_settings_display",
+      "value": "显示"
+    },
+    {
+      "name": "fieldwatch_settings_location",
+      "value": "位置与隐私"
+    },
+    {
+      "name": "fieldwatch_settings_data",
+      "value": "数据"
+    },
+    {
+      "name": "fieldwatch_settings_pause",
+      "value": "暂停实时显示"
+    },
+    {
+      "name": "fieldwatch_settings_location_tagging",
+      "value": "记录手机听到设备的位置"
+    },
+    {
+      "name": "fieldwatch_settings_privacy_mode",
+      "value": "隐私模式"
+    },
+    {
+      "name": "fieldwatch_settings_keep_screen_on",
+      "value": "屏幕常亮"
+    },
+    {
+      "name": "fieldwatch_settings_observation_count",
+      "value": "本地观测数量"
+    },
+    {
+      "name": "fieldwatch_settings_saved_sits",
+      "value": "已保存会话"
+    },
+    {
+      "name": "fieldwatch_settings_status",
+      "value": "Wi-Fi 状态"
+    },
+    {
+      "name": "fieldwatch_settings_last_success",
+      "value": "最近成功扫描"
+    },
+    {
+      "name": "fieldwatch_settings_next_attempt",
+      "value": "下一次尝试"
+    },
+    {
+      "name": "fieldwatch_settings_retry",
+      "value": "立即重试"
+    },
+    {
+      "name": "fieldwatch_settings_enabled",
+      "value": "已开启"
+    },
+    {
+      "name": "fieldwatch_settings_disabled",
+      "value": "已关闭"
+    },
+    {
+      "name": "fieldwatch_settings_none",
+      "value": "无"
+    },
+    {
+      "name": "fieldwatch_filter_travel_status",
+      "value": "目前 GPS 轨迹 %s 米。继续移动（约 50 米）才能启用同行判定。"
+    },
+    {
+      "name": "fieldwatch_preset_strong",
+      "value": "强信号"
+    },
+    {
+      "name": "fieldwatch_preset_all",
+      "value": "全部信号"
+    },
+    {
+      "name": "fieldwatch_filter_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "fieldwatch_filter_delete",
+      "value": "删除"
+    },
+    {
+      "name": "fieldwatch_filter_delete_preset_title",
+      "value": "删除预设？"
+    },
+    {
+      "name": "fieldwatch_filter_reset_body",
+      "value": "清空本页的每个开关与选择（信号类型、类别、已选特征、RSSI、名称/OUI）。你自己保存的预设会保留。"
+    },
+    {
+      "name": "fieldwatch_filter_reset_title",
+      "value": "重置筛选？"
+    },
+    {
+      "name": "fieldwatch_filter_reset",
+      "value": "重置筛选"
+    },
+    {
+      "name": "fieldwatch_filter_logic_hint",
+      "value": "「且 / 或」作用于名称、OUI、RSSI 与类别包含 —— 不作用于信号类型、「仅已命名信号源」、「仅关注的」或「隐藏 Fast Pair 账号密钥」。"
+    },
+    {
+      "name": "fieldwatch_filter_extra_logic",
+      "value": "额外筛选逻辑"
+    },
+    {
+      "name": "fieldwatch_filter_oui_contains",
+      "value": "OUI / 厂商包含"
+    },
+    {
+      "name": "fieldwatch_filter_name_contains",
+      "value": "名称 / MAC 包含"
+    },
+    {
+      "name": "fieldwatch_filter_rssi_min",
+      "value": "最低 RSSI"
+    },
+    {
+      "name": "fieldwatch_filter_fine",
+      "value": "精细筛选"
+    },
+    {
+      "name": "fieldwatch_filter_selected_hint",
+      "value": "在「特征库」里逐个开启。列表为空时不生效。关掉再打开不会丢失你的选择。"
+    },
+    {
+      "name": "fieldwatch_filter_hide_selected",
+      "value": "隐藏选中的特征"
+    },
+    {
+      "name": "fieldwatch_filter_show_selected",
+      "value": "仅显示选中的特征"
+    },
+    {
+      "name": "fieldwatch_filter_selected_signatures",
+      "value": "已选特征"
+    },
+    {
+      "name": "fieldwatch_filter_class_hide_these",
+      "value": "隐藏这些"
+    },
+    {
+      "name": "fieldwatch_filter_class_show_only",
+      "value": "仅显示"
+    },
+    {
+      "name": "fieldwatch_filter_classes_hint",
+      "value": "仅影响实时 —— 特征仍会标记、记录并可蜂鸣。「仅显示」未选任何类别时，实时不会有变化。"
+    },
+    {
+      "name": "fieldwatch_filter_classes",
+      "value": "特征分类"
+    },
+    {
+      "name": "fieldwatch_filter_fastpair_hint",
+      "value": "广场噪声：已配对、且没有其它特征可识别的 Fast Pair 芯片。保留配对模式。"
+    },
+    {
+      "name": "fieldwatch_filter_named_hint",
+      "value": "随机 / 隐私 MAC 不会跟随地址轮换。"
+    },
+    {
+      "name": "fieldwatch_filter_watched_hint",
+      "value": "只显示匹配了已关注特征、或开启了提醒的已命名信号源。"
+    },
+    {
+      "name": "fieldwatch_filter_signatures_only_hint",
+      "value": "只显示命中了特征库条目的信号源。"
+    },
+    {
+      "name": "fieldwatch_filter_hide_fastpair",
+      "value": "隐藏 Fast Pair 账号密钥"
+    },
+    {
+      "name": "fieldwatch_filter_named_radios_only",
+      "value": "仅已命名信号源"
+    },
+    {
+      "name": "fieldwatch_filter_watched_only",
+      "value": "仅关注的"
+    },
+    {
+      "name": "fieldwatch_filter_signatures_only",
+      "value": "仅已识别设备"
+    },
+    {
+      "name": "fieldwatch_filter_who_stays",
+      "value": "长时间在附近"
+    },
+    {
+      "name": "fieldwatch_filter_new_hint",
+      "value": "隐藏已经出现过的信号源，让实时上只显示新的。随机化 BLE 地址看起来都是新的。"
+    },
+    {
+      "name": "fieldwatch_filter_new_only",
+      "value": "仅新发现"
+    },
+    {
+      "name": "fieldwatch_filter_new_detections",
+      "value": "刚出现的"
+    },
+    {
+      "name": "fieldwatch_filter_moving_hint",
+      "value": "打开 设置 → 记录手机听到设备的位置，然后步行或驾车移动。只有一路跟着你、且信号足够强的 BLE 广播源才会留下。也可以直接点上面的「与你同行」预设。"
+    },
+    {
+      "name": "fieldwatch_filter_moving_with_you",
+      "value": "与你同行"
+    },
+    {
+      "name": "fieldwatch_filter_ble_only",
+      "value": "仅 BLE"
+    },
+    {
+      "name": "fieldwatch_filter_wifi_only",
+      "value": "仅 Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_filter_both",
+      "value": "全部"
+    },
+    {
+      "name": "fieldwatch_filter_radios_hint",
+      "value": "这些是包含式开关。三个都打开可同时看到 Wi-Fi、BLE 与星闪。同一台设备只属于其中一种。"
+    },
+    {
+      "name": "fieldwatch_filter_radios",
+      "value": "信号种类"
+    },
+    {
+      "name": "fieldwatch_filter_save",
+      "value": "保存"
+    },
+    {
+      "name": "fieldwatch_filter_save_as",
+      "value": "将当前保存为…"
+    },
+    {
+      "name": "fieldwatch_filter_presets_hint",
+      "value": "点按可替换整个筛选。长按可删除。内置自带一小批；「将当前保存为…」可添加你自己的。你删除的内置预设可通过「特征库 → 更多 → 恢复默认目录」找回。"
+    },
+    {
+      "name": "fieldwatch_filter_presets",
+      "value": "预设"
+    },
+    {
+      "name": "fieldwatch_class_fleet_unit",
+      "value": "个特征"
+    },
+    {
+      "name": "fieldwatch_tab_signatures",
+      "value": "特征库"
+    },
+    {
+      "name": "fieldwatch_signatures_export_failed",
+      "value": "导出失败，目录未写出"
+    },
+    {
+      "name": "fieldwatch_signatures_import_file",
+      "value": "从文件导入"
+    },
+    {
+      "name": "fieldwatch_signatures_export_file",
+      "value": "导出到文件"
+    },
+    {
+      "name": "fieldwatch_filter_preset_load",
+      "value": "载入"
+    },
+    {
+      "name": "fieldwatch_filter_preset_empty",
+      "value": "还没有预设"
+    },
+    {
+      "name": "fieldwatch_filter_preset_name",
+      "value": "预设名称"
+    },
+    {
+      "name": "fieldwatch_settings_watchlist_remove",
+      "value": "移除"
+    },
+    {
+      "name": "fieldwatch_settings_watchlist_empty",
+      "value": "关注列表为空"
+    },
+    {
+      "name": "fieldwatch_settings_watchlist",
+      "value": "关注列表"
+    },
+    {
+      "name": "fieldwatch_filter_preset_default",
+      "value": "载入默认预设"
+    },
+    {
+      "name": "fieldwatch_filter_preset_delete",
+      "value": "删除预设"
+    },
+    {
+      "name": "fieldwatch_filter_named_only",
+      "value": "仅已命名设备"
+    },
+    {
+      "name": "fieldwatch_signatures_seed_none",
+      "value": "没有新的内置关注项"
+    },
+    {
+      "name": "fieldwatch_signatures_seed_done",
+      "value": "已添加 %s 个关注项"
+    },
+    {
+      "name": "fieldwatch_signatures_seed_watch",
+      "value": "添加内置关注项"
+    },
+    {
+      "name": "fieldwatch_signatures_sort_class",
+      "value": "按类别"
+    },
+    {
+      "name": "fieldwatch_signatures_sort_name",
+      "value": "按名称"
+    },
+    {
+      "name": "fieldwatch_hunt_title",
+      "value": "寻线"
+    },
+    {
+      "name": "fieldwatch_hunt_start",
+      "value": "开始寻线"
+    },
+    {
+      "name": "fieldwatch_hunt_stop",
+      "value": "停止寻线"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_very_close",
+      "value": "非常近"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_closer",
+      "value": "更近了"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_further",
+      "value": "更远了"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_same",
+      "value": "基本没变"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_waiting",
+      "value": "正在聆听…"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_quiet",
+      "value": "安静"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_gone",
+      "value": "已消失"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_very_close",
+      "value": "这里信号极强。多半就在手上、口袋或同一个包里，不是几米外。"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_closer",
+      "value": "比几秒前更强。继续朝这个方向走。"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_further",
+      "value": "比几秒前更弱。转身或退回。"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_same",
+      "value": "还没有明显变化。放慢脚步，保持设备不动。"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_waiting",
+      "value": "需要几秒的数据包才能比较。"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_quiet",
+      "value": "几秒没有收到数据包。可能是静默，也可能被墙挡住。"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_gone",
+      "value": "目标已离开实时集合。随机地址设备常在搜寻途中消失。"
+    },
+    {
+      "name": "fieldwatch_hunt_current",
+      "value": "当前"
+    },
+    {
+      "name": "fieldwatch_hunt_peak",
+      "value": "峰值"
+    },
+    {
+      "name": "fieldwatch_hunt_range",
+      "value": "区间"
+    },
+    {
+      "name": "fieldwatch_hunt_samples",
+      "value": "样本"
+    },
+    {
+      "name": "fieldwatch_hunt_average",
+      "value": "均值"
+    },
+    {
+      "name": "fieldwatch_hunt_tick",
+      "value": "触感节拍"
+    },
+    {
+      "name": "fieldwatch_hunt_tick_unavailable",
+      "value": "此设备不支持触感节拍，已降级为纯视觉反馈。"
+    },
+    {
+      "name": "fieldwatch_hunt_disclaimer",
+      "value": "寻线只比较信号强弱，不提供方向，也不是测向仪。"
+    },
+    {
+      "name": "fieldwatch_hunt_none",
+      "value": "未在搜寻"
+    },
+    {
+      "name": "fieldwatch_hunt_na",
+      "value": "不可用"
+    },
+    {
+      "name": "fieldwatch_signatures_unwatch",
+      "value": "取消关注该签名"
+    },
+    {
+      "name": "fieldwatch_signatures_watch",
+      "value": "关注该签名"
+    },
+    {
+      "name": "fieldwatch_signatures_hits",
+      "value": "命中 %s 台"
+    },
+    {
+      "name": "fieldwatch_detail_signature_reason",
+      "value": "签名依据"
+    },
+    {
+      "name": "fieldwatch_filter_located_only",
+      "value": "仅含位置"
+    },
+    {
+      "name": "fieldwatch_filter_decoded_only",
+      "value": "仅含解码值"
+    },
+    {
+      "name": "fieldwatch_filter_matched_only",
+      "value": "仅已识别"
+    },
+    {
+      "name": "fieldwatch_sit_default_name",
+      "value": "现场观测"
+    },
+    {
+      "name": "fieldwatch_sit_active",
+      "value": "进行中"
+    },
+    {
+      "name": "fieldwatch_sit_finished",
+      "value": "已结束"
+    },
+    {
+      "name": "fieldwatch_reports_export_pending",
+      "value": "导出功能待接入系统文件与分享能力"
+    },
+    {
+      "name": "fieldwatch_reports_pdf_pending",
+      "value": "PDF 在 API26 能力验证前保持待验证"
+    },
+    {
+      "name": "fieldwatch_settings_scan_current",
+      "value": "当前扫描强度"
+    },
+    {
+      "name": "fieldwatch_report_export_csv",
+      "value": "分享 CSV"
+    },
+    {
+      "name": "fieldwatch_report_export_jsonl",
+      "value": "分享 JSONL"
+    },
+    {
+      "name": "fieldwatch_detail_watch",
+      "value": "加入关注"
+    },
+    {
+      "name": "fieldwatch_detail_unwatch",
+      "value": "取消关注"
+    },
+    {
+      "name": "fieldwatch_detail_share",
+      "value": "分享设备信息"
+    },
+    {
+      "name": "fieldwatch_report_debrief_share",
+      "value": "分享 Debrief"
+    },
+    {
+      "name": "fieldwatch_report_export_gpx",
+      "value": "分享 GPX"
+    },
+    {
+      "name": "fieldwatch_report_export_kml",
+      "value": "分享 KML"
+    },
+    {
+      "name": "fieldwatch_report_export_wigle",
+      "value": "分享 WiGLE"
+    },
+    {
+      "name": "fieldwatch_reports_delete_sit",
+      "value": "删除会话"
+    },
+    {
+      "name": "fieldwatch_report_save_csv",
+      "value": "保存 CSV 到本地"
+    },
+    {
+      "name": "fieldwatch_report_save_jsonl",
+      "value": "保存 JSONL 到本地"
+    },
+    {
+      "name": "fieldwatch_settings_backup",
+      "value": "保存设置备份"
+    },
+    {
+      "name": "fieldwatch_settings_restore",
+      "value": "恢复设置备份"
+    },
+    {
+      "name": "fieldwatch_local_file_hint",
+      "value": "文件保存在应用本地沙箱，公共文件夹另存为待验证"
+    },
+    {
+      "name": "fieldwatch_settings_backup_result",
+      "value": "设置备份已保存"
+    },
+    {
+      "name": "fieldwatch_settings_catalog_status",
+      "value": "目录版本"
+    },
+    {
+      "name": "fieldwatch_settings_watch_notifications",
+      "value": "关注目标通知"
+    },
+    {
+      "name": "fieldwatch_settings_notifications_hint",
+      "value": "仅在关注设备首次出现时发送系统通知"
+    },
+    {
+      "name": "fieldwatch_notification_title",
+      "value": "电波足迹"
+    },
+    {
+      "name": "fieldwatch_notification_watched",
+      "value": "关注设备出现"
+    },
+    {
+      "name": "fieldwatch_settings_background_scanning",
+      "value": "后台保持被动扫描"
+    },
+    {
+      "name": "fieldwatch_settings_background_hint",
+      "value": "需要系统允许后台运行；默认关闭，扫描仍保持被动监听"
+    },
+    {
+      "name": "fieldwatch_filter_class_finder",
+      "value": "定位器"
+    },
+    {
+      "name": "fieldwatch_filter_class_beacon",
+      "value": "信标"
+    },
+    {
+      "name": "fieldwatch_filter_class_drone",
+      "value": "无人机"
+    },
+    {
+      "name": "fieldwatch_filter_class_router",
+      "value": "路由器"
+    },
+    {
+      "name": "fieldwatch_filter_save_preset",
+      "value": "保存筛选预设"
+    },
+    {
+      "name": "fieldwatch_filter_restore_preset",
+      "value": "恢复筛选预设"
+    },
+    {
+      "name": "fieldwatch_settings_retry_countdown",
+      "value": "将在 %s 秒后重试"
+    },
+    {
+      "name": "fieldwatch_settings_theme",
+      "value": "外观主题"
+    },
+    {
+      "name": "fieldwatch_settings_theme_auto",
+      "value": "跟随系统"
+    },
+    {
+      "name": "fieldwatch_settings_theme_light",
+      "value": "浅色"
+    },
+    {
+      "name": "fieldwatch_settings_theme_dark",
+      "value": "深色"
+    },
+    {
+      "name": "fieldwatch_reports_sits",
+      "value": "会话"
+    },
+    {
+      "name": "fieldwatch_reports_sits_hint",
+      "value": "一段会话就是一次命名过的采集：从你点开始、到点结束之间听到的信号源。"
+    },
+    {
+      "name": "fieldwatch_reports_sit_running",
+      "value": "进行中：%s"
+    },
+    {
+      "name": "fieldwatch_reports_no_sit_running",
+      "value": "没有进行中的会话。点「开始会话」建立一段。"
+    },
+    {
+      "name": "fieldwatch_reports_start_hint",
+      "value": "「复盘」与「AI 导出」会使用这个时间窗，直到你结束它。实时列表不受影响。"
+    },
+    {
+      "name": "fieldwatch_reports_sit_default_name",
+      "value": "会话"
+    },
+    {
+      "name": "fieldwatch_reports_start",
+      "value": "开始"
+    },
+    {
+      "name": "fieldwatch_reports_rename",
+      "value": "重命名"
+    },
+    {
+      "name": "fieldwatch_reports_rename_sit",
+      "value": "重命名会话"
+    },
+    {
+      "name": "fieldwatch_reports_delete_sit_title",
+      "value": "删除这个会话？"
+    },
+    {
+      "name": "fieldwatch_reports_delete_all_sits",
+      "value": "删除全部会话"
+    },
+    {
+      "name": "fieldwatch_reports_delete_all_hint",
+      "value": "从本机移除已保存的观测。进行中的观测不会被删除。日志不变。"
+    },
+    {
+      "name": "fieldwatch_reports_sit_report",
+      "value": "会话小结"
+    },
+    {
+      "name": "fieldwatch_reports_sit_report_hint",
+      "value": "小结使用与「轨迹」相同的时间窗。"
+    },
+    {
+      "name": "fieldwatch_reports_show_unmatched",
+      "value": "显示未匹配的轮换 BLE"
+    },
+    {
+      "name": "fieldwatch_reports_show_unmatched_hint",
+      "value": "关闭（默认）：复盘清单会跳过未匹配的随机 BLE。计数仍包含它们。"
+    },
+    {
+      "name": "fieldwatch_reports_located",
+      "value": "带定位的观测"
+    },
+    {
+      "name": "fieldwatch_reports_export",
+      "value": "观测导出"
+    },
+    {
+      "name": "fieldwatch_reports_export_hint",
+      "value": "本次观测中每台唯一信号源一行。"
+    },
+    {
+      "name": "fieldwatch_reports_compare",
+      "value": "对比观测"
+    },
+    {
+      "name": "fieldwatch_reports_compare_hint",
+      "value": "保存第二段观测以便对比。先「开始观测」，再「结束观测」。"
+    },
+    {
+      "name": "fieldwatch_reports_catalog",
+      "value": "特征目录"
+    },
+    {
+      "name": "fieldwatch_reports_catalog_hint",
+      "value": "本次记录里未识别、但多次出现的信号源——它们可能是新的特征。"
+    },
+    {
+      "name": "fieldwatch_reports_candidates",
+      "value": "候选特征"
+    },
+    {
+      "name": "fieldwatch_reports_log_export",
+      "value": "记录导出"
+    },
+    {
+      "name": "fieldwatch_reports_log_hint",
+      "value": "轮转文件是 JSON 行格式。"
+    },
+    {
+      "name": "fieldwatch_reports_session_rows",
+      "value": "本次会话行数"
+    },
+    {
+      "name": "fieldwatch_reports_clear_title",
+      "value": "清空日志？"
+    },
+    {
+      "name": "fieldwatch_reports_clear_hint",
+      "value": "这会删除本机上的全部轮转记录，无法撤销。"
+    },
+    {
+      "name": "fieldwatch_reports_path",
+      "value": "轨迹"
+    },
+    {
+      "name": "fieldwatch_reports_path_hint",
+      "value": "北向上。线是本机轨迹。灰点是起点，蓝点是当前位置。绿点=已识别特征，琥珀点=未匹配。"
+    },
+    {
+      "name": "fieldwatch_reports_path_status",
+      "value": "本机轨迹 %s 米 · 带定位信号源 %d 台"
+    },
+    {
+      "name": "fieldwatch_reports_path_empty",
+      "value": "还没有轨迹。打开 设置 → 记录手机听到设备的位置，然后走动。"
+    },
+    {
+      "name": "fieldwatch_reports_ai_export",
+      "value": "文本导出"
+    },
+    {
+      "name": "fieldwatch_signatures_save_downloads",
+      "value": "存到下载目录"
+    },
+    {
+      "name": "fieldwatch_reports_debrief_pdf",
+      "value": "复盘（PDF）"
+    },
+    {
+      "name": "fieldwatch_reports_pdf_ok",
+      "value": "已生成 %s"
+    },
+    {
+      "name": "fieldwatch_reports_pdf_failed",
+      "value": "生成 PDF 失败：设备可能不支持 PDFKit，或没有可写路径。"
+    },
+    {
+      "name": "fieldwatch_reports_compare_pdf",
+      "value": "对比（PDF）"
+    },
+    {
+      "name": "fieldwatch_reports_share",
+      "value": "分享"
+    },
+    {
+      "name": "fieldwatch_reports_save_ok",
+      "value": "已保存到你选择的位置。"
+    },
+    {
+      "name": "fieldwatch_reports_format",
+      "value": "格式"
+    },
+    {
+      "name": "fieldwatch_reports_save_file",
+      "value": "保存到文件…"
+    },
+    {
+      "name": "fieldwatch_reports_radios",
+      "value": "信号源"
+    },
+    {
+      "name": "fieldwatch_reports_save_cancel",
+      "value": "已取消，或选择器未返回位置。"
+    },
+    {
+      "name": "fieldwatch_reports_no_candidates",
+      "value": "没有候选。未匹配的信号源要么是随机的，要么是家用 SSID，要么没有可聚类的唯一 ID。"
+    },
+    {
+      "name": "fieldwatch_reports_add_candidate",
+      "value": "添加到目录"
+    },
+    {
+      "name": "fieldwatch_signatures_more",
+      "value": "更多"
+    },
+    {
+      "name": "fieldwatch_signatures_sort_prefix",
+      "value": "排序："
+    },
+    {
+      "name": "fieldwatch_signatures_stats",
+      "value": "显示"
+    },
+    {
+      "name": "fieldwatch_onb_welcome_title",
+      "value": "欢迎使用 电波足迹"
+    },
+    {
+      "name": "fieldwatch_onb_welcome_body",
+      "value": "这是一个只接收的被动监听工具，用来看清你周围的无线信号：谁在广播、叫什么、属于哪一类。它不连接、不注入、不上传。"
+    },
+    {
+      "name": "fieldwatch_onb_p1_title",
+      "value": "只接收，不连接"
+    },
+    {
+      "name": "fieldwatch_onb_p1_body",
+      "value": "永远只监听广播，不会连接、配对、注入或干扰任何设备。"
+    },
+    {
+      "name": "fieldwatch_onb_p2_title",
+      "value": "完全离线"
+    },
+    {
+      "name": "fieldwatch_onb_p2_body",
+      "value": "默认不联网。只有你在「特征库 → 更多」里主动点「更新内置目录」时才会访问网络。"
+    },
+    {
+      "name": "fieldwatch_onb_p3_title",
+      "value": "不授权也能用"
+    },
+    {
+      "name": "fieldwatch_onb_p3_body",
+      "value": "特征库、Wi-Fi 扫描、日志浏览、报告导出、设置都不需要你授权。"
+    },
+    {
+      "name": "fieldwatch_onb_baseline_title",
+      "value": "不授予任何权限也能用"
+    },
+    {
+      "name": "fieldwatch_onb_baseline_body",
+      "value": "下面这些功能完全不需要权限，随时可用："
+    },
+    {
+      "name": "fieldwatch_baseline_catalog",
+      "value": "特征库：查看、搜索、编辑、导入导出签名"
+    },
+    {
+      "name": "fieldwatch_baseline_log",
+      "value": "观测记录：浏览已经保存的观测与日志"
+    },
+    {
+      "name": "fieldwatch_baseline_report",
+      "value": "报告：复盘、对比、AI 导出（基于已有数据）"
+    },
+    {
+      "name": "fieldwatch_baseline_settings",
+      "value": "设置：主题、语言、隐私模式、通知与语音、日志等级"
+    },
+    {
+      "name": "fieldwatch_onb_baseline_hint",
+      "value": "上面这些都不需要授权。「设备发现和连接」用来接收广播，可以在 设置 → 权限 里随时开启。"
+    },
+    {
+      "name": "fieldwatch_onb_perm_title",
+      "value": "关于权限"
+    },
+    {
+      "name": "fieldwatch_onb_perm_body",
+      "value": "只有「设备发现和连接」和「位置」需要你授权，并且一次只申请一条。Wi-Fi 扫描由系统自动授予，不需要你操作。"
+    },
+    {
+      "name": "fieldwatch_perm_ble_title",
+      "value": "设备发现和连接"
+    },
+    {
+      "name": "fieldwatch_perm_ble_why",
+      "value": "用来接收附近蓝牙低功耗（BLE）与星闪设备的广播（耳机、手环、追踪器、信标等）。只读取广播内容，不建立连接、不配对。"
+    },
+    {
+      "name": "fieldwatch_perm_ble_feature",
+      "value": "支撑：实时页的 BLE 与星闪信号源、与你同行判定、关注提醒、设备类型识别。"
+    },
+    {
+      "name": "fieldwatch_perm_ble_denied",
+      "value": "拒绝后：无法接收 BLE 与星闪广播，实时页只能看到 Wi-Fi 接入点。"
+    },
+    {
+      "name": "fieldwatch_perm_wifi_title",
+      "value": "Wi-Fi 扫描"
+    },
+    {
+      "name": "fieldwatch_perm_wifi_why",
+      "value": "用来列出周围的 Wi-Fi 接入点与它们的名称、频段、信号强度。不会连接任何网络。"
+    },
+    {
+      "name": "fieldwatch_perm_wifi_feature",
+      "value": "支撑：实时页的 Wi-Fi 信号源、接入点分类、按 OUI 归属厂商。"
+    },
+    {
+      "name": "fieldwatch_perm_wifi_denied",
+      "value": "拒绝后：无法扫描 Wi-Fi 接入点。"
+    },
+    {
+      "name": "fieldwatch_perm_loc_title",
+      "value": "位置"
+    },
+    {
+      "name": "fieldwatch_perm_loc_why",
+      "value": "只在你打开「记录手机听到设备的位置」后使用，用来给观测打上位置标记，并绘制本机轨迹。不会后台定位。"
+    },
+    {
+      "name": "fieldwatch_perm_loc_feature",
+      "value": "支撑：轨迹画布、带定位的观测、与你同行判定。"
+    },
+    {
+      "name": "fieldwatch_perm_loc_denied",
+      "value": "拒绝后：观测不带位置，轨迹为空。"
+    },
+    {
+      "name": "fieldwatch_perm_net_title",
+      "value": "网络"
+    },
+    {
+      "name": "fieldwatch_perm_net_why",
+      "value": "只在你在「特征库 → 更多」里主动点「更新内置目录」时使用，用来下载最新的签名目录。App 不会在后台联网。"
+    },
+    {
+      "name": "fieldwatch_perm_net_feature",
+      "value": "支撑：更新内置签名目录。"
+    },
+    {
+      "name": "fieldwatch_perm_net_denied",
+      "value": "拒绝后：无法更新内置签名目录。"
+    },
+    {
+      "name": "fieldwatch_onb_allow",
+      "value": "允许"
+    },
+    {
+      "name": "fieldwatch_onb_allowed",
+      "value": "已允许"
+    },
+    {
+      "name": "fieldwatch_onb_later",
+      "value": "先用基础功能"
+    },
+    {
+      "name": "fieldwatch_onb_enter",
+      "value": "开始使用"
+    },
+    {
+      "name": "fieldwatch_onb_next",
+      "value": "继续"
+    },
+    {
+      "name": "fieldwatch_onb_back",
+      "value": "上一步"
+    },
+    {
+      "name": "fieldwatch_restricted_title",
+      "value": "部分扫描权限未开启"
+    },
+    {
+      "name": "fieldwatch_restricted_body",
+      "value": "接收 BLE 与星闪广播需要在系统设置里开启「设备发现和连接」。我们不会自动弹出授权窗口 —— 你点了下面的按钮才会申请。"
+    },
+    {
+      "name": "fieldwatch_restricted_baseline",
+      "value": "Wi-Fi 扫描不需要授权，始终可用；特征库、观测记录、报告导出、设置也都正常。"
+    },
+    {
+      "name": "fieldwatch_restricted_enable_ble",
+      "value": "申请「设备发现和连接」"
+    },
+    {
+      "name": "fieldwatch_restricted_enable_wifi",
+      "value": "开启 Wi-Fi 扫描"
+    },
+    {
+      "name": "fieldwatch_settings_permissions",
+      "value": "权限"
+    },
+    {
+      "name": "fieldwatch_settings_permissions_hint",
+      "value": "只有「设备发现和连接」和「位置」需要你授权，名称与系统设置里完全一致。Wi-Fi 扫描由系统自动授予，不需要你操作。"
+    },
+    {
+      "name": "fieldwatch_settings_replay_onboarding",
+      "value": "重看启动引导"
+    },
+    {
+      "name": "fieldwatch_missing_title",
+      "value": "有权限尚未授予"
+    },
+    {
+      "name": "fieldwatch_missing_body",
+      "value": "缺少「%s」。它对应系统设置里的同名项目，授予后即可接收 BLE 广播。"
+    },
+    {
+      "name": "fieldwatch_missing_later",
+      "value": "暂不授予"
+    },
+    {
+      "name": "fieldwatch_missing_grant",
+      "value": "去授予"
+    },
+    {
+      "name": "fieldwatch_mode_prefix",
+      "value": "当前工作模式："
+    },
+    {
+      "name": "fieldwatch_mode_suffix",
+      "value": "模式"
+    },
+    {
+      "name": "fieldwatch_detail_title",
+      "value": "设备详情"
+    },
+    {
+      "name": "fieldwatch_detail_ai_export",
+      "value": "AI 导出"
+    },
+    {
+      "name": "fieldwatch_detail_share_text",
+      "value": "以文本分享"
+    },
+    {
+      "name": "fieldwatch_detail_no_broadcast_name",
+      "value": "无广播名称"
+    },
+    {
+      "name": "fieldwatch_detail_rssi_note",
+      "value": "越接近 0 dBm 表示此处越强，不代表距离。"
+    },
+    {
+      "name": "fieldwatch_detail_session_range",
+      "value": "本次会话听到的强度范围"
+    },
+    {
+      "name": "fieldwatch_detail_channel_freq",
+      "value": "信道 / 频率"
+    },
+    {
+      "name": "fieldwatch_detail_wifi_generation",
+      "value": "Wi-Fi 代际"
+    },
+    {
+      "name": "fieldwatch_detail_center_freq",
+      "value": "中心频率"
+    },
+    {
+      "name": "fieldwatch_detail_connectable",
+      "value": "可连接"
+    },
+    {
+      "name": "fieldwatch_detail_connectable_yes",
+      "value": "是 —— 手机可以建立 BLE 连接"
+    },
+    {
+      "name": "fieldwatch_detail_connectable_no",
+      "value": "否 —— 只广播（能听到，但这次扫描无法加入）"
+    },
+    {
+      "name": "fieldwatch_detail_discoverability",
+      "value": "可发现性"
+    },
+    {
+      "name": "fieldwatch_detail_flags_raw",
+      "value": "标志位（原始）"
+    },
+    {
+      "name": "fieldwatch_detail_device_class",
+      "value": "经典蓝牙类别"
+    },
+    {
+      "name": "fieldwatch_detail_phy_unavailable",
+      "value": "物理层（PHY）与广播间隔由平台决定，鸿蒙的扫描结果不提供这两项，因此不显示。"
+    },
+    {
+      "name": "fieldwatch_detail_capability_string",
+      "value": "能力串"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_ssid_yes",
+      "value": "隐藏 —— 它在广播但不公布网络名"
+    },
+    {
+      "name": "fieldwatch_detail_company_id",
+      "value": "蓝牙公司 %x"
+    },
+    {
+      "name": "fieldwatch_detail_company_note",
+      "value": "该 ID 由蓝牙技术联盟分配，承载于厂商自定义数据中。"
+    },
+    {
+      "name": "fieldwatch_detail_raw_payload",
+      "value": "原始载荷（%s 字节）"
+    },
+    {
+      "name": "fieldwatch_detail_first_seen",
+      "value": "首次出现"
+    },
+    {
+      "name": "fieldwatch_detail_last_seen",
+      "value": "最后出现"
+    },
+    {
+      "name": "fieldwatch_detail_hits",
+      "value": "命中次数"
+    },
+    {
+      "name": "fieldwatch_detail_last_fix",
+      "value": "最后定位"
+    },
+    {
+      "name": "fieldwatch_detail_last_fix_note",
+      "value": "最后定位是听到它时手机的位置，不是这台信号源的位置。"
+    },
+    {
+      "name": "fieldwatch_detail_matched",
+      "value": "匹配的特征"
+    },
+    {
+      "name": "fieldwatch_detail_raw_adv",
+      "value": "原始广播"
+    },
+    {
+      "name": "fieldwatch_detail_signature_note",
+      "value": "匹配到特征 %s。第二条特征仍可能同时标记这台无线电（服务 UUID、产品 OUI）。"
+    },
+    {
+      "name": "fieldwatch_detail_marked",
+      "value": "已标记"
+    },
+    {
+      "name": "fieldwatch_detail_unmarked",
+      "value": "未标记"
+    },
+    {
+      "name": "fieldwatch_detail_footer",
+      "value": "详情来自设备自己的广播内容，不是视觉识别，也不代表身份。"
+    },
+    {
+      "name": "fieldwatch_detail_unlisted",
+      "value": "不在蓝牙公司列表里"
+    },
+    {
+      "name": "fieldwatch_detail_unlisted_appearance",
+      "value": "未列出的 Appearance"
+    },
+    {
+      "name": "fieldwatch_detail_presence_none",
+      "value": "15 分钟内没有记录到在场区间。"
+    },
+    {
+      "name": "fieldwatch_detail_presence_now",
+      "value": "现在"
+    },
+    {
+      "name": "fieldwatch_detail_vendor_ieee",
+      "value": "IEEE 板卡／芯片厂商: %s (%o)。这是 MAC 前缀的持有者，不一定是产品品牌。"
+    },
+    {
+      "name": "fieldwatch_detail_vendor_company",
+      "value": "广播中的蓝牙公司: %s (%x)。"
+    },
+    {
+      "name": "fieldwatch_detail_vendor_none",
+      "value": "没有可用的厂商信息。"
+    },
+    {
+      "name": "fieldwatch_sec_appearance",
+      "value": "外观"
+    },
+    {
+      "name": "fieldwatch_sec_trend",
+      "value": "信号趋势"
+    },
+    {
+      "name": "fieldwatch_sec_presence",
+      "value": "在场情况（15 分钟）"
+    },
+    {
+      "name": "fieldwatch_sec_services",
+      "value": "它提供的服务"
+    },
+    {
+      "name": "fieldwatch_radio_kind_ble",
+      "value": "蓝牙低功耗广播源"
+    },
+    {
+      "name": "fieldwatch_radio_kind_wifi_ap",
+      "value": "Wi-Fi 接入点（在广播网络）"
+    },
+    {
+      "name": "fieldwatch_radio_kind_nearlink",
+      "value": "星闪广播源"
+    },
+    {
+      "name": "fieldwatch_rail_collapse",
+      "value": "收起"
+    },
+    {
+      "name": "fieldwatch_brand_unknown",
+      "value": "未知品牌"
+    },
+    {
+      "name": "fieldwatch_class_show_all",
+      "value": "显示全部"
+    },
+    {
+      "name": "fieldwatch_class_only_hits",
+      "value": "仅显示有结果"
+    },
+    {
+      "name": "fieldwatch_class_summary_total",
+      "value": "%s 个信号源"
+    },
+    {
+      "name": "fieldwatch_class_summary_unmatched",
+      "value": "%s 个未匹配"
+    },
+    {
+      "name": "fieldwatch_class_summary_multi",
+      "value": "%s 个属于多个分类"
+    },
+    {
+      "name": "fieldwatch_class_summary_hidden",
+      "value": "%s 个空分类已隐藏"
+    },
+    {
+      "name": "fieldwatch_mode_idle",
+      "value": "待启动"
+    },
+    {
+      "name": "fieldwatch_mode_full",
+      "value": "完整模式（蓝牙 + Wi-Fi + 星闪）"
+    },
+    {
+      "name": "fieldwatch_mode_ble",
+      "value": "仅蓝牙模式"
+    },
+    {
+      "name": "fieldwatch_mode_wifi",
+      "value": "仅 Wi-Fi 模式（「设备发现和连接」未开启）"
+    },
+    {
+      "name": "fieldwatch_mode_browse",
+      "value": "受限模式（仅浏览，无法扫描）"
+    },
+    {
+      "name": "fieldwatch_manual_title",
+      "value": "系统不会再弹出授权窗口"
+    },
+    {
+      "name": "fieldwatch_manual_body",
+      "value": "「%s」这项权限，系统不会再弹窗了 —— 你之前拒绝过它，或在系统设置里手动关闭过。\n\n请手动开启：%p"
+    },
+    {
+      "name": "fieldwatch_manual_cancel",
+      "value": "知道了"
+    },
+    {
+      "name": "fieldwatch_manual_open",
+      "value": "打开系统设置"
+    },
+    {
+      "name": "fieldwatch_manual_open_short",
+      "value": "系统设置"
+    },
+    {
+      "name": "fieldwatch_manual_toast",
+      "value": "无法自动打开系统设置。请手动前往：设置 → 应用和元服务 → 电波足迹 → 开启所需权限。"
+    },
+    {
+      "name": "fieldwatch_perm_ble_where",
+      "value": "系统设置 → 应用和元服务 → 电波足迹 → 设备发现和连接"
+    },
+    {
+      "name": "fieldwatch_perm_loc_where",
+      "value": "设置 → 应用和元服务 → 电波足迹 → 位置"
+    },
+    {
+      "name": "fieldwatch_baseline_wifi",
+      "value": "Wi-Fi 扫描：系统已自动授予，不需要你授权"
+    },
+    {
+      "name": "fieldwatch_settings_radar_display",
+      "value": "实时雷达显示"
+    },
+    {
+      "name": "fieldwatch_settings_radar_display_hint",
+      "value": "选择雷达上每个信号要显示的信息，并调整文字与图标大小。修改立即生效，无需重启。"
+    },
+    {
+      "name": "fieldwatch_radar_field_name",
+      "value": "名称"
+    },
+    {
+      "name": "fieldwatch_radar_field_address",
+      "value": "地址"
+    },
+    {
+      "name": "fieldwatch_radar_field_type",
+      "value": "类型"
+    },
+    {
+      "name": "fieldwatch_radar_field_rssi",
+      "value": "强度"
+    },
+    {
+      "name": "fieldwatch_radar_field_freq",
+      "value": "频段"
+    },
+    {
+      "name": "fieldwatch_radar_label_size",
+      "value": "文字大小"
+    },
+    {
+      "name": "fieldwatch_radar_icon_size",
+      "value": "图标大小"
+    },
+    {
+      "name": "nearlink_scan_reason",
+      "value": "用于接收附近星闪设备的广播，以被动方式发现并展示周围的星闪信号。应用不会连接、配对或传输数据。"
+    },
+    {
+      "name": "fieldwatch_perm_nl_title",
+      "value": "星闪"
+    },
+    {
+      "name": "fieldwatch_perm_nl_why",
+      "value": "用来接收附近星闪设备主动广播的信号，读取设备名称、信号强度与广播内容。只被动监听，不连接、不配对、不传输数据。"
+    },
+    {
+      "name": "fieldwatch_perm_nl_feature",
+      "value": "支撑：实时页的星闪信号源、设备类型识别、特征库匹配。"
+    },
+    {
+      "name": "fieldwatch_perm_nl_denied",
+      "value": "拒绝后：无法接收星闪广播，实时页不显示星闪设备。"
+    },
+    {
+      "name": "fieldwatch_perm_nl_where",
+      "value": "系统设置 → 应用和元服务 → 电波足迹 → 星闪"
+    },
+    {
+      "name": "fieldwatch_restricted_enable_nl",
+      "value": "申请星闪扫描"
+    },
+    {
+      "name": "fieldwatch_filter_nearlink_only",
+      "value": "仅星闪"
+    },
+    {
+      "name": "fieldwatch_detail_nl_class",
+      "value": "星闪设备类型"
+    },
+    {
+      "name": "fieldwatch_detail_nl_connectable",
+      "value": "是否可连接"
+    },
+    {
+      "name": "fieldwatch_detail_nl_yes",
+      "value": "可连接"
+    },
+    {
+      "name": "fieldwatch_detail_nl_no",
+      "value": "不可连接"
+    },
+    {
+      "name": "fieldwatch_detail_nl_unknown",
+      "value": "未知"
+    },
+    {
+      "name": "fieldwatch_export_radios_nearlink",
+      "value": "仅星闪"
+    },
+    {
+      "name": "fieldwatch_scan_nearlink_state",
+      "value": "星闪状态"
+    },
+    {
+      "name": "fieldwatch_scan_nearlink_unsupported",
+      "value": "本机不支持星闪"
+    },
+    {
+      "name": "fieldwatch_detail_nl_address_note",
+      "value": "注：星闪的真实 MAC 地址属于系统级权限，本应用无法获取。此处显示的是系统分配的标识，可能随时间变化，不适合作为长期身份依据。"
+    },
+    {
+      "name": "fieldwatch_state_notification_title",
+      "value": "电波足迹正在运行"
+    },
+    {
+      "name": "fieldwatch_state_notification_paused",
+      "value": "已暂停"
+    },
+    {
+      "name": "fieldwatch_notification_permission_reason",
+      "value": "允许通知后，应用会在后台持续扫描时显示一条常驻通知，让你随时知道它正在运行、当前发现了多少信号源。"
+    },
+    {
+      "name": "fieldwatch_perm_notif_title",
+      "value": "通知"
+    },
+    {
+      "name": "fieldwatch_background_running",
+      "value": "正在后台持续扫描附近的无线电信号"
+    },
+    {
+      "name": "fieldwatch_detail_vendor",
+      "value": "厂商"
+    },
+    {
+      "name": "fieldwatch_settings_about",
+      "value": "关于电波足迹"
+    },
+    {
+      "name": "fieldwatch_about_title",
+      "value": "关于电波足迹"
+    },
+    {
+      "name": "fieldwatch_about_principle",
+      "value": "严格离线。应用不做任何联网，除非你主动点「更新特征目录」。"
+    },
+    {
+      "name": "fieldwatch_about_permissions",
+      "value": "需要的权限只有两项：接收蓝牙与星闪广播（系统里显示为「设备发现和连接」）、以及可选的位置。"
+    },
+    {
+      "name": "fieldwatch_about_license",
+      "value": "本应用移植自开源项目 Fieldwatch 1.1.17，遵循其原始开源许可。"
+    },
+    {
+      "name": "fieldwatch_about_radiodb",
+      "value": "本机 OUI 厂商库来自 IEEE 公开注册数据。"
+    },
+    {
+      "name": "fieldwatch_about_local",
+      "value": "全部观测数据只保存在本机，不会上传。"
+    },
+    {
+      "name": "fieldwatch_about_close",
+      "value": "知道了"
+    },
+    {
+      "name": "fieldwatch_sec_identity",
+      "value": "身份"
+    },
+    {
+      "name": "fieldwatch_sec_signal",
+      "value": "信号"
+    },
+    {
+      "name": "fieldwatch_sec_ble",
+      "value": "蓝牙广播"
+    },
+    {
+      "name": "fieldwatch_sec_wifi",
+      "value": "Wi-Fi 接入点"
+    },
+    {
+      "name": "fieldwatch_sec_decoded",
+      "value": "解码字段"
+    },
+    {
+      "name": "fieldwatch_sec_maker",
+      "value": "广播里的厂商数据"
+    },
+    {
+      "name": "fieldwatch_sec_vendor_ie",
+      "value": "Wi-Fi 厂商标签"
+    },
+    {
+      "name": "fieldwatch_sec_session",
+      "value": "本次会话"
+    },
+    {
+      "name": "fieldwatch_sec_notes",
+      "value": "备注"
+    },
+    {
+      "name": "fieldwatch_sec_attention",
+      "value": "额外关注"
+    },
+    {
+      "name": "fieldwatch_sec_family",
+      "value": "特征族"
+    },
+    {
+      "name": "fieldwatch_detail_address_type",
+      "value": "地址类型"
+    },
+    {
+      "name": "fieldwatch_addr_public",
+      "value": "固定地址（厂商烧录）"
+    },
+    {
+      "name": "fieldwatch_addr_random",
+      "value": "随机地址（会轮换）"
+    },
+    {
+      "name": "fieldwatch_detail_appearance",
+      "value": "它自称是什么"
+    },
+    {
+      "name": "fieldwatch_detail_appearance_code",
+      "value": "外观代码"
+    },
+    {
+      "name": "fieldwatch_detail_tx_power",
+      "value": "声明的发射功率"
+    },
+    {
+      "name": "fieldwatch_detail_tx_power_hint",
+      "value": "设备自己声明的强度，不代表距离"
+    },
+    {
+      "name": "fieldwatch_detail_flags",
+      "value": "广播标志"
+    },
+    {
+      "name": "fieldwatch_detail_service_uuids",
+      "value": "提供的服务"
+    },
+    {
+      "name": "fieldwatch_detail_service_data",
+      "value": "服务数据"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_ssid",
+      "value": "隐藏 SSID"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_yes",
+      "value": "是（不广播网络名）"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_no",
+      "value": "否"
+    },
+    {
+      "name": "fieldwatch_detail_channel",
+      "value": "信道"
+    },
+    {
+      "name": "fieldwatch_detail_generation",
+      "value": "Wi-Fi 代际"
+    },
+    {
+      "name": "fieldwatch_detail_vendor_ie",
+      "value": "厂商标签"
+    },
+    {
+      "name": "fieldwatch_detail_custom_name",
+      "value": "自定义名称"
+    },
+    {
+      "name": "fieldwatch_detail_custom_name_hint",
+      "value": "只在实时列表里改显示名。右上角书签才是告警开关，这里不会打开它。"
+    },
+    {
+      "name": "fieldwatch_detail_custom_name_blocked",
+      "value": "该设备使用随机地址，地址会轮换，起名会绑到一个再也听不到的设备上，因此不可命名。"
+    },
+    {
+      "name": "fieldwatch_detail_notes",
+      "value": "观察者备注"
+    },
+    {
+      "name": "fieldwatch_detail_notes_hint",
+      "value": "会跟随这个地址，并出现在复盘、对比、轨迹和文本导出里。不会打开告警。"
+    },
+    {
+      "name": "fieldwatch_detail_save",
+      "value": "保存"
+    },
+    {
+      "name": "fieldwatch_detail_hide",
+      "value": "隐藏"
+    },
+    {
+      "name": "fieldwatch_detail_gone",
+      "value": "已不在空中。这是最后一次听到的信息。"
+    },
+    {
+      "name": "fieldwatch_detail_not_exposed",
+      "value": "系统不提供该字段"
+    },
+    {
+      "name": "fieldwatch_detail_attention_note",
+      "value": "这是模式匹配，不是身份认定，也不构成安全结论。"
+    },
+    {
+      "name": "fieldwatch_detail_raw_ad",
+      "value": "原始广播包"
+    },
+    {
+      "name": "fieldwatch_detail_edit",
+      "value": "编辑名称与备注"
+    },
+    {
+      "name": "fieldwatch_settings_watch_beep",
+      "value": "关注目标双响提示"
+    },
+    {
+      "name": "fieldwatch_settings_watch_beep_hint",
+      "value": "设备出现时响两声，与搜寻页的连续节拍是两套提示"
+    },
+    {
+      "name": "fieldwatch_settings_watch_voice",
+      "value": "关注目标语音播报"
+    },
+    {
+      "name": "fieldwatch_settings_watch_voice_hint",
+      "value": "在双响之后朗读；系统语音引擎不可用时自动降级为只响双声"
+    },
+    {
+      "name": "fieldwatch_settings_voice_content",
+      "value": "语音内容"
+    },
+    {
+      "name": "fieldwatch_settings_voice_class",
+      "value": "类别"
+    },
+    {
+      "name": "fieldwatch_settings_voice_signature",
+      "value": "签名"
+    },
+    {
+      "name": "fieldwatch_settings_voice_both",
+      "value": "类别 + 签名"
+    },
+    {
+      "name": "fieldwatch_settings_alert_test",
+      "value": "测试提示音与语音"
+    },
+    {
+      "name": "fieldwatch_hunt_tick_beep",
+      "value": "搜寻提示音"
+    },
+    {
+      "name": "fieldwatch_hunt_tick_vibrate",
+      "value": "搜寻触感"
+    },
+    {
+      "name": "fieldwatch_settings_compact_rows",
+      "value": "列表紧凑显示"
+    },
+    {
+      "name": "fieldwatch_settings_compact_rows_hint",
+      "value": "强度、时间线、信号轨迹、分类四个视图的行样式完全一致，这里只切换尺寸：紧凑档一屏能多看几台设备。"
+    },
+    {
+      "name": "fieldwatch_settings_display_section",
+      "value": "列表显示"
+    },
+    {
+      "name": "fieldwatch_settings_show_rssi_bar",
+      "value": "显示信号强度条"
+    },
+    {
+      "name": "fieldwatch_settings_show_fleet_name",
+      "value": "显示签名名称"
+    },
+    {
+      "name": "fieldwatch_settings_show_frequency",
+      "value": "显示频率 / 信道"
+    },
+    {
+      "name": "fieldwatch_settings_show_seen_times",
+      "value": "显示首次 / 最近发现时间"
+    },
+    {
+      "name": "fieldwatch_wifi_phase_idle",
+      "value": "空闲"
+    },
+    {
+      "name": "fieldwatch_wifi_phase_precheck",
+      "value": "检查前置条件"
+    },
+    {
+      "name": "fieldwatch_wifi_throttle_hint",
+      "value": "系统限制 Wi-Fi 扫描频率（通常每个应用几十秒一次），失败后会按 8/16/32/45 秒逐级退避；上面的倒计时就是距下次尝试的时间。"
+    },
+    {
+      "name": "fieldwatch_scan_error_prefix",
+      "value": "扫描异常："
+    },
+    {
+      "name": "fieldwatch_continuous_task_reason",
+      "value": "被动无线电扫描"
+    },
+    {
+      "name": "fieldwatch_radio_wifi",
+      "value": "Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_radio_ble",
+      "value": "蓝牙"
+    },
+    {
+      "name": "fieldwatch_radio_nearlink",
+      "value": "星闪"
+    },
+    {
+      "name": "fieldwatch_detail_ssid",
+      "value": "网络名称"
+    },
+    {
+      "name": "fieldwatch_detail_name_locked",
+      "value": "这是随机地址，会随时间轮换 —— 命名会绑死在一个再也听不到的地址上，因此不允许。"
+    },
+    {
+      "name": "fieldwatch_editor_sec_identity",
+      "value": "身份"
+    },
+    {
+      "name": "fieldwatch_editor_sec_matching",
+      "value": "匹配"
+    },
+    {
+      "name": "fieldwatch_editor_sec_color",
+      "value": "颜色"
+    },
+    {
+      "name": "fieldwatch_editor_notes_hint",
+      "value": "会显示在匹配信号源的详情页，以及分享 / AI 导出中。它只是说明，不是「重点关注」——实时上不会出现「!」，也不会有琥珀色卡片。"
+    },
+    {
+      "name": "fieldwatch_editor_category_hint",
+      "value": "对应「筛选 → 仅显示 / 隐藏这些」。按类别预设的芯片（防丢器、摄像头……）就是这些。"
+    },
+    {
+      "name": "fieldwatch_editor_match_any_hint",
+      "value": "开：任一规则命中即算匹配。关：全部规则都必须命中。"
+    },
+    {
+      "name": "fieldwatch_editor_cluster_oui",
+      "value": "按 OUI 聚类"
+    },
+    {
+      "name": "fieldwatch_editor_cluster_oui_hint",
+      "value": "把同厂商前缀的一批设备视为一个信号源族，而不是各自独立。"
+    },
+    {
+      "name": "fieldwatch_editor_sequential_mac",
+      "value": "连续 MAC"
+    },
+    {
+      "name": "fieldwatch_editor_sequential_mac_hint",
+      "value": "识别地址连续递增的设备群（同一批次出厂、同时开机）。"
+    },
+    {
+      "name": "fieldwatch_editor_min_peers",
+      "value": "最少同族数（0 = 关闭）"
+    },
+    {
+      "name": "fieldwatch_editor_peer_window",
+      "value": "同族时间窗（秒）"
+    },
+    {
+      "name": "fieldwatch_editor_peer_hint",
+      "value": "「最少同族数」大于 0 时才生效：在时间窗内至少听到这么多同族设备，才算命中。"
+    },
+    {
+      "name": "fieldwatch_editor_color_hint",
+      "value": "内置颜色按类别（红 = 渗透测试，琥珀 = 摄像头 / 车牌识别，紫 = 手机 / 标签，青 = 可穿戴，绿 = Mesh，橙 = 音频 / 眼镜，蓝绿 = 车载 / 车辆）。任意一行都可改。"
+    },
+    {
+      "name": "fieldwatch_editor_expand",
+      "value": "展开"
+    },
+    {
+      "name": "fieldwatch_editor_collapse",
+      "value": "收起"
+    },
+    {
+      "name": "fieldwatch_settings_legal",
+      "value": "关于应用"
+    },
+    {
+      "name": "fieldwatch_settings_legal_hint",
+      "value": "使用条款、隐私说明与开源声明。全部内容随应用离线提供，不会发起任何网络请求。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy",
+      "value": "隐私协议"
+    },
+    {
+      "name": "fieldwatch_legal_terms",
+      "value": "用户协议"
+    },
+    {
+      "name": "fieldwatch_legal_oss",
+      "value": "开源声明"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p1",
+      "value": "本应用是一款严格离线的无线电信号观察工具。它只接收附近设备主动广播的内容，不建立连接、不配对、不发送任何数据。应用本身不包含联网能力，也不会把你的任何信息上传到任何服务器。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p2",
+      "value": "只申请两项权限：「设备发现和连接」用于接收蓝牙低功耗与星闪设备的广播；「位置」仅在你打开「记录手机听到设备的位置」后使用，用于给观测打上位置标记并绘制本机轨迹。拒绝授权时，除相应功能外其余部分仍可正常使用。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p3",
+      "value": "所有观测、关注列表、自定义特征与设置都保存在本机应用沙箱内。卸载应用即一并删除，我们没有副本，也无法为你找回。你可以随时在「设置 → 数据」中清空日志或恢复默认。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p4",
+      "value": "本应用不收集设备标识符、不做统计分析、不投放广告、不申请后台定位。它不会在后台持续扫描，除非你主动开启「后台扫描」并接受由此产生的耗电。"
+    },
+    {
+      "name": "fieldwatch_legal_terms_p1",
+      "value": "本应用用于观察和分析你所在环境中公开广播的无线电信号，供学习、研究与安全自查使用。"
+    },
+    {
+      "name": "fieldwatch_legal_terms_p2",
+      "value": "你需自行确保使用行为符合所在地法律法规。应用提供的信号强度、厂商推断、特征匹配与设备解释都只是基于广播内容的推测，不构成对设备身份、归属或意图的确认，不应作为取证或决策的唯一依据。"
+    },
+    {
+      "name": "fieldwatch_legal_terms_p3",
+      "value": "本应用按现状提供，不对可用性、准确性或特定用途适用性作任何担保。因使用本应用产生的任何后果由使用者自行承担。"
+    },
+    {
+      "name": "fieldwatch_legal_oss_p1",
+      "value": "本应用基于 HarmonyOS ArkTS 与 ArkUI 开发，使用了华为随 HarmonyOS SDK 提供的系统能力与 HDS 设计组件。这些组件遵循其各自的许可条款。"
+    },
+    {
+      "name": "fieldwatch_legal_oss_p2",
+      "value": "厂商前缀（OUI）识别使用的数据来自 IEEE 公开的 MA-L / MA-M / MA-S 注册表。该数据是公开事实信息，随应用离线打包，不联网更新。"
+    },
+    {
+      "name": "fieldwatch_legal_oss_p3",
+      "value": "内置特征目录由本项目自行整理，来源为公开的产品资料与社区记录。目录随应用离线提供，可导出查看，也可用你自己的规则覆盖。"
+    },
+    {
+      "name": "fieldwatch_settings_log_level",
+      "value": "日志等级"
+    },
+    {
+      "name": "fieldwatch_settings_log_level_hint",
+      "value": "默认「警告」。排查问题时才需要调到「调试」—— 扫描期间日志量很大，等级过低会拖慢设备并淹没关键信息。"
+    },
+    {
+      "name": "fieldwatch_log_debug",
+      "value": "调试"
+    },
+    {
+      "name": "fieldwatch_log_info",
+      "value": "信息"
+    },
+    {
+      "name": "fieldwatch_log_warn",
+      "value": "警告"
+    },
+    {
+      "name": "fieldwatch_log_error",
+      "value": "错误"
+    },
+    {
+      "name": "fieldwatch_common_confirm",
+      "value": "知道了"
+    },
+    {
+      "name": "fieldwatch_settings_alerts",
+      "value": "通知与语音"
     }
   ]
 }

@@ -7,6 +7,7 @@ export {
   NGFWorkflowDefinition,
   NGFWorkflowStepDefinition,
   NGFWorkflowStepCondition,
+  NGFWorkflowParallelGroup,
   NGFWorkflowExecutionResult,
   NGFWorkflowStepResult
 } from './contracts/IWorkflowDefinition';

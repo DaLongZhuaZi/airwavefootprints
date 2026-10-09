@@ -5343,6 +5343,2774 @@
     {
       "name": "settings_keep_screen_on",
       "value": "Keep Screen On"
+    },
+    {
+      "name": "wifi_scan_reason",
+      "value": "Airwave Footprints needs Wi-Fi information access to passively observe nearby access points. It does not connect to or configure Wi-Fi."
+    },
+    {
+      "name": "radio_scan_started",
+      "value": "Radio scanning started"
+    },
+    {
+      "name": "radio_scan_restart",
+      "value": "Restart radio scan"
+    },
+    {
+      "name": "radio_scan_scanning",
+      "value": "Radio scanning"
+    },
+    {
+      "name": "radio_scan_permission_denied",
+      "value": "Radio scan permission was not granted"
+    },
+    {
+      "name": "live_devices_label",
+      "value": "Devices"
+    },
+    {
+      "name": "live_logs_label",
+      "value": "Logs"
+    },
+    {
+      "name": "live_unknown_device",
+      "value": "Unnamed device"
+    },
+    {
+      "name": "live_seen_count",
+      "value": "Seen count"
+    },
+    {
+      "name": "live_rssi_label",
+      "value": "RSSI"
+    },
+    {
+      "name": "watch_toggle",
+      "value": "Watch / Unwatch"
+    },
+    {
+      "name": "wifi_status_title",
+      "value": "Wi-Fi Status"
+    },
+    {
+      "name": "wifi_scanning",
+      "value": "Scanning"
+    },
+    {
+      "name": "wifi_updated",
+      "value": "Updated"
+    },
+    {
+      "name": "wifi_cached",
+      "value": "Cached"
+    },
+    {
+      "name": "wifi_waiting_system",
+      "value": "Waiting for system"
+    },
+    {
+      "name": "wifi_location_disabled",
+      "value": "Location service is off"
+    },
+    {
+      "name": "wifi_disabled",
+      "value": "Wi-Fi is off"
+    },
+    {
+      "name": "wifi_unsupported",
+      "value": "Wi-Fi scanning is unsupported"
+    },
+    {
+      "name": "wifi_next_attempt",
+      "value": "Next attempt"
+    },
+    {
+      "name": "wifi_ap_count",
+      "value": "AP count"
+    },
+    {
+      "name": "wifi_retry_now",
+      "value": "Retry now"
+    },
+    {
+      "name": "wifi_location_hint",
+      "value": "Wi-Fi scanning requires system location services to be enabled."
+    },
+    {
+      "name": "wifi_system_rejected",
+      "value": "System temporarily rejected or throttled the scan"
+    },
+    {
+      "name": "wifi_error",
+      "value": "Wi-Fi scan error"
+    },
+    {
+      "name": "wifi_last_success",
+      "value": "Last successful scan"
+    },
+    {
+      "name": "wifi_permission_denied",
+      "value": "Grant Wi-Fi information permissions again"
+    },
+    {
+      "name": "wifi_scan_intensity",
+      "value": "Scan intensity"
+    },
+    {
+      "name": "wifi_scan_basic",
+      "value": "Basic 30s"
+    },
+    {
+      "name": "wifi_scan_balanced",
+      "value": "Balanced 45s"
+    },
+    {
+      "name": "wifi_scan_saver",
+      "value": "Saver 60s"
+    },
+    {
+      "name": "wifi_restore_local",
+      "value": "Local observations restored"
+    },
+    {
+      "name": "sit_title",
+      "value": "Current session"
+    },
+    {
+      "name": "sit_name_placeholder",
+      "value": "Enter session name"
+    },
+    {
+      "name": "sit_start",
+      "value": "Start session"
+    },
+    {
+      "name": "sit_finish",
+      "value": "End session"
+    },
+    {
+      "name": "sit_active",
+      "value": "Active"
+    },
+    {
+      "name": "sit_saved_count",
+      "value": "Saved sessions"
+    },
+    {
+      "name": "sit_name_required",
+      "value": "Enter a session name"
+    },
+    {
+      "name": "fieldwatch_app_title",
+      "value": "Fieldwatch"
+    },
+    {
+      "name": "fieldwatch_app_subtitle",
+      "value": "Passive radio observation"
+    },
+    {
+      "name": "fieldwatch_tab_live",
+      "value": "Live"
+    },
+    {
+      "name": "fieldwatch_tab_filters",
+      "value": "Filters"
+    },
+    {
+      "name": "fieldwatch_tab_reports",
+      "value": "Reports"
+    },
+    {
+      "name": "fieldwatch_tab_settings",
+      "value": "Settings"
+    },
+    {
+      "name": "fieldwatch_live_title",
+      "value": "Live observation"
+    },
+    {
+      "name": "fieldwatch_view_radar",
+      "value": "Radar"
+    },
+    {
+      "name": "fieldwatch_view_strength",
+      "value": "Strength"
+    },
+    {
+      "name": "fieldwatch_view_timeline",
+      "value": "Timeline"
+    },
+    {
+      "name": "fieldwatch_view_class",
+      "value": "By class"
+    },
+    {
+      "name": "fieldwatch_view_trail",
+      "value": "Signal trail"
+    },
+    {
+      "name": "fieldwatch_trail_samples",
+      "value": "%s samples"
+    },
+    {
+      "name": "fieldwatch_trail_waiting",
+      "value": "Waiting for more samples…"
+    },
+    {
+      "name": "fieldwatch_no_observations",
+      "value": "No observations"
+    },
+    {
+      "name": "fieldwatch_filters_title",
+      "value": "Filters"
+    },
+    {
+      "name": "fieldwatch_filters_description",
+      "value": "Filters change the live view without deleting local observations."
+    },
+    {
+      "name": "fieldwatch_filter_all",
+      "value": "All"
+    },
+    {
+      "name": "fieldwatch_filter_wifi",
+      "value": "Wi-Fi only"
+    },
+    {
+      "name": "fieldwatch_filter_ble",
+      "value": "BLE only"
+    },
+    {
+      "name": "fieldwatch_filter_watch_only",
+      "value": "Watched only"
+    },
+    {
+      "name": "fieldwatch_filter_clear",
+      "value": "Clear filters"
+    },
+    {
+      "name": "fieldwatch_reports_title",
+      "value": "Reports"
+    },
+    {
+      "name": "fieldwatch_reports_description",
+      "value": "Manage observation sessions and prepare reports and exports."
+    },
+    {
+      "name": "fieldwatch_report_debrief",
+      "value": "Debrief report"
+    },
+    {
+      "name": "fieldwatch_report_compare",
+      "value": "Compare sessions"
+    },
+    {
+      "name": "fieldwatch_report_path",
+      "value": "Path"
+    },
+    {
+      "name": "fieldwatch_report_export",
+      "value": "Export"
+    },
+    {
+      "name": "fieldwatch_report_pending",
+      "value": "Reports and exports will be enabled after their data and system capabilities are verified."
+    },
+    {
+      "name": "fieldwatch_settings_title",
+      "value": "Settings"
+    },
+    {
+      "name": "fieldwatch_settings_scan",
+      "value": "Scanning"
+    },
+    {
+      "name": "fieldwatch_settings_privacy",
+      "value": "Location and privacy"
+    },
+    {
+      "name": "fieldwatch_device_preview_open",
+      "value": "Tap again for full details"
+    },
+    {
+      "name": "fieldwatch_device_detail_title",
+      "value": "Device details"
+    },
+    {
+      "name": "fieldwatch_detail_type",
+      "value": "Radio source"
+    },
+    {
+      "name": "fieldwatch_detail_name",
+      "value": "Name"
+    },
+    {
+      "name": "fieldwatch_detail_address",
+      "value": "Address"
+    },
+    {
+      "name": "fieldwatch_detail_location",
+      "value": "Location"
+    },
+    {
+      "name": "fieldwatch_detail_rssi",
+      "value": "Signal strength"
+    },
+    {
+      "name": "fieldwatch_detail_frequency",
+      "value": "Frequency"
+    },
+    {
+      "name": "fieldwatch_detail_band",
+      "value": "Band"
+    },
+    {
+      "name": "fieldwatch_detail_channel_width",
+      "value": "Channel width"
+    },
+    {
+      "name": "fieldwatch_detail_security",
+      "value": "Security type"
+    },
+    {
+      "name": "fieldwatch_detail_seen_count",
+      "value": "Seen count"
+    },
+    {
+      "name": "fieldwatch_detail_signatures",
+      "value": "Matched signatures"
+    },
+    {
+      "name": "fieldwatch_detail_decoded",
+      "value": "Decoded fields"
+    },
+    {
+      "name": "fieldwatch_detail_fresh",
+      "value": "Data state"
+    },
+    {
+      "name": "fieldwatch_detail_fresh_value",
+      "value": "Newly appeared"
+    },
+    {
+      "name": "fieldwatch_detail_cached_value",
+      "value": "Seen earlier"
+    },
+    {
+      "name": "fieldwatch_detail_not_applicable",
+      "value": "Not applicable"
+    },
+    {
+      "name": "fieldwatch_sighting_count",
+      "value": "%s sightings"
+    },
+    {
+      "name": "fieldwatch_signatures_title",
+      "value": "Signature library"
+    },
+    {
+      "name": "fieldwatch_signatures_description",
+      "value": "Built-in stock signatures plus your own rules. A match is a likely product family, not a confirmed identity."
+    },
+    {
+      "name": "fieldwatch_signatures_version",
+      "value": "Catalog version"
+    },
+    {
+      "name": "fieldwatch_signatures_total",
+      "value": "Signatures"
+    },
+    {
+      "name": "fieldwatch_signatures_search",
+      "value": "Search name or rule"
+    },
+    {
+      "name": "fieldwatch_signatures_category_all",
+      "value": "All classes"
+    },
+    {
+      "name": "fieldwatch_signatures_stock",
+      "value": "Stock"
+    },
+    {
+      "name": "fieldwatch_signatures_user",
+      "value": "Custom"
+    },
+    {
+      "name": "fieldwatch_signatures_rules",
+      "value": "Rules"
+    },
+    {
+      "name": "fieldwatch_signatures_decode",
+      "value": "Decoded fields"
+    },
+    {
+      "name": "fieldwatch_signatures_enabled",
+      "value": "Enabled"
+    },
+    {
+      "name": "fieldwatch_signatures_disabled",
+      "value": "Disabled"
+    },
+    {
+      "name": "fieldwatch_signatures_enable",
+      "value": "Enable"
+    },
+    {
+      "name": "fieldwatch_signatures_disable",
+      "value": "Disable"
+    },
+    {
+      "name": "fieldwatch_signatures_delete",
+      "value": "Delete custom signature"
+    },
+    {
+      "name": "fieldwatch_signatures_delete_confirm",
+      "value": "This cannot be undone. Delete this custom signature?"
+    },
+    {
+      "name": "fieldwatch_signatures_export",
+      "value": "Export catalog to app sandbox"
+    },
+    {
+      "name": "fieldwatch_signatures_import",
+      "value": "Import from app sandbox"
+    },
+    {
+      "name": "fieldwatch_signatures_update",
+      "value": "Update stock catalog"
+    },
+    {
+      "name": "fieldwatch_signatures_restore",
+      "value": "Restore default catalog"
+    },
+    {
+      "name": "fieldwatch_signatures_restore_confirm",
+      "value": "Restoring defaults removes every custom signature and edit. Continue?"
+    },
+    {
+      "name": "fieldwatch_signatures_empty",
+      "value": "No matching signatures"
+    },
+    {
+      "name": "fieldwatch_signatures_offline",
+      "value": "Updating needs network and only runs when you tap it."
+    },
+    {
+      "name": "fieldwatch_signatures_import_empty",
+      "value": "Nothing new to import"
+    },
+    {
+      "name": "fieldwatch_signatures_import_failed",
+      "value": "Import failed, the catalog is unchanged"
+    },
+    {
+      "name": "fieldwatch_signatures_updated",
+      "value": "Catalog updated"
+    },
+    {
+      "name": "fieldwatch_signatures_update_failed",
+      "value": "Update failed, kept the previous catalog"
+    },
+    {
+      "name": "fieldwatch_signatures_export_done",
+      "value": "Exported to the app sandbox"
+    },
+    {
+      "name": "fieldwatch_signatures_share",
+      "value": "Share catalog file"
+    },
+    {
+      "name": "fieldwatch_signatures_no_rules",
+      "value": "No rules"
+    },
+    {
+      "name": "fieldwatch_signatures_detail_signatures",
+      "value": "Matched signatures"
+    },
+    {
+      "name": "fieldwatch_signatures_detail_decoded",
+      "value": "Decoded fields"
+    },
+    {
+      "name": "fieldwatch_signatures_create_from_device",
+      "value": "Create a signature from this device"
+    },
+    {
+      "name": "fieldwatch_editor_title_new",
+      "value": "New signature"
+    },
+    {
+      "name": "fieldwatch_editor_title_edit",
+      "value": "Edit signature"
+    },
+    {
+      "name": "fieldwatch_editor_name",
+      "value": "Name"
+    },
+    {
+      "name": "fieldwatch_editor_category",
+      "value": "Class"
+    },
+    {
+      "name": "fieldwatch_editor_notes",
+      "value": "Notes"
+    },
+    {
+      "name": "fieldwatch_editor_attention",
+      "value": "Extra attention"
+    },
+    {
+      "name": "fieldwatch_editor_attention_hint",
+      "value": "Non-empty marks the radio on Live and shows in detail"
+    },
+    {
+      "name": "fieldwatch_editor_match_any",
+      "value": "Match any rule"
+    },
+    {
+      "name": "fieldwatch_editor_match_all",
+      "value": "Match every rule"
+    },
+    {
+      "name": "fieldwatch_editor_add_rule",
+      "value": "Add rule"
+    },
+    {
+      "name": "fieldwatch_editor_edit_rule",
+      "value": "Edit rule"
+    },
+    {
+      "name": "fieldwatch_editor_rule_kind",
+      "value": "Rule kind"
+    },
+    {
+      "name": "fieldwatch_editor_rule_text",
+      "value": "Match text"
+    },
+    {
+      "name": "fieldwatch_editor_rule_company",
+      "value": "Company ID"
+    },
+    {
+      "name": "fieldwatch_editor_rule_prefix",
+      "value": "Data prefix (hex)"
+    },
+    {
+      "name": "fieldwatch_editor_radio",
+      "value": "Radio"
+    },
+    {
+      "name": "fieldwatch_editor_radio_any",
+      "value": "Any"
+    },
+    {
+      "name": "fieldwatch_editor_delete_rule",
+      "value": "Delete rule"
+    },
+    {
+      "name": "fieldwatch_editor_decode_source",
+      "value": "Decode source"
+    },
+    {
+      "name": "fieldwatch_editor_decode_service",
+      "value": "Service UUID"
+    },
+    {
+      "name": "fieldwatch_editor_decode_include_company",
+      "value": "Prepend company ID"
+    },
+    {
+      "name": "fieldwatch_editor_add_field",
+      "value": "Add field"
+    },
+    {
+      "name": "fieldwatch_editor_edit_field",
+      "value": "Edit field"
+    },
+    {
+      "name": "fieldwatch_editor_field_id",
+      "value": "Field id"
+    },
+    {
+      "name": "fieldwatch_editor_field_label",
+      "value": "Field label"
+    },
+    {
+      "name": "fieldwatch_editor_field_offset",
+      "value": "Offset"
+    },
+    {
+      "name": "fieldwatch_editor_field_length",
+      "value": "Length"
+    },
+    {
+      "name": "fieldwatch_editor_field_type",
+      "value": "Type"
+    },
+    {
+      "name": "fieldwatch_editor_field_endian",
+      "value": "Endian"
+    },
+    {
+      "name": "fieldwatch_editor_field_unit",
+      "value": "Unit"
+    },
+    {
+      "name": "fieldwatch_editor_field_live",
+      "value": "Show on Live row"
+    },
+    {
+      "name": "fieldwatch_editor_save",
+      "value": "Save"
+    },
+    {
+      "name": "fieldwatch_editor_cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "fieldwatch_editor_saved",
+      "value": "Saved"
+    },
+    {
+      "name": "fieldwatch_editor_save_failed",
+      "value": "Save failed"
+    },
+    {
+      "name": "fieldwatch_editor_invalid_name",
+      "value": "Enter a name"
+    },
+    {
+      "name": "fieldwatch_editor_invalid_rule",
+      "value": "The rule is incomplete"
+    },
+    {
+      "name": "fieldwatch_editor_no_rules",
+      "value": "No rules yet; add at least one"
+    },
+    {
+      "name": "fieldwatch_editor_delete_field",
+      "value": "Delete field"
+    },
+    {
+      "name": "fieldwatch_editor_ok",
+      "value": "OK"
+    },
+    {
+      "name": "fieldwatch_editor_new_signature",
+      "value": "New signature"
+    },
+    {
+      "name": "fieldwatch_editor_edit",
+      "value": "Edit"
+    },
+    {
+      "name": "fieldwatch_editor_decode_fields_hint",
+      "value": "Fields read from the payload by offset and length."
+    },
+    {
+      "name": "fieldwatch_editor_gate",
+      "value": "Gate"
+    },
+    {
+      "name": "fieldwatch_editor_gate_op",
+      "value": "Comparison"
+    },
+    {
+      "name": "fieldwatch_editor_gate_value",
+      "value": "Compare value (hex)"
+    },
+    {
+      "name": "fieldwatch_editor_gate_and",
+      "value": "Additional condition (both must pass)"
+    },
+    {
+      "name": "fieldwatch_editor_gate_hint",
+      "value": "len compares the total payload length; eq/neq/mask/nmask compare at offset and length."
+    },
+    {
+      "name": "fieldwatch_editor_named_values",
+      "value": "Named values"
+    },
+    {
+      "name": "fieldwatch_editor_named_key",
+      "value": "Raw value"
+    },
+    {
+      "name": "fieldwatch_editor_named_label",
+      "value": "Display text"
+    },
+    {
+      "name": "fieldwatch_editor_named_strong",
+      "value": "Strong chip"
+    },
+    {
+      "name": "fieldwatch_editor_named_note",
+      "value": "Note"
+    },
+    {
+      "name": "fieldwatch_editor_add_named",
+      "value": "Add named value"
+    },
+    {
+      "name": "fieldwatch_editor_named_hint",
+      "value": "The raw value is the decoded decimal text. On a hit the display text replaces it and Strong uses a louder Live chip."
+    },
+    {
+      "name": "fieldwatch_signatures_new",
+      "value": "New signature"
+    },
+    {
+      "name": "fieldwatch_signatures_edit",
+      "value": "Edit"
+    },
+    {
+      "name": "fieldwatch_class_finder",
+      "value": "Finder tags"
+    },
+    {
+      "name": "fieldwatch_class_beacon",
+      "value": "Retail beacons"
+    },
+    {
+      "name": "fieldwatch_class_signage",
+      "value": "Signage"
+    },
+    {
+      "name": "fieldwatch_class_wearable",
+      "value": "Wearables"
+    },
+    {
+      "name": "fieldwatch_class_surveillance",
+      "value": "Surveillance"
+    },
+    {
+      "name": "fieldwatch_class_drone",
+      "value": "Drones"
+    },
+    {
+      "name": "fieldwatch_class_hacking",
+      "value": "Pentest"
+    },
+    {
+      "name": "fieldwatch_class_law_enforcement",
+      "value": "Public safety"
+    },
+    {
+      "name": "fieldwatch_class_vehicle",
+      "value": "Vehicle"
+    },
+    {
+      "name": "fieldwatch_class_glasses",
+      "value": "Glasses"
+    },
+    {
+      "name": "fieldwatch_class_audio",
+      "value": "Audio"
+    },
+    {
+      "name": "fieldwatch_class_camera",
+      "value": "Cameras"
+    },
+    {
+      "name": "fieldwatch_class_thermostat",
+      "value": "Thermostats"
+    },
+    {
+      "name": "fieldwatch_class_lock",
+      "value": "Access control"
+    },
+    {
+      "name": "fieldwatch_class_health",
+      "value": "Health"
+    },
+    {
+      "name": "fieldwatch_class_home",
+      "value": "Home IoT"
+    },
+    {
+      "name": "fieldwatch_class_isp",
+      "value": "ISP / routers"
+    },
+    {
+      "name": "fieldwatch_class_mesh",
+      "value": "Mesh"
+    },
+    {
+      "name": "fieldwatch_class_phone",
+      "value": "Phones / PCs"
+    },
+    {
+      "name": "fieldwatch_class_other",
+      "value": "Other"
+    },
+    {
+      "name": "fieldwatch_catalog_status_builtin",
+      "value": "Built-in catalog"
+    },
+    {
+      "name": "fieldwatch_catalog_status_updating",
+      "value": "Updating"
+    },
+    {
+      "name": "fieldwatch_catalog_status_updated",
+      "value": "Updated"
+    },
+    {
+      "name": "fieldwatch_catalog_status_failed",
+      "value": "Update failed, kept previous"
+    },
+    {
+      "name": "fieldwatch_filter_min_rssi",
+      "value": "Minimum signal strength"
+    },
+    {
+      "name": "fieldwatch_filter_logic",
+      "value": "Filter logic"
+    },
+    {
+      "name": "fieldwatch_filter_and",
+      "value": "Match all"
+    },
+    {
+      "name": "fieldwatch_filter_or",
+      "value": "Match any"
+    },
+    {
+      "name": "fieldwatch_filter_attention_only",
+      "value": "Extra attention only"
+    },
+    {
+      "name": "fieldwatch_filter_fresh_only",
+      "value": "Fresh results only"
+    },
+    {
+      "name": "fieldwatch_filter_cached_only",
+      "value": "Cached results only"
+    },
+    {
+      "name": "fieldwatch_filter_category",
+      "value": "Device category"
+    },
+    {
+      "name": "fieldwatch_filter_signature",
+      "value": "Signature"
+    },
+    {
+      "name": "fieldwatch_filters_count",
+      "value": "Showing"
+    },
+    {
+      "name": "fieldwatch_reports_current_sit",
+      "value": "Current observation sit"
+    },
+    {
+      "name": "fieldwatch_reports_saved_sits",
+      "value": "Saved observation sits"
+    },
+    {
+      "name": "fieldwatch_reports_start_sit",
+      "value": "Start observation sit"
+    },
+    {
+      "name": "fieldwatch_reports_finish_sit",
+      "value": "Finish observation sit"
+    },
+    {
+      "name": "fieldwatch_reports_clear_logs",
+      "value": "Clear local logs"
+    },
+    {
+      "name": "fieldwatch_reports_no_sits",
+      "value": "No saved observation sits"
+    },
+    {
+      "name": "fieldwatch_reports_no_data",
+      "value": "No observation data for reports"
+    },
+    {
+      "name": "fieldwatch_settings_display",
+      "value": "Display"
+    },
+    {
+      "name": "fieldwatch_settings_location",
+      "value": "Location and privacy"
+    },
+    {
+      "name": "fieldwatch_settings_data",
+      "value": "Data"
+    },
+    {
+      "name": "fieldwatch_settings_pause",
+      "value": "Pause live display"
+    },
+    {
+      "name": "fieldwatch_settings_location_tagging",
+      "value": "Record where the phone heard the device"
+    },
+    {
+      "name": "fieldwatch_settings_privacy_mode",
+      "value": "Privacy mode"
+    },
+    {
+      "name": "fieldwatch_settings_keep_screen_on",
+      "value": "Keep screen on"
+    },
+    {
+      "name": "fieldwatch_settings_observation_count",
+      "value": "Local observations"
+    },
+    {
+      "name": "fieldwatch_settings_saved_sits",
+      "value": "Saved sits"
+    },
+    {
+      "name": "fieldwatch_settings_status",
+      "value": "Wi-Fi status"
+    },
+    {
+      "name": "fieldwatch_settings_last_success",
+      "value": "Last successful scan"
+    },
+    {
+      "name": "fieldwatch_settings_next_attempt",
+      "value": "Next attempt"
+    },
+    {
+      "name": "fieldwatch_settings_retry",
+      "value": "Retry now"
+    },
+    {
+      "name": "fieldwatch_settings_enabled",
+      "value": "On"
+    },
+    {
+      "name": "fieldwatch_settings_disabled",
+      "value": "Off"
+    },
+    {
+      "name": "fieldwatch_settings_none",
+      "value": "None"
+    },
+    {
+      "name": "fieldwatch_filter_travel_status",
+      "value": "GPS track %s m. Keep moving (about 50 m) to enable the co-travel test."
+    },
+    {
+      "name": "fieldwatch_preset_strong",
+      "value": "Strong signal"
+    },
+    {
+      "name": "fieldwatch_preset_all",
+      "value": "All traffic"
+    },
+    {
+      "name": "fieldwatch_filter_cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "fieldwatch_filter_delete",
+      "value": "Delete"
+    },
+    {
+      "name": "fieldwatch_filter_delete_preset_title",
+      "value": "Delete preset?"
+    },
+    {
+      "name": "fieldwatch_filter_reset_body",
+      "value": "Clears every switch and pick on this tab. Presets you saved stay."
+    },
+    {
+      "name": "fieldwatch_filter_reset_title",
+      "value": "Reset filter?"
+    },
+    {
+      "name": "fieldwatch_filter_reset",
+      "value": "Reset filter"
+    },
+    {
+      "name": "fieldwatch_filter_logic_hint",
+      "value": "AND/OR applies to name, OUI, RSSI, and class include — not to radios, Named radios only, Watched only, or Hide Fast Pair."
+    },
+    {
+      "name": "fieldwatch_filter_extra_logic",
+      "value": "Extra filter logic"
+    },
+    {
+      "name": "fieldwatch_filter_oui_contains",
+      "value": "OUI / vendor contains"
+    },
+    {
+      "name": "fieldwatch_filter_name_contains",
+      "value": "Name / MAC contains"
+    },
+    {
+      "name": "fieldwatch_filter_rssi_min",
+      "value": "Lowest RSSI"
+    },
+    {
+      "name": "fieldwatch_filter_fine",
+      "value": "Fine filter"
+    },
+    {
+      "name": "fieldwatch_filter_selected_hint",
+      "value": "Turn signatures on in the catalog. An empty list has no effect. Your picks stay if you toggle this off and on."
+    },
+    {
+      "name": "fieldwatch_filter_hide_selected",
+      "value": "Hide selected signatures"
+    },
+    {
+      "name": "fieldwatch_filter_show_selected",
+      "value": "Show only selected signatures"
+    },
+    {
+      "name": "fieldwatch_filter_selected_signatures",
+      "value": "Selected signatures"
+    },
+    {
+      "name": "fieldwatch_filter_class_hide_these",
+      "value": "Hide these"
+    },
+    {
+      "name": "fieldwatch_filter_class_show_only",
+      "value": "Show only"
+    },
+    {
+      "name": "fieldwatch_filter_classes_hint",
+      "value": "Live only — signatures still label, log, and can beep. Show only with no class picked leaves Live unchanged."
+    },
+    {
+      "name": "fieldwatch_filter_classes",
+      "value": "Signature classes"
+    },
+    {
+      "name": "fieldwatch_filter_fastpair_hint",
+      "value": "Plaza noise: already-paired Fast Pair chips with no other signature. Keeps pairing mode."
+    },
+    {
+      "name": "fieldwatch_filter_named_hint",
+      "value": "A random / privacy MAC will not follow a rotation."
+    },
+    {
+      "name": "fieldwatch_filter_watched_hint",
+      "value": "Only radios that match a watched signature, or a named radio with alert on."
+    },
+    {
+      "name": "fieldwatch_filter_signatures_only_hint",
+      "value": "Show only radios that match a catalog signature."
+    },
+    {
+      "name": "fieldwatch_filter_hide_fastpair",
+      "value": "Hide Fast Pair account-key"
+    },
+    {
+      "name": "fieldwatch_filter_named_radios_only",
+      "value": "Named radios only"
+    },
+    {
+      "name": "fieldwatch_filter_watched_only",
+      "value": "Watched only"
+    },
+    {
+      "name": "fieldwatch_filter_signatures_only",
+      "value": "Signatures only (hide unmatched)"
+    },
+    {
+      "name": "fieldwatch_filter_who_stays",
+      "value": "Who stays"
+    },
+    {
+      "name": "fieldwatch_filter_new_hint",
+      "value": "Hide radios already here so only new ones show on Live. Randomized BLE addresses look new."
+    },
+    {
+      "name": "fieldwatch_filter_new_only",
+      "value": "New detections only"
+    },
+    {
+      "name": "fieldwatch_filter_new_detections",
+      "value": "New detections"
+    },
+    {
+      "name": "fieldwatch_filter_moving_hint",
+      "value": "Turn on Settings → Tag detections with GPS, then walk or drive. Only loud BLE advertisers that stay with you remain."
+    },
+    {
+      "name": "fieldwatch_filter_moving_with_you",
+      "value": "Moving with you"
+    },
+    {
+      "name": "fieldwatch_filter_ble_only",
+      "value": "BLE only"
+    },
+    {
+      "name": "fieldwatch_filter_wifi_only",
+      "value": "Wi-Fi only"
+    },
+    {
+      "name": "fieldwatch_filter_both",
+      "value": "All"
+    },
+    {
+      "name": "fieldwatch_filter_radios_hint",
+      "value": "These are inclusive switches. Turn all three on to see Wi-Fi, BLE and NearLink together. A single device belongs to only one."
+    },
+    {
+      "name": "fieldwatch_filter_radios",
+      "value": "Radios"
+    },
+    {
+      "name": "fieldwatch_filter_save",
+      "value": "Save"
+    },
+    {
+      "name": "fieldwatch_filter_save_as",
+      "value": "Save current as…"
+    },
+    {
+      "name": "fieldwatch_filter_presets_hint",
+      "value": "Tap to replace the whole filter, long-press to delete. A few are built in; “Save current as…” adds your own. Built-in presets you deleted can be restored via Signatures → More → Restore default catalog."
+    },
+    {
+      "name": "fieldwatch_filter_presets",
+      "value": "Presets"
+    },
+    {
+      "name": "fieldwatch_class_fleet_unit",
+      "value": "signatures"
+    },
+    {
+      "name": "fieldwatch_tab_signatures",
+      "value": "Signatures"
+    },
+    {
+      "name": "fieldwatch_signatures_export_failed",
+      "value": "Export failed; nothing was written"
+    },
+    {
+      "name": "fieldwatch_signatures_import_file",
+      "value": "Import from file"
+    },
+    {
+      "name": "fieldwatch_signatures_export_file",
+      "value": "Export to file"
+    },
+    {
+      "name": "fieldwatch_filter_preset_load",
+      "value": "Load"
+    },
+    {
+      "name": "fieldwatch_filter_preset_empty",
+      "value": "No presets yet"
+    },
+    {
+      "name": "fieldwatch_filter_preset_name",
+      "value": "Preset name"
+    },
+    {
+      "name": "fieldwatch_settings_watchlist_remove",
+      "value": "Remove"
+    },
+    {
+      "name": "fieldwatch_settings_watchlist_empty",
+      "value": "The watchlist is empty"
+    },
+    {
+      "name": "fieldwatch_settings_watchlist",
+      "value": "Watchlist"
+    },
+    {
+      "name": "fieldwatch_filter_preset_default",
+      "value": "Load default preset"
+    },
+    {
+      "name": "fieldwatch_filter_preset_delete",
+      "value": "Delete preset"
+    },
+    {
+      "name": "fieldwatch_filter_named_only",
+      "value": "Has a name"
+    },
+    {
+      "name": "fieldwatch_signatures_seed_none",
+      "value": "No new built-in watch targets"
+    },
+    {
+      "name": "fieldwatch_signatures_seed_done",
+      "value": "Added %s watch targets"
+    },
+    {
+      "name": "fieldwatch_signatures_seed_watch",
+      "value": "Add built-in watch targets"
+    },
+    {
+      "name": "fieldwatch_signatures_sort_class",
+      "value": "By class"
+    },
+    {
+      "name": "fieldwatch_signatures_sort_name",
+      "value": "By name"
+    },
+    {
+      "name": "fieldwatch_hunt_title",
+      "value": "Hunt"
+    },
+    {
+      "name": "fieldwatch_hunt_start",
+      "value": "Start hunt"
+    },
+    {
+      "name": "fieldwatch_hunt_stop",
+      "value": "Stop hunt"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_very_close",
+      "value": "Very Close"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_closer",
+      "value": "Closer"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_further",
+      "value": "Further"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_same",
+      "value": "About the same"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_waiting",
+      "value": "Listening…"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_quiet",
+      "value": "Quiet"
+    },
+    {
+      "name": "fieldwatch_hunt_cue_gone",
+      "value": "Gone"
+    },
+    {
+      "name": "fieldwatch_hunt_hint_very_close",
+      "value": "Screaming loud here. Look around — usually in-hand, pocket, or the same bag. Not meters."
+    },
+    {
+      "name": "fieldwatch_hunt_hint_closer",
+      "value": "Louder than a few seconds ago. Keep walking that way."
+    },
+    {
+      "name": "fieldwatch_hunt_hint_further",
+      "value": "Quieter than a few seconds ago. Turn or back up."
+    },
+    {
+      "name": "fieldwatch_hunt_hint_same",
+      "value": "No clear change yet. Slow down; hold the device still."
+    },
+    {
+      "name": "fieldwatch_hunt_hint_waiting",
+      "value": "Need a few seconds of packets to compare."
+    },
+    {
+      "name": "fieldwatch_hunt_hint_quiet",
+      "value": "No packet for a few seconds. Silent, or behind a wall."
+    },
+    {
+      "name": "fieldwatch_hunt_hint_gone",
+      "value": "Left the live set. Randomized BLE often vanishes mid-hunt."
+    },
+    {
+      "name": "fieldwatch_hunt_current",
+      "value": "Current"
+    },
+    {
+      "name": "fieldwatch_hunt_peak",
+      "value": "Peak"
+    },
+    {
+      "name": "fieldwatch_hunt_range",
+      "value": "Range"
+    },
+    {
+      "name": "fieldwatch_hunt_samples",
+      "value": "Samples"
+    },
+    {
+      "name": "fieldwatch_hunt_average",
+      "value": "Average"
+    },
+    {
+      "name": "fieldwatch_hunt_tick",
+      "value": "Haptic tick"
+    },
+    {
+      "name": "fieldwatch_hunt_tick_unavailable",
+      "value": "This device has no haptic tick; feedback is visual only."
+    },
+    {
+      "name": "fieldwatch_hunt_disclaimer",
+      "value": "Hunt compares loudness only. It gives no bearing and is not a direction finder."
+    },
+    {
+      "name": "fieldwatch_hunt_none",
+      "value": "No active hunt"
+    },
+    {
+      "name": "fieldwatch_hunt_na",
+      "value": "Not available"
+    },
+    {
+      "name": "fieldwatch_signatures_unwatch",
+      "value": "Unwatch this signature"
+    },
+    {
+      "name": "fieldwatch_signatures_watch",
+      "value": "Watch this signature"
+    },
+    {
+      "name": "fieldwatch_signatures_hits",
+      "value": "%s radios"
+    },
+    {
+      "name": "fieldwatch_detail_signature_reason",
+      "value": "Match reason"
+    },
+    {
+      "name": "fieldwatch_filter_located_only",
+      "value": "Has location"
+    },
+    {
+      "name": "fieldwatch_filter_decoded_only",
+      "value": "Has decoded value"
+    },
+    {
+      "name": "fieldwatch_filter_matched_only",
+      "value": "Has signature"
+    },
+    {
+      "name": "fieldwatch_sit_default_name",
+      "value": "Field observation"
+    },
+    {
+      "name": "fieldwatch_sit_active",
+      "value": "Active"
+    },
+    {
+      "name": "fieldwatch_sit_finished",
+      "value": "Finished"
+    },
+    {
+      "name": "fieldwatch_reports_export_pending",
+      "value": "Export awaits system file and share integration"
+    },
+    {
+      "name": "fieldwatch_reports_pdf_pending",
+      "value": "PDF remains pending API26 capability validation"
+    },
+    {
+      "name": "fieldwatch_settings_scan_current",
+      "value": "Current scan intensity"
+    },
+    {
+      "name": "fieldwatch_report_export_csv",
+      "value": "Share CSV"
+    },
+    {
+      "name": "fieldwatch_report_export_jsonl",
+      "value": "Share JSONL"
+    },
+    {
+      "name": "fieldwatch_detail_watch",
+      "value": "Add to watchlist"
+    },
+    {
+      "name": "fieldwatch_detail_unwatch",
+      "value": "Remove from watchlist"
+    },
+    {
+      "name": "fieldwatch_detail_share",
+      "value": "Share device information"
+    },
+    {
+      "name": "fieldwatch_report_debrief_share",
+      "value": "Share Debrief"
+    },
+    {
+      "name": "fieldwatch_report_export_gpx",
+      "value": "Share GPX"
+    },
+    {
+      "name": "fieldwatch_report_export_kml",
+      "value": "Share KML"
+    },
+    {
+      "name": "fieldwatch_report_export_wigle",
+      "value": "Share WiGLE"
+    },
+    {
+      "name": "fieldwatch_reports_delete_sit",
+      "value": "Delete sit"
+    },
+    {
+      "name": "fieldwatch_report_save_csv",
+      "value": "Save CSV locally"
+    },
+    {
+      "name": "fieldwatch_report_save_jsonl",
+      "value": "Save JSONL locally"
+    },
+    {
+      "name": "fieldwatch_settings_backup",
+      "value": "Save settings backup"
+    },
+    {
+      "name": "fieldwatch_settings_restore",
+      "value": "Restore settings backup"
+    },
+    {
+      "name": "fieldwatch_local_file_hint",
+      "value": "Files are stored in the app sandbox; public-folder save is pending validation"
+    },
+    {
+      "name": "fieldwatch_settings_backup_result",
+      "value": "Settings backup saved or restored"
+    },
+    {
+      "name": "fieldwatch_settings_catalog_status",
+      "value": "Current catalog"
+    },
+    {
+      "name": "fieldwatch_settings_watch_notifications",
+      "value": "Watchlist notifications"
+    },
+    {
+      "name": "fieldwatch_settings_notifications_hint",
+      "value": "Send a system notification when a watched device first appears"
+    },
+    {
+      "name": "fieldwatch_notification_title",
+      "value": "Fieldwatch"
+    },
+    {
+      "name": "fieldwatch_notification_watched",
+      "value": "Watched device detected"
+    },
+    {
+      "name": "fieldwatch_settings_background_scanning",
+      "value": "Keep passive scanning in background"
+    },
+    {
+      "name": "fieldwatch_settings_background_hint",
+      "value": "Requires system background permission; off by default and remains passive"
+    },
+    {
+      "name": "fieldwatch_filter_class_finder",
+      "value": "Finder"
+    },
+    {
+      "name": "fieldwatch_filter_class_beacon",
+      "value": "Beacon"
+    },
+    {
+      "name": "fieldwatch_filter_class_drone",
+      "value": "Drone"
+    },
+    {
+      "name": "fieldwatch_filter_class_router",
+      "value": "Router"
+    },
+    {
+      "name": "fieldwatch_filter_save_preset",
+      "value": "Save filter preset"
+    },
+    {
+      "name": "fieldwatch_filter_restore_preset",
+      "value": "Restore filter preset"
+    },
+    {
+      "name": "fieldwatch_settings_retry_countdown",
+      "value": "Retry in %s seconds"
+    },
+    {
+      "name": "fieldwatch_settings_theme",
+      "value": "Appearance"
+    },
+    {
+      "name": "fieldwatch_settings_theme_auto",
+      "value": "System"
+    },
+    {
+      "name": "fieldwatch_settings_theme_light",
+      "value": "Light"
+    },
+    {
+      "name": "fieldwatch_settings_theme_dark",
+      "value": "Dark"
+    },
+    {
+      "name": "fieldwatch_reports_sits",
+      "value": "Sits"
+    },
+    {
+      "name": "fieldwatch_reports_sits_hint",
+      "value": "A sit is a named window of radios heard here."
+    },
+    {
+      "name": "fieldwatch_reports_sit_running",
+      "value": "Running: %s"
+    },
+    {
+      "name": "fieldwatch_reports_no_sit_running",
+      "value": "No sit running. Start sit here."
+    },
+    {
+      "name": "fieldwatch_reports_start_hint",
+      "value": "Debrief and AI Export use this window until you end it."
+    },
+    {
+      "name": "fieldwatch_reports_sit_default_name",
+      "value": "Sit"
+    },
+    {
+      "name": "fieldwatch_reports_start",
+      "value": "Start"
+    },
+    {
+      "name": "fieldwatch_reports_rename",
+      "value": "Rename"
+    },
+    {
+      "name": "fieldwatch_reports_rename_sit",
+      "value": "Rename sit"
+    },
+    {
+      "name": "fieldwatch_reports_delete_sit_title",
+      "value": "Delete this sit?"
+    },
+    {
+      "name": "fieldwatch_reports_delete_all_sits",
+      "value": "Delete all sits"
+    },
+    {
+      "name": "fieldwatch_reports_delete_all_hint",
+      "value": "Removes saved sits from this phone."
+    },
+    {
+      "name": "fieldwatch_reports_sit_report",
+      "value": "Sit report"
+    },
+    {
+      "name": "fieldwatch_reports_sit_report_hint",
+      "value": "Debrief uses the same window as Path."
+    },
+    {
+      "name": "fieldwatch_reports_show_unmatched",
+      "value": "Show unmatched rotating BLE"
+    },
+    {
+      "name": "fieldwatch_reports_show_unmatched_hint",
+      "value": "Off (default): Debrief lists skip unmatched RAND BLE."
+    },
+    {
+      "name": "fieldwatch_reports_located",
+      "value": "Located radios"
+    },
+    {
+      "name": "fieldwatch_reports_export",
+      "value": "Sit export"
+    },
+    {
+      "name": "fieldwatch_reports_export_hint",
+      "value": "One row per unique radio in this sit."
+    },
+    {
+      "name": "fieldwatch_reports_compare",
+      "value": "Compare sits"
+    },
+    {
+      "name": "fieldwatch_reports_compare_hint",
+      "value": "Save a second sit to compare."
+    },
+    {
+      "name": "fieldwatch_reports_catalog",
+      "value": "Catalog"
+    },
+    {
+      "name": "fieldwatch_reports_catalog_hint",
+      "value": "Unmatched radios in the log that share a unique ID."
+    },
+    {
+      "name": "fieldwatch_reports_candidates",
+      "value": "Signature candidates"
+    },
+    {
+      "name": "fieldwatch_reports_log_export",
+      "value": "Log export"
+    },
+    {
+      "name": "fieldwatch_reports_log_hint",
+      "value": "The rotating file is JSON lines."
+    },
+    {
+      "name": "fieldwatch_reports_session_rows",
+      "value": "Rows this session"
+    },
+    {
+      "name": "fieldwatch_reports_clear_title",
+      "value": "Clear the log?"
+    },
+    {
+      "name": "fieldwatch_reports_clear_hint",
+      "value": "This deletes all rotated records on the phone. It cannot be undone."
+    },
+    {
+      "name": "fieldwatch_reports_path",
+      "value": "Path"
+    },
+    {
+      "name": "fieldwatch_reports_path_hint",
+      "value": "North up. The line is this phone. The grey dot is the start. The blue dot is you. Green = matched signature, amber = unmatched."
+    },
+    {
+      "name": "fieldwatch_reports_path_status",
+      "value": "Phone track %s m · %d located radios"
+    },
+    {
+      "name": "fieldwatch_reports_path_empty",
+      "value": "No path yet. Turn on Settings → Tag detections with GPS and walk."
+    },
+    {
+      "name": "fieldwatch_reports_ai_export",
+      "value": "AI Export"
+    },
+    {
+      "name": "fieldwatch_signatures_save_downloads",
+      "value": "Save to Downloads"
+    },
+    {
+      "name": "fieldwatch_reports_debrief_pdf",
+      "value": "Debrief (PDF)"
+    },
+    {
+      "name": "fieldwatch_reports_pdf_ok",
+      "value": "Generated %s"
+    },
+    {
+      "name": "fieldwatch_reports_pdf_failed",
+      "value": "PDF generation failed: the device may not support PDFKit."
+    },
+    {
+      "name": "fieldwatch_reports_compare_pdf",
+      "value": "Compare (PDF)"
+    },
+    {
+      "name": "fieldwatch_reports_share",
+      "value": "Share"
+    },
+    {
+      "name": "fieldwatch_reports_save_ok",
+      "value": "Saved to the location you chose."
+    },
+    {
+      "name": "fieldwatch_reports_format",
+      "value": "Format"
+    },
+    {
+      "name": "fieldwatch_reports_save_file",
+      "value": "Save to storage…"
+    },
+    {
+      "name": "fieldwatch_reports_radios",
+      "value": "Radios"
+    },
+    {
+      "name": "fieldwatch_reports_save_cancel",
+      "value": "Cancelled, or the picker returned no location."
+    },
+    {
+      "name": "fieldwatch_reports_no_candidates",
+      "value": "No candidates. Unmatched radios are randomized, house-like, or share no unique on-air ID."
+    },
+    {
+      "name": "fieldwatch_reports_add_candidate",
+      "value": "Add to catalog"
+    },
+    {
+      "name": "fieldwatch_signatures_more",
+      "value": "More"
+    },
+    {
+      "name": "fieldwatch_signatures_sort_prefix",
+      "value": "Sort: "
+    },
+    {
+      "name": "fieldwatch_signatures_stats",
+      "value": "Showing"
+    },
+    {
+      "name": "fieldwatch_onb_welcome_title",
+      "value": "Welcome to Airwave Footprints"
+    },
+    {
+      "name": "fieldwatch_onb_welcome_body",
+      "value": "A receive-only passive listener that shows what is broadcasting around you: who, what name, which class. It never connects, injects, or uploads."
+    },
+    {
+      "name": "fieldwatch_onb_p1_title",
+      "value": "Receive only, never connect"
+    },
+    {
+      "name": "fieldwatch_onb_p1_body",
+      "value": "It only listens to advertisements. It never connects, pairs, injects, or interferes."
+    },
+    {
+      "name": "fieldwatch_onb_p2_title",
+      "value": "Fully offline"
+    },
+    {
+      "name": "fieldwatch_onb_p2_body",
+      "value": "Offline by default. The app only reaches the network when you explicitly tap “Update bundled catalog” under Signatures → More."
+    },
+    {
+      "name": "fieldwatch_onb_p3_title",
+      "value": "Works without permissions"
+    },
+    {
+      "name": "fieldwatch_onb_p3_body",
+      "value": "The catalog, Wi-Fi scanning, log browsing, report export, and settings need no consent from you."
+    },
+    {
+      "name": "fieldwatch_onb_baseline_title",
+      "value": "Works with zero permissions"
+    },
+    {
+      "name": "fieldwatch_onb_baseline_body",
+      "value": "These work right away, with no permission granted:"
+    },
+    {
+      "name": "fieldwatch_baseline_catalog",
+      "value": "Catalog: browse, search, edit, import and export signatures"
+    },
+    {
+      "name": "fieldwatch_baseline_log",
+      "value": "Observations: browse saved sits and logs"
+    },
+    {
+      "name": "fieldwatch_baseline_report",
+      "value": "Reports: debrief, compare, AI export from existing data"
+    },
+    {
+      "name": "fieldwatch_baseline_settings",
+      "value": "Settings: theme, language, privacy mode, notifications & voice, log level"
+    },
+    {
+      "name": "fieldwatch_onb_baseline_hint",
+      "value": "None of the above needs authorisation. “Device discovery and connection” is what receives broadcasts; you can enable it any time under Settings → Permissions."
+    },
+    {
+      "name": "fieldwatch_onb_perm_title",
+      "value": "About permissions"
+    },
+    {
+      "name": "fieldwatch_onb_perm_body",
+      "value": "Only Device discovery and connection and Location need your consent, asked one at a time. Wi-Fi scanning is granted by the system automatically."
+    },
+    {
+      "name": "fieldwatch_perm_ble_title",
+      "value": "Device discovery and connection"
+    },
+    {
+      "name": "fieldwatch_perm_ble_why",
+      "value": "To receive nearby BLE advertisements (buds, bands, trackers, beacons). Only the advertisement contents are read; no connection or pairing is made."
+    },
+    {
+      "name": "fieldwatch_perm_ble_feature",
+      "value": "Powers: BLE radios on Live, moving-with-you, watch alerts."
+    },
+    {
+      "name": "fieldwatch_perm_ble_denied",
+      "value": "If denied: BLE advertisements cannot be received and Live shows Wi-Fi access points only."
+    },
+    {
+      "name": "fieldwatch_perm_wifi_title",
+      "value": "Wi-Fi scanning"
+    },
+    {
+      "name": "fieldwatch_perm_wifi_why",
+      "value": "To list nearby Wi-Fi access points with their names, bands, and signal strength. It never joins a network."
+    },
+    {
+      "name": "fieldwatch_perm_wifi_feature",
+      "value": "Powers: Wi-Fi radios on Live, AP classification, vendor lookup by OUI."
+    },
+    {
+      "name": "fieldwatch_perm_wifi_denied",
+      "value": "If denied: Wi-Fi access points cannot be scanned."
+    },
+    {
+      "name": "fieldwatch_perm_loc_title",
+      "value": "Location"
+    },
+    {
+      "name": "fieldwatch_perm_loc_why",
+      "value": "Used only after you turn on Tag detections with GPS, to stamp observations and draw your own track. No background location."
+    },
+    {
+      "name": "fieldwatch_perm_loc_feature",
+      "value": "Powers: the path canvas, located radios, moving-with-you."
+    },
+    {
+      "name": "fieldwatch_perm_loc_denied",
+      "value": "If denied: observations carry no location and the path stays empty."
+    },
+    {
+      "name": "fieldwatch_perm_net_title",
+      "value": "Network"
+    },
+    {
+      "name": "fieldwatch_perm_net_why",
+      "value": "Used only when you explicitly tap “Update bundled catalog” under Signatures → More, to download the latest signature catalog. The app never goes online in the background."
+    },
+    {
+      "name": "fieldwatch_perm_net_feature",
+      "value": "Powers: updating the built-in signature catalog."
+    },
+    {
+      "name": "fieldwatch_perm_net_denied",
+      "value": "If denied: the built-in signature catalog cannot be updated."
+    },
+    {
+      "name": "fieldwatch_onb_allow",
+      "value": "Allow"
+    },
+    {
+      "name": "fieldwatch_onb_allowed",
+      "value": "Allowed"
+    },
+    {
+      "name": "fieldwatch_onb_later",
+      "value": "Start with basics"
+    },
+    {
+      "name": "fieldwatch_onb_enter",
+      "value": "Start using"
+    },
+    {
+      "name": "fieldwatch_onb_next",
+      "value": "Continue"
+    },
+    {
+      "name": "fieldwatch_onb_back",
+      "value": "Back"
+    },
+    {
+      "name": "fieldwatch_restricted_title",
+      "value": "Device discovery and connection is off"
+    },
+    {
+      "name": "fieldwatch_restricted_body",
+      "value": "Receiving BLE advertisements needs Device discovery and connection in system settings. We never pop the system dialog on our own — it appears only when you tap the button below."
+    },
+    {
+      "name": "fieldwatch_restricted_baseline",
+      "value": "Wi-Fi scanning needs no permission and always works; the catalog, observations, report export, and settings work too."
+    },
+    {
+      "name": "fieldwatch_restricted_enable_ble",
+      "value": "Request device discovery"
+    },
+    {
+      "name": "fieldwatch_restricted_enable_wifi",
+      "value": "Enable Wi-Fi scanning"
+    },
+    {
+      "name": "fieldwatch_settings_permissions",
+      "value": "Permissions"
+    },
+    {
+      "name": "fieldwatch_settings_permissions_hint",
+      "value": "Only Device discovery and connection and Location need your consent — the names match system settings exactly. Wi-Fi scanning is granted by the system automatically."
+    },
+    {
+      "name": "fieldwatch_settings_replay_onboarding",
+      "value": "Replay onboarding"
+    },
+    {
+      "name": "fieldwatch_missing_title",
+      "value": "Some permissions are not granted"
+    },
+    {
+      "name": "fieldwatch_missing_body",
+      "value": "Missing \"%s\". It matches the same-named item in system settings; granting it enables BLE advertisement reception."
+    },
+    {
+      "name": "fieldwatch_missing_later",
+      "value": "Not now"
+    },
+    {
+      "name": "fieldwatch_missing_grant",
+      "value": "Grant"
+    },
+    {
+      "name": "fieldwatch_mode_prefix",
+      "value": "Working mode: "
+    },
+    {
+      "name": "fieldwatch_mode_suffix",
+      "value": " mode"
+    },
+    {
+      "name": "fieldwatch_detail_title",
+      "value": "Device detail"
+    },
+    {
+      "name": "fieldwatch_detail_ai_export",
+      "value": "AI export"
+    },
+    {
+      "name": "fieldwatch_detail_share_text",
+      "value": "Share as text"
+    },
+    {
+      "name": "fieldwatch_detail_no_broadcast_name",
+      "value": "No advertised name"
+    },
+    {
+      "name": "fieldwatch_detail_rssi_note",
+      "value": "Closer to 0 dBm is louder here, not a distance."
+    },
+    {
+      "name": "fieldwatch_detail_session_range",
+      "value": "Heard range this session"
+    },
+    {
+      "name": "fieldwatch_detail_channel_freq",
+      "value": "Channel / frequency"
+    },
+    {
+      "name": "fieldwatch_detail_wifi_generation",
+      "value": "Wi-Fi generation"
+    },
+    {
+      "name": "fieldwatch_detail_center_freq",
+      "value": "Center frequencies"
+    },
+    {
+      "name": "fieldwatch_detail_connectable",
+      "value": "Connectable"
+    },
+    {
+      "name": "fieldwatch_detail_connectable_yes",
+      "value": "Yes — a phone could open a BLE connection"
+    },
+    {
+      "name": "fieldwatch_detail_connectable_no",
+      "value": "No — broadcast-only (you can hear it, not join it from this scan)"
+    },
+    {
+      "name": "fieldwatch_detail_discoverability",
+      "value": "Discoverability"
+    },
+    {
+      "name": "fieldwatch_detail_flags_raw",
+      "value": "Flags (raw)"
+    },
+    {
+      "name": "fieldwatch_detail_device_class",
+      "value": "Classic Bluetooth class"
+    },
+    {
+      "name": "fieldwatch_detail_phy_unavailable",
+      "value": "Radio PHY and advertising interval are not exposed by this platform's scan API."
+    },
+    {
+      "name": "fieldwatch_detail_capability_string",
+      "value": "Capability string"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_ssid_yes",
+      "value": "Hidden — the AP is beaconing but not publishing a name"
+    },
+    {
+      "name": "fieldwatch_detail_company_id",
+      "value": "Bluetooth company %x"
+    },
+    {
+      "name": "fieldwatch_detail_company_note",
+      "value": "This ID is assigned by the Bluetooth SIG, carried in vendor-specific data."
+    },
+    {
+      "name": "fieldwatch_detail_raw_payload",
+      "value": "Raw payload (%s bytes)"
+    },
+    {
+      "name": "fieldwatch_detail_first_seen",
+      "value": "First seen"
+    },
+    {
+      "name": "fieldwatch_detail_last_seen",
+      "value": "Last seen"
+    },
+    {
+      "name": "fieldwatch_detail_hits",
+      "value": "Hits"
+    },
+    {
+      "name": "fieldwatch_detail_last_fix",
+      "value": "Last fix"
+    },
+    {
+      "name": "fieldwatch_detail_last_fix_note",
+      "value": "Last fix is the phone's GPS at hear-time, not a fix on this radio."
+    },
+    {
+      "name": "fieldwatch_detail_matched",
+      "value": "Matched signatures"
+    },
+    {
+      "name": "fieldwatch_detail_raw_adv",
+      "value": "Raw advertisement"
+    },
+    {
+      "name": "fieldwatch_detail_signature_note",
+      "value": "Matched %s. A second signature can still dual-label this radio (service UUID, product OUI)."
+    },
+    {
+      "name": "fieldwatch_detail_marked",
+      "value": "Marked"
+    },
+    {
+      "name": "fieldwatch_detail_unmarked",
+      "value": "Not marked"
+    },
+    {
+      "name": "fieldwatch_detail_footer",
+      "value": "This detail comes from what the device advertises — not a visual ID, and not an identity."
+    },
+    {
+      "name": "fieldwatch_detail_unlisted",
+      "value": "Not in the Bluetooth company list"
+    },
+    {
+      "name": "fieldwatch_detail_unlisted_appearance",
+      "value": "Unlisted Appearance"
+    },
+    {
+      "name": "fieldwatch_detail_presence_none",
+      "value": "No presence recorded in the last 15 minutes."
+    },
+    {
+      "name": "fieldwatch_detail_presence_now",
+      "value": "now"
+    },
+    {
+      "name": "fieldwatch_detail_vendor_ieee",
+      "value": "IEEE board/chip vendor: %s (%o). This is who owns the MAC prefix, not always the product brand."
+    },
+    {
+      "name": "fieldwatch_detail_vendor_company",
+      "value": "Bluetooth company in the ad: %s (%x)."
+    },
+    {
+      "name": "fieldwatch_detail_vendor_none",
+      "value": "No vendor information available."
+    },
+    {
+      "name": "fieldwatch_sec_appearance",
+      "value": "Appearance"
+    },
+    {
+      "name": "fieldwatch_sec_trend",
+      "value": "Signal trend"
+    },
+    {
+      "name": "fieldwatch_sec_presence",
+      "value": "Presence (15 min)"
+    },
+    {
+      "name": "fieldwatch_sec_services",
+      "value": "Services it offers"
+    },
+    {
+      "name": "fieldwatch_radio_kind_ble",
+      "value": "Bluetooth Low Energy advertiser"
+    },
+    {
+      "name": "fieldwatch_radio_kind_wifi_ap",
+      "value": "Wi-Fi access point (beaconing a network)"
+    },
+    {
+      "name": "fieldwatch_radio_kind_nearlink",
+      "value": "NearLink advertiser"
+    },
+    {
+      "name": "fieldwatch_rail_collapse",
+      "value": "Collapse"
+    },
+    {
+      "name": "fieldwatch_brand_unknown",
+      "value": "Unknown brand"
+    },
+    {
+      "name": "fieldwatch_class_show_all",
+      "value": "Show all"
+    },
+    {
+      "name": "fieldwatch_class_only_hits",
+      "value": "With results only"
+    },
+    {
+      "name": "fieldwatch_class_summary_total",
+      "value": "%s sources"
+    },
+    {
+      "name": "fieldwatch_class_summary_unmatched",
+      "value": "%s unmatched"
+    },
+    {
+      "name": "fieldwatch_class_summary_multi",
+      "value": "%s in multiple classes"
+    },
+    {
+      "name": "fieldwatch_class_summary_hidden",
+      "value": "%s empty classes hidden"
+    },
+    {
+      "name": "fieldwatch_mode_idle",
+      "value": "Idle"
+    },
+    {
+      "name": "fieldwatch_mode_full",
+      "value": "Full (Bluetooth + Wi-Fi)"
+    },
+    {
+      "name": "fieldwatch_mode_ble",
+      "value": "Bluetooth only"
+    },
+    {
+      "name": "fieldwatch_mode_wifi",
+      "value": "Wi-Fi only (device discovery and connection is off)"
+    },
+    {
+      "name": "fieldwatch_mode_browse",
+      "value": "Restricted (browse only, no scanning)"
+    },
+    {
+      "name": "fieldwatch_manual_title",
+      "value": "The system will not prompt again"
+    },
+    {
+      "name": "fieldwatch_manual_body",
+      "value": "\"%s\" will not be prompted again — you denied it earlier, or turned it off in system settings.\n\nPlease enable it manually: %p"
+    },
+    {
+      "name": "fieldwatch_manual_cancel",
+      "value": "Got it"
+    },
+    {
+      "name": "fieldwatch_manual_open",
+      "value": "Open system settings"
+    },
+    {
+      "name": "fieldwatch_manual_open_short",
+      "value": "Settings"
+    },
+    {
+      "name": "fieldwatch_manual_toast",
+      "value": "Could not open system settings. Please go to Settings → Apps → Airwave Footprints and enable the permission."
+    },
+    {
+      "name": "fieldwatch_perm_ble_where",
+      "value": "Settings → Apps → Airwave Footprints → Device discovery and connection"
+    },
+    {
+      "name": "fieldwatch_perm_loc_where",
+      "value": "Settings → Apps → Airwave Footprints → Location"
+    },
+    {
+      "name": "fieldwatch_baseline_wifi",
+      "value": "Wi-Fi scanning: already granted by the system, no action needed"
+    },
+    {
+      "name": "fieldwatch_settings_radar_display",
+      "value": "Live radar display"
+    },
+    {
+      "name": "fieldwatch_settings_radar_display_hint",
+      "value": "Choose what each signal shows on the radar, and adjust text and icon size. Changes apply instantly, no restart."
+    },
+    {
+      "name": "fieldwatch_radar_field_name",
+      "value": "Name"
+    },
+    {
+      "name": "fieldwatch_radar_field_address",
+      "value": "Address"
+    },
+    {
+      "name": "fieldwatch_radar_field_type",
+      "value": "Type"
+    },
+    {
+      "name": "fieldwatch_radar_field_rssi",
+      "value": "Strength"
+    },
+    {
+      "name": "fieldwatch_radar_field_freq",
+      "value": "Frequency"
+    },
+    {
+      "name": "fieldwatch_radar_label_size",
+      "value": "Text size"
+    },
+    {
+      "name": "fieldwatch_radar_icon_size",
+      "value": "Icon size"
+    },
+    {
+      "name": "nearlink_scan_reason",
+      "value": "To receive nearby NearLink advertisements so the app can passively discover and display surrounding NearLink signals. The app never connects, pairs, or transfers data."
+    },
+    {
+      "name": "fieldwatch_perm_nl_title",
+      "value": "NearLink"
+    },
+    {
+      "name": "fieldwatch_perm_nl_why",
+      "value": "To receive nearby NearLink advertisements, reading device name, signal strength and advertisement contents. Passive listening only — no connection, pairing, or data transfer."
+    },
+    {
+      "name": "fieldwatch_perm_nl_feature",
+      "value": "Powers: NearLink radios on Live, device type identification, signature matching."
+    },
+    {
+      "name": "fieldwatch_perm_nl_denied",
+      "value": "If denied: NearLink advertisements cannot be received and Live shows no NearLink devices."
+    },
+    {
+      "name": "fieldwatch_perm_nl_where",
+      "value": "Settings → Apps → Airwave Footprints → NearLink"
+    },
+    {
+      "name": "fieldwatch_filter_nearlink_only",
+      "value": "NearLink only"
+    },
+    {
+      "name": "fieldwatch_detail_nl_class",
+      "value": "NearLink device type"
+    },
+    {
+      "name": "fieldwatch_detail_nl_connectable",
+      "value": "Connectable"
+    },
+    {
+      "name": "fieldwatch_detail_nl_yes",
+      "value": "Yes"
+    },
+    {
+      "name": "fieldwatch_detail_nl_no",
+      "value": "No"
+    },
+    {
+      "name": "fieldwatch_detail_nl_unknown",
+      "value": "Unknown"
+    },
+    {
+      "name": "fieldwatch_export_radios_nearlink",
+      "value": "NearLink only"
+    },
+    {
+      "name": "fieldwatch_scan_nearlink_state",
+      "value": "NearLink state"
+    },
+    {
+      "name": "fieldwatch_scan_nearlink_unsupported",
+      "value": "NearLink is not supported on this device"
+    },
+    {
+      "name": "fieldwatch_detail_nl_address_note",
+      "value": "Note: a NearLink device's real MAC address requires a system-level permission this app does not hold. The value shown is a system-assigned identifier that may change over time and is not a stable device identity."
+    },
+    {
+      "name": "fieldwatch_state_notification_title",
+      "value": "Airwave Footprints is running"
+    },
+    {
+      "name": "fieldwatch_state_notification_paused",
+      "value": "paused"
+    },
+    {
+      "name": "fieldwatch_notification_permission_reason",
+      "value": "With notifications allowed, the app shows a persistent notification while scanning in the background, so you always know it is running and how many radios it has found."
+    },
+    {
+      "name": "fieldwatch_perm_notif_title",
+      "value": "Notifications"
+    },
+    {
+      "name": "fieldwatch_background_running",
+      "value": "Scanning nearby radio signals in the background"
+    },
+    {
+      "name": "fieldwatch_detail_vendor",
+      "value": "Vendor"
+    },
+    {
+      "name": "fieldwatch_settings_about",
+      "value": "About"
+    },
+    {
+      "name": "fieldwatch_about_title",
+      "value": "About Airwave Footprints"
+    },
+    {
+      "name": "fieldwatch_about_principle",
+      "value": "Strictly offline. The app makes no network calls unless you tap Update signature catalog."
+    },
+    {
+      "name": "fieldwatch_about_permissions",
+      "value": "Only two permissions are needed: receiving Bluetooth and NearLink broadcasts (shown as Device discovery and connection in Settings), plus optional location."
+    },
+    {
+      "name": "fieldwatch_about_license",
+      "value": "Ported from the open-source project Fieldwatch 1.1.17 under its original license."
+    },
+    {
+      "name": "fieldwatch_about_radiodb",
+      "value": "The local OUI vendor database comes from IEEE public registry data."
+    },
+    {
+      "name": "fieldwatch_about_local",
+      "value": "All observations stay on this device and are never uploaded."
+    },
+    {
+      "name": "fieldwatch_about_close",
+      "value": "Got it"
+    },
+    {
+      "name": "fieldwatch_sec_identity",
+      "value": "Identity"
+    },
+    {
+      "name": "fieldwatch_sec_signal",
+      "value": "Signal"
+    },
+    {
+      "name": "fieldwatch_sec_ble",
+      "value": "Bluetooth advertisement"
+    },
+    {
+      "name": "fieldwatch_sec_wifi",
+      "value": "Wi-Fi access point"
+    },
+    {
+      "name": "fieldwatch_sec_decoded",
+      "value": "Decoded fields"
+    },
+    {
+      "name": "fieldwatch_sec_maker",
+      "value": "Maker data inside the ad"
+    },
+    {
+      "name": "fieldwatch_sec_vendor_ie",
+      "value": "Wi-Fi vendor tags"
+    },
+    {
+      "name": "fieldwatch_sec_session",
+      "value": "Session"
+    },
+    {
+      "name": "fieldwatch_sec_notes",
+      "value": "Notes"
+    },
+    {
+      "name": "fieldwatch_sec_attention",
+      "value": "Extra attention"
+    },
+    {
+      "name": "fieldwatch_sec_family",
+      "value": "Signature family"
+    },
+    {
+      "name": "fieldwatch_detail_address_type",
+      "value": "Address type"
+    },
+    {
+      "name": "fieldwatch_addr_public",
+      "value": "Public (burned in by the maker)"
+    },
+    {
+      "name": "fieldwatch_addr_random",
+      "value": "Random (rotates)"
+    },
+    {
+      "name": "fieldwatch_detail_appearance",
+      "value": "What it says it is"
+    },
+    {
+      "name": "fieldwatch_detail_appearance_code",
+      "value": "Appearance code"
+    },
+    {
+      "name": "fieldwatch_detail_tx_power",
+      "value": "Claimed transmit power"
+    },
+    {
+      "name": "fieldwatch_detail_tx_power_hint",
+      "value": "Self-declared, not a distance"
+    },
+    {
+      "name": "fieldwatch_detail_flags",
+      "value": "Flags (raw)"
+    },
+    {
+      "name": "fieldwatch_detail_service_uuids",
+      "value": "Services it offers"
+    },
+    {
+      "name": "fieldwatch_detail_service_data",
+      "value": "Service data"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_ssid",
+      "value": "Hidden SSID"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_yes",
+      "value": "Yes (does not broadcast a name)"
+    },
+    {
+      "name": "fieldwatch_detail_hidden_no",
+      "value": "No"
+    },
+    {
+      "name": "fieldwatch_detail_channel",
+      "value": "Channel"
+    },
+    {
+      "name": "fieldwatch_detail_generation",
+      "value": "Wi-Fi generation"
+    },
+    {
+      "name": "fieldwatch_detail_vendor_ie",
+      "value": "Vendor tags"
+    },
+    {
+      "name": "fieldwatch_detail_custom_name",
+      "value": "Custom name"
+    },
+    {
+      "name": "fieldwatch_detail_custom_name_hint",
+      "value": "Changes the display name on Live only. The bookmark (top-right) is the alert; this does not turn it on."
+    },
+    {
+      "name": "fieldwatch_detail_custom_name_blocked",
+      "value": "This radio uses a random address that rotates. A name would stick to a dead key, so naming is disabled."
+    },
+    {
+      "name": "fieldwatch_detail_notes",
+      "value": "Observer notes"
+    },
+    {
+      "name": "fieldwatch_detail_notes_hint",
+      "value": "Pinned to this address. Shows on Debrief, Compare, Path, and text export. Does not turn Alert on."
+    },
+    {
+      "name": "fieldwatch_detail_save",
+      "value": "Save"
+    },
+    {
+      "name": "fieldwatch_detail_hide",
+      "value": "Hide"
+    },
+    {
+      "name": "fieldwatch_detail_gone",
+      "value": "Not on the air. This is the last detail we heard."
+    },
+    {
+      "name": "fieldwatch_detail_not_exposed",
+      "value": "Not exposed by the system"
+    },
+    {
+      "name": "fieldwatch_detail_attention_note",
+      "value": "Pattern match, not identity. Not a safety finding."
+    },
+    {
+      "name": "fieldwatch_detail_raw_ad",
+      "value": "Raw advertisement"
+    },
+    {
+      "name": "fieldwatch_detail_edit",
+      "value": "Edit name and notes"
+    },
+    {
+      "name": "fieldwatch_settings_watch_beep",
+      "value": "Double-beep for watched targets"
+    },
+    {
+      "name": "fieldwatch_settings_watch_beep_hint",
+      "value": "Two beeps when a device appears; separate from the continuous tick on the hunt page"
+    },
+    {
+      "name": "fieldwatch_settings_watch_voice",
+      "value": "Voice announcement for watched targets"
+    },
+    {
+      "name": "fieldwatch_settings_watch_voice_hint",
+      "value": "Speaks after the double beep; falls back to beeps only when the system voice engine is unavailable"
+    },
+    {
+      "name": "fieldwatch_settings_voice_content",
+      "value": "Voice content"
+    },
+    {
+      "name": "fieldwatch_settings_voice_class",
+      "value": "Class"
+    },
+    {
+      "name": "fieldwatch_settings_voice_signature",
+      "value": "Signature"
+    },
+    {
+      "name": "fieldwatch_settings_voice_both",
+      "value": "Class + signature"
+    },
+    {
+      "name": "fieldwatch_settings_alert_test",
+      "value": "Test alert sound and voice"
+    },
+    {
+      "name": "fieldwatch_hunt_tick_beep",
+      "value": "Hunt tick sound"
+    },
+    {
+      "name": "fieldwatch_hunt_tick_vibrate",
+      "value": "Hunt tick vibration"
+    },
+    {
+      "name": "fieldwatch_settings_compact_rows",
+      "value": "Compact list rows"
+    },
+    {
+      "name": "fieldwatch_settings_compact_rows_hint",
+      "value": "Strength, Timeline, Trail and Class share one row style; this only switches the size. Compact fits more devices per screen."
+    },
+    {
+      "name": "fieldwatch_settings_display_section",
+      "value": "List display"
+    },
+    {
+      "name": "fieldwatch_settings_show_rssi_bar",
+      "value": "Show signal strength bar"
+    },
+    {
+      "name": "fieldwatch_settings_show_fleet_name",
+      "value": "Show signature name"
+    },
+    {
+      "name": "fieldwatch_settings_show_frequency",
+      "value": "Show frequency / channel"
+    },
+    {
+      "name": "fieldwatch_settings_show_seen_times",
+      "value": "Show first / last seen times"
+    },
+    {
+      "name": "fieldwatch_wifi_phase_idle",
+      "value": "Idle"
+    },
+    {
+      "name": "fieldwatch_wifi_phase_precheck",
+      "value": "Checking preconditions"
+    },
+    {
+      "name": "fieldwatch_wifi_throttle_hint",
+      "value": "The system throttles Wi-Fi scanning (usually once every few tens of seconds per app). After a failure it backs off by 8/16/32/45 seconds; the countdown above is the time until the next attempt."
+    },
+    {
+      "name": "fieldwatch_scan_error_prefix",
+      "value": "Scan error: "
+    },
+    {
+      "name": "fieldwatch_continuous_task_reason",
+      "value": "Passive radio scanning"
+    },
+    {
+      "name": "fieldwatch_radio_wifi",
+      "value": "Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_radio_ble",
+      "value": "Bluetooth"
+    },
+    {
+      "name": "fieldwatch_radio_nearlink",
+      "value": "NearLink"
+    },
+    {
+      "name": "fieldwatch_detail_ssid",
+      "value": "Network name (SSID)"
+    },
+    {
+      "name": "fieldwatch_detail_name_locked",
+      "value": "This is a randomized address that rotates over time; naming it would bind to an address that may never be heard again, so it is disabled."
+    },
+    {
+      "name": "fieldwatch_editor_sec_identity",
+      "value": "Identity"
+    },
+    {
+      "name": "fieldwatch_editor_sec_matching",
+      "value": "Matching"
+    },
+    {
+      "name": "fieldwatch_editor_sec_color",
+      "value": "Color"
+    },
+    {
+      "name": "fieldwatch_editor_notes_hint",
+      "value": "Shown on the detail page of matching radios and in Share / AI export. It is only a description, not Extra attention — no “!” on Live and no amber card."
+    },
+    {
+      "name": "fieldwatch_editor_category_hint",
+      "value": "Corresponds to Filters → Show only / Hide these. The per-class preset chips (trackers, cameras, …) are these."
+    },
+    {
+      "name": "fieldwatch_editor_match_any_hint",
+      "value": "On: any single rule matching counts. Off: every rule must match."
+    },
+    {
+      "name": "fieldwatch_editor_cluster_oui",
+      "value": "Cluster by OUI"
+    },
+    {
+      "name": "fieldwatch_editor_cluster_oui_hint",
+      "value": "Treats a batch of devices sharing a vendor prefix as one signature family instead of separate ones."
+    },
+    {
+      "name": "fieldwatch_editor_sequential_mac",
+      "value": "Sequential MACs"
+    },
+    {
+      "name": "fieldwatch_editor_sequential_mac_hint",
+      "value": "Recognizes device groups whose addresses increment sequentially (same production batch, powered on together)."
+    },
+    {
+      "name": "fieldwatch_editor_min_peers",
+      "value": "Min peers (0 = off)"
+    },
+    {
+      "name": "fieldwatch_editor_peer_window",
+      "value": "Peer window (seconds)"
+    },
+    {
+      "name": "fieldwatch_editor_peer_hint",
+      "value": "Only applies when Min peers is above 0: at least that many peers must be heard within the time window for a match."
+    },
+    {
+      "name": "fieldwatch_editor_color_hint",
+      "value": "Stock colors are by class (red pentest, amber cameras/ALPR, purple phones/tags, cyan wearables, green mesh, orange audio/glasses, teal in-vehicle). Any of them can be changed."
+    },
+    {
+      "name": "fieldwatch_editor_expand",
+      "value": "Expand"
+    },
+    {
+      "name": "fieldwatch_editor_collapse",
+      "value": "Collapse"
+    },
+    {
+      "name": "fieldwatch_settings_legal",
+      "value": "About this app"
+    },
+    {
+      "name": "fieldwatch_settings_legal_hint",
+      "value": "Terms, privacy notes and open-source notices. All content ships offline; no network request is made."
+    },
+    {
+      "name": "fieldwatch_legal_privacy",
+      "value": "Privacy Policy"
+    },
+    {
+      "name": "fieldwatch_legal_terms",
+      "value": "Terms of Use"
+    },
+    {
+      "name": "fieldwatch_legal_oss",
+      "value": "Open-source notices"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p1",
+      "value": "This app is a strictly offline radio-signal observation tool. It only receives what nearby devices broadcast on their own; it does not connect, pair, or transmit anything. The app has no networking capability and never uploads your information to any server."
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p2",
+      "value": "Only two permissions are requested: “Device discovery and connection” to receive Bluetooth Low Energy and NearLink broadcasts, and “Location”, used only after you enable “record where the phone heard the device”, to tag observations and draw your own track. If you decline, everything except those features still works."
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p3",
+      "value": "All observations, the watchlist, custom signatures and settings are stored in the app sandbox on this device. Uninstalling the app deletes them; we hold no copy and cannot recover them for you. You can clear logs or restore defaults at any time under Settings → Data."
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p4",
+      "value": "The app collects no device identifiers, performs no analytics, shows no ads and requests no background location. It does not scan in the background unless you explicitly enable “Background scanning” and accept the battery cost."
+    },
+    {
+      "name": "fieldwatch_legal_terms_p1",
+      "value": "This app observes and analyses radio signals that are publicly broadcast in your environment, for learning, research and self-audit purposes."
+    },
+    {
+      "name": "fieldwatch_legal_terms_p2",
+      "value": "You are responsible for ensuring your use complies with local laws. Signal strength, vendor inference, signature matching and device explanations are inferences drawn from broadcast content only; they do not confirm a device's identity, ownership or intent and must not be the sole basis for evidence or decisions."
+    },
+    {
+      "name": "fieldwatch_legal_terms_p3",
+      "value": "The app is provided as is, without warranty of availability, accuracy or fitness for a particular purpose. Any consequence of using it rests with the user."
+    },
+    {
+      "name": "fieldwatch_legal_oss_p1",
+      "value": "Built with HarmonyOS ArkTS and ArkUI, using system capabilities and HDS design components shipped with the HarmonyOS SDK. Those components are governed by their own licences."
+    },
+    {
+      "name": "fieldwatch_legal_oss_p2",
+      "value": "Vendor prefix (OUI) resolution uses the publicly published IEEE MA-L / MA-M / MA-S registries. That data is public factual information, bundled offline with the app and never updated over the network."
+    },
+    {
+      "name": "fieldwatch_legal_oss_p3",
+      "value": "The bundled signature catalog is compiled by this project from public product documentation and community records. It ships offline, can be exported for inspection, and can be overridden by your own rules."
+    },
+    {
+      "name": "fieldwatch_settings_log_level",
+      "value": "Log level"
+    },
+    {
+      "name": "fieldwatch_settings_log_level_hint",
+      "value": "Defaults to Warn. Lower it only while troubleshooting: scan-time logging is heavy and a low level slows the device and buries what matters."
+    },
+    {
+      "name": "fieldwatch_log_debug",
+      "value": "Debug"
+    },
+    {
+      "name": "fieldwatch_log_info",
+      "value": "Info"
+    },
+    {
+      "name": "fieldwatch_log_warn",
+      "value": "Warn"
+    },
+    {
+      "name": "fieldwatch_log_error",
+      "value": "Error"
+    },
+    {
+      "name": "fieldwatch_common_confirm",
+      "value": "Got it"
+    },
+    {
+      "name": "fieldwatch_settings_alerts",
+      "value": "Notifications & voice"
     }
   ]
 }

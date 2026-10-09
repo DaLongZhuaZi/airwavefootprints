@@ -25,8 +25,32 @@
         "name": "ohos.permission.INTERNET"
       },
       {
+        "name": "ohos.permission.ACCESS_NEARLINK",
+        "reason": "$string:nearlink_scan_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "inuse"
+        }
+      },
+      {
         "name": "ohos.permission.ACCESS_BLUETOOTH",
         "reason": "$string:bluetooth_scan_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "inuse"
+        }
+      },
+      {
+        "name": "ohos.permission.GET_WIFI_INFO",
+        "reason": "$string:wifi_scan_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "inuse"
+        }
+      },
+      {
+        "name": "ohos.permission.SET_WIFI_INFO",
+        "reason": "$string:wifi_scan_reason",
         "usedScene": {
           "abilities": ["EntryAbility"],
           "when": "inuse"
@@ -74,6 +98,14 @@
       },
       {
         "name": "ohos.permission.ACCELEROMETER",
+        "reason": "$string:detect_gesture_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "inuse"
+        }
+      },
+      {
+        "name": "ohos.permission.VIBRATE",
         "reason": "$string:detect_gesture_reason",
         "usedScene": {
           "abilities": ["EntryAbility"],

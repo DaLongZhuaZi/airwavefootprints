@@ -6,39 +6,39 @@
     },
     {
       "name": "background_primary",
-      "value": "#1A1A1A"
+      "value": "#0B0F14"
     },
     {
       "name": "background_secondary",
-      "value": "#262626"
+      "value": "#141A22"
     },
     {
       "name": "background_default",
-      "value": "#121212"
+      "value": "#0B0F14"
     },
     {
       "name": "background_surface",
-      "value": "#1E1E1E"
+      "value": "#141A22"
     },
     {
       "name": "panel_background",
-      "value": "#1E1E1E"
+      "value": "#141A22"
     },
     {
       "name": "panel_border",
-      "value": "#3A3A3A"
+      "value": "#2A3340"
     },
     {
       "name": "card_border",
-      "value": "#333333"
+      "value": "#232C36"
     },
     {
       "name": "card_border_alt",
-      "value": "#3A3A3A"
+      "value": "#2A3340"
     },
     {
       "name": "card_border_inner",
-      "value": "#2A2A2A"
+      "value": "#1B232D"
     },
     {
       "name": "card_shadow",
@@ -62,23 +62,23 @@
     },
     {
       "name": "text_primary",
-      "value": "#E8EAED"
+      "value": "#D5DCE3"
     },
     {
       "name": "text_secondary",
-      "value": "#9AA0A6"
+      "value": "#9AA6B2"
     },
     {
       "name": "text_body",
-      "value": "#E8EAED"
+      "value": "#D5DCE3"
     },
     {
       "name": "text_tertiary",
-      "value": "#9AA0A6"
+      "value": "#9AA6B2"
     },
     {
       "name": "text_muted",
-      "value": "#5F6368"
+      "value": "#6B7683"
     },
     {
       "name": "text_white",
@@ -98,35 +98,35 @@
     },
     {
       "name": "button_primary",
-      "value": "#8AB4F8"
+      "value": "#3DFF9A"
     },
     {
       "name": "button_secondary",
-      "value": "#4DB6AC"
+      "value": "#FFB020"
     },
     {
       "name": "button_success",
-      "value": "#66BB6A"
+      "value": "#35D683"
     },
     {
       "name": "button_warning",
-      "value": "#EF5350"
+      "value": "#FF3D5A"
     },
     {
       "name": "button_inactive",
-      "value": "#5F6368"
+      "value": "#6B7683"
     },
     {
       "name": "button_inactive_bg",
-      "value": "#3A3A3A"
+      "value": "#1B232D"
     },
     {
       "name": "tag_green",
-      "value": "#4ADE80"
+      "value": "#3DFF9A"
     },
     {
       "name": "tag_blue",
-      "value": "#60A5FA"
+      "value": "#4FC3F7"
     },
     {
       "name": "tag_purple",
@@ -134,7 +134,7 @@
     },
     {
       "name": "tag_red",
-      "value": "#F87171"
+      "value": "#FF3D5A"
     },
     {
       "name": "tag_indigo",
@@ -142,11 +142,11 @@
     },
     {
       "name": "component_control_bg",
-      "value": "#1E293B"
+      "value": "#141A22"
     },
     {
       "name": "component_control_border",
-      "value": "#334155"
+      "value": "#2A3340"
     },
     {
       "name": "glass_surface_overlay",
@@ -302,31 +302,127 @@
     },
     {
       "name": "tag_amber",
-      "value": "#F59E0B"
+      "value": "#FFB020"
     },
     {
       "name": "tag_cyan",
-      "value": "#38BDF8"
+      "value": "#4FC3F7"
     },
     {
       "name": "tag_teal",
-      "value": "#2DD4BF"
+      "value": "#35D683"
     },
     {
       "name": "tag_green_dark",
-      "value": "#22C55E"
+      "value": "#35D683"
     },
     {
       "name": "tag_green_darker",
-      "value": "#16A34A"
+      "value": "#2AA968"
     },
     {
       "name": "background_success",
-      "value": "#0A1A08"
+      "value": "#0A1A12"
     },
     {
       "name": "background_error",
-      "value": "#1A0A0A"
+      "value": "#1A0A0D"
+    },
+    {
+      "name": "fw_night",
+      "value": "#0B0F14"
+    },
+    {
+      "name": "fw_panel",
+      "value": "#141A22"
+    },
+    {
+      "name": "fw_panel2",
+      "value": "#1B232D"
+    },
+    {
+      "name": "fw_outline",
+      "value": "#2A3340"
+    },
+    {
+      "name": "fw_accent",
+      "value": "#3DFF9A"
+    },
+    {
+      "name": "fw_accent_active",
+      "value": "#35D683"
+    },
+    {
+      "name": "fw_on_accent",
+      "value": "#003820"
+    },
+    {
+      "name": "fw_amber",
+      "value": "#FFB020"
+    },
+    {
+      "name": "fw_signal_red",
+      "value": "#FF3D5A"
+    },
+    {
+      "name": "fw_cyan",
+      "value": "#4FC3F7"
+    },
+    {
+      "name": "fw_text",
+      "value": "#D5DCE3"
+    },
+    {
+      "name": "fw_text_dim",
+      "value": "#9AA6B2"
+    },
+    {
+      "name": "fw_header_text",
+      "value": "#E8EDF2"
+    },
+    {
+      "name": "fw_badge_bg",
+      "value": "#1B232D"
+    },
+    {
+      "name": "fw_rssi_bar",
+      "value": "#FF3D5A"
+    },
+    {
+      "name": "fw_rssi_track",
+      "value": "#1B232D"
+    },
+    {
+      "name": "fw_rssi_strong",
+      "value": "#3DFF9A"
+    },
+    {
+      "name": "fw_rssi_mid",
+      "value": "#FFB020"
+    },
+    {
+      "name": "fw_divider",
+      "value": "#222A34"
+    },
+    {
+      "name": "fw_overlay_scrim",
+      "value": "#B3000000"
+    },
+    {
+      "name": "fw_on_warning",
+      "value": "#3A2600"
+    },
+    {
+      "name": "fw_on_secondary",
+      "value": "#3A2600"
+    },
+    {
+      "name": "fw_on_danger",
+      "value": "#30000A"
+    },
+    {
+      "name": "fw_on_primary",
+      "value": "#FFFFFF"
     }
   ]
 }

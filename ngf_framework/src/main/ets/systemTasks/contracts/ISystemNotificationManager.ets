@@ -44,6 +44,8 @@ export class NGFNotificationRequest {
 
 export interface ISystemNotificationManager {
   requestPermission(): Promise<boolean>;
+  /** 通知是否已启用；UI 用它显示真实状态（用户可能在系统设置里随时关掉）。 */
+  isEnabled(): Promise<boolean>;
   publish(request: NGFNotificationRequest): Promise<void>;
   cancel(id: number): Promise<void>;
 }

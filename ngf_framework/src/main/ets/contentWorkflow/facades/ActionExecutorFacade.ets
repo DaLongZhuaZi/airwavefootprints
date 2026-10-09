@@ -49,6 +49,42 @@ class NGFNavigateActionEnvelope {
   }
 }
 
+class NGFExtractActionOutput {
+  actionType: string;
+  executedAt: number;
+  extractedPath: string;
+  extractedValue: string;
+
+  constructor(actionType: string, executedAt: number, extractedPath: string, extractedValue: string) {
+    this.actionType = actionType;
+    this.executedAt = executedAt;
+    this.extractedPath = extractedPath;
+    this.extractedValue = extractedValue;
+  }
+}
+
+class NGFNavigationIntentOutput {
+  route: string;
+  params: Record<string, string>;
+
+  constructor(route: string, params: Record<string, string>) {
+    this.route = route;
+    this.params = params;
+  }
+}
+
+class NGFNavigateActionOutput {
+  actionType: string;
+  executedAt: number;
+  navigationIntent: NGFNavigationIntentOutput;
+
+  constructor(actionType: string, executedAt: number, navigationIntent: NGFNavigationIntentOutput) {
+    this.actionType = actionType;
+    this.executedAt = executedAt;
+    this.navigationIntent = navigationIntent;
+  }
+}
+
 class NGFActionOutputEnvelope {
   actionType: string;
   actionJson: string;
@@ -181,7 +217,9 @@ export class ActionExecutorFacade implements IActionExecutor {
       }
       const context: object = JSON.parse(contextJson) as object;
       const result: string = this.resolveJsonPath(context, envelope.path);
-      const outputJson: string = '{"actionType":"extract","executedAt":' + String(Date.now()) + ',"extractedPath":"' + envelope.path + '","extractedValue":"' + result + '"}';
+      const outputJson: string = JSON.stringify(new NGFExtractActionOutput(
+        'extract', Date.now(), envelope.path, result
+      ));
       logger.info(TAG, 'extract 完成: path=' + envelope.path);
       return new NGFActionResult(true, outputJson);
     } catch (error) {
@@ -233,7 +271,12 @@ export class ActionExecutorFacade implements IActionExecutor {
       return new NGFActionResult(false, '{"error":"missing route"}');
     }
     const paramsJson: string = this.mapToJson(envelope.params);
-    const outputJson: string = '{"actionType":"navigate","executedAt":' + String(Date.now()) + ',"navigationIntent":{"route":"' + envelope.route + '","params":' + paramsJson + '}}';
+    const intent: NGFNavigationIntentOutput = new NGFNavigationIntentOutput(
+      envelope.route, JSON.parse(paramsJson) as Record<string, string>
+    );
+    const outputJson: string = JSON.stringify(new NGFNavigateActionOutput(
+      'navigate', Date.now(), intent
+    ));
     logger.info(TAG, 'navigate 意图已生成: route=' + envelope.route);
     return new NGFActionResult(true, outputJson);
   }
@@ -503,17 +546,11 @@ export class ActionExecutorFacade implements IActionExecutor {
   }
 
   private mapToJson(map: Map<string, string>): string {
-    let result: string = '{';
-    let first: boolean = true;
+    const values: Record<string, string> = {};
     map.forEach((value: string, key: string): void => {
-      if (!first) {
-        result += ',';
-      }
-      result += '"' + key + '":"' + value + '"';
-      first = false;
+      values[key] = value;
     });
-    result += '}';
-    return result;
+    return JSON.stringify(values);
   }
 
   private extractStringField(json: string, fieldName: string): string {
@@ -534,7 +571,9 @@ export class ActionExecutorFacade implements IActionExecutor {
     if (quoteEnd < 0) {
       return '';
     }
-    return json.substring(quoteStart + 1, quoteEnd);
+    return json.substring(quoteStart + 1, quoteEnd)
+      .replace(/\\\\/g, '\\')
+      .replace(/\\"/g, '"');
   }
 
   private parseWaitAction(actionJson: string): NGFWaitActionEnvelope {

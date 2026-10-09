@@ -8,6 +8,15 @@
 >
 > 说明：本文描述的是 Android 版本已经具备或明确实现的能力，不代表 HarmonyOS 已经实现。HarmonyOS 版本需要基于 NGF 重新实现系统能力、页面和权限流程。
 
+> HarmonyOS 迁移状态以 [`Fieldwatch鸿蒙迁移任务计划.md`](./Fieldwatch鸿蒙迁移任务计划.md)、[`Fieldwatch鸿蒙能力映射.md`](./Fieldwatch鸿蒙能力映射.md) 和 [`Fieldwatch鸿蒙验收矩阵.md`](./Fieldwatch鸿蒙验收矩阵.md) 为准；本清单中的 Android 能力不能直接视为鸿蒙已完成。
+
+## HarmonyOS 当前落地摘要（2026-10-06）
+
+- 已落地：BLE/Wi-Fi 被动观测基础闭环、Wi-Fi 状态机与退避、缓存/fresh、动态重试倒计时、NGF 主题跟随系统/浅色/深色控制、RDB 观测恢复、可解释签名匹配、AND/OR 过滤、RSSI 样本趋势、地址/坐标掩码、API26 HDS 导航、全屏 Live 雷达、强度/时间线/分类列表视图、设备预览/半屏详情 Sheet、Catalog 主动更新入口、关注通知权限入口和后台扫描入口。
+- 2026-10-06 批次：API26 真机完成最新 HAP 安装/冷启动/前台确认、暂停显示闭环（暂停 120 秒可见快照冻结在 BLE 91 / Wi-Fi 70，同窗口 345 条观测继续到达、Wi-Fi 最近成功时间继续推进，恢复后刷新到 BLE 125 / Wi-Fi 107）、U30 环境 6 分 31 秒 Wi-Fi 连续矩阵（9 次成功回调、0 失败、25–34 条/批）和 Live 四视图真机矩阵；修复详情字段绑定（新增“名称/位置”行、地址行改为纯地址、位置缺失显示本地化“无”而不是硬编码 `Unavailable`、BLE 的 Wi-Fi 专属字段显示“不适用”而不是 0）与时间线原始 epoch 毫秒显示（改为 `HH:mm:ss` + 本地化“N 次观测”），并限制浮动预览卡只在雷达视图出现。
+- 仍待完成：生产协议字段深度解码、公共文件夹保存、Path 真机数据验收、导出页面、Catalog 网络成功/失败真机证据、位置权限矩阵、手机/平板完整视觉矩阵和普通路由器长期真机矩阵；Compare 设备集合、Catalog stock 替换/用户签名保留和主题控制契约已取得 LocalUnit/真机证据。
+- 验证边界：API26 `assembleHap` 已成功；2026-10-06 `hvigorw test --no-daemon` 全量通过，但**必须同时断言 `> hvigor ERROR: Error in ` 行数为 0**，因为本次实测发现存在失败用例时 hvigor 仍输出 `BUILD SUCCESSFUL`；未取得真机证据的系统能力不标记为完成。
+
 ## 1. 产品定位
 
 Fieldwatch 是一个以离线、被动观测为核心的现场无线电观察工具：
@@ -74,6 +83,8 @@ Fieldwatch 是一个以离线、被动观测为核心的现场无线电观察工
 
 ### 3.1 Wi-Fi 被动扫描
 
+**HarmonyOS 状态（API26）**：基础 AP 扫描闭环已实现：使用 `startScan`、`wifiScanStateChange` 和 `getScanInfoList`，包含权限/Wi-Fi/位置前置检查、单飞请求、30/45/60 秒周期、8/16/32/45 秒退避、缓存与 `fresh` 区分、BSSID 过滤、基础字段和 IE 原始十六进制保留。MatePad Mini U30 真机已收到状态回调 `1` 并取得 31/34 条 AP 结果，页面已显示数量、最近成功和下一次尝试；普通路由器主验收、完整 IE 解码和 Probe 仍待完成。Wi-Fi 失败状态独立于 BLE。
+
 - 使用系统 Wi-Fi 扫描结果观察附近接入点。
 - 记录 SSID、BSSID/MAC、RSSI、频率/信道、能力和安全信息等系统可用字段。
 - 解析 Wi-Fi Information Elements（IE）中的厂商和扩展字段。
@@ -129,6 +140,8 @@ Fieldwatch 是一个以离线、被动观测为核心的现场无线电观察工
 - 深色主题。
 - 可配置实时列表排序和显示字段。
 - 对新目标进行短暂视觉高亮。
+
+> 2026-10-06 特征库落地状态：§4 的类别集合、规则种类、解码字段形状和 §11 的目录管理契约已在 `entry/src/main/ets/fieldwatch/domain/signatures/` 与 `rawfile/fieldwatch-signatures-v2.json` 中实现。HDS 特征库页面提供搜索、20 类筛选、名称/类别排序、启用停用、详情（规则 + 解码字段 + 命中数）、用户签名编辑器（含门控与命名值）、关注整个签名、内置关注项、导出到文件、从文件导入、更新内置目录、恢复默认（带警告）。签名在 Live 行（live 解码 chip 与签名色）、设备详情（命中签名 / 签名依据 / 解码字段）、Debrief、Compare 和 CSV/JSONL 导出中一致呈现。§6 Hunt 目标搜寻已实现（状态机 + 触感/音频 geiger tick + 独立页面）。§11 的「保存到文件/从文件导入」经 API26 `DocumentViewPicker` 已接入，不再是缺口。仍未完成：真机视觉与交互矩阵（按用户要求暂停）。
 
 ## 4. 分类、签名和识别系统
 

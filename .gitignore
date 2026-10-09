@@ -7,6 +7,17 @@
 # HarmonyOS / DevEco generated files
 /local.properties
 **/build/
+
+# ── 迁移期间的一次性脚本 ──
+# 这些是改文件用的临时 PowerShell（fix-* / add-* / wire-* …），
+# 不是产品代码，也不是可复用工具，留在本机即可。
+# scripts/fieldwatch-data/ 下的数据源生成工具**要提交**，故不在此列。
+scripts/*.ps1
+scripts/*.txt
+
+# 从编译缓存里清理出来的孤儿产物（对应源文件已删除）。
+# 保留是为了可追溯，不属于源码，也不应提交。
+.build-orphans/
 **/.cxx/
 **/.preview/
 **/.test/
