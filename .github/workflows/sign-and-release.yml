@@ -25,10 +25,11 @@ env:
 
 jobs:
   prepare:
-    name: 解析 CI 镜像 / Resolve CI image
+    name: 解析 CI 镜像与签名材料 / Resolve image & signing readiness
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.img.outputs.image }}
+      signing: ${{ steps.probe.outputs.signing }}
     steps:
       - name: 计算镜像引用 / Compute image reference
         id: img
@@ -37,6 +38,37 @@ jobs:
         run: |
           owner=$(printf '%s' "$OWNER" | tr 'A-Z' 'a-z')
           echo "image=ghcr.io/${owner}/harmonyos-ci:api26r" >> "$GITHUB_OUTPUT"
+
+      # **签名材料是否齐备必须在 step 里算好再传给后续作业。**
+      #
+      # `secrets` 上下文不允许出现在 `jobs.<job_id>.if` —— 官方可用性表里
+      # `jobs.<job_id>.if` 只允许 github / needs / vars / inputs。
+      # 一旦用了 `secrets.*`，整个 workflow 文件失效：每次 push 都会产生一个
+      # 「0 个作业」的失败运行，且运行名退化成文件路径（实测）。
+      #
+      # 这里把结果写进 outputs，后续用 `needs.prepare.outputs.signing` 判断 ——
+      # `needs` 正是 job 级 if 允许的上下文。
+      - name: 探测签名材料 / Probe signing materials
+        id: probe
+        env:
+          S_CERT: ${{ secrets.SIGNING_CERT }}
+          S_PROFILE: ${{ secrets.SIGNING_PROFILE }}
+          S_KEY: ${{ secrets.SIGNING_KEY }}
+          S_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          S_STORE_PWD: ${{ secrets.KEYSTORE_PASSWORD }}
+          S_KEY_PWD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          ok=true
+          for v in S_CERT S_PROFILE S_KEY S_ALIAS S_STORE_PWD S_KEY_PWD; do
+            if [ -z "${!v}" ]; then ok=false; fi
+          done
+          if [ "$ok" = true ]; then
+            echo "signing=true"  >> "$GITHUB_OUTPUT"
+            echo "签名材料齐备，将执行签名与发布。"
+          else
+            echo "signing=false" >> "$GITHUB_OUTPUT"
+            echo "未配置完整的签名 Secrets，将跳过签名与发布。"
+          fi
 
   sign-and-release:
     name: 构建签名并发布 / Build, sign & release
@@ -47,14 +79,10 @@ jobs:
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    # 签名材料未配置时跳过(见 guide job), 避免 tag 构建误报红
-    if: >-
-      secrets.SIGNING_CERT != '' &&
-      secrets.SIGNING_PROFILE != '' &&
-      secrets.SIGNING_KEY != '' &&
-      secrets.SIGNING_KEY_ALIAS != '' &&
-      secrets.KEYSTORE_PASSWORD != '' &&
-      secrets.KEY_PASSWORD != ''
+    # 签名材料未配置时跳过(见 guide job), 避免 tag 构建误报红。
+    # **不要改回 `secrets.* != ''`** —— secrets 在 job 级 if 里非法，会让整个
+    # workflow 失效（每次 push 产生一个 0 作业的失败运行）。见 prepare 作业里的说明。
+    if: needs.prepare.outputs.signing == 'true'
     steps:
       - name: Checkout 检出代码 / Checkout
         uses: actions/checkout@v4
@@ -146,8 +174,9 @@ jobs:
 
   guide:
     name: 未配置签名 Secrets (跳过) / Signing secrets missing (skipped)
-    needs: sign-and-release
-    if: ${{ always() && needs.sign-and-release.result == 'skipped' }}
+    needs: [prepare, sign-and-release]
+    # 同样不能引用 secrets；判断 prepare 探测出来的结果。
+    if: ${{ always() && needs.prepare.outputs.signing != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: 说明如何启用签名 / Explain how to enable signing
