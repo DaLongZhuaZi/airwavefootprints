@@ -36,7 +36,7 @@ jobs:
           OWNER: ${{ github.repository_owner }}
         run: |
           owner=$(printf '%s' "$OWNER" | tr 'A-Z' 'a-z')
-          echo "image=ghcr.io/${owner}/harmonyos-ci:api26" >> "$GITHUB_OUTPUT"
+          echo "image=ghcr.io/${owner}/harmonyos-ci:api26r" >> "$GITHUB_OUTPUT"
 
   sign-and-release:
     name: 构建签名并发布 / Build, sign & release
