@@ -1,8 +1,9 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
-import { NGFHdsTitleBarOptionsFactory, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
+import { logger, NGFHdsTitleBarOptionsFactory, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { SignatureClass, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
-import { SignatureDecodeField, SignatureFleet, SignatureFleetDecode, SignatureRule } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
+import { SignatureFleet, SignatureRule } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
+import { FieldwatchSignatureDetail } from '../../fieldwatch/ui/FieldwatchSignatureDetail';
 import { SignatureImportResult, SignaturePackError } from '../../fieldwatch/domain/signatures/FieldwatchSignatureCatalog';
 import { FieldwatchCatalogImportOutcome } from '../../fieldwatch/data/FieldwatchCatalogRepository';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
@@ -11,7 +12,6 @@ import { SignatureSortMode, sortSignatureFleets } from '../../fieldwatch/ui/Fiel
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone, FieldwatchSegmentedChip } from '../../fieldwatch/ui/FieldwatchButton';
 
-const DECODE_TYPE_LABELS: string[] = ['u8', 'i8', 'u16', 'i16', 'u24', 'u32', 'i32', 'f32', 'bits', 'utf8', 'hex', 'mac', 'bool'];
 
 @Component
 export struct FieldwatchSignaturesPage {
@@ -28,7 +28,31 @@ export struct FieldwatchSignaturesPage {
    * 滚动、回收、间距都由它处理；手写 Row 包两份 List 反而会各滚各的。
    */
   twoColumn: boolean = false;
+  /**
+   * 是否横屏。
+   *
+   * 横屏下详情**不能走底部 sheet**：Navigation 在无子页面时是 Stack 模式，
+   * 整页占满窗口，sheet 会横跨两栏。改为压栈到右侧分栏，与设备详情同一套做法。
+   */
+  landscape: boolean = false;
   onEditFleet: (fleetId: string, deviceKey: string) => void = (): void => {};
+  /** 横屏下把详情压进右侧分栏（由根页面实现）。 */
+  onOpenDetail: (fleetId: string) => void = (fleetId: string): void => {};
+  /**
+   * 打开关注列表（横屏进右栏，竖屏整页）。
+   *
+   * **故意不给默认值**：默认空函数会把点击静默吃掉，
+   * 表现为「这个按钮怎么点都没反应」而且**没有任何日志**。
+   * 本文件里 `onEditFleet` 已经因此踩过一次（见 FieldwatchPage 的注释），
+   * 关注列表又踩了第二次（横屏布局那个调用点漏传）。
+   * 去掉默认值后，漏传是**编译错误**，不会再漏到运行时。
+   */
+  onOpenWatchlist: () => void = (): void => {
+    // ArkTS 要求 struct 成员必须有初始值，所以去不掉默认值 ——
+    // 那就让它**吵**：漏传时打 error 日志，而不是静默吃掉点击。
+    // error 级默认就会进 hilog，不需要把日志等级调低也能看到。
+    logger.error('FieldwatchSignaturesPage', 'onOpenWatchlist 未接线：这次点击被丢弃');
+  };
   @State private query: string = '';
   @State private category: SignatureClass | undefined = undefined;
   @State private categoryIndex: number = -1;
@@ -40,6 +64,17 @@ export struct FieldwatchSignaturesPage {
   private fleetSource: SignatureFleetDataSource = new SignatureFleetDataSource();
   @State private sheetOpen: boolean = false;
   @State private tick: number = 0;
+  /** 外层转发的关注状态变化计数；变化即重建列表（横屏分栏时列表同屏可见）。 */
+  @Prop @Watch('onFollowTick') followTick: number = 0;
+  /**
+   * 本页当前是否可见；不可见时不做任何刷新（`Tabs` 会让页面常驻）。
+   *
+   * **不能叫 `visible`**：本组件已有一个同名的 `visible()` 过滤方法，会撞名（实测编译失败）。
+   */
+  @Prop pageVisible: boolean = true;
+  private refreshTimer: number = -1;
+
+  onFollowTick(): void { this.refresh(); }
   @State private sortMode: SignatureSortMode = SignatureSortMode.NAME;
 
   /**
@@ -55,19 +90,35 @@ export struct FieldwatchSignaturesPage {
   aboutToAppear(): void {
     this.refresh();
     void fieldwatchApplication.ensureCatalogLoaded().then((): void => { this.refresh(); });
+    // 本页的行内内容（关注状态、命中次数）都是运行期会变的，
+    // 靠 `ensureCatalogLoaded` 那种一次性刷新覆盖不到。
+    //
+    // 只在**可见且前台**时刷：`Tabs` 会让页面常驻，
+    // 不可见时每秒重算 240 条的命中次数纯属白烧电。
+    this.refreshTimer = setInterval((): void => {
+      if (!this.pageVisible || !fieldwatchApplication.isAppForeground()) return;
+      this.refresh();
+    }, 1000);
+  }
+
+  aboutToDisappear(): void {
+    if (this.refreshTimer < 0) return;
+    clearInterval(this.refreshTimer);
+    this.refreshTimer = -1;
   }
 
   private refresh(): void {
     const state = fieldwatchApplication.getState();
     this.version = state.catalogVersion;
-    this.total = state.signatures.length;
+    // 计数与列表都跳过墓碑（已删除的内置行仍留在目录里，见 removeFleet）。
+    this.total = fieldwatchApplication.visibleSignatures().length;
     // 数据源必须跟着重建：LazyForEach 只从它取数，
     // 不重载的话搜索/筛选/启用停用都不会反映到列表上。
     this.fleetSource.reload(this.visible());
     this.tick += 1;
   }
 
-  private fleets(): SignatureFleet[] { return fieldwatchApplication.getState().signatures; }
+  private fleets(): SignatureFleet[] { return fieldwatchApplication.visibleSignatures(); }
 
   private visible(): SignatureFleet[] {
     const needle: string = this.query.trim().toLowerCase();
@@ -143,7 +194,20 @@ export struct FieldwatchSignaturesPage {
         List({ space: 8 }) {
           LazyForEach(this.fleetSource, (fleet: SignatureFleet): void => {
             ListItem() { this.buildRow(fleet) }.width('100%')
-          }, (fleet: SignatureFleet): string => fleet.id + '-' + fleet.enabled.toString())
+          },
+          /**
+           * **key 必须包含所有「运行期会变、且行内会渲染」的状态。**
+           *
+           * LazyForEach 按 key 缓存行：key 不变就**复用旧行、不重建**。
+           * 之前 key 只有 `id-enabled`，于是「已关注」标记与命中次数都永远停在
+           * 首次构建那一刻 —— 表现就是「不改 key 就得重载页面才刷新」（实测反馈）。
+           *
+           * 把命中次数也放进来是**有意的**：它每秒都可能变，
+           * 而 key 变化恰好只在「这一行真的要重画」时发生，比无差别重建省得多。
+           */
+          (fleet: SignatureFleet): string => fleet.id + '-' + fleet.enabled.toString()
+            + '-' + (fieldwatchApplication.isSignatureWatched(fleet.id) ? '1' : '0')
+            + '-' + fieldwatchApplication.countMatches(fleet.id).toString())
           ListItem().height(32)
         }
         .layoutWeight(1)
@@ -220,6 +284,10 @@ export struct FieldwatchSignaturesPage {
     Row({ space: 8 }) {
       FieldwatchButton({ label: $r('app.string.fieldwatch_signatures_new'), tone: FieldwatchButtonTone.PRIMARY,
         fillWidth: false, onTap: (): void => { this.onEditFleet('', ''); } }).layoutWeight(1)
+      // 关注列表入口。放在这一行而不是「更多」菜单里：
+      // 卡片点击会直达该页，用户需要在同一处也能自己找得到。
+      FieldwatchButton({ label: $r('app.string.fieldwatch_watchlist_title'), tone: FieldwatchButtonTone.OUTLINE,
+        fillWidth: false, onTap: (): void => { this.onOpenWatchlist(); } }).layoutWeight(1)
       Button($r('app.string.fieldwatch_signatures_more')).height(44).width(96)
         .backgroundColor($r('app.color.background_secondary'))
         .bindMenu(this.buildMoreMenu())
@@ -314,23 +382,21 @@ export struct FieldwatchSignaturesPage {
     this.notice = restored ? this.noticeText('app.string.fieldwatch_signatures_updated') : this.noticeText('app.string.fieldwatch_signatures_import_failed');
     this.refresh();
   }
-  private confirmDelete(fleet: SignatureFleet): void {
-    this.getUIContext().showAlertDialog({
-      title: this.noticeText('app.string.fieldwatch_signatures_delete'),
-      message: this.noticeText('app.string.fieldwatch_signatures_delete_confirm'),
-      primaryButton: { value: this.noticeText('app.string.fieldwatch_filter_cancel'), action: (): void => {} },
-      secondaryButton: { value: this.noticeText('app.string.fieldwatch_signatures_delete'), action: (): void => {
-        fieldwatchApplication.removeUserFleet(fleet.id);
-        this.sheetOpen = false;
-        this.refresh();
-      } }
-    });
-  }
   @Builder
   private buildRow(fleet: SignatureFleet) {
     Row({ space: 10 }) {
       Column({ space: 4 }) {
-        Text(fleet.name).fontSize(15).fontColor($r('app.color.text_primary')).maxLines(1)
+        Row({ space: 4 }) {
+          Text(fleet.name).fontSize(15).fontColor($r('app.color.text_primary')).maxLines(1)
+          // 已关注：名称旁边给一个 symbol + 文字。
+          // 只看名称的话，用户没法在 240 多条里认出自己关注了哪几个。
+          if (fieldwatchApplication.isSignatureWatched(fleet.id)) {
+            SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(13)
+              .fontColor([$r('app.color.button_primary')])
+            Text($r('app.string.fieldwatch_signatures_watched')).fontSize(12)
+              .fontColor($r('app.color.button_primary'))
+          }
+        }.width('100%')
         Text(signatureClassLabel(foldedSignatureClass(fleet.category))).fontSize(13).fontColor($r('app.color.text_secondary')).maxLines(1)
         Text((fleet.builtIn ? this.noticeText('app.string.fieldwatch_signatures_stock') : this.noticeText('app.string.fieldwatch_signatures_user'))
           + ' · ' + this.noticeText('app.string.fieldwatch_signatures_rules') + ': ' + fleet.rules.length.toString()
@@ -343,73 +409,25 @@ export struct FieldwatchSignaturesPage {
       })
     }
     .width('100%').padding(12).backgroundColor($r('app.color.background_secondary')).borderRadius(12)
-    .onClick((): void => { this.detailId = fleet.id; this.sheetOpen = true; })
+    .onClick((): void => {
+      if (this.landscape) this.onOpenDetail(fleet.id);
+      else { this.detailId = fleet.id; this.sheetOpen = true; }
+    })
   }
 
   @Builder
   private buildDetailSheet() {
-    Scroll() {
-      Column({ space: 10 }) {
-        if (this.detailFleet() !== undefined) {
-          this.buildDetailContent(this.detailFleet() as SignatureFleet)
-        }
-      }.width('100%').padding(20)
-    }.width('100%').height('100%')
-  }
-
-  @Builder
-  private buildDetailContent(fleet: SignatureFleet) {
-    Text(fleet.name).fontSize(20).fontWeight(FontWeight.Bold).fontColor($r('app.color.text_primary'))
-    Text(signatureClassLabel(foldedSignatureClass(fleet.category))).fontSize(13).fontColor($r('app.color.text_secondary'))
-    Text((fleet.builtIn ? this.noticeText('app.string.fieldwatch_signatures_stock') : this.noticeText('app.string.fieldwatch_signatures_user')) + ' · ' + (fleet.enabled ? this.noticeText('app.string.fieldwatch_signatures_enabled') : this.noticeText('app.string.fieldwatch_signatures_disabled')))
-      .fontSize(13).fontColor($r('app.color.text_secondary'))
-    if (fleet.attentionNote.length > 0) Text(fleet.attentionNote).fontSize(13).fontColor(FieldwatchPaletteHolder.get().warn)
-    if (fleet.notes.length > 0) Text(fleet.notes).fontSize(12).fontColor($r('app.color.text_secondary'))
-    Text(this.noticeText('app.string.fieldwatch_signatures_rules') + ' (' + fleet.rules.length.toString() + ')').fontSize(16).fontWeight(FontWeight.Medium)
-    if (fleet.rules.length === 0) Text($r('app.string.fieldwatch_signatures_no_rules')).fontSize(13).fontColor($r('app.color.text_secondary'))
-    ForEach(fleet.rules, (rule: SignatureRule): void => {
-      Row({ space: 8 }) {
-        Text(rule.kind).fontSize(12).fontColor($r('app.color.tag_blue')).width(150)
-        Text(this.ruleText(rule)).fontSize(12).fontColor($r('app.color.text_primary')).layoutWeight(1).maxLines(2)
-      }.width('100%')
-    }, (rule: SignatureRule): string => rule.kind + rule.text + rule.dataPrefixHex + rule.companyId.toString())
-    if (fleet.decode !== undefined) { this.buildDecodeSection(fleet.decode) }
-    Button(fieldwatchApplication.isSignatureWatched(fleet.id) ? $r('app.string.fieldwatch_signatures_unwatch') : $r('app.string.fieldwatch_signatures_watch')).height(44).width('100%').onClick((): void => {
-      fieldwatchApplication.toggleSignatureWatch(fleet);
-      this.refresh();
+    // 内容抽到 FieldwatchSignatureDetail：竖屏 sheet 与横屏右栏**共用同一份**，
+    // 避免「同一件事写两遍」——两处必然漂移。
+    FieldwatchSignatureDetail({
+      fleetId: this.detailId,
+      onEdit: (fleetId: string): void => {
+        this.sheetOpen = false;
+        this.onEditFleet(fleetId, '');
+      },
+      onClose: (): void => { this.sheetOpen = false; },
+      // 关注状态变了就重建列表，让行内的「已关注」立刻出现/消失。
+      onFollowChanged: (): void => { this.refresh(); }
     })
-    if (!fleet.builtIn) {
-      Row({ space: 8 }) {
-        Button($r('app.string.fieldwatch_signatures_edit')).height(44).layoutWeight(1).onClick((): void => { this.sheetOpen = false; this.onEditFleet(fleet.id, ''); })
-        Button($r('app.string.fieldwatch_signatures_delete')).height(44).layoutWeight(1).onClick((): void => { this.confirmDelete(fleet); })
-      }.width('100%')
-    }
-  }
-
-  @Builder
-  private buildDecodeSection(decode: SignatureFleetDecode) {
-    Text(this.noticeText('app.string.fieldwatch_signatures_decode') + ' (' + decode.source + ')').fontSize(16).fontWeight(FontWeight.Medium)
-    ForEach(decode.fields, (field: SignatureDecodeField): void => {
-      Row({ space: 8 }) {
-        Text(field.label).fontSize(12).fontColor($r('app.color.tag_blue')).width(150)
-        Text(this.decodeFieldText(field)).fontSize(12).fontColor($r('app.color.text_primary')).layoutWeight(1).maxLines(2)
-      }.width('100%')
-    }, (field: SignatureDecodeField): string => field.id)
-  }
-
-  private ruleText(rule: SignatureRule): string {
-    const parts: string[] = [];
-    if (rule.text.length > 0) parts.push(rule.text);
-    if (rule.dataPrefixHex.length > 0) parts.push('0x' + rule.dataPrefixHex);
-    if (rule.companyId > 0) parts.push('company=' + rule.companyId.toString());
-    return parts.length > 0 ? parts.join(' · ') : rule.kind;
-  }
-
-  private decodeFieldText(field: SignatureDecodeField): string {
-    const type: string = DECODE_TYPE_LABELS.indexOf(field.type) >= 0 ? field.type : 'hex';
-    const parts: string[] = ['@' + field.offset.toString(), type, field.endian];
-    if (field.unit.length > 0) parts.push(field.unit);
-    if (field.enumLabels !== undefined) parts.push('named=' + field.enumLabels.size.toString());
-    return parts.join(' · ');
   }
 }

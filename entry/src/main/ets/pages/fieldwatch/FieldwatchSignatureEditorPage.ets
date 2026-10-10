@@ -1,9 +1,9 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 // `NavigationSystemTransitionType` 是 ArkUI 全局枚举，与 `NavigationMode`、
 // `BarPosition` 一样**不需要 import** —— 从 kit 导入会报「no exported member」。
-import { NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
+import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
-import { RadioKind, SignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
+import { foldedSignatureClass, RadioKind, SignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
 import {
   SignatureDecodeEndian, SignatureDecodeField, SignatureDecodeSource, SignatureDecodeType, SignatureDecodeWhen,
   SignatureDecodeWhenOp, SignatureFleet, SignatureFleetDecode, SignatureRule, SignatureRuleKind
@@ -85,14 +85,16 @@ function toInt(value: string, fallback: number): number {
 export struct FieldwatchSignatureEditorPage {
   fleetId: string = '';
   fromDeviceKey: string = '';
+  /** 顶部系统安全区高度（vp），由根页面测量后传入。 */
+  topInset: number = 0;
   /**
    * 内容层顶部避让。
    *
-   * **必须与标题栏高度同源**：92 与 `NGFImmersiveTopChromePresetFactory.build` 的
-   * `contentTopInset` 一致，也与设备详情页的 `DETAIL_CONTENT_TOP` 相同。
-   * 写死一个小值会让内容压在标题栏底下。
+   * **不是 92** —— 底板实际覆盖 `underlayHeight + 顶部安全区`（本机 168 + 28 = 196vp），
+   * 且合成在内容之上；写 92 时首个内容元素会被压暗（实测）。
+   * 见 `ngfImmersiveContentTop`。
    */
-  private readonly contentTop: number = 92;
+  private contentTop(): number { return ngfImmersiveContentTop(this.underlayHeight, this.topInset); }
   /** 顶栏底板高度，与详情页同值。 */
   private readonly underlayHeight: number = 168;
   onClose: () => void = (): void => {};
@@ -130,13 +132,6 @@ export struct FieldwatchSignatureEditorPage {
   @State private enterShift: number = 40;
   @State private enterAlpha: number = 0;
   private leaving: boolean = false;
-  @State private ruleOpen: boolean = false;
-  @State private ruleIndex: number = -1;
-  @State private ruleKind: SignatureRuleKind = SignatureRuleKind.NAME_CONTAINS;
-  @State private ruleText: string = '';
-  @State private ruleCompany: string = '0';
-  @State private rulePrefix: string = '';
-  @State private ruleRadio: number = 0;
   @State private fieldOpen: boolean = false;
   @State private fieldIndex: number = -1;
   @State private fieldId: string = '';
@@ -184,6 +179,23 @@ export struct FieldwatchSignatureEditorPage {
   }
 
   private text(key: string): string { return resolveResourceString(this.getUIContext().getHostContext(), $r(key)); }
+
+  /**
+   * 顶栏主标题：**当前特征的名称**。
+   *
+   * 原来写死「编辑特征 / 新建特征」—— 连着改几条之后，
+   * 顶栏认不出「我现在改的是哪一条」。名称还没填时才回退到「新建特征」。
+   */
+  private editorTitle(): ResourceStr {
+    const name: string = this.nameText.trim();
+    if (name.length > 0) return name;
+    return $r('app.string.fieldwatch_editor_title_new');
+  }
+
+  /** 顶栏副标题：**当前类别**，与「匹配」段的分类同一处取值、同一个折叠口径。 */
+  private editorSubtitle(): ResourceStr {
+    return signatureClassLabel(foldedSignatureClass(this.category));
+  }
 
   private load(): void {
     if (this.fleetId.length > 0) {
@@ -252,6 +264,23 @@ export struct FieldwatchSignatureEditorPage {
     this.notice = saved ? this.text('app.string.fieldwatch_editor_saved') : this.text('app.string.fieldwatch_editor_save_failed');
   }
 
+  /**
+   * 删除这条特征。内置特征走墓碑（见 FieldwatchApplication.removeFleet），
+   * 所以这里对内置与用户特征一视同仁。
+   */
+  private confirmDeleteFleet(): void {
+    if (this.fleetId.length === 0) return;
+    this.getUIContext().showAlertDialog({
+      title: this.text('app.string.fieldwatch_editor_delete_fleet'),
+      message: this.text('app.string.fieldwatch_signatures_delete_confirm'),
+      primaryButton: { value: this.text('app.string.fieldwatch_filter_cancel'), action: (): void => {} },
+      secondaryButton: { value: this.text('app.string.fieldwatch_editor_delete_fleet'), action: (): void => {
+        fieldwatchApplication.removeFleet(this.fleetId);
+        this.onClose();
+      } }
+    });
+  }
+
   private sheetOptions(): NGFMaterialSheetOptions {
     const options: NGFMaterialSheetOptions = new NGFMaterialSheetOptions(ngfVisualEffectsFacade.buildSystemMaterialForSheet(), ngfVisualEffectsFacade.shouldUseSystemMaterialSurface());
     options.detents = [SheetSize.MEDIUM, SheetSize.LARGE];
@@ -283,24 +312,32 @@ export struct FieldwatchSignatureEditorPage {
           this.buildColorCard()
           this.buildRulesSection()
           this.buildDecodeSection()
+          // ── 删除特征：原版在页面最底部单独一张卡片 ──
+          // 只有已存在的特征才谈得上删除（新建时 fleetId 是临时 id）。
+          if (this.editing) {
+            Button($r('app.string.fieldwatch_editor_delete_fleet')).height(44).width('100%')
+              .backgroundColor(FieldwatchPaletteHolder.get().panel)
+              .fontColor(FieldwatchPaletteHolder.get().warn)
+              .onClick((): void => { this.confirmDeleteFleet(); })
+          }
           Row({ space: 8 }) {
             Button($r('app.string.fieldwatch_editor_save')).height(44).layoutWeight(1).onClick((): void => { this.save(); })
             Button($r('app.string.fieldwatch_editor_cancel')).height(44).layoutWeight(1).onClick((): void => { this.onClose(); })
           }.width('100%')
           if (this.notice.length > 0) Text(this.notice).fontSize(13).fontColor(FieldwatchPaletteHolder.get().warn)
-          // **顶部避让必须与标题栏高度同源。**
+          // **顶部避让必须覆盖底板本身。**
           //
-          // 原来写死 16，内容直接压在标题栏底下（实测反馈）。
-          // 92 与 `NGFImmersiveTopChromePresetFactory.build` 的 `contentTopInset` 一致，
-          // 也与设备详情页的 `DETAIL_CONTENT_TOP` 同源。
-          }.width('100%').padding({ left: 16, right: 16, top: this.contentTop, bottom: 48 })
+          // 原来写死 16，内容直接压在标题栏底下（实测反馈）；
+          // 改成 92 之后仍然落在底板的覆盖带里（底板 168 + 状态栏 28 = 196vp，
+          // 且它合成在内容之上）—— 详见 `ngfImmersiveContentTop`。
+          }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: 48 })
         }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
       }
       .width('100%').height('100%')
     }
     .titleBar(NGFHdsTitleBarOptionsFactory.build(
-      this.editing ? $r('app.string.fieldwatch_editor_title_edit') : $r('app.string.fieldwatch_editor_title_new'),
-      $r('app.string.fieldwatch_editor_attention_hint'),
+      this.editorTitle(),
+      this.editorSubtitle(),
       FieldwatchPaletteHolder.get().night,
       hdsMaterial.MaterialLevel.GENTLE,
       true,
@@ -336,7 +373,6 @@ export struct FieldwatchSignatureEditorPage {
      */
     .translate({ x: this.enterShift })
     .opacity(this.enterAlpha)
-    .bindSheet($$this.ruleOpen, this.buildRuleSheet(), this.sheetOptions())
   }
 
   /**
@@ -515,20 +551,23 @@ export struct FieldwatchSignatureEditorPage {
   private buildRulesSection() {
     Row() {
       Text(this.text('app.string.fieldwatch_signatures_rules') + ' (' + this.rules.length.toString() + ')').fontSize(18).fontWeight(FontWeight.Medium).layoutWeight(1)
-      Button($r('app.string.fieldwatch_editor_add_rule')).height(36).onClick((): void => { this.openRule(-1); })
+      Button($r('app.string.fieldwatch_editor_add_rule')).height(36).onClick((): void => { this.addRule(); })
     }.width('100%')
-    if (this.rules.length === 0) Text($r('app.string.fieldwatch_editor_no_rules')).fontSize(13).fontColor($r('app.color.text_secondary'))
+    Text($r('app.string.fieldwatch_editor_rules_hint')).fontSize(11)
+      .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+    if (this.rules.length === 0) Text($r('app.string.fieldwatch_editor_no_rules')).fontSize(13)
+      .fontColor(FieldwatchPaletteHolder.get().textDim)
     ForEach(this.rules, (rule: SignatureRule, index: number): void => {
-      Row({ space: 8 }) {
-        Column({ space: 2 }) {
-          Text(rule.kind).fontSize(13).fontColor($r('app.color.tag_blue'))
-          Text(this.ruleSummary(rule)).fontSize(12).fontColor($r('app.color.text_primary')).maxLines(1)
-        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-        Button($r('app.string.fieldwatch_signatures_edit')).height(36).onClick((): void => { this.openRule(index); })
-      }.width('100%').padding(10).backgroundColor($r('app.color.background_secondary')).borderRadius(10)
-    }, (rule: SignatureRule, index: number): string => rule.kind + rule.text + rule.dataPrefixHex + index.toString())
+      this.buildRuleRow(rule, index)
+    }, (rule: SignatureRule, index: number): string => index.toString())
   }
 
+  /**
+   * 解码字段段（原版编辑页没有这一段，属于本项目的既有能力，保留）。
+   *
+   * 它与「规则」段共用同一张卡片风格，但**数据是两回事**：
+   * 规则决定「这条特征命中哪些设备」，解码字段决定「命中之后从广播里读出什么」。
+   */
   @Builder
   private buildDecodeSection() {
     Column({ space: 8 }) {
@@ -560,26 +599,113 @@ export struct FieldwatchSignatureEditorPage {
     .bindSheet($$this.fieldOpen, this.buildFieldSheet(), this.sheetOptions())
   }
 
-  private ruleSummary(rule: SignatureRule): string {
-    const parts: string[] = [];
-    if (rule.text.length > 0) parts.push(rule.text);
-    if (rule.dataPrefixHex.length > 0) parts.push('0x' + rule.dataPrefixHex);
-    if (rule.companyId > 0) parts.push('company=' + rule.companyId.toString());
-    // 星闪是独立种类，不能再落进 BLE 分支显示成「BLE」。
-    if (rule.radio !== undefined) parts.push(this.radioLabelOf(rule.radio));
-    return parts.length > 0 ? parts.join(' · ') : rule.kind;
+  /**
+   * 一条规则的**行内编辑行**：开关 | 类型 | 值 | 删除。
+   *
+   * 对齐原版：一条规则的所有可改项都在这一行里，不必先点「编辑」再进弹层。
+   * 每条规则有**自己的开关** —— 关掉的规则仍留在目录里、只是不参与匹配，
+   * 用它可以在单个特征上静音嘈杂的 OUI 或名称，而不必删掉它们。
+   */
+  @Builder
+  private buildRuleRow(rule: SignatureRule, index: number) {
+    Row({ space: 10 }) {
+      Toggle({ type: ToggleType.Switch, isOn: rule.enabled })
+        .onChange((value: boolean): void => { this.setRuleEnabled(index, value); })
+      Column({ space: 6 }) {
+        Select(this.ruleKindOptions())
+          .selected(this.ruleKindIndexOf(rule.kind))
+          .value(this.ruleKindLabel(rule.kind))
+          .font({ size: 13 })
+          .onSelect((at: number): void => { this.setRuleKind(index, RULE_KINDS[at]); })
+        TextInput({ text: this.ruleValueText(rule) })
+        TextInput({ text: this.ruleValueText(rule), placeholder: $r('app.string.fieldwatch_editor_rule_value') })
+          // **就地改，不替换数组。**
+          // 替换数组会让 ForEach 重建这个 TextInput，输入焦点与光标每敲一个字就丢一次。
+          .onChange((value: string): void => { this.setRuleValueText(rule, value); })
+      }.layoutWeight(1)
+      SymbolGlyph($r('sys.symbol.trash')).fontSize(18)
+        .fontColor([FieldwatchPaletteHolder.get().warn])
+        .onClick((): void => { this.removeRule(index); })
+    }.width('100%').padding(10).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(10)
   }
 
-  private openRule(index: number): void {
-    this.ruleIndex = index;
-    const rule: SignatureRule = index >= 0 && index < this.rules.length ? this.rules[index] : new SignatureRule(SignatureRuleKind.NAME_CONTAINS);
-    this.ruleKind = rule.kind;
-    this.ruleText = rule.text;
-    this.ruleCompany = rule.companyId.toString();
-    this.rulePrefix = rule.dataPrefixHex;
-    this.ruleRadio = rule.radio === undefined ? 0
-      : (rule.radio === RadioKind.WIFI ? 1 : (rule.radio === RadioKind.NEARLINK ? 3 : 2));
-    this.ruleOpen = true;
+  private addRule(): void {
+    this.rules = this.rules.concat([new SignatureRule(SignatureRuleKind.OUI)]);
+  }
+
+  private removeRule(index: number): void {
+    this.rules = this.rules.filter((item: SignatureRule, at: number): boolean => at !== index);
+  }
+
+  private setRuleEnabled(index: number, enabled: boolean): void {
+    const next: SignatureRule[] = this.rules.slice();
+    next[index].enabled = enabled;
+    this.rules = next;
+  }
+
+  private setRuleKind(index: number, kind: SignatureRuleKind): void {
+    const current: SignatureRule = this.rules[index];
+    const next: SignatureRule[] = this.rules.slice();
+    next[index] = new SignatureRule(kind, current.text, current.companyId, current.dataPrefixHex, current.radio, current.enabled);
+    this.rules = next;
+  }
+
+  private ruleKindOptions(): SelectOption[] {
+    const options: SelectOption[] = [];
+    RULE_KINDS.forEach((kind: SignatureRuleKind): void => { options.push({ value: this.ruleKindLabel(kind) }); });
+    return options;
+  }
+
+  private ruleKindIndexOf(kind: SignatureRuleKind): number {
+    const at: number = RULE_KINDS.indexOf(kind);
+    return at < 0 ? 0 : at;
+  }
+
+  /**
+   * 规则类型 → 界面名。
+   *
+   * 原版的下拉里显示的是「OUI」「名称通配」这类可读名，不是 `NAME_GLOB` 这种枚举字面量。
+   */
+  private ruleKindLabel(kind: SignatureRuleKind): string {
+    if (kind === SignatureRuleKind.OUI) return 'OUI';
+    if (kind === SignatureRuleKind.MAC_PREFIX) return this.text('app.string.fieldwatch_rule_kind_mac_prefix');
+    if (kind === SignatureRuleKind.NAME_CONTAINS) return this.text('app.string.fieldwatch_rule_kind_name_contains');
+    if (kind === SignatureRuleKind.NAME_GLOB) return this.text('app.string.fieldwatch_rule_kind_name_glob');
+    if (kind === SignatureRuleKind.SERVICE_UUID) return this.text('app.string.fieldwatch_rule_kind_service_uuid');
+    if (kind === SignatureRuleKind.SERVICE_DATA) return this.text('app.string.fieldwatch_rule_kind_service_data');
+    if (kind === SignatureRuleKind.MANUFACTURER_ID) return this.text('app.string.fieldwatch_rule_kind_company');
+    if (kind === SignatureRuleKind.MANUFACTURER_DATA) return this.text('app.string.fieldwatch_rule_kind_manufacturer_data');
+    if (kind === SignatureRuleKind.RADIO_KIND) return this.text('app.string.fieldwatch_rule_kind_radio');
+    if (kind === SignatureRuleKind.HIDDEN_SSID) return this.text('app.string.fieldwatch_rule_kind_hidden_ssid');
+    return this.text('app.string.fieldwatch_rule_kind_vendor_ie');
+  }
+
+  /**
+   * 「值」字段的统一读写。
+   *
+   * 模型把值分散在 `text` / `companyId` / `dataPrefixHex` / `radio` 四个字段里，
+   * 而界面上只有一个「值」输入框 —— 这里按类型把两边口径对上，
+   * 免得用户看着「值」却不知道改的是哪个字段。
+   */
+  private ruleValueText(rule: SignatureRule): string {
+    if (rule.kind === SignatureRuleKind.MANUFACTURER_ID) return rule.companyId > 0 ? rule.companyId.toString() : '';
+    if (rule.kind === SignatureRuleKind.MANUFACTURER_DATA || rule.kind === SignatureRuleKind.SERVICE_DATA
+      || rule.kind === SignatureRuleKind.VENDOR_IE_OUI) return rule.dataPrefixHex;
+    if (rule.kind === SignatureRuleKind.RADIO_KIND) return this.radioLabelOf(rule.radio === undefined ? RadioKind.BLE : rule.radio);
+    return rule.text;
+  }
+
+  private setRuleValueText(rule: SignatureRule, value: string): void {
+    if (rule.kind === SignatureRuleKind.MANUFACTURER_ID) { rule.companyId = toInt(value, 0); return; }
+    if (rule.kind === SignatureRuleKind.MANUFACTURER_DATA || rule.kind === SignatureRuleKind.SERVICE_DATA
+      || rule.kind === SignatureRuleKind.VENDOR_IE_OUI) { rule.dataPrefixHex = value.trim(); return; }
+    if (rule.kind === SignatureRuleKind.RADIO_KIND) {
+      const lowered: string = value.trim().toLowerCase();
+      rule.radio = lowered.indexOf('wi-fi') >= 0 ? RadioKind.WIFI
+        : (value.indexOf('星闪') >= 0 ? RadioKind.NEARLINK : RadioKind.BLE);
+      return;
+    }
+    rule.text = value;
   }
 
   /** 无线电种类 → 显示名。三态必须各自区分，否则星闪会被误认为 BLE。 */
@@ -587,52 +713,6 @@ export struct FieldwatchSignatureEditorPage {
     if (kind === RadioKind.WIFI) return 'Wi-Fi';
     if (kind === RadioKind.NEARLINK) return '星闪';
     return 'BLE';
-  }
-  private commitRule(): void {
-    const rule: SignatureRule = new SignatureRule(this.ruleKind, this.ruleText.trim(), toInt(this.ruleCompany, 0), this.rulePrefix.trim(), this.ruleRadio === 0 ? undefined
-      : (this.ruleRadio === 1 ? RadioKind.WIFI : (this.ruleRadio === 3 ? RadioKind.NEARLINK : RadioKind.BLE)));
-    const next: SignatureRule[] = this.rules.slice();
-    if (this.ruleIndex >= 0 && this.ruleIndex < next.length) next[this.ruleIndex] = rule;
-    else next.push(rule);
-    this.rules = next;
-    this.ruleOpen = false;
-  }
-
-  private deleteRule(): void {
-    if (this.ruleIndex < 0) return;
-    this.rules = this.rules.filter((item: SignatureRule, index: number): boolean => index !== this.ruleIndex);
-    this.ruleOpen = false;
-  }
-
-  @Builder
-  private buildRuleSheet() {
-    Scroll() {
-      Column({ space: 10 }) {
-        Text(this.ruleIndex >= 0 ? $r('app.string.fieldwatch_editor_edit_rule') : $r('app.string.fieldwatch_editor_add_rule')).fontSize(20).fontWeight(FontWeight.Bold)
-        Text($r('app.string.fieldwatch_editor_rule_kind')).fontSize(14).fontColor($r('app.color.text_secondary'))
-        Scroll() {
-          Row({ space: 8 }) {
-            ForEach(RULE_KINDS, (item: SignatureRuleKind): void => {
-              FieldwatchSegmentedChip({ label: item, selected: this.ruleKind === item, onTap: (): void => { this.ruleKind = item; } })
-            }, (item: SignatureRuleKind): string => item)
-          }
-        }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring).width('100%')
-        TextInput({ text: this.ruleText, placeholder: $r('app.string.fieldwatch_editor_rule_text') }).height(44).onChange((value: string): void => { this.ruleText = value; })
-        TextInput({ text: this.ruleCompany, placeholder: $r('app.string.fieldwatch_editor_rule_company') }).type(InputType.Number).height(44).onChange((value: string): void => { this.ruleCompany = value; })
-        TextInput({ text: this.rulePrefix, placeholder: $r('app.string.fieldwatch_editor_rule_prefix') }).height(44).onChange((value: string): void => { this.rulePrefix = value; })
-        Text($r('app.string.fieldwatch_editor_radio')).fontSize(14).fontColor($r('app.color.text_secondary'))
-        Row({ space: 8 }) {
-          FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_editor_radio_any'), selected: this.ruleRadio === 0, onTap: (): void => { this.ruleRadio = 0; } })
-          FieldwatchSegmentedChip({ label: 'Wi-Fi', selected: this.ruleRadio === 1, onTap: (): void => { this.ruleRadio = 1; } })
-          FieldwatchSegmentedChip({ label: '星闪', selected: this.ruleRadio === 3, onTap: (): void => { this.ruleRadio = 3; } })
-          FieldwatchSegmentedChip({ label: 'BLE', selected: this.ruleRadio === 2, onTap: (): void => { this.ruleRadio = 2; } })
-        }.width('100%')
-        Row({ space: 8 }) {
-          Button($r('app.string.fieldwatch_editor_ok')).height(44).layoutWeight(1).onClick((): void => { this.commitRule(); })
-          if (this.ruleIndex >= 0) Button($r('app.string.fieldwatch_editor_delete_rule')).height(44).layoutWeight(1).onClick((): void => { this.deleteRule(); })
-        }.width('100%')
-      }.width('100%').padding(20)
-    }.width('100%').height('100%')
   }
 
   private openField(index: number): void {

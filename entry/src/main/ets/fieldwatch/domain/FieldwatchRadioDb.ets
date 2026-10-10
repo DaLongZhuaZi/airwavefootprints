@@ -186,7 +186,9 @@ export class FieldwatchRadioDb {
   isReady(): boolean { return this.ready; }
 
   /**
-   * 厂商名（对齐原版 `RadioDb.vendorForMac`）。**界面与 facts 都应走这条。**
+   * 厂商名（对齐原版 `RadioDb.vendorForMac`）。
+   *
+   * **这只是链条的一级，调用方应走 `vendorFor`**（它还会补上蓝牙公司 ID 兜底）。
    *
    * 与 `vendorForOui24` 的两点关键区别：
    *
@@ -211,6 +213,32 @@ export class FieldwatchRadioDb {
       return isPhoneHouseVendor(name) ? '' : name;
     }
     return this.vendorForOui24(hex);
+  }
+
+  /**
+   * 厂商解析链的**唯一实现**：① 已有解析值 -> ② MAC / OUI -> ③ 蓝牙公司 ID。
+   *
+   * 抽出来是因为它此前**被写了三遍、且口径不一致**：
+   *   - `attachVendor`（写入 `facts.manufacturer`）是「OUI -> 公司 ID」两级；
+   *   - `vendorOfSighting`（**分类页的品牌分组**、详情页标题、详情文本转储）只有 OUI 一级；
+   *   - `FieldwatchFilterEngine.vendorOf`（筛选页按品牌筛）也只有 OUI 一级。
+   * 后果：随机 MAC 的 BLE 设备在列表里显示「Apple, Inc.」，
+   * 在分类页却全部落进「未知品牌」—— 看起来就像分类页没有品牌分组。
+   *
+   * 三级缺一不可：随机地址查不到 OUI（第 ② 级落空），
+   * 而 BLE 广播里几乎总带 Company ID（第 ③ 级救回来）；
+   * 手机大厂的 OUI 在还原路径上被过滤，也只能靠第 ③ 级还原出品牌。
+   *
+   * @param existing 已经解析好的值（`RadioFacts.manufacturer`）；非空即直接采用，
+   *                 这样「界面显示的品牌」与「参与分组的品牌」必然一致。
+   */
+  vendorFor(existing: string, mac: string, manufacturerId: number): string {
+    if (existing.length > 0) return existing;
+    if (!this.ready) return '';
+    const byMac: string = this.vendorForMac(mac);
+    if (byMac.length > 0) return byMac;
+    if (manufacturerId > 0) return this.company(manufacturerId);
+    return '';
   }
 
   /**

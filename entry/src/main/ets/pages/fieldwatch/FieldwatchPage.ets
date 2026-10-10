@@ -7,7 +7,7 @@ import { NGFThemeMode, ngfDeviceAdaptationFacade, NGFDeviceInfo, NGFImmersiveTop
 import { FieldwatchApplication, FieldwatchApplicationState, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { FieldwatchRowMetrics, rowMetricsFor } from '../../fieldwatch/ui/FieldwatchSignalRow';
 import { FieldwatchLiveMode, FieldwatchNavigationTab, FieldwatchRadarPoint, FieldwatchUiState, buildRadarPoints, groupByBrand, planRadarLabels, RadarLabelPlan, sparkRangeOf, SparkRange, formatClockTime, liveDecodeLabels, matchedSignatureNames, remainingAttemptSeconds, sparklineCommands, signatureColorAt, signatureColorIndex, sortSightingsForLiveMode, visibleSightingsAfterPause, wifiPhaseNeedsAction, wifiFactValue } from '../../fieldwatch/ui/FieldwatchUiState';
-import { logger } from 'ngf_framework';
+import { logger, ngfSystemNotificationManager } from 'ngf_framework';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { buildRadarNodes, FieldwatchRadarNode } from '../../fieldwatch/ui/FieldwatchRadarCluster';
 import { nearLinkClassLabel } from '../../fieldwatch/ui/FieldwatchDeviceTypeIcon';
@@ -30,7 +30,14 @@ import { FieldwatchDeviceDetailPage } from './FieldwatchDeviceDetailPage';
 import { FieldwatchSignatureEditorPage } from './FieldwatchSignatureEditorPage';
 import { FieldwatchDeviceTypeIcon } from '../../fieldwatch/ui/FieldwatchDeviceTypeIcon';
 import { FieldwatchSignaturesPage } from './FieldwatchSignaturesPage';
+import { FieldwatchToolboxPage } from './FieldwatchToolboxPage';
+import { FieldwatchWatchlistPage } from '../../fieldwatch/ui/FieldwatchWatchlistPage';
+import { FieldwatchFeedbackPage } from './FieldwatchFeedbackPage';
+import {
+  FieldwatchDeepLink, fieldwatchDeepLinkBridge, FieldwatchDeepLinkKind
+} from '../../fieldwatch/platform/FieldwatchDeepLink';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
+import { FieldwatchSignatureDetail } from '../../fieldwatch/ui/FieldwatchSignatureDetail';
 import { FieldwatchOnboardingPage } from './FieldwatchOnboardingPage';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 
@@ -81,6 +88,8 @@ const PAGE_UNDERLAY_HEIGHT: number = 96;
 @Component
 struct FieldwatchRootPage {
   @State private selectedTab: number = FieldwatchNavigationTab.LIVE;
+  /** 关注状态变化计数：转发给特征库列表，让它重建行内的「已关注」。 */
+  @State private followTick: number = 0;
   /** 首次启动引导：未完成时先走引导，再进主界面。 */
   @State private showOnboarding: boolean = false;
   @StorageProp('ngf_is_dark_mode') @Watch('onDarkModeChanged') private isDarkMode: boolean = true;
@@ -144,7 +153,30 @@ struct FieldwatchRootPage {
   }
   private readonly uiState: FieldwatchUiState = new FieldwatchUiState();
   private refreshTimer: number = -1;
-  private readonly deviceChangeListener = (info: NGFDeviceInfo): void => { this.isLandscape = info.isLandscape; };
+  /**
+   * 横竖屏切换。
+   *
+   * **切回竖屏时必须把 Tabs 控制器拨回 `selectedTab`。**
+   *
+   * 竖屏与横屏是**两棵不同的布局树**（`HdsTabs` 与自绘侧栏），切换时竖屏那棵是**新建**的，
+   * `HdsTabs` 的内部下标从 0 开始；而底栏的选中态读的是 `this.selectedTab`（见 `buildTabItem`）。
+   * 两者当场错开：底栏高亮「特征库」，内容却是「实时-雷达」（实测反馈）。
+   */
+  private readonly deviceChangeListener = (info: NGFDeviceInfo): void => {
+    const wasLandscape: boolean = this.isLandscape;
+    this.isLandscape = info.isLandscape;
+    // 只在「横 -> 竖」时补：反方向横屏读的就是 `selectedTab`，本来就一致。
+    if (wasLandscape && !info.isLandscape) {
+      // 延后一帧：此刻新的布局树还没挂上，立刻拨会被丢弃。
+      setTimeout((): void => { this.syncTabsToSelected(); }, 0);
+    }
+  };
+
+  /** 把 Tabs 的内部控制下标拨到 `selectedTab`，消除「底栏与内容不一致」。 */
+  private syncTabsToSelected(): void {
+    if (this.selectedTab === 0) return;
+    this.tabsController.changeIndex(this.selectedTab);
+  }
 
   /**
    * 拦截导航的显示事件，用来判断「当前是否还有子页面」。
@@ -186,6 +218,14 @@ struct FieldwatchRootPage {
    * `subPageOpen` 的含义是「详情页开着」，不是「有页面开着」——
    * 两者混用会让每个新页面都继承详情页的分栏行为。
    */
+  /** 深链带进来的 issue 号；0 表示只看列表。 */
+  @State private feedbackIssueNumber: number = 0;
+  /** 深链 `feedback/new`：直达新建表单。 */
+  @State private feedbackCreateMode: boolean = false;
+
+  /** 打开反馈中心。 */
+  private openFeedback(): void { this.pathStack.pushPathByName(FieldwatchRouteName.FEEDBACK, ''); }
+
   private topRouteUsesSplit(): boolean {
     const names: string[] = this.pathStack.getAllPathName();
     if (names.length === 0) return false;
@@ -194,8 +234,11 @@ struct FieldwatchRootPage {
     // 详情、特征编辑器、搜寻。它们与左侧列表是主从关系，
     // 全屏会丢掉「我还在这一列里」的上下文（实测反馈）。
     return top === FieldwatchRouteName.DEVICE_DETAIL
+      || top === FieldwatchRouteName.SIGNATURE_DETAIL
       || top === FieldwatchRouteName.SIGNATURE_EDITOR
-      || top === FieldwatchRouteName.HUNT;
+      || top === FieldwatchRouteName.WATCHLIST
+      || top === FieldwatchRouteName.HUNT
+      || top === FieldwatchRouteName.FEEDBACK;
   }
 
   private openSubPage(name: string, param: string): void {
@@ -360,6 +403,33 @@ struct FieldwatchRootPage {
   }
 
   private refreshView(): void {
+    // 快捷方式 / 卡片点击带进来的目标标签页。
+    //
+    // 放在 1 秒刷新里消费，而不是只在 `aboutToAppear`：
+    // 应用**已经在前台**时再点快捷方式走的是 `onNewWant`，页面不会重建，
+    // 只认 aboutToAppear 会「点了没反应」。
+    const pendingTab: number = fieldwatchApplication.consumePendingTab();
+    if (pendingTab >= 0 && pendingTab !== this.selectedTab) this.switchTab(pendingTab);
+    // 卡片点击带进来的**路由**（关注列表是压栈页面，不是标签页）。
+    const pendingRoute: string = fieldwatchApplication.consumePendingRoute();
+    if (pendingRoute.length > 0) {
+      const names: string[] = this.pathStack.getAllPathName();
+      const alreadyOpen: boolean = names.length > 0 && names[names.length - 1] === pendingRoute;
+      // 已经在栈顶就不再压一次：卡片连点两下会堆出两层同样的页面。
+      if (!alreadyOpen && pendingRoute === FieldwatchRouteName.WATCHLIST) this.openWatchlist();
+    }
+    // 深度链接（`airwavefootprints://…`）。与上面同一个理由：
+    // 应用在前台时点链接走 `onNewWant`，页面不重建，只认 aboutToAppear 会「点了没反应」。
+    const deepLink: FieldwatchDeepLink | undefined = fieldwatchDeepLinkBridge.consumePending();
+    if (deepLink !== undefined && deepLink.kind === FieldwatchDeepLinkKind.FEEDBACK) {
+      const names2: string[] = this.pathStack.getAllPathName();
+      const onTop: boolean = names2.length > 0 && names2[names2.length - 1] === FieldwatchRouteName.FEEDBACK;
+      // 已经在反馈中心时只更新目标条目，不再压一层。
+      this.feedbackIssueNumber = deepLink.issueNumber;
+      this.feedbackCreateMode = deepLink.createMode;
+      this.feedbackCreateMode = deepLink.createMode;
+      if (!onTop) this.openFeedback();
+    }
     const state = fieldwatchApplication.getState();
     this.deviceCount = state.sightings.length;
     this.logCount = state.logs.length;
@@ -385,6 +455,34 @@ struct FieldwatchRootPage {
     if (sighting === undefined) return;
     fieldwatchApplication.startHunt(sighting);
     this.pathStack.pushPathByName(FieldwatchRouteName.HUNT, new FieldwatchHuntParam(deviceKey));
+  }
+
+  /**
+   * 横屏下把特征详情压进右侧分栏。
+   *
+   * 与 `openSignatureEditor` 同一个道理：**先切分栏、再压栈**，
+   * 否则右栏会先以 Stack 占满全屏再被推过去（读作「先闪一下再跑到右边」）。
+   */
+  private openSignatureDetail(fleetId: string): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_DETAIL, fleetId);
+  }
+
+  /**
+   * 打开关注列表（横屏进右栏，竖屏整页）。
+   *
+   * 与 `openSignatureDetail` 同一个道理：**先切分栏、再压栈**，
+   * 否则右栏会先以 Stack 占满全屏再被推过去。
+   */
+  /** 继续当前 Hunt：只压栈，**不重启会话**（重启会清空已有样本）。 */
+  private openHunt(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.HUNT, null);
+  }
+
+  private openWatchlist(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.WATCHLIST, '');
   }
 
   private openSignatureEditor(fleetId: string, deviceKey: string): void {
@@ -469,11 +567,38 @@ struct FieldwatchRootPage {
     else if (name === FieldwatchRouteName.SIT_DETAIL) FieldwatchReportsPage();
     else if (name === FieldwatchRouteName.EXPORT) FieldwatchReportsPage();
     else if (name === FieldwatchRouteName.SIGNATURE_CATALOG) {
-      FieldwatchSignaturesPage({ onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); } });
+      FieldwatchSignaturesPage({ landscape: this.isLandscape, onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }, onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, followTick: this.followTick, onOpenWatchlist: (): void => { this.openWatchlist(); } });
     } else if (name === FieldwatchRouteName.HUNT) {
       FieldwatchHuntPage({ onClose: (): void => { this.pathStack.pop(); } });
+    } else if (name === FieldwatchRouteName.SIGNATURE_DETAIL) {
+      // 横屏右栏的特征详情：与竖屏 sheet 共用同一个内容组件。
+      FieldwatchSignatureDetail({
+        fleetId: String(param),
+        withShell: true,
+        topInset: this.topInsetVp,
+        onEdit: (fleetId: string): void => { this.openSignatureEditor(fleetId, ''); },
+        onClose: (): void => { this.pathStack.pop(); },
+        // 横屏分栏时列表与详情是**两个组件实例**，关注变化必须经外层转发，
+        // 否则左栏的「已关注」要等下次进页面才更新。
+        onFollowChanged: (): void => { this.followTick += 1; }
+      });
+    } else if (name === FieldwatchRouteName.WATCHLIST) {
+      // 横屏右栏的关注列表：与竖屏整页共用同一个内容组件。
+      FieldwatchWatchlistPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.FEEDBACK) {
+      FieldwatchFeedbackPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        openIssueNumber: this.feedbackIssueNumber,
+        openCreate: this.feedbackCreateMode,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
     } else if (name === FieldwatchRouteName.SIGNATURE_EDITOR) {
-      FieldwatchSignatureEditorPage({ fleetId: (param as FieldwatchSignatureEditorParam).fleetId, fromDeviceKey: (param as FieldwatchSignatureEditorParam).fromDeviceKey, onClose: (): void => { this.pathStack.pop(); } });
+      FieldwatchSignatureEditorPage({ fleetId: (param as FieldwatchSignatureEditorParam).fleetId, fromDeviceKey: (param as FieldwatchSignatureEditorParam).fromDeviceKey, topInset: this.topInsetVp, onClose: (): void => { this.pathStack.pop(); } });
     }
   }
 
@@ -483,14 +608,18 @@ struct FieldwatchRootPage {
       TabContent() { FieldwatchLivePage({ visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
       TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
             // `onEditFleet` 必须传：它的默认值是空函数，漏传就变成「点了没反应」。
-      TabContent() { FieldwatchSignaturesPage({ embedded: true,
-        onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); } })
+      TabContent() { FieldwatchSignaturesPage({ embedded: true, landscape: this.isLandscape,
+        onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); },
+        onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, onOpenWatchlist: (): void => { this.openWatchlist(); }, pageVisible: this.selectedTab === 2 })
       }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2))
       TabContent() { FieldwatchReportsPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3))
-      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 4))
+      TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
+      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
     }
     .width('100%').height('100%').backgroundColor(FieldwatchPaletteHolder.get().night).barMode(BarMode.Fixed).barOverlap(true).barFloatingStyle({ adaptToHandedness: true, systemMaterialEffect: { materialType: hdsMaterial.MaterialType.IMMERSIVE, materialLevel: hdsMaterial.MaterialLevel.EXQUISITE }, thermoCtrl: true, barOpacity: 0.94, barBottomMargin: this.bottomInsetVp })
     .onChange((index: number): void => { this.selectedTab = index; })
+    /** 再兜一次：布局树重建的时机由框架决定，`onAppear` 是最可靠的落点。 */
+    .onAppear((): void => { this.syncTabsToSelected(); })
     // 实时页（tab 0）**禁用左右滑动切页**：把水平滑动让给雷达本身，
     // 于是单指拖动可以直接当作平移，不再需要和 Tabs 抢手势、也不用手势冲突计算。
     // 其它页仍保留滑动切页。切页统一走底栏。
@@ -540,7 +669,10 @@ struct FieldwatchRootPage {
       // 两种握持下同一个功能应当长得一样。
       this.buildRailItem($r('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2)
       this.buildRailItem($r('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3)
-      this.buildRailItem($r('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 4)
+      // 工具箱与设置同样**两处都要有**：本文件上方已经因为「特征库只在竖屏有」踩过一次，
+      // 横屏用户进不去（实测反馈）。新增标签页时竖屏底栏与横屏侧栏必须同时改。
+      this.buildRailItem($r('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4)
+      this.buildRailItem($r('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5)
       Blank()
       if (this.railExpanded) {
         Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.live_devices_label'))
@@ -634,11 +766,15 @@ struct FieldwatchRootPage {
       if (this.selectedTab === 0) FieldwatchLivePage({ savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); } }).width('100%').height('100%')
       else if (this.selectedTab === 1) FieldwatchFiltersPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
       // 同上：`onEditFleet` 漏传会让「新建」「编辑」两个按钮都变成空操作。
-      else if (this.selectedTab === 2) FieldwatchSignaturesPage({ embedded: true, twoColumn: this.twoColumnTabs(),
-        onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }
+      else if (this.selectedTab === 2) FieldwatchSignaturesPage({ embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
+        onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); },
+        onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); },
+        onOpenWatchlist: (): void => { this.openWatchlist(); },
+        pageVisible: true
       }).width('100%').height('100%')
       else if (this.selectedTab === 3) FieldwatchReportsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
-      else FieldwatchSettingsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }).width('100%').height('100%')
+      else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }).width('100%').height('100%')
+      else FieldwatchSettingsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }).width('100%').height('100%')
     }.width('100%').height('100%')
     /**
      * **切换过渡（方向感知）。**
@@ -3389,6 +3525,9 @@ struct FieldwatchSettingsPage {
   /** 手动重渲染计数器：筛选/设置直接改应用状态，不经过 @State，需要它来触发刷新。 */
   @State private tick: number = 0;
   onOpenSignatures: () => void = (): void => {};
+  /** 打开反馈中心。**必须有默认空实现**：ArkTS 要求成员初始化，
+   *  而漏传的表现是「点了没反应」（这个坑在本仓库出现过多次）。 */
+  onOpenFeedback: () => void = (): void => {};
   /** 「关于」面板开关。 */
   /**
    * 设置页 sheet 的**唯一开关**。
@@ -3423,6 +3562,8 @@ struct FieldwatchSettingsPage {
   @State private capability: FieldwatchCapabilitySnapshot = new FieldwatchCapabilitySnapshot();
   // 用应用层的**按能力过滤**目录：不支持星闪的设备不会列出星闪权限。
   private readonly permissionSpecs: FieldwatchPermissionSpec[] = fieldwatchApplication.permissionCatalog();
+  /** 通知是否已启用（与普通权限分开跟踪，API 不同）。 */
+  @State private notificationEnabled: boolean = false;
   @State private privacyMode: boolean = false;
   @State private keepScreenOn: boolean = false;
   @State private watchNotifications: boolean = false;
@@ -3486,8 +3627,7 @@ struct FieldwatchSettingsPage {
   @State private catalogVersion: number = 0;
   @State private catalogStatus: string = '';
   @State private signatureCount: number = 0;
-  @State private watchCount: number = 0;
-  @State private watchEntries: WatchTarget[] = [];
+  // 关注列表的计数与条目已随该段迁往独立页面，这里不再保留副本。
   private retryTimer: number = -1;
 
   aboutToAppear(): void {
@@ -3518,6 +3658,10 @@ struct FieldwatchSettingsPage {
     this.paused = state.settings.displayPaused;
     this.locationTagging = state.settings.locationTagging;
     this.capability = fieldwatchApplication.permissionSnapshot();
+    // 通知状态同样每秒读一次：在系统设置里改完回来要立刻反映。
+    void ngfSystemNotificationManager.isEnabled().then((enabled: boolean): void => {
+      if (enabled !== this.notificationEnabled) this.notificationEnabled = enabled;
+    });
     this.privacyMode = state.settings.privacyMode;
     this.keepScreenOn = state.settings.keepScreenOn;
     this.watchNotifications = state.settings.watchNotifications;
@@ -3547,8 +3691,7 @@ struct FieldwatchSettingsPage {
     this.catalogVersion = state.catalogVersion;
     this.catalogStatus = state.catalogStatus;
     this.signatureCount = state.signatures.length;
-    this.watchEntries = state.watchlist.slice();
-    this.watchCount = this.watchEntries.length;
+    // 关注列表不再在本页展示，不再读 watchlist。
   }
 
   private wifiPhaseText(phase: string): string {
@@ -3625,12 +3768,29 @@ struct FieldwatchSettingsPage {
     }
   }
   /** 设置页权限行：标题 + 状态 + 未授权时的「允许」按钮。 */
+  /**
+   * 权限卡片。**与启动引导里的是同一种卡片**（图标徽标 + 标题 + 状态 +
+   * 用途 + 能力 + 被拒说明），而不是一行文字。
+   *
+   * 设置页的权限区是用户「回来补授权」的地方，信息必须和引导页一样全 ——
+   * 只给一行标题的话，用户根本想不起来这条权限是干什么的。
+   */
   @Builder private buildPermissionRow(spec: FieldwatchPermissionSpec) {
-    Column({ space: 4 }) {
-      Row({ space: 8 }) {
-        Text($r(spec.titleKey)).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+    Column({ space: 8 }) {
+      Row({ space: 10 }) {
+        Stack() {
+          SymbolGlyph($r(this.permissionSymbol(spec.kind)))
+            .fontSize(18).fontColor([FieldwatchPaletteHolder.get().accent])
+        }.width(36).height(36).borderRadius(18).backgroundColor(FieldwatchPaletteHolder.get().badgeBg)
+        Text($r(spec.titleKey)).fontSize(16).fontWeight(FontWeight.Medium)
+          .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
         if (this.permissionGranted(spec.kind)) {
-          Text($r('app.string.fieldwatch_onb_allowed')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent)
+          Row({ space: 4 }) {
+            SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(14)
+              .fontColor([FieldwatchPaletteHolder.get().accent])
+            Text($r('app.string.fieldwatch_onb_allowed')).fontSize(13)
+              .fontColor(FieldwatchPaletteHolder.get().accent)
+          }
         } else {
           Row({ space: 6 }) {
             FieldwatchButton({ label: $r('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
@@ -3643,8 +3803,82 @@ struct FieldwatchSettingsPage {
           }
         }
       }.width('100%')
-      Text($r(spec.whyKey)).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
-    }.width('100%').alignItems(HorizontalAlign.Start)
+      Text($r(spec.whyKey)).fontSize(13).fontColor(FieldwatchPaletteHolder.get().text)
+      Row({ space: 6 }) {
+        SymbolGlyph($r('sys.symbol.list_checkmark')).fontSize(12)
+          .fontColor([FieldwatchPaletteHolder.get().textDim])
+        Text($r(spec.featureKey)).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim).layoutWeight(1)
+      }.width('100%')
+      // 被拒说明只在**确实没授权**时出现，否则四张卡片都挂一句警告，读起来像全是问题。
+      if (!this.permissionGranted(spec.kind)) {
+        Row({ space: 6 }) {
+          SymbolGlyph($r('sys.symbol.exclamationmark_circle')).fontSize(12)
+            .fontColor([FieldwatchPaletteHolder.get().warn])
+          Text($r(spec.deniedKey)).fontSize(12).fontColor(FieldwatchPaletteHolder.get().warn).layoutWeight(1)
+        }.width('100%')
+      }
+    }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().night).borderRadius(14)
+  }
+
+  /** 每条权限一个可辨识的图标（与引导页同一套映射）。 */
+  private permissionSymbol(kind: FieldwatchPermissionKind): string {
+    if (kind === FieldwatchPermissionKind.BLUETOOTH) return 'sys.symbol.dot_radiowaves';
+    if (kind === FieldwatchPermissionKind.LOCATION) return 'sys.symbol.location_up_fill';
+    return 'sys.symbol.location_up_fill';
+  }
+
+  /**
+   * 通知权限卡片。
+   *
+   * **通知不走 `requestPermissionsFromUser`**，而是
+   * `notificationManager.requestEnableNotification`，所以它不能混在权限目录里，
+   * 必须单独成卡 —— 之前设置页压根没有它，用户找不到地方开。
+   */
+  @Builder private buildNotificationPermissionRow() {
+    Column({ space: 8 }) {
+      Row({ space: 10 }) {
+        Stack() {
+          SymbolGlyph($r('sys.symbol.dot_radiowaves_left_and_right'))
+            .fontSize(18).fontColor([FieldwatchPaletteHolder.get().accent])
+        }.width(36).height(36).borderRadius(18).backgroundColor(FieldwatchPaletteHolder.get().badgeBg)
+        Text($r('app.string.fieldwatch_perm_notif_title')).fontSize(16).fontWeight(FontWeight.Medium)
+          .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+        if (this.notificationEnabled) {
+          Row({ space: 4 }) {
+            SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(14)
+              .fontColor([FieldwatchPaletteHolder.get().accent])
+            Text($r('app.string.fieldwatch_onb_allowed')).fontSize(13)
+              .fontColor(FieldwatchPaletteHolder.get().accent)
+          }
+        } else {
+          Row({ space: 6 }) {
+            FieldwatchButton({ label: $r('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
+              compact: true, fillWidth: false, onTap: (): void => { void this.requestNotificationPermission(); } })
+            Button($r('app.string.fieldwatch_manual_open_short')).height(32).fontSize(13)
+              .backgroundColor(Color.Transparent).borderWidth(1)
+              .borderColor(FieldwatchPaletteHolder.get().outline)
+              .fontColor(FieldwatchPaletteHolder.get().textDim)
+              .onClick((): void => { this.openAppSettings(); })
+          }
+        }
+      }.width('100%')
+      Text($r('app.string.fieldwatch_notification_permission_reason')).fontSize(13)
+        .fontColor(FieldwatchPaletteHolder.get().text)
+      Row({ space: 6 }) {
+        SymbolGlyph($r('sys.symbol.list_checkmark')).fontSize(12)
+          .fontColor([FieldwatchPaletteHolder.get().textDim])
+        Text($r('app.string.fieldwatch_settings_notif_feature')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).layoutWeight(1)
+      }.width('100%')
+    }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().night).borderRadius(14)
+  }
+
+  /** 申请通知权限；结果立刻读回来，别让卡片停留在旧状态。 */
+  private async requestNotificationPermission(): Promise<void> {
+    await ngfSystemNotificationManager.requestPermission();
+    this.notificationEnabled = await ngfSystemNotificationManager.isEnabled();
   }
   /** 打开本应用在系统设置里的权限页（与引导页同一 want）。 */
   /** 跳系统设置：与引导页共用同一个应用层实现，避免两处逻辑漂移。 */
@@ -3754,6 +3988,8 @@ struct FieldwatchSettingsPage {
     ForEach(this.permissionSpecs, (spec: FieldwatchPermissionSpec): void => {
     this.buildPermissionRow(spec)
     }, (spec: FieldwatchPermissionSpec): string => spec.kind)
+    // 通知权限单独成卡（API 不同，不进权限目录）。
+    this.buildNotificationPermissionRow()
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
@@ -3868,21 +4104,9 @@ struct FieldwatchSettingsPage {
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
-  @Builder private buildSettingsAbout() {
-    Column({ space: 8 }) {
-    Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_watchlist')) + ' (' + this.watchCount.toString() + ')').fontSize(18).fontWeight(FontWeight.Medium)
-    if (this.watchCount === 0) Text($r('app.string.fieldwatch_settings_watchlist_empty')).fontSize(13).fontColor($r('app.color.text_secondary'))
-    ForEach(this.watchEntries, (entry: WatchTarget, index: number): void => {
-    Row({ space: 8 }) {
-    Column({ space: 2 }) {
-    Text(entry.label.length > 0 ? entry.label : (entry.signatureId.length > 0 ? entry.signatureId : entry.deviceKey)).fontSize(14).fontColor($r('app.color.text_primary')).maxLines(1)
-    if (entry.note.length > 0) Text(entry.note).fontSize(11).fontColor($r('app.color.text_secondary')).maxLines(2)
-    }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-    Button($r('app.string.fieldwatch_settings_watchlist_remove')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).height(36).onClick((): void => { fieldwatchApplication.removeWatchTarget(index); this.refresh(); })
-    }.width('100%').padding(10).backgroundColor($r('app.color.background_secondary')).borderRadius(10)
-    }, (entry: WatchTarget, index: number): string => entry.deviceKey + entry.signatureId + index.toString())
-    }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
-  }
+  // 关注列表已从设置页迁出：现在是一个独立页面（`FieldwatchWatchlistPage`），
+  // 从特征库进入，卡片点击也直达它。设置页不再重复提供第二份入口 ——
+  // 同一个东西两个入口，迟早会有一处忘了改（陷阱 16）。
   /**
    * **关于应用**：版本信息、使用条款与开源声明。
    *
@@ -3894,6 +4118,10 @@ struct FieldwatchSettingsPage {
     Column({ space: 8 }) {
       Text($r('app.string.fieldwatch_settings_legal')).fontSize(18).fontWeight(FontWeight.Medium)
       Text($r('app.string.fieldwatch_settings_legal_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
+      // 反馈中心放在「关于」这一组：它和条款、开源声明是同一类东西
+      // —— 都是「关于这个应用」的对外通道。
+      FieldwatchButton({ label: $r('app.string.fieldwatch_settings_feedback'), tone: FieldwatchButtonTone.OUTLINE,
+        onTap: (): void => { this.onOpenFeedback(); } })
       FieldwatchButton({ label: $r('app.string.fieldwatch_settings_about'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 0; this.sheetOpen = true; } })
       FieldwatchButton({ label: $r('app.string.fieldwatch_legal_privacy'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 1; this.sheetOpen = true; } })
       FieldwatchButton({ label: $r('app.string.fieldwatch_legal_terms'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 2; this.sheetOpen = true; } })
@@ -3954,7 +4182,6 @@ struct FieldwatchSettingsPage {
         Column({ space: 12 }) {
           this.buildSettingsAppearance()
           this.buildSettingsListDisplay()
-          this.buildSettingsAbout()
           this.buildSettingsLegal()
         }.layoutWeight(1)
       }.width('100%').alignItems(VerticalAlign.Top)
@@ -3965,7 +4192,6 @@ struct FieldwatchSettingsPage {
       this.buildSettingsListDisplay()
       this.buildSettingsPermissions()
       this.buildSettingsAlerts()
-      this.buildSettingsAbout()
       this.buildSettingsGuide()
       this.buildSettingsLegal()
     }
@@ -3993,9 +4219,58 @@ struct FieldwatchSettingsPage {
   @Builder private buildSettingsSheet() {
     if (this.sheetDoc === 0) {
       this.buildAboutSheet()
+    } else if (this.sheetDoc === 3) {
+      // 开源声明单独成块：正文里要插一个**可点击的仓库链接**，
+      // 而通用条款 sheet 只渲染纯文本段落。
+      this.buildOssSheet()
     } else {
       this.buildLegalSheet()
     }
+  }
+
+  /**
+   * 开源声明。
+   *
+   * 仓库地址**单独做成可点击组件**，而不是混在正文里当普通文字 ——
+   * 混在段落里既点不动、也看不出是链接（用户反馈）。
+   */
+  @Builder private buildOssSheet() {
+    Column({ space: 12 }) {
+      Text(this.text('app.string.fieldwatch_legal_oss')).fontSize(20).fontWeight(FontWeight.Bold)
+        .fontColor(FieldwatchPaletteHolder.get().text)
+      Scroll() {
+        Column({ space: 12 }) {
+          Text(this.text('app.string.fieldwatch_legal_oss_p1')).fontSize(14)
+            .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+          // ── 仓库链接（可点）──
+          Row({ space: 8 }) {
+            SymbolGlyph($r('sys.symbol.link')).fontSize(18)
+              .fontColor([FieldwatchPaletteHolder.get().accent])
+            Column({ space: 2 }) {
+              Text(this.text('app.string.fieldwatch_legal_oss_repo_label')).fontSize(11)
+                .fontColor(FieldwatchPaletteHolder.get().textDim)
+              Text(REPOSITORY_URL).fontSize(14)
+                .fontColor(FieldwatchPaletteHolder.get().accent)
+                .decoration({ type: TextDecorationType.Underline, color: FieldwatchPaletteHolder.get().accent })
+                .maxLines(2)
+            }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+          }.width('100%').padding(12).borderRadius(12)
+          .backgroundColor(FieldwatchPaletteHolder.get().night)
+          .onClick((): void => { void this.openAppGallery(REPOSITORY_URL); })
+          Text(this.text('app.string.fieldwatch_legal_oss_p2')).fontSize(14)
+            .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+          Text(this.text('app.string.fieldwatch_legal_oss_p3')).fontSize(13)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        }.width('100%')
+      }.layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+      FieldwatchButton({ label: $r('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
+        onTap: (): void => { this.sheetOpen = false; } })
+    }.width('100%').padding({ left: 20, right: 20, top: 8, bottom: 24 }).alignItems(HorizontalAlign.Start)
+  }
+
+  /** 统一的取文案入口（设置页里多处需要字符串）。 */
+  private text(key: string): string {
+    return resolveResourceString(this.getUIContext().getHostContext(), $r(key));
   }
 
   @Builder private buildLegalSheet() {
@@ -4039,8 +4314,13 @@ struct FieldwatchSettingsPage {
   }
   private legalParagraphKeys(): string[] {
     if (this.sheetDoc === 1) {
-      return ['app.string.fieldwatch_legal_privacy_p1', 'app.string.fieldwatch_legal_privacy_p2',
-        'app.string.fieldwatch_legal_privacy_p3', 'app.string.fieldwatch_legal_privacy_p4'];
+      // 隐私声明按服务端/法务给定的版本**逐段列出** ——
+      // 段落键固定，改文案只改资源，不动代码。
+      const keys: string[] = [];
+      for (let i: number = 1; i <= PRIVACY_PARAGRAPH_COUNT; i += 1) {
+        keys.push('app.string.fieldwatch_legal_privacy_p' + i.toString());
+      }
+      return keys;
     }
     if (this.sheetDoc === 2) {
       return ['app.string.fieldwatch_legal_terms_p1', 'app.string.fieldwatch_legal_terms_p2',
@@ -4056,16 +4336,85 @@ struct FieldwatchSettingsPage {
    * 这里集中说明应用的三条底线：严格离线、只申请两项权限、数据只留在本机。
    * 放在设置页而不是单独页面：信息量小，弹层足够，也避免多一层导航。
    */
+  /**
+   * 同开发者的其他应用。
+   *
+   * 链接格式与漫匣一致（AppGallery 详情页 + 分享来源参数）。
+   */
+  private readonly developerApps: DeveloperApp[] = buildDeveloperApps();
+
+  private async openAppGallery(url: string): Promise<void> {
+    if (url.length === 0) return;
+    const context: common.UIAbilityContext | undefined =
+      this.getUIContext().getHostContext() as common.UIAbilityContext;
+    if (context === undefined) return;
+    try {
+      await context.openLink(url, { appLinkingOnly: false });
+    } catch (error) {
+      const failure: BusinessError = error as BusinessError;
+      logger.warn(TAG, '打开应用市场失败 code=' + failure.code + ' msg=' + failure.message);
+      this.getUIContext().getPromptAction().showToast({
+        message: resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_dev_apps_failed')),
+        duration: 2200
+      });
+    }
+  }
+
+  /** 与漫匣同一种卡片：图标（可选）+ 名称 + 描述，下面一条「在应用市场查看」。 */
+  @Builder private buildDeveloperAppCard(item: DeveloperApp) {
+    Column({ space: 0 }) {
+      Row({ space: 14 }) {
+        if (item.icon !== undefined) {
+          Image(item.icon).width(56).height(56).borderRadius(14).objectFit(ImageFit.Cover)
+        } else {
+          Stack() {
+            SymbolGlyph($r('sys.symbol.square_grid_2x2')).fontSize(26)
+              .fontColor([FieldwatchPaletteHolder.get().accent])
+          }.width(56).height(56).borderRadius(14)
+          .backgroundColor(FieldwatchPaletteHolder.get().badgeBg)
+        }
+        Column({ space: 4 }) {
+          Text(item.name).fontSize(17).fontWeight(FontWeight.Bold)
+            .fontColor(FieldwatchPaletteHolder.get().text)
+          Text(item.description).fontSize(13)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(2)
+        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+      }.width('100%').padding({ left: 14, right: 14, top: 14, bottom: 12 })
+      if (item.galleryUrl.length > 0) {
+        Divider().strokeWidth(1).color(FieldwatchPaletteHolder.get().outline)
+          .margin({ left: 14, right: 14 })
+        Row() {
+          Text($r('app.string.fieldwatch_dev_apps_view')).fontSize(15)
+            .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+          SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(18)
+            .fontColor([FieldwatchPaletteHolder.get().textDim])
+        }.width('100%').height(48).padding({ left: 14, right: 14 })
+        .onClick((): void => { void this.openAppGallery(item.galleryUrl); })
+      }
+    }.width('100%')
+    .backgroundColor(FieldwatchPaletteHolder.get().night).borderRadius(14)
+    .alignItems(HorizontalAlign.Start)
+  }
+
   @Builder private buildAboutSheet() {
     Column({ space: 12 }) {
       Text($r('app.string.fieldwatch_about_title')).fontSize(20).fontWeight(FontWeight.Bold)
         .fontColor(FieldwatchPaletteHolder.get().text)
       Text($r('app.string.fieldwatch_app_title')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
+      // 一句话介绍：先让人知道这是什么，再往下看原则。
+      Text($r('app.string.fieldwatch_about_intro')).fontSize(14)
+        .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
       this.aboutLine($r('app.string.fieldwatch_about_principle'))
       this.aboutLine($r('app.string.fieldwatch_about_local'))
       this.aboutLine($r('app.string.fieldwatch_about_permissions'))
       this.aboutLine($r('app.string.fieldwatch_about_radiodb'))
       this.aboutLine($r('app.string.fieldwatch_about_license'))
+      // ── 同开发者 App（与漫匣同一个模式：卡片 + 在应用市场查看）──
+      Text($r('app.string.fieldwatch_dev_apps')).fontSize(16).fontWeight(FontWeight.Medium)
+        .fontColor(FieldwatchPaletteHolder.get().text).margin({ top: 8 })
+      ForEach(this.developerApps, (item: DeveloperApp): void => {
+        this.buildDeveloperAppCard(item)
+      }, (item: DeveloperApp): string => item.name)
       FieldwatchButton({ label: $r('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { this.sheetOpen = false; } })
     }.width('100%').padding({ left: 20, right: 20, top: 8, bottom: 24 }).alignItems(HorizontalAlign.Start)
@@ -4106,6 +4455,12 @@ struct FieldwatchSettingsPage {
  * 用类而不是对象字面量：ArkTS 不允许未类型化的对象字面量，
  * 而且 `ForEach` 需要一个稳定的键，`value` 正好当键。
  */
+/** 本应用的开源仓库地址（开源声明里作为可点击链接展示）。 */
+const REPOSITORY_URL: string = 'https://github.com/DaLongZhuaZi/airwavefootprints';
+
+/** 隐私声明的段落数（与 `fieldwatch_legal_privacy_pN` 资源一一对应）。 */
+const PRIVACY_PARAGRAPH_COUNT: number = 24;
+
 class LogLevelChoice {
   public value: number;
   public labelKey: string;
@@ -4113,5 +4468,44 @@ class LogLevelChoice {
     this.value = value;
     this.labelKey = labelKey;
   }
+}
+
+/** 同开发者的其他应用（与漫匣同一套数据结构）。 */
+class DeveloperApp {
+  public name: string;
+  public description: string;
+  public galleryUrl: string;
+  /** 应用图标；没有时用符号占位（与漫匣的 `icon?` 同一个思路）。 */
+  public icon: Resource | undefined;
+  constructor(name: string, description: string, galleryUrl: string, icon: Resource | undefined) {
+    this.name = name;
+    this.description = description;
+    this.galleryUrl = galleryUrl;
+    this.icon = icon;
+  }
+}
+
+/**
+ * 同开发者应用清单。
+ *
+ * 链接格式与漫匣完全一致（AppGallery 详情页 + 分享来源参数），
+ * 这样两边的「同开发者 App」打开的是同一套页面。
+ */
+function buildDeveloperApps(): DeveloperApp[] {
+  const list: DeveloperApp[] = [];
+  list.push(new DeveloperApp('漫匣', '一款基于 HarmonyOS 的现代化漫画阅读应用',
+    'https://appgallery.huawei.com/app/detail?id=com.dlzz.manxia&channelId=SHARE&source=appshare',
+    $r('app.media.devapp_manxia')));
+  list.push(new DeveloperApp('花漾字影', '帮您轻松创作更亮眼的手持弹幕内容',
+    'https://appgallery.huawei.com/app/detail?id=com.dlzz.lumabloom&channelId=SHARE&source=appshare',
+    $r('app.media.devapp_lumabloom')));
+  list.push(new DeveloperApp('书脉', '支持多种格式的元数据编辑与封面管理',
+    'https://appgallery.huawei.com/app/detail?id=com.dlzz.ebookparser&channelId=SHARE&source=appshare',
+    $r('app.media.devapp_shumai')));
+  list.push(new DeveloperApp('NGF Coder', '移动端 AI 编程协作工具',
+    'https://appgallery.huawei.com/app/detail?id=com.dlzz.coder&channelId=SHARE&source=appshare',
+    $r('app.media.devapp_ngfcoder')));
+  list.push(new DeveloperApp('神秘 APP', '敬请期待', '', undefined));
+  return list;
 }
 

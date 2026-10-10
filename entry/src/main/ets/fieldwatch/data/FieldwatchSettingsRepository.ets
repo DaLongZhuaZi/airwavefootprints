@@ -182,6 +182,17 @@ export class FieldwatchSettingsRepository {
       return undefined;
     }
   }  /** 首次启动引导是否已完成。 */
+  /**
+   * 卡片状态：应用写、FormExtensionAbility 读。
+   *
+   * 放在设置存储里而不是另开一份文件：两侧本来就读同一个 preferences，
+   * 复用它可以少一条「两个沙箱路径是否一致」的不确定性。
+   */
+  saveWidgetState(json: string): void { ngfSettingsStoreFacade.setString('fieldwatch.widgetState', json); }
+  loadWidgetState(): string { return ngfSettingsStoreFacade.getString('fieldwatch.widgetState', ''); }
+  /** 卡片清单：FormExtensionAbility 登记，主应用读来主动推送。 */
+  loadWidgetForms(): string { return ngfSettingsStoreFacade.getString('fieldwatch.widgetForms', ''); }
+
   loadOnboardingSeen(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.onboardingSeen', false); }
   saveOnboardingSeen(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.onboardingSeen', value); }
   /** 用户主动选择「先用基础功能」后不再自动弹权限说明。 */

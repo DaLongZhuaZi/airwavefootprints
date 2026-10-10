@@ -16,6 +16,7 @@ import { logger } from 'ngf_framework';
 import { crashAnalytics } from 'ngf_framework';
 import { ngfContinuationManagerFacade } from 'ngf_framework';
 import { fieldwatchApplication } from '../fieldwatch/application/FieldwatchApplication';
+import { fieldwatchDeepLinkBridge } from '../fieldwatch/platform/FieldwatchDeepLink';
 
 const TAG: string = 'EntryAbility';
 
@@ -28,11 +29,26 @@ export default class EntryAbility extends UIAbility {
     void ngfScreenKeepAwakeFacade.initialize(this.context as common.UIAbilityContext);
     crashAnalytics.initialize();
     logger.startup(TAG, 'NGF 引导启动完成', '成功=' + bootstrapResult);
+    // **必须在 bootstrap 之后重读设置。**
+    //
+    // `fieldwatchApplication` 是本文件 import 进来的单例，它的构造函数在**模块导入时**
+    // 就执行了 —— 早于这一行 bootstrap，因此那次 `settingsRepository.load()`
+    // 读到的是**尚未初始化的内存缓存**，全部落回默认值。
+    // 不在这里重读，用户就会看到「所有设置每次启动都被重置」。
+    fieldwatchApplication.reloadSettings();
+    // 清理上一次运行残留的通知（进程被杀时不会有正常收尾）。
+    // 不 await：这里不阻塞启动；`syncBackgroundTask` 会在第一次发布前再 await 一次。
+    void fieldwatchApplication.clearStaleNotifications();
 
     // 解析流转数据
     if (want.parameters) {
       ngfContinuationManagerFacade.receiveContinuationData(want.parameters as Record<string, Object>);
     }
+    // 快捷方式 / 卡片带进来的目标标签页（`targetTab`）。
+    this.applyTargetTab(want);
+    // 深度链接（`airwavefootprints://…`）。
+    // 冷启动时页面还没创建，桥会先存下，由页面就绪后取走。
+    this.applyDeepLink(want);
 
     /**
      * API 23 适配说明：
@@ -63,6 +79,38 @@ export default class EntryAbility extends UIAbility {
     if (want.parameters) {
       ngfContinuationManagerFacade.receiveContinuationData(want.parameters as Record<string, Object>);
     }
+    // **热启动也要处理**：应用已在前台时点快捷方式走的是这里，不是 onCreate。
+    this.applyTargetTab(want);
+    this.applyDeepLink(want);
+  }
+
+  /**
+   * 处理深度链接。
+   *
+   * 这里**只做识别与转交**，不做任何导航：
+   * 冷启动时页面还不存在，热启动时页面又不在本文件的掌控里；
+   * 导航交给页面（它才知道自己现在在哪、该往哪压栈）。
+   * 与 `applyTargetTab` 是同一个思路。
+   */
+  private applyDeepLink(want: Want): void {
+    const uri: string = want.uri === undefined ? '' : want.uri;
+    if (uri.length === 0) return;
+    fieldwatchDeepLinkBridge.accept(uri);
+  }
+
+  /**
+   * 记下 `want.parameters.targetTab`，由页面在 1 秒刷新里消费。
+   *
+   * 这里**不直接切页**：冷启动时页面还没创建，热启动时页面又不在本文件的掌控里。
+   * 统一交给应用层做「先记下、页面消费」的中间态，两条路径共用一套逻辑。
+   */
+  private applyTargetTab(want: Want): void {
+    const parameters: Record<string, Object> | undefined = want.parameters;
+    if (parameters === undefined) return;
+    const target: Object | undefined = parameters['targetTab'];
+    if (target === undefined) return;
+    fieldwatchApplication.requestTab(String(target));
+    logger.info(TAG, '快捷方式目标标签页: ' + String(target));
   }
 
   onContinue(wantParam: Record<string, Object>): AbilityConstant.OnContinueResult {
@@ -88,6 +136,9 @@ export default class EntryAbility extends UIAbility {
   onWindowStageCreate(windowStage: window.WindowStage): void {
     logger.lifecycle(TAG, '生命周期: onWindowStageCreate');
     ngfPlatformWindowManagerFacade.bindWindowStage(windowStage);
+    // 兜一次：`SettingsManager.initialize` 是 `void` 异步调用的，
+    // `onCreate` 返回时它可能还没走完。这里再读一次，确保页面首帧拿到的就是磁盘上的值。
+    fieldwatchApplication.reloadSettings();
     ngfScreenKeepAwakeFacade.onWindowStageCreate();
     ngfDeviceAdaptationFacade.bindWindowStage(windowStage);
 

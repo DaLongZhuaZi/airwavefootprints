@@ -29,6 +29,17 @@ class SettingsManager {
     return SettingsManager.instance;
   }
 
+  /**
+   * 内存缓存是否已由 `initialize()` 填充完毕。
+   *
+   * **调用方必须能问出这件事**：`initialize` 是异步的，
+   * 而框架是在 `onBootstrapped()` 里 `void` 调用它的（不 await）。
+   * 任何在 bootstrap 之后立刻读设置的地方，都可能读到**尚未填充的空缓存** ——
+   * 那时每个 `getXxx` 都返回默认值，而且没有任何报错，
+   * 表现就是「设置每次启动都被重置」。
+   */
+  isReady(): boolean { return this.initialized; }
+
   async initialize(context: common.UIAbilityContext): Promise<void> {
     if (this.initialized) {
       logger.debug(TAG, '已初始化，跳过');

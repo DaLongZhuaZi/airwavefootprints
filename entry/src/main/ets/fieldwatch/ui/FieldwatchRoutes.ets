@@ -20,6 +20,12 @@ export class FieldwatchRouteName {
   static readonly SIT_DETAIL: string = 'fieldwatch.sit_detail';
   static readonly EXPORT: string = 'fieldwatch.export';
   static readonly SIGNATURE_CATALOG: string = 'fieldwatch.signatures';
+  /** 横屏右栏的特征详情；竖屏不用它（竖屏走底部 sheet）。 */
+  static readonly SIGNATURE_DETAIL: string = 'fieldwatch.signature_detail';
   static readonly SIGNATURE_EDITOR: string = 'fieldwatch.signature_editor';
+  /** 关注列表：从特征库进入，也在卡片点击时直达。 */
+  static readonly WATCHLIST: string = 'fieldwatch.watchlist';
+  /** 反馈中心：设置页入口 + 深度链接直达。 */
+  static readonly FEEDBACK: string = 'fieldwatch.feedback';
   static readonly HUNT: string = 'fieldwatch.hunt';
 }

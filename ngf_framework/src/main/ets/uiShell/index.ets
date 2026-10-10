@@ -29,6 +29,7 @@ export { OverlayManagerFacade, ngfOverlayManagerFacade } from './facades/Overlay
 export { NGFListPageTemplate, NGFDetailPageTemplate, NGFFormPageTemplate, NGFKeyValueEntry } from './components/NGFPageTemplates';
 export { NGFHdsTitleBarOptionsFactory } from './components/HdsNavigationSupport';
 export {
+  ngfImmersiveContentTop,
   NGFImmersiveTopChromePresetFactory,
   NGFImmersiveTopChromeSpec,
   NGFImmersiveTopChromeUnderlay

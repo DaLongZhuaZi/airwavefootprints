@@ -148,6 +148,31 @@ export function huntCueKey(cue: HuntCue): string {
   return 'waiting';
 }
 
+/**
+ * 一次**已结束**的搜寻记录。
+ *
+ * 工具箱的「信号追踪」面板要展示历史，而 `HuntSession` 在停止时就没了 ——
+ * 所以停止时把关键指标固化下来，UI 只读这份快照。
+ */
+export class HuntRecord {
+  public targetKey: string = '';
+  public label: string = '';
+  public startedAt: number = 0;
+  public endedAt: number = 0;
+  public peak: number = -127;
+  public samples: number = 0;
+  public average: number = 0;
+  public durationMs(): number { return this.endedAt - this.startedAt; }
+}
+
+/** 搜寻历史的汇总。 */
+export class HuntStats {
+  public sessions: number = 0;
+  public totalMs: number = 0;
+  public bestPeak: number = -127;
+  public bestLabel: string = '';
+}
+
 /** 一次 Hunt 会话；由应用层持有，UI 只读。 */
 export class HuntSession {
   public targetKey: string = '';

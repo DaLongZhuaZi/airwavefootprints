@@ -88,8 +88,12 @@ class SystemNotificationManagerFacade implements ISystemNotificationManager {
       const req: notificationManager.NotificationRequest = {
         id: request.id,
         content: notificationContent,
+        // 注意：API 26 起 `isOngoing` / `isUnremovable` 在声明里都标注
+        // 「Not supported currently.」—— 置上它们**不会**让通知变成常驻。
+        // 真正让通知不可划掉的是「长时任务伴随通知」这条机制（见 BackgroundTaskManagerFacade）。
         isOngoing: request.isOngoing
       };
+      if (request.slotType > 0) req.notificationSlotType = request.slotType as notificationManager.SlotType;
 
       if (request.type === NGFNotificationType.PROGRESS) {
         let defaultData: Record<string, Object> = {
@@ -116,6 +120,16 @@ class SystemNotificationManagerFacade implements ISystemNotificationManager {
       logger.debug(TAG, '发送通知成功: ID=' + request.id + ', 类型=' + request.type);
     } catch (e) {
       logger.error(TAG, '发送通知失败: ' + e);
+    }
+  }
+
+  /** 撤销本应用的全部通知；启动期清理残留用。 */
+  async cancelAll(): Promise<void> {
+    try {
+      await notificationManager.cancelAll();
+      logger.info(TAG, '已清理本应用的全部残留通知');
+    } catch (e) {
+      logger.warn(TAG, '清理残留通知失败: ' + e);
     }
   }
 

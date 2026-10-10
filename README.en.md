@@ -171,6 +171,44 @@ settings backup, permissions and theming.
 
 ---
 
+## Acknowledgements
+
+This app stands on other people's work. The open source material it depends on or draws from is
+credited below.
+
+### Fieldwatch — where this project started
+
+**Airwave Footprints is a HarmonyOS rewrite of the open source project
+**Fieldwatch** (Android, 1.1.17).**
+
+- Its design shaped this app's feature scope, information architecture and interaction: passive
+  reception, the radar view, the signature catalog, observation records and single-target hunting
+  (Hunt) all come from it;
+- The code itself is **reimplemented** with ArkTS and ArkUI and does not reuse its Java / Kotlin
+  sources, though the domain model boundaries and decision logic were inspired by it;
+- The bundled signature catalog was also compiled following the direction of its public signature
+  definitions.
+
+Fieldwatch is released under the **MIT license**, and this app is released under the same MIT
+license — see [LICENSE](LICENSE). Without it, this project would not exist.
+
+### IEEE OUI registries
+
+Vendor prefix (OUI) lookup uses the public IEEE **MA-L / MA-M / MA-S** registries. These are public
+factual registration records, shipped offline with the app and never updated over the network.
+
+### HarmonyOS SDK and HDS design components
+
+The UI and system capabilities are built on the APIs shipped with the HarmonyOS SDK and on
+**HDS (HarmonyOS Design System)** components, under their respective license terms.
+
+### Bundled signature catalog
+
+The catalog is compiled by this project from public product information and community records. It
+ships offline, can be exported for inspection, and can be overridden with your own rules.
+
+---
+
 ## License
 
 [MIT](LICENSE)

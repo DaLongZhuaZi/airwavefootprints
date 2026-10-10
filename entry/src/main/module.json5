@@ -50,7 +50,7 @@
       },
       {
         "name": "ohos.permission.SET_WIFI_INFO",
-        "reason": "$string:wifi_scan_reason",
+        "reason": "$string:set_wifi_reason",
         "usedScene": {
           "abilities": ["EntryAbility"],
           "when": "inuse"
@@ -82,7 +82,7 @@
       },
       {
         "name": "ohos.permission.PUBLISH_AGENT_REMINDER",
-        "reason": "$string:background_task_reason",
+        "reason": "$string:reminder_reason",
         "usedScene": {
           "abilities": ["EntryAbility"],
           "when": "inuse"
@@ -90,7 +90,7 @@
       },
       {
         "name": "ohos.permission.ACCESS_BIOMETRIC",
-        "reason": "$string:background_task_reason",
+        "reason": "$string:biometric_reason",
         "usedScene": {
           "abilities": ["EntryAbility"],
           "when": "inuse"
@@ -106,7 +106,7 @@
       },
       {
         "name": "ohos.permission.VIBRATE",
-        "reason": "$string:detect_gesture_reason",
+        "reason": "$string:vibrate_reason",
         "usedScene": {
           "abilities": ["EntryAbility"],
           "when": "inuse"
@@ -114,7 +114,7 @@
       },
       {
         "name": "ohos.permission.APPROXIMATELY_LOCATION",
-        "reason": "$string:background_task_reason",
+        "reason": "$string:location_reason",
         "usedScene": {
           "abilities": ["EntryAbility"],
           "when": "inuse"
@@ -132,7 +132,15 @@
         "startWindowIcon": "$media:startIcon",
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
-        "backgroundModes": ["dataTransfer"],
+        // **用途声明必须与实际相符**（应用市场会按此审核）。
+        //
+        // 此前声明的是 dataTransfer —— 但本应用是**被动无线电扫描**，不是上传下载。
+        // dataTransfer 的官方要求是「必须用 live view 通知持续更新进度，
+        // 超过 10 分钟不更新就会被系统取消」，与我们的场景根本不符。
+        //
+        // bluetoothInteraction：蓝牙相关服务，对应「后台持续接收 BLE 广播」。
+        // 星闪若要一并保活，可再加 nearlink（需 ACCESS_NEARLINK 权限，已声明）。
+        "backgroundModes": ["bluetoothInteraction"],
         "skills": [
           {
             "entities": [
@@ -140,6 +148,38 @@
             ],
             "actions": [
               "ohos.want.action.home"
+            ]
+          },
+          // ── 深度链接 ──
+          //
+          // `entity.system.browsable` + `ohos.want.action.viewData` 是系统识别
+          // 「这个应用能处理哪种 URI」的判据；下面的 `uris` 决定放行哪些。
+          //
+          // **必须与 `platform/FieldwatchDeepLink.ets` 的解析保持一致**：
+          // 这里放行、那边认不出，表现就是「链接把应用拉起来了但什么也没发生」。
+          {
+            "entities": [
+              "entity.system.browsable"
+            ],
+            "actions": [
+              "ohos.want.action.viewData"
+            ],
+            "uris": [
+              {
+                "scheme": "airwavefootprints",
+                "host": "open",
+                "path": ""
+              },
+              {
+                "scheme": "airwavefootprints",
+                "host": "feedback",
+                "pathRegex": ".*"
+              },
+              {
+                "scheme": "airwavefootprints",
+                "host": "turnstile",
+                "pathRegex": ".*"
+              }
             ]
           }
         ],

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E2418"/>
+      <stop offset="1" stop-color="#06110C"/>
+    </linearGradient>
+    <!-- 扫描扇：从中心向外淡出 -->
+    <linearGradient id="sweep" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3DFF9A" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#3DFF9A" stop-opacity="0.02"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3DFF9A" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#3DFF9A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="192" height="192" rx="44" fill="url(#bg)"/>
+  <!-- 中心辉光 -->
+  <circle cx="96" cy="96" r="78" fill="url(#glow)"/>
+  <!-- 十字准线 -->
+  <g stroke="#3DFF9A" stroke-opacity="0.16" stroke-width="2">
+    <line x1="96" y1="24" x2="96" y2="168"/>
+    <line x1="24" y1="96" x2="168" y2="96"/>
+  </g>
+  <!-- 同心圈：由内到外逐渐变淡 -->
+  <g fill="none" stroke="#3DFF9A">
+    <circle cx="96" cy="96" r="22" stroke-opacity="0.55" stroke-width="3"/>
+    <circle cx="96" cy="96" r="44" stroke-opacity="0.38" stroke-width="3"/>
+    <circle cx="96" cy="96" r="66" stroke-opacity="0.22" stroke-width="3"/>
+  </g>
+  <!-- 扫描扇（右上方向，60 度） -->
+  <path d="M96 96 L96 30 A66 66 0 0 1 153 63 Z" fill="url(#sweep)"/>
+  <!-- 扫描前沿：一条亮线 -->
+  <line x1="96" y1="96" x2="153" y2="63" stroke="#3DFF9A" stroke-opacity="0.85" stroke-width="3" stroke-linecap="round"/>
+  <!-- 目标点 -->
+  <circle cx="133" cy="67" r="7" fill="#3DFF9A"/>
+  <circle cx="70" cy="118" r="5" fill="#3DFF9A" fill-opacity="0.75"/>
+  <circle cx="118" cy="128" r="4" fill="#3DFF9A" fill-opacity="0.55"/>
+  <!-- 中心 -->
+  <circle cx="96" cy="96" r="6" fill="#3DFF9A"/>
+</svg>

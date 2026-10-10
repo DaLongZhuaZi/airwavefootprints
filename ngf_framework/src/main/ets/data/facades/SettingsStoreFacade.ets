@@ -7,6 +7,9 @@ const TAG = 'NGFSettingsStoreFacade';
 export class SettingsStoreFacade implements ISettingsStore {
   private readonly settingsManager: SettingsManager = SettingsManager.getInstance();
 
+  /** 存储是否已就绪；未就绪时所有读操作都会返回默认值。 */
+  isReady(): boolean { return this.settingsManager.isReady(); }
+
   getString(key: string, defaultValue: string): string {
     const value = this.settingsManager.getString(key, defaultValue);
     logger.debug(TAG, '读取字符串设置: key=' + key);

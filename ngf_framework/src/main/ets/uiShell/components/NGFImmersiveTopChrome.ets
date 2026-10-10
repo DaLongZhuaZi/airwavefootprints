@@ -1,5 +1,27 @@
 import { hdsEffect } from '@kit.UIDesignKit';
 
+/**
+ * 沉浸式顶栏页面的**内容层顶部避让**。
+ *
+ * **必须把底板自身的高度算进去。**
+ *
+ * `NGFImmersiveTopChromeUnderlay` 会 `expandSafeArea([SYSTEM], [TOP])` 向状态栏方向扩展，
+ * 所以它实际覆盖的高度是 `underlayHeight + 顶部安全区`（本机实测 168 + 28 = **196vp**，
+ * 像素剖面在 y≈392px 处从渐变突降到页面底色，与该值吻合）。
+ *
+ * 而且它**合成在内容之上**：落在这一带里的内容会被压暗。
+ * 实测把强调色 `rgb(21,255,142)`（带外）冲成 `rgb(86,246,158)`（带内）。
+ *
+ * 之前三个页面都写死 92（= 框架 preset 的 `contentTopInset` 默认值），
+ * 于是首个内容元素整块落在覆盖带里 —— 表现为「顶部未正确避让、按钮被挡住」。
+ *
+ * @param underlayHeight 传给 `NGFImmersiveTopChromePresetFactory.build` 的底板高度
+ * @param topInset       顶部系统安全区高度（vp），由根页面测量后传入
+ */
+export function ngfImmersiveContentTop(underlayHeight: number, topInset: number): number {
+  return underlayHeight + topInset;
+}
+
 export class NGFImmersiveTopChromeMetrics {
   underlayHeight: number;
   contentTopInset: number;

@@ -56,6 +56,7 @@ interface RawSignatureFleet {
   id?: string | null; name?: string | null; enabled?: boolean | null; matchAny?: boolean | null; colorIndex?: number | null;
   rules?: RawSignatureRule[] | null; minPeers?: number | null; peerWindowSec?: number | null; clusterByOui?: boolean | null;
   sequentialMac?: boolean | null; notes?: string | null; attentionNote?: string | null; builtIn?: boolean | null;
+  userEdited?: boolean | null; deleted?: boolean | null;
   kind?: string | null; decode?: RawSignatureDecode | null;
 }
 interface RawSignaturePack {
@@ -158,6 +159,8 @@ function fleetOf(raw: RawSignatureFleet): SignatureFleet {
   fleet.notes = stringOr(raw.notes);
   fleet.attentionNote = stringOr(raw.attentionNote);
   fleet.builtIn = boolOr(raw.builtIn, false);
+  fleet.userEdited = boolOr(raw.userEdited, false);
+  fleet.deleted = boolOr(raw.deleted, false);
   fleet.decode = decodeOf(raw.decode);
   const rawRules: RawSignatureRule[] = raw.rules === undefined || raw.rules === null ? [] : raw.rules;
   rawRules.forEach((item: RawSignatureRule): void => { fleet.rules.push(ruleOf(item)); });
@@ -291,6 +294,8 @@ function fleetJson(fleet: SignatureFleet, pad: string): string {
   if (fleet.notes.length > 0) parts.push(pad + '  "notes": ' + quote(fleet.notes));
   if (fleet.attentionNote.length > 0) parts.push(pad + '  "attentionNote": ' + quote(fleet.attentionNote));
   if (fleet.builtIn) parts.push(pad + '  "builtIn": true');
+  if (fleet.userEdited) parts.push(pad + '  "userEdited": true');
+  if (fleet.deleted) parts.push(pad + '  "deleted": true');
   parts.push(pad + '  "kind": ' + quote(fleet.category.toUpperCase()));
   if (fleet.decode !== undefined) parts.push(pad + '  "decode": ' + decodeJson(fleet.decode, pad + '  '));
   return '{\n' + parts.join(',\n') + '\n' + pad + '}';
@@ -471,6 +476,13 @@ export function overlayStockFleets(existing: SignatureFleet[], incoming: Signatu
     }
     const local: SignatureFleet = next[existingIndex];
     if (!local.builtIn) return;
+    // 用户删掉的内置行：保持墓碑，**不要复活**。
+    // 没有这一条时，删除内置特征只生效到下次启动 —— 覆盖逻辑会把它原样加回来。
+    if (local.deleted) return;
+    // 用户手工编辑过的内置行：整行以本地为准。
+    // 用户已显式接管这一行，再悄悄塞回 stock 的名称 / 规则会与他的编辑打架；
+    // 要回到出厂值有「恢复默认目录」这条明确路径。
+    if (local.userEdited) return;
     const stockKeys: Set<string> = new Set<string>();
     stock.rules.forEach((rule: SignatureRule): void => { stockKeys.add(signatureRuleKey(rule)); });
     const extras: SignatureRule[] = local.rules.filter((rule: SignatureRule): boolean => !stockKeys.has(signatureRuleKey(rule)));

@@ -1,33 +1,29 @@
 {
   "shortcuts": [
     {
-      "shortcutId": "shortcut_multiton_a",
-      "label": "$string:shortcut_multiton_a",
-      "icon": "$media:layered_image",
+      "shortcutId": "shortcut_live",
+      "label": "$string:shortcut_live",
+      "icon": "$media:shortcut_live",
       "wants": [
         {
           "bundleName": "com.dlzz.airwavefootprints",
-          "abilityName": "MultitonEntryAbility",
+          "abilityName": "EntryAbility",
           "parameters": {
-            "instanceId": "A",
-            "targetRouteName": "SystemResourcePreview",
-            "targetTitle": "Symbol 预览"
+            "targetTab": "live"
           }
         }
       ]
     },
     {
-      "shortcutId": "shortcut_multiton_b",
-      "label": "$string:shortcut_multiton_b",
-      "icon": "$media:layered_image",
+      "shortcutId": "shortcut_signatures",
+      "label": "$string:shortcut_signatures",
+      "icon": "$media:shortcut_signatures",
       "wants": [
         {
           "bundleName": "com.dlzz.airwavefootprints",
-          "abilityName": "MultitonEntryAbility",
+          "abilityName": "EntryAbility",
           "parameters": {
-            "instanceId": "B",
-            "targetRouteName": "NGFDemoDataStorage",
-            "targetTitle": "数据沙箱"
+            "targetTab": "signatures"
           }
         }
       ]

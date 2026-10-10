@@ -50,6 +50,62 @@ function buildTwo(ouiA: number, nameA: string, ouiB: number, nameB: string): Uin
   return bytes;
 }
 
+/**
+ * 合成一个含 `btc` 段（蓝牙公司 ID）的 radiodb。
+ *
+ * 与 `buildTwo` 的两点不同：
+ *   ① `btc` 的键宽是 **2 字节**（读取端 `readIndex(btc, 2)`），不是 4 字节；
+ *   ② 公司名与厂商名**共用同一个名称池**（`noff` / `nstr` 只有一份）。
+ * 公司 ID 这一级正是「随机 MAC 的 BLE 设备也能认出品牌」的来源。
+ */
+function buildWithCompany(malKey: number, malName: string, companyId: number, companyName: string): Uint8Array {
+  const a: Uint8Array = new Uint8Array(malName.length);
+  for (let index: number = 0; index < malName.length; index += 1) a[index] = malName.charCodeAt(index);
+  const b: Uint8Array = new Uint8Array(companyName.length);
+  for (let index: number = 0; index < companyName.length; index += 1) b[index] = companyName.charCodeAt(index);
+  const malAt: number = 48;
+  const malSize: number = 4 + 1 * 4 + 1 * 2;
+  const btcAt: number = malAt + malSize;
+  const btcSize: number = 4 + 1 * 2 + 1 * 2;
+  const noffAt: number = btcAt + btcSize;
+  const noffSize: number = 4 + 3 * 4;
+  const nstrAt: number = noffAt + noffSize;
+  const buffer: ArrayBuffer = new ArrayBuffer(nstrAt + a.length + b.length);
+  const bytes: Uint8Array = new Uint8Array(buffer);
+  const view: DataView = new DataView(buffer);
+  bytes[0] = 0x53; bytes[1] = 0x50; bytes[2] = 0x4C; bytes[3] = 0x4B;
+  view.setUint16(4, 1, true);
+  view.setUint16(6, 0, true);
+  view.setInt32(8, 20260824, true);
+  view.setInt32(12, 4, true);
+  const tags: string[] = ['mal', 'btc', 'noff', 'nstr'];
+  const offs: number[] = [malAt, btcAt, noffAt, nstrAt];
+  for (let index: number = 0; index < 4; index += 1) {
+    const at: number = 16 + index * 8;
+    bytes[at] = tags[index].charCodeAt(0);
+    bytes[at + 1] = tags[index].charCodeAt(1);
+    bytes[at + 2] = tags[index].charCodeAt(2);
+    bytes[at + 3] = tags[index].charCodeAt(3);
+    view.setInt32(at + 4, offs[index], true);
+  }
+  // mal：单条，4 字节键
+  view.setInt32(malAt, 1, true);
+  view.setInt32(malAt + 4, malKey, true);
+  view.setInt16(malAt + 8, 0, true);
+  // btc：单条，**2 字节键**，索引 1 指向公司名
+  view.setInt32(btcAt, 1, true);
+  view.setInt16(btcAt + 4, companyId, true);
+  view.setInt16(btcAt + 6, 1, true);
+  // noff / nstr：两个名字共用一份池
+  view.setInt32(noffAt, 2, true);
+  view.setInt32(noffAt + 4, 0, true);
+  view.setInt32(noffAt + 8, a.length, true);
+  view.setInt32(noffAt + 12, a.length + b.length, true);
+  for (let index: number = 0; index < a.length; index += 1) bytes[nstrAt + index] = a[index];
+  for (let index: number = 0; index < b.length; index += 1) bytes[nstrAt + a.length + index] = b[index];
+  return bytes;
+}
+
 
 /**
  * 合成一个含 `long` 段（8 字节键）的 radiodb。
@@ -277,6 +333,53 @@ export default function fieldwatchRadioDbTest() {
       expect(db.vendorForMac('A8:BB:CC:11:22:33')).assertEqual('Apple, Inc.');
       // 还原路径上的 Apple 被过滤为空
       expect(db.vendorForMac('AA:BB:CC:11:22:33')).assertEqual('');
+    });
+
+    // ── 厂商解析链 `vendorFor`：分类页的品牌分组必须与列表「厂商」同源 ──
+    //
+    // 曾经的缺陷：这条链**被写了三遍、且口径不一致** ——
+    //   `attachVendor`（写入 `facts.manufacturer`）是「OUI -> 公司 ID」两级；
+    //   `vendorOfSighting`（**分类页的品牌分组** / 详情页标题 / 详情文本转储）只有 OUI 一级；
+    //   `FieldwatchFilterEngine.vendorOf`（筛选页按品牌筛）也只有 OUI 一级。
+    // 于是随机 MAC 的 BLE 设备在列表里写着「Apple, Inc.」，
+    // 在分类页却整片落进「未知品牌」—— 看起来就是分类页没有品牌分组。
+    it('vendorFor 用蓝牙公司 ID 兜底随机 MAC（分类页品牌分组回归）', 0, () => {
+      const db: FieldwatchRadioDb = new FieldwatchRadioDb();
+      // 0xA8BBCC 的 LA 位是 0（真实地址）；0xAA 是它在虚拟 SSID 上的变体（LA 位置 1）
+      expect(db.load(buildWithCompany(0xA8BBCC, 'Apple, Inc.', 0x004C, 'Apple, Inc.'))).assertTrue();
+      // OUI 一级：真实地址查得到
+      expect(db.vendorForMac('A8:BB:CC:11:22:33')).assertEqual('Apple, Inc.');
+      // OUI 一级：随机地址被手机大厂过滤 -> 落空。这正是分类页此前丢掉的那一级
+      expect(db.vendorForMac('AA:BB:CC:11:22:33')).assertEqual('');
+      // 公司 ID 兜底把它救回来
+      expect(db.vendorFor('', 'AA:BB:CC:11:22:33', 0x004C)).assertEqual('Apple, Inc.');
+      // 没有公司 ID 时保持空 —— 不能凭空造品牌
+      expect(db.vendorFor('', 'AA:BB:CC:11:22:33', 0)).assertEqual('');
+      // 已有解析值优先：界面显示什么品牌，分组就用什么品牌
+      expect(db.vendorFor('HUAWEI TECHNOLOGIES CO.,LTD', 'AA:BB:CC:11:22:33', 0x004C)).assertEqual('HUAWEI TECHNOLOGIES CO.,LTD');
+      // 名称库未载入时安全返回空串（已有值仍可直接采用）
+      const empty: FieldwatchRadioDb = new FieldwatchRadioDb();
+      expect(empty.vendorFor('', 'AA:BB:CC:11:22:33', 0x004C)).assertEqual('');
+      expect(empty.vendorFor('Apple, Inc.', '', 0)).assertEqual('Apple, Inc.');
+    });
+
+    // 筛选页是这条链的**第三个**调用点：界面写着 Apple, Inc.，按 apple 就得筛得出来。
+    // 它此前的注释写着「与 facts 同源」，实际比 facts 少一级。
+    it('按品牌筛选与界面显示同源（随机 MAC + 公司 ID 也能筛中）', 0, () => {
+      const db: FieldwatchRadioDb = new FieldwatchRadioDb();
+      expect(db.load(buildWithCompany(0xA8BBCC, 'Apple, Inc.', 0x004C, 'Apple, Inc.'))).assertTrue();
+      FieldwatchFilterEngine.setRadioDb(db);
+      const engine: FieldwatchFilterEngine = new FieldwatchFilterEngine();
+      const facts: RadioFacts = new RadioFacts();
+      facts.manufacturerId = 0x004C;
+      const observation: ScanObservation = new ScanObservation('ble:AA:BB:CC:11:22:33', RadioKind.BLE, 'AA:BB:CC:11:22:33', 'X', -60, 1000, facts);
+      const item: Sighting = Sighting.fromObservation(observation);
+      const byBrand: FilterDefinition = new FilterDefinition();
+      byBrand.ouiQuery = 'apple';
+      expect(engine.pass(item, byBrand, [], [], [], 2000)).assertTrue();
+      const byOther: FilterDefinition = new FilterDefinition();
+      byOther.ouiQuery = 'huawei';
+      expect(engine.pass(item, byOther, [], [], [], 2000)).assertFalse();
     });
   });
 }

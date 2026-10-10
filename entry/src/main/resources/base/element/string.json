@@ -5774,7 +5774,7 @@
     },
     {
       "name": "fieldwatch_signatures_delete",
-      "value": "删除自定义签名"
+      "value": "删除该特征"
     },
     {
       "name": "fieldwatch_signatures_delete_confirm",
@@ -6674,11 +6674,11 @@
     },
     {
       "name": "fieldwatch_signatures_unwatch",
-      "value": "取消关注该签名"
+      "value": "取消关注该特征"
     },
     {
       "name": "fieldwatch_signatures_watch",
-      "value": "关注该签名"
+      "value": "关注该特征"
     },
     {
       "name": "fieldwatch_signatures_hits",
@@ -6810,11 +6810,11 @@
     },
     {
       "name": "fieldwatch_settings_background_scanning",
-      "value": "后台保持被动扫描"
+      "value": "后台运行"
     },
     {
       "name": "fieldwatch_settings_background_hint",
-      "value": "需要系统允许后台运行；默认关闭，扫描仍保持被动监听"
+      "value": "切到后台后继续接收信号。需要系统允许后台运行，并会显示一条常驻通知。"
     },
     {
       "name": "fieldwatch_filter_class_finder",
@@ -7658,7 +7658,7 @@
     },
     {
       "name": "fieldwatch_notification_permission_reason",
-      "value": "允许通知后，应用会在后台持续扫描时显示一条常驻通知，让你随时知道它正在运行、当前发现了多少信号源。"
+      "value": "允许通知后，后台运行时会显示一条常驻通知，让你随时知道它正在运行、当前发现了多少信号源。"
     },
     {
       "name": "fieldwatch_perm_notif_title",
@@ -7666,7 +7666,7 @@
     },
     {
       "name": "fieldwatch_background_running",
-      "value": "正在后台持续扫描附近的无线电信号"
+      "value": "后台运行中 · 正在接收附近的无线电信号"
     },
     {
       "name": "fieldwatch_detail_vendor",
@@ -7950,7 +7950,7 @@
     },
     {
       "name": "fieldwatch_continuous_task_reason",
-      "value": "被动无线电扫描"
+      "value": "后台运行中的被动无线电扫描"
     },
     {
       "name": "fieldwatch_radio_wifi",
@@ -8057,22 +8057,6 @@
       "value": "开源声明"
     },
     {
-      "name": "fieldwatch_legal_privacy_p1",
-      "value": "本应用是一款严格离线的无线电信号观察工具。它只接收附近设备主动广播的内容，不建立连接、不配对、不发送任何数据。应用本身不包含联网能力，也不会把你的任何信息上传到任何服务器。"
-    },
-    {
-      "name": "fieldwatch_legal_privacy_p2",
-      "value": "只申请两项权限：「设备发现和连接」用于接收蓝牙低功耗与星闪设备的广播；「位置」仅在你打开「记录手机听到设备的位置」后使用，用于给观测打上位置标记并绘制本机轨迹。拒绝授权时，除相应功能外其余部分仍可正常使用。"
-    },
-    {
-      "name": "fieldwatch_legal_privacy_p3",
-      "value": "所有观测、关注列表、自定义特征与设置都保存在本机应用沙箱内。卸载应用即一并删除，我们没有副本，也无法为你找回。你可以随时在「设置 → 数据」中清空日志或恢复默认。"
-    },
-    {
-      "name": "fieldwatch_legal_privacy_p4",
-      "value": "本应用不收集设备标识符、不做统计分析、不投放广告、不申请后台定位。它不会在后台持续扫描，除非你主动开启「后台扫描」并接受由此产生的耗电。"
-    },
-    {
       "name": "fieldwatch_legal_terms_p1",
       "value": "本应用用于观察和分析你所在环境中公开广播的无线电信号，供学习、研究与安全自查使用。"
     },
@@ -8086,15 +8070,15 @@
     },
     {
       "name": "fieldwatch_legal_oss_p1",
-      "value": "本应用基于 HarmonyOS ArkTS 与 ArkUI 开发，使用了华为随 HarmonyOS SDK 提供的系统能力与 HDS 设计组件。这些组件遵循其各自的许可条款。"
+      "value": "电波足迹是开源项目 Fieldwatch 1.1.17（Android）在 HarmonyOS 上的重写版本：功能与交互沿用其设计，代码基于 ArkTS 与 ArkUI 重新实现，未直接复用其 Java/Kotlin 源码。原项目以 MIT 协议开源，本应用同样以 MIT 协议开源。"
     },
     {
       "name": "fieldwatch_legal_oss_p2",
-      "value": "厂商前缀（OUI）识别使用的数据来自 IEEE 公开的 MA-L / MA-M / MA-S 注册表。该数据是公开事实信息，随应用离线打包，不联网更新。"
+      "value": "数据来源：厂商前缀（OUI）识别使用 IEEE 公开的 MA-L / MA-M / MA-S 注册表，属公开事实信息，随应用离线打包、不联网更新；内置特征目录由本项目自行整理，来源为公开的产品资料与社区记录，可导出查看，也可用你自己的规则覆盖；界面使用了华为随 HarmonyOS SDK 提供的系统能力与 HDS 设计组件，遵循其各自的许可条款。"
     },
     {
       "name": "fieldwatch_legal_oss_p3",
-      "value": "内置特征目录由本项目自行整理，来源为公开的产品资料与社区记录。目录随应用离线提供，可导出查看，也可用你自己的规则覆盖。"
+      "value": "MIT License\n\nCopyright (c) Fieldwatch contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
     },
     {
       "name": "fieldwatch_settings_log_level",
@@ -8127,6 +8111,1050 @@
     {
       "name": "fieldwatch_settings_alerts",
       "value": "通知与语音"
+    },
+    {
+      "name": "fieldwatch_signatures_edit_fleet",
+      "value": "编辑该特征"
+    },
+    {
+      "name": "fieldwatch_editor_delete_fleet",
+      "value": "删除特征"
+    },
+    {
+      "name": "fieldwatch_signatures_detail_subtitle",
+      "value": "特征详情"
+    },
+    {
+      "name": "fieldwatch_signatures_detail_gone",
+      "value": "这条特征已不在目录中。"
+    },
+    {
+      "name": "fieldwatch_signatures_rule_off",
+      "value": "已关闭"
+    },
+    {
+      "name": "fieldwatch_editor_rules_hint",
+      "value": "每条规则有它自己的开关。关闭后规则仍然保留，只是不再参与匹配 —— 用它可以为单个特征静音嘈杂的 OUI 或名称，而不必删掉它们。"
+    },
+    {
+      "name": "fieldwatch_editor_rule_value",
+      "value": "值"
+    },
+    {
+      "name": "fieldwatch_rule_kind_mac_prefix",
+      "value": "MAC 前缀"
+    },
+    {
+      "name": "fieldwatch_rule_kind_name_contains",
+      "value": "名称包含"
+    },
+    {
+      "name": "fieldwatch_rule_kind_name_glob",
+      "value": "名称通配"
+    },
+    {
+      "name": "fieldwatch_rule_kind_service_uuid",
+      "value": "服务 UUID"
+    },
+    {
+      "name": "fieldwatch_rule_kind_service_data",
+      "value": "服务数据"
+    },
+    {
+      "name": "fieldwatch_rule_kind_company",
+      "value": "公司 ID"
+    },
+    {
+      "name": "fieldwatch_rule_kind_manufacturer_data",
+      "value": "厂商数据"
+    },
+    {
+      "name": "fieldwatch_rule_kind_radio",
+      "value": "无线电种类"
+    },
+    {
+      "name": "fieldwatch_rule_kind_hidden_ssid",
+      "value": "隐藏 SSID"
+    },
+    {
+      "name": "fieldwatch_rule_kind_vendor_ie",
+      "value": "厂商 IE OUI"
+    },
+    {
+      "name": "fieldwatch_onb_settings_title",
+      "value": "功能设置"
+    },
+    {
+      "name": "fieldwatch_onb_settings_body",
+      "value": "三项随时可以在「设置」里改。现在定好，之后就不用再进设置页找。"
+    },
+    {
+      "name": "shortcut_live",
+      "value": "实时雷达"
+    },
+    {
+      "name": "shortcut_signatures",
+      "value": "特征库"
+    },
+    {
+      "name": "widget_running",
+      "value": "运行中"
+    },
+    {
+      "name": "widget_not_running",
+      "value": "未运行"
+    },
+    {
+      "name": "widget_tap_to_settings",
+      "value": "点击进入设置"
+    },
+    {
+      "name": "fieldwatch_signatures_watched",
+      "value": "已关注"
+    },
+    {
+      "name": "fieldwatch_watchlist_title",
+      "value": "关注列表"
+    },
+    {
+      "name": "fieldwatch_watchlist_subtitle",
+      "value": "%s 个关注目标"
+    },
+    {
+      "name": "fieldwatch_watchlist_tab_watched",
+      "value": "已关注"
+    },
+    {
+      "name": "fieldwatch_watchlist_tab_add",
+      "value": "从特征库添加"
+    },
+    {
+      "name": "fieldwatch_watchlist_empty",
+      "value": "还没有关注任何内容。切到「从特征库添加」挑一个。"
+    },
+    {
+      "name": "fieldwatch_watchlist_add_empty",
+      "value": "特征库里的内容都已经关注了。"
+    },
+    {
+      "name": "fieldwatch_watchlist_add_hint",
+      "value": "按类别分组，点类别展开；也可直接搜索。点条目即关注。"
+    },
+    {
+      "name": "fieldwatch_watchlist_remove",
+      "value": "移除"
+    },
+    {
+      "name": "fieldwatch_watchlist_source_signature",
+      "value": "来源：特征"
+    },
+    {
+      "name": "fieldwatch_watchlist_source_device",
+      "value": "来源：具体设备"
+    },
+    {
+      "name": "fieldwatch_watchlist_search",
+      "value": "搜索特征名称或规则"
+    },
+    {
+      "name": "fieldwatch_watchlist_group_count",
+      "value": "%s 条"
+    },
+    {
+      "name": "fieldwatch_tab_toolbox",
+      "value": "工具箱"
+    },
+    {
+      "name": "fieldwatch_toolbox_channel_title",
+      "value": "Wi-Fi 信道拥堵"
+    },
+    {
+      "name": "fieldwatch_toolbox_channel_hint",
+      "value": "每条弧是一个 AP：位置是中心频率，半径是占用宽度的一半。弧叠在一起的地方就是互相干扰的信道。"
+    },
+    {
+      "name": "fieldwatch_toolbox_band_24",
+      "value": "2.4 GHz"
+    },
+    {
+      "name": "fieldwatch_toolbox_band_5",
+      "value": "5 GHz"
+    },
+    {
+      "name": "fieldwatch_toolbox_band_6",
+      "value": "6 GHz"
+    },
+    {
+      "name": "fieldwatch_toolbox_channel_summary",
+      "value": "本频段 %1 个 AP · 最拥挤信道 %2（拥堵度 %3）"
+    },
+    {
+      "name": "fieldwatch_toolbox_channel_recommend",
+      "value": "推荐切到信道 %1（拥堵度 %2）"
+    },
+    {
+      "name": "fieldwatch_toolbox_channel_empty",
+      "value": "本频段暂时没有扫到 AP。"
+    },
+    {
+      "name": "fieldwatch_toolbox_channel_ranking",
+      "value": "最拥挤的信道"
+    },
+    {
+      "name": "fieldwatch_toolbox_channel_short",
+      "value": "信道"
+    },
+    {
+      "name": "fieldwatch_antitrack_notify_title",
+      "value": "疑似跟踪设备"
+    },
+    {
+      "name": "fieldwatch_antitrack_notify_body",
+      "value": "%1 已持续伴随你 %2 分钟，且信号强度几乎不随你的移动而变化。"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_title",
+      "value": "反追踪安全"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_hint",
+      "value": "综合时间跨度、你的实际移动路径与信号强度拟合，找出可能一直跟着你的设备。"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_none",
+      "value": "暂未发现疑似跟踪设备。"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_nogeo",
+      "value": "未开启位置标注，地理维度无法参与判断；当前仅按时间跨度与信号稳定性评估。"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_risk_suspect",
+      "value": "疑似跟踪"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_risk_watch",
+      "value": "值得留意"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_span",
+      "value": "伴随 %1 分钟"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_path",
+      "value": "你走了 %1（直线 %2，曲折度 %3）"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_slope",
+      "value": "强度斜率 %1 dB/分 · 残差 %2 dB"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_presence",
+      "value": "出现占比 %1%"
+    },
+    {
+      "name": "fieldwatch_toolbox_antitrack_score",
+      "value": "可疑度 %1"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_title",
+      "value": "信号追踪"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_hint",
+      "value": "选定一个目标后持续观察它的强度变化，用短促的 tick 声辅助现场接近判断。它不是测向仪，只反映远近与趋势。"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_active",
+      "value": "正在搜寻"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_resume",
+      "value": "继续"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_pick",
+      "value": "选一个目标开始搜寻（按当前信号强度排序）"
+    },
+    {
+      "name": "fieldwatch_toolbox_kind_ble",
+      "value": "蓝牙"
+    },
+    {
+      "name": "fieldwatch_toolbox_kind_wifi",
+      "value": "Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_toolbox_kind_nearlink",
+      "value": "星闪"
+    },
+    {
+      "name": "fieldwatch_hunt_trend",
+      "value": "最近样本与趋势（横轴为样本先后，参考线为峰值）"
+    },
+    {
+      "name": "fieldwatch_toolbox_title",
+      "value": "工具箱"
+    },
+    {
+      "name": "fieldwatch_toolbox_description",
+      "value": "现场用的三件工具：信道拥堵、信号追踪、反追踪安全。"
+    },
+    {
+      "name": "fieldwatch_toolbox_tab_channel",
+      "value": "信道分析"
+    },
+    {
+      "name": "fieldwatch_toolbox_tab_hunt",
+      "value": "信号追踪"
+    },
+    {
+      "name": "fieldwatch_toolbox_tab_antitrack",
+      "value": "反追踪"
+    },
+    {
+      "name": "fieldwatch_toolbox_chart_legend",
+      "value": "弧线：横向宽度 = 信道占用宽度（真实比例，交叠即干扰）；高度 = 信号强度。每台设备一个颜色，标注里给出名称与 dBm。"
+    },
+    {
+      "name": "fieldwatch_toolbox_hidden_ssid",
+      "value": "(隐藏名称)"
+    },
+    {
+      "name": "fieldwatch_toolbox_zoom",
+      "value": "双指捏合可横向缩放 · 当前 %1×"
+    },
+    {
+      "name": "fieldwatch_toolbox_zoom_reset",
+      "value": "重置缩放"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_current",
+      "value": "当前"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_peak",
+      "value": "峰值"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_range",
+      "value": "区间"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_average",
+      "value": "均值"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_samples",
+      "value": "样本"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_elapsed",
+      "value": "已持续"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_stats",
+      "value": "历史汇总"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_sessions",
+      "value": "搜寻次数"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_total_time",
+      "value": "累计时长"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_best_peak",
+      "value": "最佳峰值"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_history",
+      "value": "搜寻记录"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_no_history",
+      "value": "还没有结束过搜寻。选定一个目标开始后会记录在这里。"
+    },
+    {
+      "name": "fieldwatch_toolbox_hunt_record_detail",
+      "value": "%1 个样本 · 峰值 %2 · 均值 %3"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_evaluated",
+      "value": "已评估"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_suspect",
+      "value": "疑似"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_watch",
+      "value": "留意"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_top",
+      "value": "最高分"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_threshold",
+      "value": "判定线：%1 分及以上为「值得留意」，%2 分及以上为「疑似跟踪」。"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_travel",
+      "value": "我的移动"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_path",
+      "value": "路径"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_displacement",
+      "value": "直线位移"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_ratio",
+      "value": "曲折度"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_travel_note",
+      "value": "%1 个定位点，覆盖 %2 分钟。曲折度 = 路径 / 直线位移，越弯越能说明「它一直跟着你」。"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_suspects",
+      "value": "疑似跟踪设备"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_score",
+      "value": "总分"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_dim_time",
+      "value": "时间"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_dim_geo",
+      "value": "地理"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_dim_signal",
+      "value": "信号"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_evaluated_list",
+      "value": "全部评估"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_evaluated_note",
+      "value": "按分数排序。没超过判定线的也在这里 —— 方便确认「它确实被看过，只是还不够」。"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_log",
+      "value": "判定记录"
+    },
+    {
+      "name": "fieldwatch_toolbox_at_no_log",
+      "value": "还没有触发过疑似跟踪判定。"
+    },
+    {
+      "name": "fieldwatch_feedback_title",
+      "value": "反馈中心"
+    },
+    {
+      "name": "fieldwatch_feedback_subtitle",
+      "value": "提交前请先搜索是否已有同类问题。"
+    },
+    {
+      "name": "fieldwatch_feedback_search",
+      "value": "搜索已有反馈"
+    },
+    {
+      "name": "fieldwatch_feedback_all",
+      "value": "全部"
+    },
+    {
+      "name": "fieldwatch_feedback_new",
+      "value": "新建反馈"
+    },
+    {
+      "name": "fieldwatch_feedback_refresh",
+      "value": "刷新"
+    },
+    {
+      "name": "fieldwatch_feedback_loading",
+      "value": "正在请求…"
+    },
+    {
+      "name": "fieldwatch_feedback_list_summary",
+      "value": "已显示 %1 条，共 %2 条"
+    },
+    {
+      "name": "fieldwatch_feedback_issue_meta",
+      "value": "%1 · %2 · %3 人支持 · %4 条回复"
+    },
+    {
+      "name": "fieldwatch_feedback_load_more",
+      "value": "加载更多"
+    },
+    {
+      "name": "fieldwatch_feedback_back",
+      "value": "返回列表"
+    },
+    {
+      "name": "fieldwatch_feedback_support",
+      "value": "我也遇到"
+    },
+    {
+      "name": "fieldwatch_feedback_supported_already",
+      "value": "已支持"
+    },
+    {
+      "name": "fieldwatch_feedback_supported",
+      "value": "已记录你的支持。"
+    },
+    {
+      "name": "fieldwatch_feedback_already_supported",
+      "value": "这台设备之前已经支持过了。"
+    },
+    {
+      "name": "fieldwatch_feedback_posts",
+      "value": "回复"
+    },
+    {
+      "name": "fieldwatch_feedback_no_posts",
+      "value": "还没有回复。"
+    },
+    {
+      "name": "fieldwatch_feedback_reply_hint",
+      "value": "补充说明…"
+    },
+    {
+      "name": "fieldwatch_feedback_send",
+      "value": "发送"
+    },
+    {
+      "name": "fieldwatch_feedback_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "fieldwatch_feedback_draft_title",
+      "value": "一句话说明问题"
+    },
+    {
+      "name": "fieldwatch_feedback_draft_body",
+      "value": "详细描述：什么情况下出现、期望是什么、实际是什么"
+    },
+    {
+      "name": "fieldwatch_feedback_diagnostic_note",
+      "value": "提交时会附带设备信息：%1 · %2。不含任何标识符。"
+    },
+    {
+      "name": "fieldwatch_feedback_submit",
+      "value": "提交"
+    },
+    {
+      "name": "fieldwatch_feedback_submit_ok",
+      "value": "已提交，感谢反馈。"
+    },
+    {
+      "name": "fieldwatch_feedback_submit_failed",
+      "value": "提交失败，请检查网络后重试。"
+    },
+    {
+      "name": "fieldwatch_feedback_network_failed",
+      "value": "网络请求失败，请稍后重试。"
+    },
+    {
+      "name": "fieldwatch_feedback_need_title_body",
+      "value": "标题与描述都要填。"
+    },
+    {
+      "name": "fieldwatch_feedback_empty_or_failed",
+      "value": "没有拿到数据：可能是真的没有匹配的反馈，也可能是网络不通。"
+    },
+    {
+      "name": "fieldwatch_feedback_type_source",
+      "value": "其它"
+    },
+    {
+      "name": "fieldwatch_feedback_type_book_source",
+      "value": "其它"
+    },
+    {
+      "name": "fieldwatch_feedback_type_software",
+      "value": "软件问题"
+    },
+    {
+      "name": "fieldwatch_feedback_type_ui",
+      "value": "界面问题"
+    },
+    {
+      "name": "fieldwatch_feedback_type_suggestion",
+      "value": "功能建议"
+    },
+    {
+      "name": "fieldwatch_feedback_type_other",
+      "value": "其它"
+    },
+    {
+      "name": "fieldwatch_feedback_status_open",
+      "value": "待处理"
+    },
+    {
+      "name": "fieldwatch_feedback_status_in_progress",
+      "value": "处理中"
+    },
+    {
+      "name": "fieldwatch_feedback_status_resolved",
+      "value": "已解决"
+    },
+    {
+      "name": "fieldwatch_feedback_status_closed",
+      "value": "已关闭"
+    },
+    {
+      "name": "fieldwatch_feedback_status_merged",
+      "value": "已合并"
+    },
+    {
+      "name": "fieldwatch_settings_feedback",
+      "value": "反馈中心"
+    },
+    {
+      "name": "fieldwatch_settings_feedback_hint",
+      "value": "报告问题、提出建议，或看看别人遇到了什么"
+    },
+    {
+      "name": "fieldwatch_feedback_rate_limited",
+      "value": "操作太频繁了，请过几分钟再试。"
+    },
+    {
+      "name": "fieldwatch_feedback_not_found",
+      "value": "这条反馈不存在，或上传会话已过期，请重新开始。"
+    },
+    {
+      "name": "fieldwatch_feedback_invalid",
+      "value": "提交的内容不合要求（类型或描述长度），请修改后重试。"
+    },
+    {
+      "name": "fieldwatch_feedback_chunk_mismatch",
+      "value": "上传进度错位了，请重新发起这次上传。"
+    },
+    {
+      "name": "fieldwatch_feedback_no_items",
+      "value": "还没有反馈。有问题的话，欢迎第一条。"
+    },
+    {
+      "name": "fieldwatch_feedback_turnstile_title",
+      "value": "需要先完成一次人机验证"
+    },
+    {
+      "name": "fieldwatch_feedback_turnstile_wait",
+      "value": "验证完成后会自动返回，请稍候…"
+    },
+    {
+      "name": "fieldwatch_feedback_turnstile_cancel",
+      "value": "取消验证"
+    },
+    {
+      "name": "fieldwatch_feedback_turnstile_failed",
+      "value": "没有拿到验证结果，请重试。"
+    },
+    {
+      "name": "fieldwatch_feedback_attachments",
+      "value": "附件"
+    },
+    {
+      "name": "fieldwatch_feedback_attachment_note",
+      "value": "附件默认待管理员审核，审核通过前不会出现在这里。"
+    },
+    {
+      "name": "fieldwatch_feedback_no_attachments",
+      "value": "没有公开的附件。"
+    },
+    {
+      "name": "fieldwatch_feedback_open",
+      "value": "打开"
+    },
+    {
+      "name": "fieldwatch_feedback_meta",
+      "value": "创建 %1 · 更新 %2"
+    },
+    {
+      "name": "fieldwatch_feedback_pick_file",
+      "value": "选择文件"
+    },
+    {
+      "name": "fieldwatch_feedback_attach_logs",
+      "value": "附加日志"
+    },
+    {
+      "name": "fieldwatch_feedback_remove",
+      "value": "移除"
+    },
+    {
+      "name": "fieldwatch_feedback_attachment_hint",
+      "value": "单个不超过 %1，合计不超过 %2；已选 %3。"
+    },
+    {
+      "name": "fieldwatch_feedback_file_too_large",
+      "value": "这个文件太大了，单个不能超过 80 MB。"
+    },
+    {
+      "name": "fieldwatch_feedback_total_too_large",
+      "value": "附件总量超了，单条反馈合计不能超过 160 MB。"
+    },
+    {
+      "name": "fieldwatch_feedback_picker_failed",
+      "value": "打开文件选择器失败。"
+    },
+    {
+      "name": "fieldwatch_feedback_log_failed",
+      "value": "无法生成日志附件。"
+    },
+    {
+      "name": "fieldwatch_feedback_no_logs",
+      "value": "最近 15 分钟没有应用日志。"
+    },
+    {
+      "name": "fieldwatch_feedback_log_attached",
+      "value": "已附加 %1 条日志。"
+    },
+    {
+      "name": "fieldwatch_feedback_pending_upload",
+      "value": "待上传"
+    },
+    {
+      "name": "fieldwatch_feedback_uploading",
+      "value": "上传中"
+    },
+    {
+      "name": "fieldwatch_feedback_uploaded",
+      "value": "已上传，待审核"
+    },
+    {
+      "name": "fieldwatch_feedback_upload_failed",
+      "value": "上传失败"
+    },
+    {
+      "name": "fieldwatch_feedback_submit_ok_attachments",
+      "value": "已提交，%1/%2 个附件上传成功（待审核）。"
+    },
+    {
+      "name": "fieldwatch_feedback_status_any",
+      "value": "全部状态"
+    },
+    {
+      "name": "fieldwatch_feedback_banner_title",
+      "value": "匿名 Issue 协作"
+    },
+    {
+      "name": "fieldwatch_feedback_banner_sub",
+      "value": "把相同问题聚到一起，让反馈更容易被看见"
+    },
+    {
+      "name": "fieldwatch_feedback_banner_note",
+      "value": "可以提出问题，也可以加入已有 Issue。我们只收集诊断所需的机型、系统和 APP 版本。"
+    },
+    {
+      "name": "fieldwatch_feedback_badge_anon",
+      "value": "匿名参与"
+    },
+    {
+      "name": "fieldwatch_feedback_badge_admin",
+      "value": "日志附件默认仅管理员可见"
+    },
+    {
+      "name": "fieldwatch_feedback_new_short",
+      "value": "提出"
+    },
+    {
+      "name": "fieldwatch_feedback_label_type",
+      "value": "类型"
+    },
+    {
+      "name": "fieldwatch_feedback_label_status",
+      "value": "状态"
+    },
+    {
+      "name": "fieldwatch_feedback_support_count",
+      "value": "支持 %1"
+    },
+    {
+      "name": "fieldwatch_feedback_post_count",
+      "value": "补充 %1"
+    },
+    {
+      "name": "fieldwatch_feedback_author_anon",
+      "value": "匿名用户"
+    },
+    {
+      "name": "fieldwatch_feedback_submit_reply",
+      "value": "提交补充"
+    },
+    {
+      "name": "fieldwatch_feedback_diagnostic",
+      "value": "诊断信息"
+    },
+    {
+      "name": "fieldwatch_feedback_diagnostic_note_short",
+      "value": "仅收集诊断必需信息"
+    },
+    {
+      "name": "fieldwatch_feedback_meta_model",
+      "value": "机型"
+    },
+    {
+      "name": "fieldwatch_feedback_meta_system",
+      "value": "系统"
+    },
+    {
+      "name": "fieldwatch_feedback_meta_app",
+      "value": "APP"
+    },
+    {
+      "name": "fieldwatch_feedback_not_provided",
+      "value": "未提供"
+    },
+    {
+      "name": "fieldwatch_feedback_attachment_kinds",
+      "value": "日志、图片、视频或压缩包"
+    },
+    {
+      "name": "fieldwatch_feedback_log_from_app",
+      "value": "从 APP 记录系统生成"
+    },
+    {
+      "name": "fieldwatch_feedback_log_15m",
+      "value": "15 分钟"
+    },
+    {
+      "name": "fieldwatch_feedback_log_1h",
+      "value": "1 小时"
+    },
+    {
+      "name": "fieldwatch_feedback_log_3h",
+      "value": "3 小时"
+    },
+    {
+      "name": "fieldwatch_feedback_log_all",
+      "value": "全部"
+    },
+    {
+      "name": "fieldwatch_feedback_log_clear",
+      "value": "清除"
+    },
+    {
+      "name": "fieldwatch_feedback_create_title",
+      "value": "创建新的匿名 Issue"
+    },
+    {
+      "name": "fieldwatch_feedback_create_sub",
+      "value": "描述清楚问题，其他用户可以加入并补充线索"
+    },
+    {
+      "name": "fieldwatch_feedback_ctx_station",
+      "value": "电台名称"
+    },
+    {
+      "name": "fieldwatch_feedback_ctx_frequency",
+      "value": "频率"
+    },
+    {
+      "name": "fieldwatch_feedback_ctx_location",
+      "value": "位置"
+    },
+    {
+      "name": "fieldwatch_feedback_submit_issue",
+      "value": "提交 Issue"
+    },
+    {
+      "name": "fieldwatch_feedback_reply_title",
+      "value": "匿名补充"
+    },
+    {
+      "name": "fieldwatch_feedback_reply_sub",
+      "value": "补充复现步骤或更多线索"
+    },
+    {
+      "name": "fieldwatch_feedback_need_title",
+      "value": "请填写 Issue 标题（至少 2 个字）。"
+    },
+    {
+      "name": "fieldwatch_feedback_need_body",
+      "value": "问题描述至少需要 10 个字，现在只有 %1 个。"
+    },
+    {
+      "name": "fieldwatch_feedback_reply_too_short",
+      "value": "补充内容太短了，至少写 2 个字。"
+    },
+    {
+      "name": "fieldwatch_feedback_toast_submitted",
+      "value": "Issue #%1 已提交"
+    },
+    {
+      "name": "fieldwatch_feedback_toast_uploaded",
+      "value": "附件 %1/%2 上传完成，待管理员审核"
+    },
+    {
+      "name": "fieldwatch_feedback_toast_upload_partial",
+      "value": "Issue 已提交，但有附件没传完，可在详情里重试"
+    },
+    {
+      "name": "fieldwatch_feedback_toast_replied",
+      "value": "补充已提交"
+    },
+    {
+      "name": "fieldwatch_feedback_uploading_named",
+      "value": "正在上传 %1/%2：%3"
+    },
+    {
+      "name": "fieldwatch_feedback_upload_cancel",
+      "value": "取消上传"
+    },
+    {
+      "name": "fieldwatch_settings_notif_feature",
+      "value": "目标离开/进入范围、疑似跟踪判定都会通过通知提醒你。"
+    },
+    {
+      "name": "location_reason",
+      "value": "只在你自己打开「位置标注」之后，用来给观测打上位置标记并绘制移动轨迹。只申请模糊位置，不做后台定位，也不用于任何其他用途。"
+    },
+    {
+      "name": "vibrate_reason",
+      "value": "在信号追踪时用振动提示目标更近、更远或已经消失，让你不必一直盯着屏幕。"
+    },
+    {
+      "name": "reminder_reason",
+      "value": "在后台持续扫描时显示一条常驻通知，让你随时知道应用还在工作；发现疑似跟踪设备时也通过它推送提醒。"
+    },
+    {
+      "name": "biometric_reason",
+      "value": "框架能力演示页用它验证「本地生物识别」能力是否可用，应用本体的扫描功能不依赖它。"
+    },
+    {
+      "name": "set_wifi_reason",
+      "value": "系统要求发起 Wi-Fi 扫描时同时声明该权限。应用只读取扫描结果，不会连接、配置或修改任何 Wi-Fi 网络。"
+    },
+    {
+      "name": "fieldwatch_about_intro",
+      "value": "电波足迹是一个只接收、不连接的无线信号观测工具：被动接收周围的蓝牙低功耗、Wi-Fi 与星闪广播，看清谁在广播、属于哪一类，不配对、不上传。"
+    },
+    {
+      "name": "fieldwatch_dev_apps",
+      "value": "同开发者 App"
+    },
+    {
+      "name": "fieldwatch_dev_apps_view",
+      "value": "在应用市场查看"
+    },
+    {
+      "name": "fieldwatch_dev_apps_failed",
+      "value": "无法打开应用市场，请重试"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p1",
+      "value": "关于电波足迹与隐私的声明"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p2",
+      "value": "更新日期：2026.10.10"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p3",
+      "value": "电波足迹 是由 周龙溢 （以下简称“我们”）为您提供的，用于无线信号扫描与收集的应用。本隐私声明由我们为处理您的个人信息而制定。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p4",
+      "value": "我们非常重视您的个人信息和隐私保护，将会按照法律要求和业界成熟的安全标准，为您的个人信息提供相应的安全保护措施。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p5",
+      "value": "1. 我们如何收集和使用您的个人信息"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p6",
+      "value": "我们仅在有合法性基础的情形下才会使用您的个人信息。根据适用的法律，我们可能会基于您的同意、为履行/订立您与我们的合同所必需、履行法定义务所必需等合法性基础，使用您的个人信息。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p7",
+      "value": "1.1 我们为您提供了基本功能服务和全量功能服务，您可以前往启动引导进行选择，不同设备或版本其路径可能存在差异，具体以您当前使用的设备为准。在基本功能服务下不收集个人信息，仅提供基于WiFi扫描的基本功能，不提供基于蓝牙与星闪的精准扫描等其他附加功能，这可能会影响您的使用体验。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p8",
+      "value": "2. 设备权限调用"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p9",
+      "value": "位置（获取设备模糊位置信息）"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p10",
+      "value": "在开启「记录手机听到设备的位置」功能后，为观测附加位置标记并绘制轨迹"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p11",
+      "value": "设备发现和连接（允许接入并使用星闪功能、接入蓝牙并使用蓝牙能力）"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p12",
+      "value": "接收周围 BLE 与星闪设备主动广播的信号，在「实时」页展示附近无线信号源"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p13",
+      "value": "运动数据（读取用户当前的运动状态）"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p14",
+      "value": "识别设备的运动状态（静止 / 步行 / 骑行 / 驾车），辅助「与你同行」功能判定的准确性"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p15",
+      "value": "3. 管理您的个人信息"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p16",
+      "value": "如您对您的数据主体权利有进一步要求或存在任何疑问、意见或建议，可通过本声明中“如何联系我们”章节中所述方式与我们取得联系，并行使您的相关权利。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p17",
+      "value": "4. 信息存储地点及期限"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p18",
+      "value": "4.1 我们承诺，除法律法规另有规定外，我们对您的信息的保存期限应当为实现处理目的所必要的最短时间。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p19",
+      "value": "4.2 上述信息将会传输并保存至中国境内的服务器。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p20",
+      "value": "5. 如何联系我们"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p21",
+      "value": "您可通过以下方式联系我们，并行使您的相关权利，我们会尽快回复。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p22",
+      "value": "邮箱：1335941759@qq.com"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p23",
+      "value": "如果您对我们的回复不满意, 特别是当个人信息处理行为损害了您的合法权益时您还可以通过向有管辖权的人民法院提起诉讼、向行业自律协会或政府相关管理机构投诉等外部途径进行解决。 您也可以向我们了解可能适用的相关投诉途径的信息。"
+    },
+    {
+      "name": "fieldwatch_legal_privacy_p24",
+      "value": "生效日期：2026.10.8"
+    },
+    {
+      "name": "fieldwatch_legal_oss_repo_label",
+      "value": "开源仓库"
+    },
+    {
+      "name": "fieldwatch_legal_oss_repo",
+      "value": "https://github.com/DaLongZhuaZi/airwavefootprints"
     }
   ]
 }

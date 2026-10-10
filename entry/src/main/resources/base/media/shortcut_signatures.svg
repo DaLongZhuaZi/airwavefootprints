@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0E2418"/>
+      <stop offset="1" stop-color="#06110C"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3DFF9A" stop-opacity="0.25"/>
+      <stop offset="0.5" stop-color="#3DFF9A" stop-opacity="1"/>
+      <stop offset="1" stop-color="#3DFF9A" stop-opacity="0.25"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="44" fill="url(#bg2)"/>
+  <!-- 「特征指纹」：一组同心的信号弧，由内到外张开 -->
+  <g fill="none" stroke="#3DFF9A" stroke-linecap="round">
+    <path d="M96 60 A36 36 0 0 1 132 96" stroke-opacity="0.95" stroke-width="6"/>
+    <path d="M96 48 A48 48 0 0 1 144 96" stroke-opacity="0.70" stroke-width="6"/>
+    <path d="M96 36 A60 60 0 0 1 156 96" stroke-opacity="0.45" stroke-width="6"/>
+    <path d="M96 60 A36 36 0 0 0 60 96" stroke-opacity="0.95" stroke-width="6"/>
+    <path d="M96 48 A48 48 0 0 0 48 96" stroke-opacity="0.70" stroke-width="6"/>
+    <path d="M96 36 A60 60 0 0 0 36 96" stroke-opacity="0.45" stroke-width="6"/>
+  </g>
+  <!-- 发射源 -->
+  <circle cx="96" cy="96" r="9" fill="#3DFF9A"/>
+  <!-- 波形：横穿下方的信号指纹线 -->
+  <path d="M28 142 L44 142 L52 122 L62 162 L72 132 L82 152 L92 142 L104 142 L112 126 L122 158 L132 134 L142 142 L164 142"
+        fill="none" stroke="url(#wave)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

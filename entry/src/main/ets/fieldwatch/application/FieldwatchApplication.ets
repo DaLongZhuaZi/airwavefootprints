@@ -4,12 +4,19 @@ import { FieldwatchCompareResult, FieldwatchCompareService, FieldwatchFilterEngi
 import { SignatureFleet } from '../domain/signatures/FieldwatchSignatureModels';
 import { FieldwatchWatchAlert, parseVoiceWhat } from '../platform/FieldwatchWatchAlert';
 import { signatureClassLabel } from '../ui/FieldwatchClassLabels';
-import { HuntCue, HuntSession } from '../domain/FieldwatchHunt';
+import { HuntCue, HuntRecord, HuntSession, HuntStats } from '../domain/FieldwatchHunt';
 import { matchedSignatureNames, signatureHitCounts } from '../ui/FieldwatchUiState';
 import { SignaturePackError, StockCatalogUpdateResult, overlayStockFleets } from '../domain/signatures/FieldwatchSignatureCatalog';
 import { FieldwatchSignatureEngine as FieldwatchFleetEngine, FieldwatchSignatureFieldDecoder, SignatureMatchContext, SignatureMatchExplanation, signatureContextOfObservation, signatureContextOfSighting } from '../domain/signatures/FieldwatchSignatureEngine';
 import { FieldwatchExportSerializer } from '../domain/FieldwatchExportSerializer';
 import { FieldwatchSettingsRepository } from '../data/FieldwatchSettingsRepository';
+import {
+  buildWidgetCardData, FieldwatchWidgetForm, FieldwatchWidgetState, parseWidgetForms, parseWidgetState
+} from '../domain/FieldwatchWidgetState';
+import {
+  AntiTrackEvent, AntiTrackStats, assessTrack, FollowRisk, formatMinutes, GeoPoint, riskOf, TrackEvidence, TrackPoint,
+  TrackSuspect, TRACK_MIN_SAMPLES, TRACK_WINDOW_MS, travelSummaryOf, TravelSummary
+} from '../domain/FieldwatchAntiTracking';
 import { FieldwatchCatalogImportOutcome, FieldwatchCatalogRepository } from '../data/FieldwatchCatalogRepository';
 import { FieldwatchCatalogFileGateway } from '../platform/FieldwatchCatalogFileGateway';
 import { FieldwatchBleScanner } from '../radio/FieldwatchBleScanner';
@@ -25,6 +32,7 @@ import { common, Permissions } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { manager as nearlinkManager } from '@kit.ConnectivityKit';
 import { FieldwatchRadioDb } from '../domain/FieldwatchRadioDb';
+import { ngfSettingsStoreFacade, ngfWidgetManagerFacade } from 'ngf_framework';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../domain/FieldwatchPermissions';
 import { fileIo } from '@kit.CoreFileKit';
 
@@ -68,6 +76,29 @@ export class FieldwatchApplication {
   private lastLoggedPhase: Map<string, string> = new Map<string, string>();
   /** 本机 GPS 轨迹样本；由定位更新喂入，供「与你同行」判定与状态行使用。 */
   private travelSamples: GpsSample[] = [];
+
+  /**
+   * 每台设备的 (时间, 强度) 序列，反追踪识别用。
+   *
+   * **为什么另存一份**：`Sighting.rssiSamples` 只有强度、**没有时间**，
+   * 而反追踪的核心之一就是「你在动、它的强度几乎不变」的**拟合斜率** ——
+   * 没有时间轴就无从拟合。这里按窗口滚动保存，长度有上限。
+   */
+  private readonly deviceTracks: Map<string, TrackPoint[]> = new Map<string, TrackPoint[]>();
+  /** 已经就「疑似跟踪」发过通知的设备；每台每次运行只吵一次。 */
+  private readonly antiTrackAlerted: Set<string> = new Set<string>();
+
+  private recordDeviceSample(key: string, at: number, rssi: number): void {
+    let list: TrackPoint[] | undefined = this.deviceTracks.get(key);
+    if (list === undefined) {
+      list = [];
+      this.deviceTracks.set(key, list);
+    }
+    list.push(new TrackPoint(at, rssi));
+    // 只留窗口内的：长时间运行不能让这个 Map 无限增长。
+    const cutoff: number = at - TRACK_WINDOW_MS;
+    while (list.length > 0 && list[0].at < cutoff) list.shift();
+  }
   setTravelSamples(samples: GpsSample[]): void {
     this.travelSamples = samples;
     this.filterEngine.setTravelSamples(samples);
@@ -83,7 +114,45 @@ export class FieldwatchApplication {
   private sequence: number = 0;
   private restoreStarted: boolean = false;
   private huntSession: HuntSession | undefined = undefined;
+  /** 已结束的搜寻记录；只保留最近若干条。 */
+  private static readonly HUNT_HISTORY_MAX: number = 20;
+  private readonly huntHistory: HuntRecord[] = [];
+  /** 反追踪判定记录；只保留最近若干条。 */
+  private static readonly ANTITRACK_LOG_MAX: number = 50;
+  private readonly antiTrackLog: AntiTrackEvent[] = [];
   private readonly watchedNotificationIds: Map<string, number> = new Map<string, number>();
+  /** `reloadSettings` 的重试计数（存储未就绪时用）。 */
+  private settingsReloadAttempts: number = 0;
+  /** 本次进程是否已做过启动期通知清理。 */
+  private notificationsCleared: boolean = false;
+  private clearingNotifications: Promise<void> | undefined = undefined;
+
+  /**
+   * 启动期清理上一次运行残留的通知。**每个进程只做一次。**
+   *
+   * 为什么必须做：进程被杀时（崩溃 / 强制停止 / 从最近任务划掉），
+   * 上一次的通知不会被撤销 ——
+   *   - 关注告警的 id 只在 `watchedNotificationIds` 这个**内存** Map 里，重启即失忆；
+   *   - 运行状态通知的伴随 id 由系统每次申请时分配，上一个同样没持久化。
+   * 结果是旧通知永远挂在通知栏，和新会话的通知并存。
+   *
+   * 并发安全：`syncBackgroundTask` 会在第一次发布之前 `await` 它，
+   * 因此不会出现「先发新通知、再被这次清理一起清掉」。
+   */
+  async clearStaleNotifications(): Promise<void> {
+    if (this.notificationsCleared) return;
+    const pending: Promise<void> | undefined = this.clearingNotifications;
+    if (pending !== undefined) { await pending; return; }
+    const task: Promise<void> = this.performNotificationCleanup();
+    this.clearingNotifications = task;
+    try { await task; } finally { this.clearingNotifications = undefined; }
+  }
+
+  private async performNotificationCleanup(): Promise<void> {
+    this.watchedNotificationIds.clear();
+    await ngfSystemNotificationManager.cancelAll();
+    this.notificationsCleared = true;
+  }
   /** 关注列表的可听告警（双响 + 语音），与 Hunt 的 tick 是两套独立告警。 */
   private readonly watchAlert: FieldwatchWatchAlert = new FieldwatchWatchAlert();
   private nextNotificationId: number = 4101;
@@ -124,6 +193,47 @@ export class FieldwatchApplication {
     logger.setHilogOutputLevel(level);
   }
 
+  /**
+   * 重新从设置存储读取全部设置。
+   *
+   * **为什么需要它**：`FieldwatchApplication` 是单例，构造函数在**模块导入时**就执行了，
+   * 而框架数据层是在 `EntryAbility.onCreate` 里 `ngfStarterKernel.bootstrap()` 才引导的 ——
+   * 也就是**晚于**构造函数。`SettingsManager` 的读接口走的是**内存缓存**，
+   * 缓存只在 `initialize()` 之后才填充；构造函数里那次 `load()` 因此全部读成**默认值**，
+   * 而之后没有任何地方重读。
+   *
+   * 后果：**每次启动，所有设置都静默回到默认值** —— 磁盘上的值还在（`save()` 写进去了），
+   * 只是没人读。表现就是「开关设好了，重开 app 又变回关闭」。
+   *
+   * 这也解释了为什么「引导只出现一次」是对的：那个标志是按需查询的
+   * （`onboardingSeen()` 在页面里现读），查询时机晚于 bootstrap，所以读得到；
+   * 而 `AppSettings` 只在构造期读过一次。
+   */
+  reloadSettings(): void {
+    // **未就绪就重试。**
+    //
+    // `SettingsManager.initialize` 是 `void` 异步调用的，`bootstrap()` 返回时它多半还没走完；
+    // 此时读设置会**静默**全部落回默认值 —— 上一轮只在 onCreate / onWindowStageCreate
+    // 各读一次，实测仍然读到了默认值（用户反馈「重开 app 开关又关了」）。
+    // 改成轮询到「真的就绪」为止，最多 40 次 × 50ms = 2 秒。
+    if (!ngfSettingsStoreFacade.isReady()) {
+      if (this.settingsReloadAttempts < 40) {
+        this.settingsReloadAttempts += 1;
+        setTimeout((): void => { this.reloadSettings(); }, 50);
+      } else {
+        logger.warn(TAG, '设置存储迟迟未就绪，本次仍按默认值运行');
+      }
+      return;
+    }
+    this.settingsReloadAttempts = 0;
+    this.state.settings = this.settingsRepository.load();
+    this.state.watchlist = this.settingsRepository.loadWatchlist();
+    // 日志等级同样要重新应用：构造期读到的是默认 WARN。
+    this.applyLogLevel(this.state.settings.logLevel);
+    logger.info(TAG, '设置已重新载入: 后台运行=' + this.state.settings.backgroundScanning.toString()
+      + ' 扫描强度=' + this.state.settings.scanIntensity + ' 屏幕常亮=' + this.state.settings.keepScreenOn.toString());
+  }
+
   /** 设置日志等级并落盘。`LogLevel` 的数值直接存，便于以后加档不用改存储格式。 */
   setLogLevel(value: number): void {
     this.state.settings.logLevel = value;
@@ -131,6 +241,151 @@ export class FieldwatchApplication {
     this.settingsRepository.save(this.state.settings);
   }
   getState(): FieldwatchApplicationState { return this.state; }
+
+  /**
+   * 把卡片要显示的状态写进设置存储。
+   *
+   * **方向为什么是「应用写、卡片侧拉」**：`formProvider` 没有「列出本应用全部卡片」
+   * 的接口 —— 主应用拿不到自己的 formId，也就无从 `updateForm`。
+   * 而 FormExtensionAbility 在 `onAddForm` / `onUpdateForm` 里天然拿得到 formId，
+   * 所以反过来：应用只写状态，卡片侧负责取用与刷新。
+   *
+   * `running` 的口径与要求一致：**允许后台运行 且 应用确实在后台**。
+   * 前台时卡片显示「app 未运行」—— 它此刻并没有在后台采集。
+   * `heartbeatAt` 供卡片侧判断新鲜度：应用被杀后心跳会停，
+   * 卡片据此在超时后自行显示「app 未运行」，而不是永远停在最后一张快照上。
+   */
+  writeWidgetState(): void {
+    const snapshot: FieldwatchWidgetState = new FieldwatchWidgetState();
+    snapshot.running = this.state.settings.backgroundScanning && !this.appForeground;
+    snapshot.heartbeatAt = Date.now();
+    snapshot.paused = this.state.settings.displayPaused;
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.kind === RadioKind.WIFI) snapshot.wifi += 1;
+      else if (item.kind === RadioKind.NEARLINK) snapshot.nearLink += 1;
+      else snapshot.ble += 1;
+    });
+    // 大卡片：最近一次命中的关注目标，以及最近一次命中的特征族。
+    //
+    // **用下标 + 显式 for，不用闭包内赋值** ——
+    // ArkTS 的控制流分析看不到回调里的赋值，会把 `let x: T | undefined`
+    // 一路窄化成 `never`，随后 `x.rssi` 直接编译失败（实测）。
+    const now: number = Date.now();
+    const sightings: Sighting[] = this.state.sightings;
+    const targets: WatchTarget[] = this.state.watchlist;
+    let watchIndex: number = -1;
+    let watchLabel: string = '';
+    let familyIndex: number = -1;
+    for (let i: number = 0; i < sightings.length; i += 1) {
+      const item: Sighting = sightings[i];
+      for (let t: number = 0; t < targets.length; t += 1) {
+        const target: WatchTarget = targets[t];
+        if (!target.alert) continue;
+        const hit: boolean = target.deviceKey.length > 0
+          ? target.deviceKey === item.key
+          : (target.signatureId.length > 0 && item.signatureIds.indexOf(target.signatureId) >= 0);
+        if (!hit) continue;
+        if (watchIndex < 0 || item.lastSeen > sightings[watchIndex].lastSeen) {
+          watchIndex = i;
+          watchLabel = target.label;
+        }
+      }
+      const names: string[] = matchedSignatureNames(item.signatureIds, this.state.signatures);
+      if (names.length > 0 && (familyIndex < 0 || item.lastSeen > sightings[familyIndex].lastSeen)) {
+        familyIndex = i;
+      }
+    }
+    if (watchIndex >= 0) {
+      snapshot.watchLabel = watchLabel;
+      snapshot.watchRssi = sightings[watchIndex].rssi;
+      snapshot.watchAgeSec = Math.max(0, Math.round((now - sightings[watchIndex].lastSeen) / 1000));
+    }
+    if (familyIndex >= 0) {
+      const familyNames: string[] = matchedSignatureNames(sightings[familyIndex].signatureIds, this.state.signatures);
+      snapshot.familyLabel = familyNames.length > 0 ? familyNames[0] : '';
+      snapshot.familyAgeSec = Math.max(0, Math.round((now - sightings[familyIndex].lastSeen) / 1000));
+    }
+    this.settingsRepository.saveWidgetState(JSON.stringify(snapshot));
+    // 状态变了就顺手推一次卡片。
+    this.pushWidgetData(snapshot);
+  }
+
+  /**
+   * 把卡片数据推给扩展登记过的卡片。
+   *
+   * 主应用**拿不到自己的 formId**（`formProvider` 没有枚举接口），
+   * 所以由 FormExtensionAbility 在 `onAddForm` 时反向登记到设置存储里。
+   * 没有这条推送，卡片就只能等系统 30 分钟的周期刷新 —— 表现就是「卡片是死的」。
+   */
+  private pushWidgetData(snapshot: FieldwatchWidgetState): void {
+    const forms: FieldwatchWidgetForm[] = parseWidgetForms(this.settingsRepository.loadWidgetForms());
+    if (forms.length === 0) return;
+    const now: number = Date.now();
+    forms.forEach((form: FieldwatchWidgetForm): void => {
+      void ngfWidgetManagerFacade.updateWidgetData(form.id, buildWidgetCardData(snapshot, form.dimension, now));
+    });
+  }
+
+  /**
+   * 待处理的目标标签页（快捷方式 / 卡片带进来的 `targetTab`）。
+   *
+   * **为什么放在应用层而不是页面里**：入口有三个 —— 快捷方式、卡片点击、
+   * 以及应用已在运行时的 `onNewWant`。它们拿到的都是 `want.parameters`，
+   * 而页面可能还没创建（冷启动）或已经创建（热启动），
+   * 所以需要一个「先记下、页面出现时消费」的中间态。
+   *
+   * -1 表示没有待处理项。
+   */
+  private pendingTab: number = -1;
+
+  /**
+   * 待处理的目标**路由**（不是标签页）。
+   *
+   * 标签页用 `pendingTab`（下标），但关注列表是**压栈的页面**、不是某个标签页，
+   * 两者不能用同一个通道 —— 否则「打开关注列表」会被当成「切到第 N 个标签页」。
+   */
+  private pendingRoute: string = '';
+  /** 待处理的目标工具页（工具箱内部的下标）；-1 表示没有。 */
+  private pendingTool: number = -1;
+
+  /** 取走待处理的目标工具页；取走后清空。 */
+  consumePendingTool(): number {
+    const value: number = this.pendingTool;
+    this.pendingTool = -1;
+    return value;
+  }
+
+  /** 取走待处理的目标路由；取走后清空（只生效一次）。 */
+  consumePendingRoute(): string {
+    const value: string = this.pendingRoute;
+    this.pendingRoute = '';
+    return value;
+  }
+
+  /** 按名称记下目标标签页；未知名称忽略（不猜）。 */
+  requestTab(name: string): void {
+    // 卡片点击要直达关注列表页（不是某个标签页），单独走路由通道。
+    if (name === 'watchlist') { this.pendingRoute = 'fieldwatch.watchlist'; return; }
+    if (name === 'live') this.pendingTab = 0;
+    else if (name === 'filters') this.pendingTab = 1;
+    else if (name === 'signatures') this.pendingTab = 2;
+    else if (name === 'reports') this.pendingTab = 3;
+    else if (name === 'toolbox') this.pendingTab = 4;
+    // 深链到工具箱里的某一个工具页：
+    // 与 `targetTab` 同一条链（快捷方式 / 卡片 / `aa start --ps` 都能用），
+    // 这样「打开反追踪」不必先落到工具箱再让用户点一下。
+    else if (name === 'toolbox-channel') { this.pendingTab = 4; this.pendingTool = 0; }
+    else if (name === 'toolbox-hunt') { this.pendingTab = 4; this.pendingTool = 1; }
+    else if (name === 'toolbox-antitrack') { this.pendingTab = 4; this.pendingTool = 2; }
+    else if (name === 'settings') this.pendingTab = 5;
+  }
+
+  /** 取走待处理的目标标签页；取走后清空（只生效一次）。 */
+  consumePendingTab(): number {
+    const value: number = this.pendingTab;
+    this.pendingTab = -1;
+    return value;
+  }
 
   /**
    * 页面侧兜底：构造期若 Ability 上下文尚未就绪，内置目录会加载为空。
@@ -442,14 +697,45 @@ export class FieldwatchApplication {
     return this.catalogRepository.save(this.state.signatures);
   }
 
-  /** 删除用户自定义签名；stock 行只允许停用，不允许删除。 */
-  removeUserFleet(fleetId: string): boolean {
+  /**
+   * 删除一条特征（用户特征与内置特征都能删）。
+   *
+   * 两条路径**故意不同**：
+   *   - 用户特征：直接从目录里移除；
+   *   - 内置特征：来自只读 rawfile 包，删不掉，改为留一条**墓碑**
+   *     （`deleted = true` + `enabled = false`）。行还在，所以启动时的 stock 覆盖
+   *     不会把它加回来；列表与匹配都跳过它。
+   *
+   * 「恢复默认目录」会重建整个目录，墓碑随之清除 —— 这就是撤销路径。
+   */
+  removeFleet(fleetId: string): boolean {
     const fleet: SignatureFleet | undefined = this.state.signatures.find((item: SignatureFleet): boolean => item.id === fleetId);
-    if (fleet === undefined || fleet.builtIn) return false;
-    this.state.signatures = this.state.signatures.filter((item: SignatureFleet): boolean => item.id !== fleetId);
+    if (fleet === undefined) return false;
+    if (fleet.builtIn) {
+      fleet.deleted = true;
+      // 同时停用：匹配引擎按 enabled 过滤，墓碑绝不能继续命中。
+      fleet.enabled = false;
+    } else {
+      this.state.signatures = this.state.signatures.filter((item: SignatureFleet): boolean => item.id !== fleetId);
+    }
     return this.catalogRepository.save(this.state.signatures);
   }
+  /** 目录里实际可见的特征（跳过墓碑）。列表、计数与统计都应走它。 */
+  visibleSignatures(): SignatureFleet[] {
+    return this.state.signatures.filter((item: SignatureFleet): boolean => !item.deleted);
+  }
 
+  /**
+   * 保存一条特征（新建或编辑，内置特征也走这里）。
+   *
+   * **字段清单必须与编辑器的可编辑项一一对应。** 此前这里漏拷了
+   * `clusterByOui` / `sequentialMac` / `minPeers` / `peerWindowSec` ——
+   * 编辑器里改这四项、点保存、界面回到「匹配」段看着像是记住了，
+   * 实际写库时被丢掉，重启即还原。
+   *
+   * 内置行额外打 `userEdited`：启动时的 stock 覆盖逻辑据此整行让位给本地值，
+   * 否则用户对内置特征的修改会在下次启动被静默覆盖。
+   */
   saveUserFleet(fleet: SignatureFleet): boolean {
     const existing: SignatureFleet | undefined = this.state.signatures.find((item: SignatureFleet): boolean => item.id === fleet.id);
     if (existing === undefined) this.state.signatures.push(fleet);
@@ -459,10 +745,17 @@ export class FieldwatchApplication {
       existing.enabled = fleet.enabled;
       existing.matchAny = fleet.matchAny;
       existing.colorIndex = fleet.colorIndex;
+      existing.clusterByOui = fleet.clusterByOui;
+      existing.sequentialMac = fleet.sequentialMac;
+      existing.minPeers = fleet.minPeers;
+      existing.peerWindowSec = fleet.peerWindowSec;
       existing.notes = fleet.notes;
       existing.attentionNote = fleet.attentionNote;
       existing.rules = fleet.rules;
       existing.decode = fleet.decode;
+      if (existing.builtIn) existing.userEdited = true;
+      // 编辑一条被删除过的内置行等于把它找回来。
+      existing.deleted = false;
     }
     return this.catalogRepository.save(this.state.signatures);
   }
@@ -478,8 +771,37 @@ export class FieldwatchApplication {
   }
 
   stopHunt(): void {
-    if (this.huntSession !== undefined) logger.info(TAG, '停止搜寻: key=' + this.huntSession.targetKey);
+    const session: HuntSession | undefined = this.huntSession;
+    if (session !== undefined) {
+      logger.info(TAG, '停止搜寻: key=' + session.targetKey);
+      // **先固化再丢弃**：`HuntSession` 一置空，历史就没了，
+      // 而工具箱的「信号追踪」面板要展示历史。
+      const record: HuntRecord = new HuntRecord();
+      record.targetKey = session.targetKey;
+      record.label = session.label;
+      record.startedAt = session.startedAt;
+      record.endedAt = Date.now();
+      record.peak = session.peak();
+      record.samples = session.samples.length;
+      record.average = session.average();
+      this.huntHistory.unshift(record);
+      if (this.huntHistory.length > FieldwatchApplication.HUNT_HISTORY_MAX) this.huntHistory.pop();
+    }
     this.huntSession = undefined;
+  }
+
+  /** 已结束的搜寻记录，最新的在前。 */
+  getHuntHistory(): HuntRecord[] { return this.huntHistory.slice(); }
+
+  /** 搜寻历史汇总。 */
+  huntStats(): HuntStats {
+    const stats: HuntStats = new HuntStats();
+    stats.sessions = this.huntHistory.length;
+    this.huntHistory.forEach((record: HuntRecord): void => {
+      stats.totalMs += record.durationMs();
+      if (record.peak > stats.bestPeak) { stats.bestPeak = record.peak; stats.bestLabel = record.label; }
+    });
+    return stats;
   }
 
   getHunt(): HuntSession | undefined { return this.huntSession; }
@@ -706,6 +1028,121 @@ export class FieldwatchApplication {
 
   getWatchlist(): WatchTarget[] { return this.state.watchlist; }
 
+  /** 用户自身的位置轨迹，转成领域层的 GeoPoint。 */
+  private travelPoints(): GeoPoint[] {
+    return this.travelSamples.map((sample: GpsSample): GeoPoint =>
+      new GeoPoint(sample.at, sample.latitude, sample.longitude));
+  }
+
+  /**
+   * 反追踪评估结果，按分数降序。
+   *
+   * **只读**，不产生任何副作用（通知走 `scanAntiTracking`）——
+   * 页面每 2 秒调一次，让一个 getter 发通知会变成刷屏。
+   */
+  antiTrackingReport(): TrackSuspect[] {
+    const now: number = Date.now();
+    const travel: GeoPoint[] = this.travelPoints();
+    const result: TrackSuspect[] = [];
+    this.state.sightings.forEach((item: Sighting): void => {
+      const samples: TrackPoint[] | undefined = this.deviceTracks.get(item.key);
+      if (samples === undefined) return;
+      const evidence: TrackEvidence = assessTrack(samples, travel, now);
+      const risk: FollowRisk = riskOf(evidence.score);
+      if (risk === FollowRisk.NONE) return;
+      const suspect: TrackSuspect = new TrackSuspect();
+      suspect.key = item.key;
+      suspect.label = item.name.length > 0 ? item.name : item.key;
+      suspect.risk = risk;
+      suspect.evidence = evidence;
+      result.push(suspect);
+    });
+    return result.sort((a: TrackSuspect, b: TrackSuspect): number => b.evidence.score - a.evidence.score);
+  }
+
+  /** 用户的位置轨迹是否可用；不可用时地理维度恒为 0，界面必须说明。 */
+  antiTrackingHasGeo(): boolean { return this.travelSamples.length >= 2; }
+
+  /**
+   * **全部**参与评估的设备（含分数低于阈值的）。
+   *
+   * 面板要回答「为什么这台没报」，所以不能只给超过阈值的那些 ——
+   * 那会让用户以为算法根本没在看它们。
+   */
+  antiTrackingAll(): TrackSuspect[] {
+    const now: number = Date.now();
+    const travel: GeoPoint[] = this.travelPoints();
+    const result: TrackSuspect[] = [];
+    this.state.sightings.forEach((item: Sighting): void => {
+      const samples: TrackPoint[] | undefined = this.deviceTracks.get(item.key);
+      if (samples === undefined) return;
+      const evidence: TrackEvidence = assessTrack(samples, travel, now);
+      // 样本不足的（score 0 且样本数不够）不列出来，否则列表会被刚出现的设备淹没。
+      if (evidence.sampleCount < TRACK_MIN_SAMPLES) return;
+      const suspect: TrackSuspect = new TrackSuspect();
+      suspect.key = item.key;
+      suspect.label = item.name.length > 0 ? item.name : item.key;
+      suspect.risk = riskOf(evidence.score);
+      suspect.evidence = evidence;
+      result.push(suspect);
+    });
+    return result.sort((a: TrackSuspect, b: TrackSuspect): number => b.evidence.score - a.evidence.score);
+  }
+
+  /** 反追踪面板的汇总计数。 */
+  antiTrackStats(): AntiTrackStats {
+    const stats: AntiTrackStats = new AntiTrackStats();
+    const all: TrackSuspect[] = this.antiTrackingAll();
+    stats.evaluated = all.length;
+    all.forEach((suspect: TrackSuspect): void => {
+      if (suspect.risk === FollowRisk.SUSPECT) stats.suspect += 1;
+      else if (suspect.risk === FollowRisk.WATCH) stats.watch += 1;
+    });
+    if (all.length > 0) { stats.topScore = all[0].evidence.score; stats.topLabel = all[0].label; }
+    return stats;
+  }
+
+  /** 判定记录，最新的在前。 */
+  antiTrackEvents(): AntiTrackEvent[] { return this.antiTrackLog.slice(); }
+
+  /** 我自己的移动摘要（面板的「我的移动」块）。 */
+  travelSummary(): TravelSummary { return travelSummaryOf(this.travelPoints()); }
+
+  /**
+   * 周期性评估，并对**新出现**的疑似跟踪设备推一条通知。
+   *
+   * 每台设备每次运行只推一次：这条告警是「有个东西一直跟着你」，
+   * 反复推会把真正重要的那一次淹没。
+   */
+  scanAntiTracking(): void {
+    const suspects: TrackSuspect[] = this.antiTrackingReport();
+    suspects.forEach((suspect: TrackSuspect): void => {
+      if (suspect.risk !== FollowRisk.SUSPECT) return;
+      if (this.antiTrackAlerted.has(suspect.key)) return;
+      this.antiTrackAlerted.add(suspect.key);
+      // 先落记录：通知可能因为权限没发出去，但「什么时候判定过什么」必须留下。
+      const event: AntiTrackEvent = new AntiTrackEvent();
+      event.at = Date.now();
+      event.key = suspect.key;
+      event.label = suspect.label;
+      event.score = suspect.evidence.score;
+      event.risk = suspect.risk;
+      this.antiTrackLog.unshift(event);
+      if (this.antiTrackLog.length > FieldwatchApplication.ANTITRACK_LOG_MAX) this.antiTrackLog.pop();
+      const context = uiContextManager.getFullAbilityContext();
+      if (context === null) return;
+      const title: string = resolveResourceString(context, $r('app.string.fieldwatch_antitrack_notify_title'));
+      const template: string = resolveResourceString(context, $r('app.string.fieldwatch_antitrack_notify_body'));
+      const body: string = template.replace('%1', suspect.label)
+        .replace('%2', formatMinutes(suspect.evidence.spanMs));
+      const notificationId: number = this.nextNotificationId;
+      this.nextNotificationId += 1;
+      void ngfSystemNotificationManager.publish(
+        new NGFNotificationRequest(notificationId, title, body, NGFNotificationType.BASIC));
+      logger.warn(TAG, '疑似跟踪设备: ' + suspect.label + ' 分数=' + suspect.evidence.score.toString());
+    });
+  }
+
   removeWatchTarget(index: number): void {
     if (index < 0 || index >= this.state.watchlist.length) return;
     this.state.watchlist = this.state.watchlist.filter((target: WatchTarget, position: number): boolean => position !== index);
@@ -747,17 +1184,20 @@ export class FieldwatchApplication {
   }
   async setBackgroundScanning(enabled: boolean): Promise<boolean> {
     if (enabled) {
-      // 任务描述在系统任务中心对用户可见，必须走资源而不是硬编码中文。
-      const taskContext = uiContextManager.getFullAbilityContext();
-      const taskReason: string = taskContext === null ? 'Fieldwatch'
-        : resolveResourceString(taskContext, $r('app.string.fieldwatch_continuous_task_reason'));
-      const started: boolean = await ngfBackgroundTaskManager.startContinuousTask('fieldwatch.scan', 'Fieldwatch', taskReason);
-      if (!started) return false;
+      // 走 `syncBackgroundTask`：它与前台路径共用同一份文案与同一条启动逻辑。
+      // 此前这里自己拼了一套硬编码标题（`'Fieldwatch'` / taskReason），
+      // 于是「前台持有的通知」与「这里启动的通知」文案不一致。
+      await this.syncBackgroundTask();
     } else {
       await ngfBackgroundTaskManager.stopContinuousTask();
+      // 通知定时器必须一起停：此前只停了任务，定时器仍在每 15 秒发一次通知，
+      // 于是「关掉后台运行」之后通知栏里反而一直有东西。
+      this.stopStateNotification();
     }
     this.state.settings.backgroundScanning = enabled;
     this.settingsRepository.save(this.state.settings);
+    // 允许/取消后台运行会直接改变卡片要显示的「是否在运行」，必须立刻同步。
+    this.writeWidgetState();
     return true;
   }
   /**
@@ -788,7 +1228,13 @@ export class FieldwatchApplication {
         // 3 秒一次等于把这两次 IPC 变成常态负载；线程剖析显示主 JS 线程占用显著，
         // 基线对照归因给本应用的后台耗电约 8.9%/小时。
         // 通知里的计数是给人看的，15 秒的粒度足够，也更少打扰用户。
-        this.stateNotificationTimer = setInterval((): void => { this.publishStateNotification(); }, 15000);
+        this.stateNotificationTimer = setInterval((): void => {
+          this.publishStateNotification();
+          // 心跳与计数一起走这条 15 秒的定时器：卡片侧据此判断应用是否还在运行。
+          this.writeWidgetState();
+          // 反追踪评估与状态通知同频：15 秒足够，也不需要另开定时器。
+          this.scanAntiTracking();
+        }, 15000);
       }
     });
   }
@@ -827,34 +1273,43 @@ export class FieldwatchApplication {
    * 用户切出去没多久就被系统挂起。
    */
   async syncBackgroundTask(): Promise<void> {
+    // **先清残留、再发通知。** 顺序反了会把本次刚发的运行状态通知一起清掉。
+    await this.clearStaleNotifications();
     // 后台任务同样依赖通知：鸿蒙要求长时任务必须伴随一条用户可见的通知。
     this.notificationsEnabled = await ngfSystemNotificationManager.isEnabled();
-    if (!this.state.settings.backgroundScanning) {
-      await ngfBackgroundTaskManager.stopContinuousTask();
-      return;
-    }
     const context = uiContextManager.getFullAbilityContext();
     if (context === null) return;
     const title: string = resolveResourceString(context, $r('app.string.fieldwatch_state_notification_title'));
     const body: string = resolveResourceString(context, $r('app.string.fieldwatch_background_running'));
-    await ngfBackgroundTaskManager.startContinuousTask('fieldwatch.scan', title, body);
+    // **前台也持有长时任务**（用户明确要求：前台运行时通知应当是常驻的）。
+    //
+    // 鸿蒙上「不可划掉的通知」只有长时任务伴随通知这一种机制 ——
+    // `isOngoing` / `isUnremovable` 在 API 26 声明里都标注 Not supported currently。
+    // 因此要满足「前台常驻通知」，就只能在前台也持有长时任务；
+    // 未开启后台运行的用户切到后台时再把它停掉（见 onAbilityBackground）。
+    const started: boolean = await ngfBackgroundTaskManager.startContinuousTask('fieldwatch.scan', title, body);
+    if (started) this.startStateNotification();
+    // 冷启动也要写一次：卡片可能正在显示，不能等下一次状态变化。
+    this.writeWidgetState();
   }
   async onAbilityBackground(): Promise<void> {
     // 先落标志：页面在下一个 tick 就会据此停掉 60fps 重绘。
     this.appForeground = false;
+    // 卡片口径是「允许后台运行 且 确实在后台」——进后台后要立刻重算。
+    this.writeWidgetState();
     if (this.state.settings.backgroundScanning) {
       if (this.state.scanState === ScanState.SCANNING) {
-        // 用户明确要求后台继续扫描：申请长时任务并保持扫描。
-        await ngfBackgroundTaskManager.startContinuousTask('fieldwatch.scan', 'Fieldwatch', '被动无线电扫描');
-        // 鸿蒙要求长时任务伴随用户可见通知，因此通知与任务同时起、同时停。
-        this.startStateNotification();
+        // 用户明确要求后台继续扫描：保持长时任务与伴随通知。
+        // 前台已经持有，这里只是确保（`syncBackgroundTask` 幂等，已在运行就只刷新内容）。
+        await this.syncBackgroundTask();
       }
       return;
     }
-    // 未开启后台扫描：既不停留扫描，也不需要常驻通知。
+    // 未开启后台扫描：**完全暂停信号收集**，长时任务与常驻通知一起关掉。
     // 记住「退后台前在扫描」，回前台时据此恢复 —— 平台只会暂停扫描，不会帮你恢复。
     this.resumeScanOnForeground = this.state.scanState === ScanState.SCANNING;
     this.stopStateNotification();
+    await ngfBackgroundTaskManager.stopContinuousTask();
     // **用户没有开启后台扫描时必须停扫。**
     //
     // 此前这里只处理「开了后台扫描」的分支，没开就什么都不做 ——
@@ -880,9 +1335,11 @@ export class FieldwatchApplication {
 
   async onAbilityForeground(): Promise<void> {
     this.appForeground = true;
-    // 回到前台长时任务已停止，伴随它的通知也该停 ——
-    // 此前 `stopStateNotification()` 是死代码，通知定时器从扫描开始就永不停止。
-    this.stopStateNotification();
+    // 回前台后卡片应显示「app 未运行」（此刻并没有在后台采集）。
+    this.writeWidgetState();
+    // 回到前台：**重新持有长时任务与常驻通知**（前台要求通知常驻）。
+    // 它可能在退后台时被停掉（未开启后台运行的分支）。
+    void this.syncBackgroundTask();
     // **恢复扫描**：平台在后台暂停了 BLE 扫描，回前台不会自动恢复。
     //
     // 必须先 `stopScan()` 再 `startScan()`：BLE 扫描器的 `start()` 会再次
@@ -894,7 +1351,8 @@ export class FieldwatchApplication {
       this.startScan();
       logger.info(TAG, '回到前台，无线电扫描已重新启动');
     }
-    if (!this.state.settings.backgroundScanning) await ngfBackgroundTaskManager.stopContinuousTask();
+    // **不要在这里按「有没有开后台运行」去停长时任务** ——
+    // 前台是要求通知常驻的，上面刚把它起来，这里再停就自相矛盾了。
     // 权限不需要在这里重新探测：
     // Live 页与 Settings 页都在自己的 1 秒刷新里重读 permissionSnapshot()，
     // 因此从系统设置改完权限切回来，最多 1 秒就会自己更新。
@@ -903,6 +1361,26 @@ export class FieldwatchApplication {
   }
   async onAbilityDestroy(): Promise<void> { await ngfBackgroundTaskManager.stopContinuousTask(); }
   shareSighting(sighting: Sighting): void { ngfSystemShareFacade.shareText(this.exportSerializer.serializeJsonl([sighting], this.state.settings)); }
+  /**
+   * 详情页「以文本分享」：把详情纯文本交给系统分享面板。
+   *
+   * 此前这个入口与「AI 导出」**只弹了一个「前 60 字」的 Toast，文本没有去处** ——
+   * 按钮看起来有反应，实际什么都没分享出去。
+   * 分享一律走 `ngfSystemShareFacade.shareText`（ShareKit 纯文本），
+   * 与 `shareSighting` / `shareDebrief` / `shareExport` 同一条路。
+   */
+  shareDetailText(sighting: Sighting, signatureNames: string[]): void {
+    ngfSystemShareFacade.shareText(this.detailTextOf(sighting, signatureNames));
+  }
+  /**
+   * 详情页「AI 导出」：把 AI 提示词交给系统分享面板。
+   *
+   * 不加 `AI_MAX_CHARS` 截断：那个上限是给「整场观测」的导出用的（要列全部设备），
+   * 这里只有一台设备，文本量远小于上限。
+   */
+  shareDetailPrompt(sighting: Sighting, signatureNames: string[]): void {
+    ngfSystemShareFacade.shareText(this.detailPromptOf(sighting, signatureNames));
+  }
   /** 重命名已保存的观测：读回后改名再写回。 */
   async renameSit(id: string, name: string): Promise<boolean> {
     const trimmed: string = name.trim();
@@ -1458,10 +1936,15 @@ export class FieldwatchApplication {
   /** 名称库只读访问（详情页的解释层要用 appearance / company / serviceUuid）。 */
   radioDbRef(): FieldwatchRadioDb { return this.radioDb; }
 
-  /** 该设备的 IEEE 厂商名；查不到返回空串。 */
+  /**
+   * 该设备的厂商名；查不到返回空串。
+   *
+   * 走 `RadioDb.vendorFor` 这条**唯一**的解析链，与 `facts.manufacturer` 同源 ——
+   * 分类页的品牌分组、详情页标题、详情文本转储都读它，
+   * 因此不会再出现「列表里有品牌、分类页却归到未知品牌」的分裂。
+   */
   vendorOfSighting(sighting: Sighting): string {
-    if (!this.radioDb.isReady()) return '';
-    return this.radioDb.vendorForMac(sighting.address);
+    return this.radioDb.vendorFor(sighting.facts.manufacturer, sighting.address, sighting.facts.manufacturerId);
   }
 
   appearanceName(value: number): string {
@@ -1708,27 +2191,16 @@ export class FieldwatchApplication {
    *
    * 名称库本身是完整的（MA-L 39995 条 / 34781 个名称），只是从没人把结果写进去。
    * 放在 ingest 入口：覆盖全部信号源、全部路径（含定位标记分支与恢复分支）。
+   *
+   * 解析链本身在 `RadioDb.vendorFor` —— **只写一遍**。此前这条链在本方法、
+   * `vendorOfSighting` 与筛选引擎的 `vendorOf` 里各写了一份且口径不同
+   * （这里两级、那两处一级），结果就是列表里看得到品牌、
+   * 分类页的品牌分组却整片落进「未知品牌」。
    */
   private attachVendor(observation: ScanObservation): void {
     if (observation.facts.manufacturer.length > 0) return;
-    if (!this.radioDb.isReady()) return;
-    // 走 `vendorForMac` 而不是 `vendorForOui24`：前者会**从随机 / 虚拟 MAC 还原真实 OUI**
-    // （访客 / Mesh BSSID 常是「厂商前缀 + 本地管理位置 1」），并过滤手机大厂。
-    // 此前这里直接查 OUI，所以随机 MAC 的 `facts.manufacturer` 一直是空的 ——
-    // 界面品牌列空白、候选引擎的厂商排除也跟着失效。
-    const vendor: string = this.radioDb.vendorForMac(observation.address);
-    if (vendor.length > 0) {
-      observation.facts.manufacturer = vendor;
-    } else if (observation.facts.manufacturerId > 0) {
-      // **第二级回退：BLE 广播里的公司 ID。** 对齐原版 `DeviceStore` 的
-      // `OuiLookup.vendor(mac) ?: manufacturerId?.let { RadioDb.company(it) }`。
-      //
-      // 这一级才是原版「能认出很多品牌」的关键：BLE 设备**即使 MAC 是随机的，
-      // 广播里几乎总带着 Company ID**（如 0x004C = Apple、0x0006 = Microsoft）。
-      // 此前我们只查 OUI，随机地址一律落空，品牌列就整片空白。
-      const company: string = this.radioDb.company(observation.facts.manufacturerId);
-      if (company.length > 0) observation.facts.manufacturer = company;
-    }
+    const vendor: string = this.radioDb.vendorFor('', observation.address, observation.facts.manufacturerId);
+    if (vendor.length > 0) observation.facts.manufacturer = vendor;
   }
   private ingest(observation: ScanObservation): void {
     this.attachVendor(observation);
@@ -1787,6 +2259,8 @@ export class FieldwatchApplication {
     const decoded: DecodedFieldValue[] = this.decodeFields(matched, context);
     const hunt: HuntSession | undefined = this.huntSession;
     if (hunt !== undefined && hunt.targetKey === observation.key) hunt.addSample(observation.rssi, observation.seenAt);
+    // 反追踪需要 (时间, 强度) 序列，与 Hunt 各自独立。
+    this.recordDeviceSample(observation.key, observation.seenAt, observation.rssi);
     const existing: Sighting | undefined = this.state.sightings.find((item: Sighting): boolean => item.key === observation.key);
     if (existing === undefined) { const sighting: Sighting = Sighting.fromObservation(observation); sighting.signatureIds = matched; sighting.decodedFields = decoded; this.state.sightings.push(sighting); this.notifyWatched(sighting); }
     else { existing.ingest(observation); existing.signatureIds = matched; existing.decodedFields = decoded; }

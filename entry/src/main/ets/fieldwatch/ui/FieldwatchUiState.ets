@@ -4,7 +4,7 @@ import { FieldwatchPaletteHolder } from './FieldwatchPalette';
 import { deviceClassSymbol, nearLinkClassSymbol } from './FieldwatchDeviceTypeIcon';
 
 export enum FieldwatchLiveMode { RADAR = 'radar', STRENGTH = 'strength', TIMELINE = 'timeline', CLASS = 'class', TRAIL = 'trail' }
-export enum FieldwatchNavigationTab { LIVE = 0, FILTERS = 1, SIGNATURES = 2, REPORTS = 3, SETTINGS = 4 }
+export enum FieldwatchNavigationTab { LIVE = 0, FILTERS = 1, SIGNATURES = 2, REPORTS = 3, TOOLBOX = 4, SETTINGS = 5 }
 export enum FieldwatchUiStatus { SCANNING = 'scanning', UPDATED = 'updated', CACHED = 'cached', WAITING = 'waiting', LOCATION_DISABLED = 'location_disabled', WIFI_DISABLED = 'wifi_disabled', PERMISSION_DENIED = 'permission_denied', UNSUPPORTED = 'unsupported', EMPTY = 'empty', ERROR = 'error' }
 
 /** 签名 colorIndex 0..8 的调色板；无命中签名时退回无线电类型颜色。 */

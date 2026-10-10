@@ -98,16 +98,18 @@ export class FieldwatchFilterEngine {
     if (!filter.movingWithYou) return true;
     return this.movingWithYou(sighting, now);
   }
-  /** 该信号源的 IEEE OUI 厂商名；名称库未载入时返回空串。 */
   /**
-   * 该信号源的 IEEE OUI 厂商名；名称库未载入时返回空串。
+   * 该信号源的厂商名；名称库未载入时返回空串。
    * 名称库由应用启动时注入，引擎本身不持有 IO。
+   *
+   * 走 `RadioDb.vendorFor` 这条**唯一**的解析链：筛选要匹配的正是列表里
+   * 显示的那个品牌，否则会出现「界面写着 Apple, Inc.，按 apple 却筛不出来」。
+   * 此前这里只有 OUI 一级，注释虽写着「与 facts 同源」，实际比 facts 少一级。
    */
   private vendorOf(sighting: Sighting): string {
     const db: FieldwatchRadioDb | undefined = FieldwatchFilterEngine.radioDb;
-    if (db === undefined || !db.isReady()) return '';
-    // 与 facts 同源：走 `vendorForMac` 才能对随机 / 虚拟 MAC 还原出厂商。
-    return db.vendorForMac(sighting.address);
+    if (db === undefined) return '';
+    return db.vendorFor(sighting.facts.manufacturer, sighting.address, sighting.facts.manufacturerId);
   }
   /** 原版 FastPair.FLEET_ID：目录里的 Fast Pair 特征 id。 */
   private static readonly FAST_PAIR_FLEET_ID: string = 'fleet-fast-pair';

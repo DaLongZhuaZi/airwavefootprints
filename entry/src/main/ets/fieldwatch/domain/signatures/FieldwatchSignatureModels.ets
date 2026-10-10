@@ -315,6 +315,22 @@ export class SignatureFleet {
   public notes: string = '';
   public attentionNote: string = '';
   public builtIn: boolean = false;
+  /**
+   * 用户是否手工编辑过这一行（内置行也会被编辑）。
+   *
+   * 存在的理由：启动时 `overlayStockFleets` 会用**打包的 stock 值**覆盖内置行。
+   * 没有这个标志时，用户对内置特征的修改会「当场生效、重启丢失」——
+   * 表现为「编辑器明明保存了，回头再看又变回去了」。
+   */
+  public userEdited: boolean = false;
+  /**
+   * 用户是否删除了这一行（仅内置行需要）。
+   *
+   * 内置特征来自只读的 rawfile 包，**删不掉**，只能留一条墓碑：
+   * 行还在（因此覆盖逻辑不会把它复活），但 `enabled` 置 false 且不参与列表与匹配。
+   * 「恢复默认目录」会重建整个目录，墓碑随之消失。
+   */
+  public deleted: boolean = false;
   public category: SignatureClass = SignatureClass.OTHER;
   public decode: SignatureFleetDecode | undefined = undefined;
 
@@ -354,6 +370,7 @@ export function cloneSignatureFleet(fleet: SignatureFleet): SignatureFleet {
   copy.minPeers = fleet.minPeers; copy.peerWindowSec = fleet.peerWindowSec;
   copy.clusterByOui = fleet.clusterByOui; copy.sequentialMac = fleet.sequentialMac;
   copy.notes = fleet.notes; copy.attentionNote = fleet.attentionNote;
+  copy.userEdited = fleet.userEdited; copy.deleted = fleet.deleted;
   fleet.rules.forEach((rule: SignatureRule): void => { copy.rules.push(cloneSignatureRule(rule)); });
   const decode: SignatureFleetDecode | undefined = fleet.decode;
   if (decode !== undefined) {

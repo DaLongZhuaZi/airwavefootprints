@@ -13,6 +13,7 @@ import {
 } from '../../fieldwatch/domain/FieldwatchPermissions';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
+import { FieldwatchChip } from '../../fieldwatch/ui/FieldwatchChip';
 
 const TAG: string = 'FieldwatchOnboarding';
 
@@ -32,16 +33,21 @@ function buildStepHeads(): OnboardingStepHead[] {
   heads.push(new OnboardingStepHead('sys.symbol.dot_radiowaves', 'app.string.fieldwatch_onb_welcome_title', 'app.string.fieldwatch_onb_welcome_body'));
   heads.push(new OnboardingStepHead('sys.symbol.list_checkmark', 'app.string.fieldwatch_onb_baseline_title', 'app.string.fieldwatch_onb_baseline_body'));
   heads.push(new OnboardingStepHead('sys.symbol.checkmark_shield', 'app.string.fieldwatch_onb_perm_title', 'app.string.fieldwatch_onb_perm_body'));
+  heads.push(new OnboardingStepHead('sys.symbol.gearshape', 'app.string.fieldwatch_onb_settings_title', 'app.string.fieldwatch_onb_settings_body'));
   return heads;
 }
 
 /**
  * 首次启动引导。
  *
- * 三步，顺序不可换：
+ * 四步，顺序不可换：
  *   ① 这是什么（只接收 / 离线 / 无需权限也能用）
  *   ② 不授权也能用哪些功能（先把退路讲清楚）
  *   ③ 权限逐条说明与逐条申请（**在系统弹窗之前**讲用途）
+ *   ④ 功能设置（扫描强度 / 后台运行 / 屏幕常亮）
+ *
+ * 第 ④ 步放在最后是**有意的**：后台运行会拉起长时任务与常驻通知，
+ * 而通知权限在第 ③ 步才申请 —— 顺序反了会让用户看到一个「开了却弹不出通知」的开关。
  *
  * 每一步都有主视觉 symbol，切换时做淡出+位移的过渡，避免「静态换页」的单调感。
  */
@@ -61,16 +67,35 @@ export struct FieldwatchOnboardingPage {
   private readonly specs: FieldwatchPermissionSpec[] = fieldwatchApplication.permissionCatalog();
   /** 通知是否已启用（与普通权限分开跟踪，API 不同）。 */
   @State private notificationEnabled: boolean = false;
+  // ── 第 ④ 步「功能设置」的三项（与设置页共用同一套应用层 API）──
+  @State private scanIntensity: string = 'balanced';
+  @State private backgroundScanning: boolean = false;
+  @State private keepScreenOn: boolean = false;
   private readonly heads: OnboardingStepHead[] = buildStepHeads();
 
   aboutToAppear(): void {
     this.readTopInset();
     this.snapshot = fieldwatchApplication.permissionSnapshot();
+    // 第 ④ 步的三项**不在这里缓存副本**。
+    //
+    // 曾经缓存在 @State 里，于是出现「引导页显示的与设置页不一致」：
+    // 引导页只在 aboutToAppear 读一次，而那一刻应用层可能还没把设置读进来；
+    // 设置页每秒重读，自然就与引导页对不上了。
+    // 改为在 builder 里直接读应用层当前值（进入该步会重建，值就是最新的）。
+    this.syncFeatureSettings();
     // 读一次真实的通知开关状态，避免卡片显示与系统实际状态不一致。
     void ngfSystemNotificationManager.isEnabled().then((enabled: boolean): void => {
       this.notificationEnabled = enabled;
     });
   }
+  /** 把第 ④ 步三项的当前值从应用层同步进来。 */
+  private syncFeatureSettings(): void {
+    const settings = fieldwatchApplication.getState().settings;
+    this.scanIntensity = settings.scanIntensity;
+    this.backgroundScanning = settings.backgroundScanning;
+    this.keepScreenOn = settings.keepScreenOn;
+  }
+
   private readTopInset(): void {
     const uiContext = this.getUIContext();
     if (uiContext === undefined) return;
@@ -146,6 +171,8 @@ export struct FieldwatchOnboardingPage {
     });
     setTimeout((): void => {
       this.step = next;
+    // 进入第 ④ 步时把三项的当前值同步进来（它们不在本页缓存）。
+    if (next === 3) this.syncFeatureSettings();
       this.contentShift = forward ? 18 : -18;
       ui.animateTo({ duration: 260, curve: Curve.Friction }, (): void => {
         this.contentOpacity = 1;
@@ -163,7 +190,8 @@ export struct FieldwatchOnboardingPage {
           this.buildHero()
           if (this.step === 0) this.buildWelcome()
           else if (this.step === 1) this.buildBaseline()
-          else this.buildPermissions()
+          else if (this.step === 2) this.buildPermissions()
+          else this.buildFeatureSettings()
         }.width('100%').padding({ left: 20, right: 20, top: 4, bottom: 24 })
       }.layoutWeight(1).width('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
       this.buildActions()
@@ -197,10 +225,10 @@ export struct FieldwatchOnboardingPage {
     .translate({ y: this.contentShift })
   }
 
-  /** 三步进度：当前步是拉长的胶囊，其余是圆点。 */
+  /** 四步进度：当前步是拉长的胶囊，其余是圆点。 */
   @Builder private buildProgress() {
     Row({ space: 8 }) {
-      ForEach([0, 1, 2], (index: number): void => {
+      ForEach([0, 1, 2, 3], (index: number): void => {
         Row()
           .width(index === this.step ? 26 : 8)
           .height(8)
@@ -209,7 +237,8 @@ export struct FieldwatchOnboardingPage {
           .animation({ duration: 220, curve: Curve.EaseOut })
       }, (index: number): string => index.toString())
       Blank()
-      Text((this.step + 1).toString() + ' / 3').fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+      // 总数取自 heads，避免以后再加一步时又漏改这一处（这里曾经写死 3）。
+      Text((this.step + 1).toString() + ' / ' + this.heads.length.toString()).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').padding({ left: 20, right: 20, bottom: 12 })
   }
 
@@ -341,6 +370,59 @@ export struct FieldwatchOnboardingPage {
     return this.snapshot.location;
   }
 
+  /**
+  * 第 ④ 步：功能设置。
+  *
+  * 三项都**立即生效并落盘**（走与设置页完全相同的那套应用层 API），
+  * 不是「先记下来、进主界面再应用」—— 那样一旦用户中途退出就会丢设置。
+  *
+  * 页面内不重复实现任何逻辑：文案、取值、副作用都复用设置页那一套，
+  * 否则「引导里改的」与「设置页改的」迟早会不一致（陷阱 16）。
+  */
+  @Builder private buildFeatureSettings() {
+    Column({ space: 14 }) {
+      // ① 扫描强度
+      Column({ space: 8 }) {
+        Text($r('app.string.fieldwatch_settings_scan')).fontSize(16).fontWeight(FontWeight.Medium)
+          .fontColor(FieldwatchPaletteHolder.get().headerText)
+        Row({ space: 8 }) {
+          FieldwatchChip({ label: $r('app.string.wifi_scan_basic'), active: this.scanIntensity === 'basic',
+            onTap: (): void => { this.scanIntensity = 'basic'; fieldwatchApplication.setScanIntensity('basic'); } })
+          FieldwatchChip({ label: $r('app.string.wifi_scan_balanced'), active: this.scanIntensity === 'balanced',
+            onTap: (): void => { this.scanIntensity = 'balanced'; fieldwatchApplication.setScanIntensity('balanced'); } })
+          FieldwatchChip({ label: $r('app.string.wifi_scan_saver'), active: this.scanIntensity === 'saver',
+            onTap: (): void => { this.scanIntensity = 'saver'; fieldwatchApplication.setScanIntensity('saver'); } })
+        }.width('100%')
+      }.width('100%').alignItems(HorizontalAlign.Start)
+
+      // ② 后台运行（开关状态以应用层返回值为准：申请失败时不能显示成「已开启」）
+      Column({ space: 4 }) {
+        Row() {
+          Text($r('app.string.fieldwatch_settings_background_scanning')).fontSize(14)
+            .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+          Toggle({ type: ToggleType.Switch, isOn: this.backgroundScanning })
+            .onChange((value: boolean): void => {
+              void fieldwatchApplication.setBackgroundScanning(value).then((enabled: boolean): void => {
+                this.backgroundScanning = enabled;
+              });
+            })
+        }.width('100%')
+        Text($r('app.string.fieldwatch_settings_background_hint')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim)
+      }.width('100%').alignItems(HorizontalAlign.Start)
+
+      // ③ 屏幕常亮
+      Row() {
+        Text($r('app.string.fieldwatch_settings_keep_screen_on')).fontSize(14)
+          .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+        Toggle({ type: ToggleType.Switch, isOn: this.keepScreenOn })
+          .onChange((value: boolean): void => {
+            void fieldwatchApplication.setKeepScreenOn(value).then((): void => { this.keepScreenOn = value; });
+          })
+      }.width('100%')
+    }.width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
+  }
+
   // ── 底部动作 ──
   @Builder private buildActions() {
     Column({ space: 8 }) {
@@ -358,7 +440,7 @@ export struct FieldwatchOnboardingPage {
         }
         Button({ type: ButtonType.Normal }) {
           Row({ space: 6 }) {
-            Text(this.step < 2 ? $r('app.string.fieldwatch_onb_next') : $r('app.string.fieldwatch_onb_enter'))
+            Text(this.step < this.heads.length - 1 ? $r('app.string.fieldwatch_onb_next') : $r('app.string.fieldwatch_onb_enter'))
               .fontSize(15).fontColor(FieldwatchPaletteHolder.get().onAccent)
             SymbolGlyph($r('sys.symbol.arrow_right')).fontSize(15).fontColor([FieldwatchPaletteHolder.get().onAccent])
           }
@@ -366,7 +448,10 @@ export struct FieldwatchOnboardingPage {
         .height(46).layoutWeight(1).borderRadius(23)
         .fontColor($r('app.color.fw_on_accent'))
         .backgroundColor($r('app.color.button_primary'))
-        .onClick((): void => { if (this.step < 2) this.goTo(this.step + 1); else this.finish(); })
+        .onClick((): void => {
+          if (this.step < this.heads.length - 1) this.goTo(this.step + 1);
+          else this.finish();
+        })
       }.width('100%')
       if (this.step === 2) {
         Button($r('app.string.fieldwatch_onb_later')).height(44).width('100%')

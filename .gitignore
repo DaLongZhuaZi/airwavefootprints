@@ -123,3 +123,7 @@ desktop.ini
 *.key
 *.keystore
 *.jks
+
+# 会话期间的临时截图与脚本
+/.tmp-shots/
+

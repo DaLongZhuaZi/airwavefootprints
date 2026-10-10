@@ -1,6 +1,6 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 import window from '@ohos.window';
-import { NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, logger, resolveResourceString } from 'ngf_framework';
+import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, resolveResourceString } from 'ngf_framework';
 import { FieldwatchApplication, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { PresenceSpan, RadioKind, Sighting } from '../../fieldwatch/domain/FieldwatchModels';
 import { ExplainGuess, FieldwatchDeviceExplain } from '../../fieldwatch/domain/FieldwatchDeviceExplain';
@@ -10,17 +10,21 @@ import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/Fiel
 import { FieldwatchRouteName, FieldwatchSignatureEditorParam } from '../../fieldwatch/ui/FieldwatchRoutes';
 import { presenceTrackCommands, TrendGeometry, trendGeometry, TrendTickLabel } from '../../fieldwatch/ui/FieldwatchUiState';
 
-const TAG: string = 'FieldwatchDeviceDetail';
 /** 顶部沉浸底板高度。 */
 const DETAIL_UNDERLAY_HEIGHT: number = 168;
 /**
  * 内容顶部避让。
  *
- * **不能只用状态栏高度**：HDS 顶栏在状态栏之下还有自己的高度，
- * 用状态栏高度会让首段被顶栏压住（实测副标题与首段文字被覆盖）。
- * 这个值与 `NGFImmersiveTopChromePresetFactory.build` 的 `contentTopInset` 同源。
+ * **必须覆盖底板本身**：底板实际高度是 `underlayHeight + 顶部安全区`
+ * （本机 168 + 28 = 196vp，因为它 `expandSafeArea` 向状态栏方向扩展），
+ * 而且它**合成在内容之上** —— 落在这一带里的内容会被压暗。
+ *
+ * 历史上这里写死过 92（= 框架 preset 的 `contentTopInset` 默认值），
+ * 首个内容元素整块落在覆盖带里。改用共享的 `ngfImmersiveContentTop`。
  */
-const DETAIL_CONTENT_TOP: number = 92;
+function detailContentTop(topInset: number): number {
+  return ngfImmersiveContentTop(DETAIL_UNDERLAY_HEIGHT, topInset);
+}
 /** 趋势图与在场条的画框。 */
 const TREND_W: number = 300;
 const TREND_H: number = 64;
@@ -54,7 +58,8 @@ export struct FieldwatchDeviceDetailPage {
    */
   pathStack: NavPathStack = new NavPathStack();
   @State private sighting: Sighting | undefined = undefined;
-  @State private topInsetVp: number = 108;
+  /** 顶部系统安全区高度（vp）。测量前的兜底值取本机实测的 28，避免首帧跳一下。 */
+  @State private topInsetVp: number = 28;
   @State private guess: ExplainGuess | undefined = undefined;
   @State private family: SignatureFamilyHint | undefined = undefined;
   /** 趋势图几何量：随设备与画框变化，在 `refresh()` 里算一次。 */
@@ -101,7 +106,7 @@ export struct FieldwatchDeviceDetailPage {
       window.getLastWindow(hostContext).then((lastWindow: window.Window): void => {
         const statusArea: window.AvoidArea = lastWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
         this.topInsetVp = uiContext.px2vp(statusArea.topRect.height);
-      }).catch((): void => { this.topInsetVp = 108; });
+      }).catch((): void => { this.topInsetVp = 28; });
     }
     this.refresh();
     this.timerId = setInterval((): void => { this.refresh(); }, 1000);
@@ -208,7 +213,7 @@ export struct FieldwatchDeviceDetailPage {
         this.buildFamilySection(this.sighting)
         this.buildFooter()
       }
-    }.width('100%').padding({ left: 16, right: 16, top: DETAIL_CONTENT_TOP, bottom: 40 })
+    }.width('100%').padding({ left: 16, right: 16, top: detailContentTop(this.topInsetVp), bottom: 40 })
   }
 
   /**
@@ -766,22 +771,10 @@ export struct FieldwatchDeviceDetailPage {
             new FieldwatchSignatureEditorParam('', item.key));
         } })
       FieldwatchButton({ label: $r('app.string.fieldwatch_detail_share_text'), tone: FieldwatchButtonTone.OUTLINE,
-        onTap: (): void => { this.shareText(item); } })
+        onTap: (): void => { fieldwatchApplication.shareDetailText(item, this.signatureNames); } })
       FieldwatchButton({ label: $r('app.string.fieldwatch_detail_ai_export'), tone: FieldwatchButtonTone.OUTLINE,
-        onTap: (): void => { this.aiExport(item); } })
+        onTap: (): void => { fieldwatchApplication.shareDetailPrompt(item, this.signatureNames); } })
     }.width('100%')
-  }
-
-  private shareText(item: Sighting): void {
-    const text: string = fieldwatchApplication.detailTextOf(item, this.signatureNames);
-    this.getUIContext().getPromptAction().showToast({ message: text.substring(0, 60) + '…', duration: 2000 });
-    logger.info(TAG, '以文本分享: ' + item.key + ' 长度=' + text.length.toString());
-  }
-
-  private aiExport(item: Sighting): void {
-    const text: string = fieldwatchApplication.detailPromptOf(item, this.signatureNames);
-    this.getUIContext().getPromptAction().showToast({ message: text.substring(0, 60) + '…', duration: 2000 });
-    logger.info(TAG, 'AI 导出: ' + item.key + ' 长度=' + text.length.toString());
   }
 
   // ── 特征族 ──
