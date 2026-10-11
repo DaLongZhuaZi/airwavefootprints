@@ -10,7 +10,11 @@ import {
 } from '../domain/signatures/FieldwatchSignatureCatalog';
 
 const TAG: string = 'FieldwatchCatalogRepository';
-const CATALOG_URL: string = 'https://raw.githubusercontent.com/DaLongZhuaZi/Fieldwatch/main/dist/fieldwatch-signatures-v2.json';
+/** 特征数据仓 airwave-signatures 的发布地址；按顺序尝试，首个可用镜像为准（raw 在国内不稳定，jsDelivr 兜底）。 */
+const CATALOG_URLS: string[] = [
+  'https://raw.githubusercontent.com/DaLongZhuaZi/airwave-signatures/main/dist/fieldwatch-signatures-v2.json',
+  'https://cdn.jsdelivr.net/gh/DaLongZhuaZi/airwave-signatures@main/dist/fieldwatch-signatures-v2.json'
+];
 const STOCK_RAWFILE: string = 'fieldwatch-signatures-v2.json';
 const CATALOG_FILE: string = 'fieldwatch/signatures.json';
 const LEGACY_CATALOG_FILE: string = 'fieldwatch/catalog.json';
@@ -115,26 +119,47 @@ export class FieldwatchCatalogRepository {
     return FileUtils.writeText(CATALOG_FILE, encodeSignaturePack(new SignaturePack(fleets, 0, 'harmonyos')));
   }
 
-  /** 用户主动更新：拉取 stock 包并覆盖 stock 行，保留用户状态、额外规则和自定义签名。 */
+  /** 用户主动更新：按镜像顺序拉取 stock 包并覆盖 stock 行，保留用户状态、额外规则和自定义签名。 */
   async updateStockCatalog(current: SignatureFleet[]): Promise<StockCatalogUpdateResult> {
-    try {
-      const response = await ngfNetworkClient.get(CATALOG_URL);
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        return new StockCatalogUpdateResult(0, 0, 0, 0, SignaturePackError.MALFORMED);
+    if (this.stockVersion <= 0) await this.loadStock();
+    let lastError: SignaturePackError = SignaturePackError.MALFORMED;
+    let lastSkippedDecode: number = 0;
+    let sawOutdated: boolean = false;
+    for (let index: number = 0; index < CATALOG_URLS.length; index++) {
+      const url: string = CATALOG_URLS[index];
+      try {
+        const response = await ngfNetworkClient.get(url);
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          logger.warn(TAG, 'Catalog 镜像 HTTP 失败: ' + url + ' status=' + response.statusCode.toString());
+          continue;
+        }
+        const parsed = parseSignaturePack(response.body);
+        if (parsed.error !== SignaturePackError.NONE) {
+          lastError = parsed.error;
+          lastSkippedDecode = parsed.skippedDecode;
+          continue;
+        }
+        if (parsed.pack.catalogVersion < this.stockVersion) {
+          // 版本守卫：更新源比内置还旧时拒绝覆盖，防止数据源回滚让特征库倒退；
+          // 继续尝试下一个镜像（CDN 缓存可能滞后），全部过旧才报 OUTDATED。
+          logger.warn(TAG, 'Catalog 版本过旧已拒绝: remote=' + parsed.pack.catalogVersion.toString() + ', stock=' + this.stockVersion.toString() + ', url=' + url);
+          sawOutdated = true;
+          continue;
+        }
+        parsed.pack.fleets.forEach((fleet: SignatureFleet): void => { fleet.builtIn = true; });
+        const before: number = current.length;
+        const merged: SignatureFleet[] = overlayStockFleets(current, parsed.pack.fleets);
+        const added: number = merged.length - before;
+        const saved: boolean = this.save(merged);
+        logger.info(TAG, 'Catalog 更新完成: added=' + added.toString() + ', version=' + parsed.pack.catalogVersion.toString() + ', saved=' + saved.toString() + ', url=' + url);
+        return new StockCatalogUpdateResult(added < 0 ? 0 : added, before, parsed.pack.catalogVersion, parsed.skippedDecode, SignaturePackError.NONE);
+      } catch (error) {
+        logger.warn(TAG, 'Catalog 镜像请求异常: ' + url + ' ' + this.errorMessage(error));
       }
-      const parsed = parseSignaturePack(response.body);
-      if (parsed.error !== SignaturePackError.NONE) return new StockCatalogUpdateResult(0, 0, 0, parsed.skippedDecode, parsed.error);
-      parsed.pack.fleets.forEach((fleet: SignatureFleet): void => { fleet.builtIn = true; });
-      const before: number = current.length;
-      const merged: SignatureFleet[] = overlayStockFleets(current, parsed.pack.fleets);
-      const added: number = merged.length - before;
-      const saved: boolean = this.save(merged);
-      logger.info(TAG, 'Catalog 更新完成: added=' + added.toString() + ', version=' + parsed.pack.catalogVersion.toString() + ', saved=' + saved.toString());
-      return new StockCatalogUpdateResult(added < 0 ? 0 : added, before, parsed.pack.catalogVersion, parsed.skippedDecode, SignaturePackError.NONE);
-    } catch (error) {
-      logger.warn(TAG, 'Catalog 更新失败，保留旧目录: ' + this.errorMessage(error));
-      return new StockCatalogUpdateResult(0, 0, 0, 0, SignaturePackError.MALFORMED);
     }
+    if (sawOutdated) return new StockCatalogUpdateResult(0, 0, 0, lastSkippedDecode, SignaturePackError.OUTDATED);
+    logger.warn(TAG, 'Catalog 更新失败，保留旧目录');
+    return new StockCatalogUpdateResult(0, 0, 0, lastSkippedDecode, lastError);
   }
 
   /** 从文件导入：追加规则、按指纹跳过重复，不删除现有目录。 */

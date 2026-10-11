@@ -14,7 +14,8 @@ export enum SignaturePackError {
   MALFORMED = 'malformed',
   WRONG_FORMAT = 'wrong_format',
   NO_SIGNATURES = 'no_signatures',
-  NO_STOCK = 'no_stock'
+  NO_STOCK = 'no_stock',
+  OUTDATED = 'outdated'
 }
 
 export class SignaturePackParseResult {
