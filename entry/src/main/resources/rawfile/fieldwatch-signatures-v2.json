@@ -1,9 +1,9 @@
 {
     "format": "fieldwatch-signatures",
     "formatVersion": 1,
-    "exportedAt": "2026-10-11T07:42:48Z",
+    "exportedAt": "2026-10-11T07:50:53Z",
     "appVersion": "stock",
-    "catalogVersion": 101,
+    "catalogVersion": 102,
     "fleets": [
         {
             "id": "fleet-actiontec",
@@ -101004,6 +101004,726 @@
             "kind": "HOME"
         },
         {
+            "id": "fleet-blemonitor-teltonika",
+            "name": "Teltonika EYE / Blue Puck sensor",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 2202,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "PUCK_T1*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "PUCK_TH*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "C T*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "P T*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "P RHT*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Teltonika EYE sensors and rebadged ELA Blue Puck/Coin sensors: company ID 0x089A (Teltonika), or broadcast names PUCK_T1 / PUCK_TH / 'C T*' / 'P T*' / 'P RHT*'. Source: ble_monitor teltonika.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "FINDER"
+        },
+        {
+            "id": "fleet-blemonitor-ela",
+            "name": "ELA sensor",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 1879,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "ELA Innovation sensors (also sold rebadged as Teltonika Blue Puck/Coin): company ID 0x0757. Source: ble_monitor teltonika.py dispatch (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-michelin",
+            "name": "Michelin TMS tyre sensor",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_DATA",
+                    "text": "",
+                    "companyId": 2088,
+                    "dataPrefixHex": "03",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "offset": 1
+                },
+                {
+                    "kind": "MANUFACTURER_DATA",
+                    "text": "",
+                    "companyId": 2088,
+                    "dataPrefixHex": "04",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "offset": 1
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Michelin Tyre Monitoring Sensor: company ID 0x0828 with frame-type byte 0x03/0x04 at payload offset 1. Source: ble_monitor michelin.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "VEHICLE"
+        },
+        {
+            "id": "fleet-blemonitor-acconeer-xm122",
+            "name": "Acconeer XM122",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_DATA",
+                    "text": "",
+                    "companyId": 44224,
+                    "dataPrefixHex": "80",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "offset": 0
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Acconeer radar module XM122: company ID 0xACC0, model byte 0x80 at payload offset 0. Source: ble_monitor acconeer.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-acconeer-xm126",
+            "name": "Acconeer XM126",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_DATA",
+                    "text": "",
+                    "companyId": 44224,
+                    "dataPrefixHex": "90",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "offset": 0
+                },
+                {
+                    "kind": "MANUFACTURER_DATA",
+                    "text": "",
+                    "companyId": 44224,
+                    "dataPrefixHex": "91",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "offset": 0
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Acconeer radar module XM126: company ID 0xACC0, model byte 0x90/0x91 at payload offset 0. Source: ble_monitor acconeer.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-chefiq",
+            "name": "Chef iQ",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 1485,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Chef iQ smart cooking (CQ60 probe system): company ID 0x05CD; the model itself is length-determined in the source parser, so this is a brand-level match. Source: ble_monitor chefiq.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-grundfos",
+            "name": "Grundfos MI401",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 61972,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Grundfos pump interface MI401: manufacturer block keyed 0xF214 in the source parser. Source: ble_monitor grundfos.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-hormann",
+            "name": "Hörmann Supramatic",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 1972,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Hörmann garage-door drives (Supramatic E4 BS): company ID 0x07B4. Source: ble_monitor hormann.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-laica",
+            "name": "Laica Smart Scale",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 41132,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Laica body scales: manufacturer block keyed 0xA0AC in the source parser. Source: ble_monitor laica.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HEALTH"
+        },
+        {
+            "id": "fleet-blemonitor-mocreo",
+            "name": "Mocreo sensor",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "MOCREO*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "ST7*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "SERVICE_UUID",
+                    "text": "F0FF",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "group": 1
+                },
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 74,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "group": 1
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Mocreo temperature sensors (ST7 family): names MOCREO / ST7 / ST7-CL, or service F0FF combined with company ID 0x004A. Model-level bytes sit in the company-ID high byte in the source parser and cannot be expressed. Source: ble_monitor mocreo.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-relsib-eclerk",
+            "name": "Relsib EClerk Eco",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "SERVICE_UUID",
+                    "text": "AA20",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "SERVICE_UUID",
+                    "text": "AA21",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "SERVICE_UUID",
+                    "text": "AA22",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Relsib EClerk Eco datalogger: service data under AA20/AA21/AA22. Source: ble_monitor relsib.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-relsib-wh52",
+            "name": "Relsib WH52",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "SERVICE_DATA",
+                    "text": "1809",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "minLen": 20,
+                    "maxLen": 20
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Relsib WH52 thermometer: Health Thermometer (1809) service data with a 20-byte payload (length is the model discriminator in the source parser). Source: ble_monitor relsib.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HEALTH"
+        },
+        {
+            "id": "fleet-blemonitor-relsib-wt51",
+            "name": "Relsib WT51",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "SERVICE_DATA",
+                    "text": "1809",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true,
+                    "minLen": 10,
+                    "maxLen": 10
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Relsib WT51 thermometer: Health Thermometer (1809) service data with a 10-byte payload. Source: ble_monitor relsib.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HEALTH"
+        },
+        {
+            "id": "fleet-blemonitor-almendo",
+            "name": "Almendo bluSensor",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 1768,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Almendo bluSensor Mini: company ID 0x06E8. Source: ble_monitor almendo.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-airmentor-pro2",
+            "name": "Air Mentor Pro 2",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 8465,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 8466,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 8481,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 8482,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Air Mentor Pro 2 air-quality monitor: company ID in {0x2111, 0x2112, 0x2121, 0x2122}. Source: ble_monitor airmentor.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-airmentor-2s",
+            "name": "Air Mentor 2S",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 20754,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 20770,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 24849,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 24865,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Air Mentor 2S air-quality monitor: company ID in {0x5112, 0x5122, 0x6111, 0x6121}. Source: ble_monitor airmentor.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-blustream",
+            "name": "Blustream",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 404,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Blustream: company ID 0x0194. Source: ble_monitor blustream.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-beckett",
+            "name": "Beckett Genisys",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "MANUFACTURER_ID",
+                    "text": "",
+                    "companyId": 1562,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "R.W. Beckett Genisys oil-burner controls: company ID 0x061A (SIG-assigned). Model keys are recovered only after a chained-XOR unwrap in the source parser, so this is a brand-level match. Source: ble_monitor beckett.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-jinou",
+            "name": "Jinou BEC07-5",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "SERVICE_UUID",
+                    "text": "20AA",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "Jinou beacon BEC07-5: advertised service 0x20AA. Source: ble_monitor jinou.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-thermopro",
+            "name": "ThermoPro",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "TP357*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "TP358*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "TP359*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "TP393*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "TP96*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                },
+                {
+                    "kind": "NAME_GLOB",
+                    "text": "TP970*",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "ThermoPro probes/thermo-hygrometers advertise under their model names (TP357/TP358/TP359/TP393/TP96x/TP970 families). Sources: ble_monitor thermopro.py name dispatch and Bluetooth-Devices/thermopro-ble name prefixes (both MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "HOME"
+        },
+        {
+            "id": "fleet-blemonitor-holyiot-tracker",
+            "name": "HolyIoT BLE tracker",
+            "enabled": true,
+            "matchAny": true,
+            "colorIndex": 4,
+            "rules": [
+                {
+                    "kind": "SERVICE_DATA",
+                    "text": "5242",
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "radio": "BLE",
+                    "enabled": true
+                }
+            ],
+            "minPeers": 0,
+            "peerWindowSec": 60,
+            "clusterByOui": false,
+            "sequentialMac": false,
+            "notes": "HolyIoT tracker form: service data under UUID 0x5242 (the catalog's HolyIoT Beacon fleet covers the separate 0x180A form). Source: ble_monitor holyiot.py (MIT).",
+            "attentionNote": "",
+            "builtIn": true,
+            "kind": "FINDER"
+        },
+        {
             "attentionNote": "",
             "builtIn": true,
             "clusterByOui": false,
@@ -101198,6 +101918,39 @@
             "attentionNote": "",
             "builtIn": true,
             "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-moat-s2",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "Moat S2 water sensor",
+            "notes": "Moat S2 leak/temperature sensor: service data under its 128-bit UUID 00001000-0000-1000-8000-00805f9b34fb (Bluetooth-Devices/moat-ble, MIT); a second advertising form is keyed by manufacturer ID 0x1000 in ble_monitor's parser (MIT) — both forms are included; which one current firmware emits is unconfirmed.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "radio": "BLE",
+                    "text": "00001000-0000-1000-8000-00805F9B34FB"
+                },
+                {
+                    "companyId": 4096,
+                    "dataPrefixHex": "",
+                    "enabled": true,
+                    "kind": "MANUFACTURER_ID",
+                    "radio": "BLE",
+                    "text": ""
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
             "colorIndex": 3,
             "enabled": true,
             "id": "fleet-manual-ninebot",
@@ -101375,6 +102128,361 @@
                     "kind": "SERVICE_UUID",
                     "radio": "BLE",
                     "text": "FD69"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-curtain-3",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Curtain 3",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "5B",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                },
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "7B",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-curtain",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Curtain",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "63",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                },
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "43",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-fan",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Fan (WoFan)",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "46",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                },
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "66",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-hub-mini",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Hub Mini",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "4D",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                },
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "6D",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-hub-plus",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Hub Plus",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "50",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                },
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "70",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-hub",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Hub (WoLink)",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "4C",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                },
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "6C",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-lock",
+            "kind": "LOCK",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Lock",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "6F",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-meter-typecode",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot Meter (type code)",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "54",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                },
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "74",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-woan",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot (Woan broadcast)",
+            "notes": "SwitchBot Color Bulb / LED Strip Light / Plug Mini advertise only manufacturer data with company ID 0x0969 (Woan Technology, SwitchBot's parent) and no device-type byte, so the three cannot be told apart from the broadcast alone (official spec: OpenWonderLabs/SwitchBotAPI-BLE). Protocol-level brand match.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 2409,
+                    "dataPrefixHex": "",
+                    "enabled": true,
+                    "kind": "MANUFACTURER_ID",
+                    "radio": "BLE",
+                    "text": ""
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-switchbot-wobutton",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "SwitchBot WoButton (Remote)",
+            "notes": "SwitchBot official BLE spec (OpenWonderLabs/SwitchBotAPI-BLE): FD3D service data byte 0 = device type code (ASCII); uppercase = pair/add mode, lowercase = normal broadcast. Theengs fleets cover Bot/Contact/Motion/Blind Tilt/Meter Pro/Outdoor Meter; this type was missing.",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 0,
+                    "dataPrefixHex": "42",
+                    "enabled": true,
+                    "kind": "SERVICE_DATA",
+                    "offset": 0,
+                    "radio": "BLE",
+                    "text": "FD3D"
+                }
+            ],
+            "sequentialMac": false
+        },
+        {
+            "attentionNote": "",
+            "builtIn": true,
+            "clusterByOui": false,
+            "colorIndex": 4,
+            "enabled": true,
+            "id": "fleet-manual-thermobeacon-extra",
+            "kind": "HOME",
+            "matchAny": true,
+            "minPeers": 0,
+            "name": "ThermoBeacon (additional types)",
+            "notes": "Additional ThermoBeacon/Brifit sensor types 0x14 and 0x30 (manufacturer-data leading byte read as pseudo company ID, the same encoding the Theengs WS02-WS08 fleet uses for types 0x10/0x11/0x15/0x18/0x1B). Source: Bluetooth-Devices/thermobeacon-ble DEVICE_TYPES (MIT).",
+            "peerWindowSec": 60,
+            "rules": [
+                {
+                    "companyId": 20,
+                    "dataPrefixHex": "",
+                    "enabled": true,
+                    "kind": "MANUFACTURER_ID",
+                    "radio": "BLE",
+                    "text": ""
+                },
+                {
+                    "companyId": 48,
+                    "dataPrefixHex": "",
+                    "enabled": true,
+                    "kind": "MANUFACTURER_ID",
+                    "radio": "BLE",
+                    "text": ""
                 }
             ],
             "sequentialMac": false
@@ -101934,9 +103042,13 @@
             "added": 7,
             "models": 7
         },
+        "blemonitor": {
+            "added": 21,
+            "table_fleets": 21
+        },
         "manual": {
-            "added": 15,
-            "manual_fleets": 15
+            "added": 27,
+            "manual_fleets": 27
         }
     }
 }
