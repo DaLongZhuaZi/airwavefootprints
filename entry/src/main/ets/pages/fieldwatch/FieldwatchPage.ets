@@ -567,7 +567,7 @@ struct FieldwatchRootPage {
     else if (name === FieldwatchRouteName.SIT_DETAIL) FieldwatchReportsPage();
     else if (name === FieldwatchRouteName.EXPORT) FieldwatchReportsPage();
     else if (name === FieldwatchRouteName.SIGNATURE_CATALOG) {
-      FieldwatchSignaturesPage({ landscape: this.isLandscape, onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }, onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, followTick: this.followTick, onOpenWatchlist: (): void => { this.openWatchlist(); } });
+      FieldwatchSignaturesPage({ topInset: this.topInsetVp, landscape: this.isLandscape, onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }, onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, followTick: this.followTick, onOpenWatchlist: (): void => { this.openWatchlist(); } });
     } else if (name === FieldwatchRouteName.HUNT) {
       FieldwatchHuntPage({ onClose: (): void => { this.pathStack.pop(); } });
     } else if (name === FieldwatchRouteName.SIGNATURE_DETAIL) {
@@ -608,7 +608,7 @@ struct FieldwatchRootPage {
       TabContent() { FieldwatchLivePage({ visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
       TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
             // `onEditFleet` 必须传：它的默认值是空函数，漏传就变成「点了没反应」。
-      TabContent() { FieldwatchSignaturesPage({ embedded: true, landscape: this.isLandscape,
+      TabContent() { FieldwatchSignaturesPage({ topInset: this.topInsetVp, embedded: true, landscape: this.isLandscape,
         onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); },
         onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, onOpenWatchlist: (): void => { this.openWatchlist(); }, pageVisible: this.selectedTab === 2 })
       }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2))
@@ -766,7 +766,7 @@ struct FieldwatchRootPage {
       if (this.selectedTab === 0) FieldwatchLivePage({ savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); } }).width('100%').height('100%')
       else if (this.selectedTab === 1) FieldwatchFiltersPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
       // 同上：`onEditFleet` 漏传会让「新建」「编辑」两个按钮都变成空操作。
-      else if (this.selectedTab === 2) FieldwatchSignaturesPage({ embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
+      else if (this.selectedTab === 2) FieldwatchSignaturesPage({ topInset: this.topInsetVp, embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
         onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); },
         onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); },
         onOpenWatchlist: (): void => { this.openWatchlist(); },

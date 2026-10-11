@@ -67,6 +67,16 @@ export struct FieldwatchSignaturesPage {
   /** 外层转发的关注状态变化计数；变化即重建列表（横屏分栏时列表同屏可见）。 */
   @Prop @Watch('onFollowTick') followTick: number = 0;
   /**
+   * 顶部系统安全区高度（vp）。
+   *
+   * 与「筛选」「记录」「设置」三个标签页一致：由根页面测出后传进来，
+   * 页头用 `topInset + N` 避让状态栏。
+   *
+   * 这里原先写死 `top: 16` 且**没有接收这个值**，竖屏下标题直接顶到状态栏
+   * （实测反馈：特征库标题贴到边框，与其它标签页不一致）。
+   */
+  @Prop topInset: number = 0;
+  /**
    * 本页当前是否可见；不可见时不做任何刷新（`Tabs` 会让页面常驻）。
    *
    * **不能叫 `visible`**：本组件已有一个同名的 `visible()` 过滤方法，会撞名（实测编译失败）。
@@ -171,7 +181,7 @@ export struct FieldwatchSignaturesPage {
       Text($r('app.string.fieldwatch_signatures_offline')).fontSize(12).fontColor($r('app.color.text_secondary'))
       if (this.visible().length === 0) Text($r('app.string.fieldwatch_signatures_empty')).fontSize(14)
         .fontColor($r('app.color.text_secondary'))
-    }.width('100%').padding({ left: 16, right: 16, top: 16, bottom: 16 })
+    }.width('100%').padding({ left: 16, right: 16, top: this.topInset + 8, bottom: 16 })
   }
 
   @Builder

@@ -293,11 +293,31 @@ export struct FieldwatchDeviceDetailPage {
     });
   }
 
-  /** 顶栏主标题：厂商 · 猜测结论（对齐原版 `Apple, Inc. · iPhone、iPad 或 Mac`）。 */
+  /**
+   * 顶栏主标题。
+   *
+   * **名称优先**：`名称 · 厂商` -> `名称 · 结论` -> `名称` ->
+   * `厂商 · 结论` -> `结论` -> `厂商` -> 地址。
+   *
+   * 原来只有「厂商 · 结论」这一条链，**从头到尾没用过设备名称**，于是：
+   *
+   *  - Wi-Fi 接入点有 SSID（`CMCC-CKkA`），但既没有厂商、结论又是通用，
+   *    标题只能掉到地址 —— 用户看到的是一串 MAC，明明有名字却不用（实测反馈）；
+   *  - 蓝牙设备识别出厂商后，标题被厂商名占满，设备名（`OPPO Watch 2 1666`）
+   *    反而看不见（实测反馈）。
+   *
+   * 名称才是「这台设备叫什么」；厂商与结论是补充信息，排在后面。
+   */
   private titleText(): string {
     if (this.sighting === undefined) return this.label('app.string.fieldwatch_detail_title');
     const vendor: string = fieldwatchApplication.vendorOfSighting(this.sighting);
     const core: string = this.guess === undefined || this.guess.generic ? '' : this.guess.label;
+    const name: string = fieldwatchApplication.describeName(this.sighting);
+    if (name.length > 0) {
+      if (vendor.length > 0) return name + ' · ' + vendor;
+      if (core.length > 0) return name + ' · ' + core;
+      return name;
+    }
     if (vendor.length > 0 && core.length > 0) return vendor + ' · ' + core;
     if (core.length > 0) return core;
     if (vendor.length > 0) return vendor;

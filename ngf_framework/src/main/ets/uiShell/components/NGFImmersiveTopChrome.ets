@@ -18,8 +18,29 @@ import { hdsEffect } from '@kit.UIDesignKit';
  * @param underlayHeight 传给 `NGFImmersiveTopChromePresetFactory.build` 的底板高度
  * @param topInset       顶部系统安全区高度（vp），由根页面测量后传入
  */
+/** 标题栏高度（HDS 顶栏在状态栏之下的部分）。 */
+const TITLE_BAR_HEIGHT: number = 56;
+/** 标题栏下沿与首屏内容之间留的呼吸位。 */
+const CONTENT_BREATHING_ROOM: number = 8;
+
 export function ngfImmersiveContentTop(underlayHeight: number, topInset: number): number {
-  return underlayHeight + topInset;
+  // **避让的是标题栏，不是整块底板。**
+  //
+  // 底板是一块装饰性渐变，`expandSafeArea` 之后覆盖 `underlayHeight + 顶部安全区`，
+  // 而且**合成在内容之上** —— 但它越往下越淡，内容落在它下半段是完全正常的，
+  // 框架自己的 preset 就是这么配的：`underlayHeight = 168` 配 `contentTopInset = 92`
+  // （见 `NGFImmersiveTopChromePresetFactory.build` 的默认参数）。
+  //
+  // 本机 28 + 56 + 8 = 92，与框架默认值吻合 —— 这不是巧合，
+  // 92 就是「状态栏 + 标题栏 + 呼吸位」。
+  //
+  // 曾经按「避让整块底板」写成 `underlayHeight + topInset`（本机 196vp），
+  // 结果是首屏内容被多推下去约 100vp，顶部空出一大段渐变带（实测反馈：
+  // 手动上滑之后的高度才是合理的）。
+  //
+  // `underlayHeight` 保留在签名里：调用方本来就持有这个值，
+  // 而且底板高度若调整、需要重新评估避让时它仍是依据。
+  return topInset + TITLE_BAR_HEIGHT + CONTENT_BREATHING_ROOM;
 }
 
 export class NGFImmersiveTopChromeMetrics {
