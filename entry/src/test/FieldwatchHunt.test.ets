@@ -1,7 +1,8 @@
 import { describe, it, expect } from '@ohos/hypium';
 import {
   HuntCue, HuntSample, HuntSession, HUNT_MAX_SAMPLES, huntAverage, huntCue, huntCueKey, huntCueLevel, huntLastMeasured,
-  huntPeak, huntRssiMeasured, huntSessionRange, huntTickIntervalMs
+  HuntDirectionMap, huntDirectionSector, huntDirectionSectorHeading, huntPeak, huntRssiMeasured, huntSessionRange,
+  huntTickIntervalMs
 } from '../main/ets/fieldwatch/domain/FieldwatchHunt';
 
 function samplesAt(base: number, offsets: number[], rssi: number): HuntSample[] {
@@ -77,6 +78,46 @@ export default function fieldwatchHuntTest() {
       expect(session.lastSeen).assertEqual(1000 + HUNT_MAX_SAMPLES + 19);
       expect(session.peak() >= -60).assertTrue();
       expect(session.missing).assertFalse();
+    });
+
+    it('maps heading samples into stable wrapped sectors', 0, () => {
+      expect(huntDirectionSector(0)).assertEqual(0);
+      expect(huntDirectionSector(360)).assertEqual(0);
+      expect(huntDirectionSector(-1)).assertEqual(15);
+      expect(huntDirectionSectorHeading(0)).assertEqual(11.25);
+      expect(huntDirectionSectorHeading(15)).assertEqual(348.75);
+    });
+
+    it('withholds relative direction until coverage and contrast are sufficient', 0, () => {
+      const map: HuntDirectionMap = new HuntDirectionMap();
+      for (let sector: number = 0; sector < 7; sector += 1) {
+        map.addSample(huntDirectionSectorHeading(sector), sector === 3 ? -45 : -75);
+      }
+      expect(map.coverage()).assertEqual(7);
+      expect(map.ready()).assertFalse();
+      expect(map.relativeDelta(180)).assertEqual(-101.25);
+      map.addSample(huntDirectionSectorHeading(7), -75);
+      expect(map.coverage()).assertEqual(8);
+      expect(map.ready()).assertTrue();
+      expect(map.peakHeading()).assertEqual(78.75);
+      expect(map.relativeDelta(90)).assertEqual(-11.25);
+    });
+
+    it('ignores unavailable headings and invalid radio levels', 0, () => {
+      const map: HuntDirectionMap = new HuntDirectionMap();
+      expect(map.addSample(Number.NaN, -50)).assertFalse();
+      expect(map.addSample(20, 127)).assertFalse();
+      expect(map.coverage()).assertEqual(0);
+      expect(map.sectorRssi(0)).assertEqual(127);
+    });
+
+    it('does not claim a bearing when all covered sectors have similar strength', 0, () => {
+      const map: HuntDirectionMap = new HuntDirectionMap();
+      for (let sector: number = 0; sector < 16; sector += 1) {
+        map.addSample(huntDirectionSectorHeading(sector), -60 - (sector % 2));
+      }
+      expect(map.coverage()).assertEqual(16);
+      expect(map.ready()).assertFalse();
     });
   });
 }

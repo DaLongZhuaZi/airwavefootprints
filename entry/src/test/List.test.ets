@@ -22,6 +22,8 @@ import fieldwatchPrivacyExportTest from './FieldwatchPrivacyExport.test';
 import fieldwatchSettingsBackupTest from './FieldwatchSettingsBackup.test';
 import fieldwatchWatchAlertTest from './FieldwatchWatchAlert.test';
 import fieldwatchToolboxTest from './FieldwatchToolbox.test';
+import fieldwatchWidgetTest from './FieldwatchWidget.test';
+import fieldwatchExportNamingTest from './FieldwatchExportNaming.test';
 
 export default function testsuite() {
   localUnitTest();
@@ -44,4 +46,6 @@ export default function testsuite() {
   fieldwatchSettingsBackupTest();
   fieldwatchWatchAlertTest();
   fieldwatchToolboxTest();
+  fieldwatchWidgetTest();
+  fieldwatchExportNamingTest();
 }

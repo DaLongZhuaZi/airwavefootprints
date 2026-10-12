@@ -1,7 +1,8 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 import { NGFHdsTitleBarOptionsFactory, resolveResourceString } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
-import { HuntCue, HuntSample, HuntSession, huntCueKey, huntCueLevel, huntRssiMeasured, huntTickIntervalMs } from '../../fieldwatch/domain/FieldwatchHunt';
+import { HUNT_DIRECTION_SECTOR_COUNT, HuntCue, HuntDirectionMap, HuntSample, HuntSession, huntCueKey, huntCueLevel, huntDirectionSectorHeading, huntRssiMeasured, huntTickIntervalMs } from '../../fieldwatch/domain/FieldwatchHunt';
+import { FieldwatchDirectionSensor, FieldwatchDirectionSensorListener } from '../../fieldwatch/platform/FieldwatchDirectionSensor';
 import { FieldwatchHuntCombinedFeedback, IFieldwatchHuntFeedback } from '../../fieldwatch/platform/FieldwatchHuntFeedback';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 
@@ -28,13 +29,32 @@ export struct FieldwatchHuntPage {
   @State private huntVibrate: boolean = false;
   @State private tickSupported: boolean = false;
   @State private soundSupported: boolean = false;
+  @State private directionAssist: boolean = true;
+  @State private directionReady: boolean = false;
+  @State private directionUnavailable: boolean = false;
+  @State private directionHeading: number = 0;
+  @State private directionDelta: number = 127;
+  @State private directionCoverage: number = 0;
   private readonly feedback: IFieldwatchHuntFeedback = new FieldwatchHuntCombinedFeedback();
+  private readonly directionSensor: FieldwatchDirectionSensor = new FieldwatchDirectionSensor();
+  private readonly directionMap: HuntDirectionMap = new HuntDirectionMap();
+  private readonly directionListener: FieldwatchDirectionSensorListener = new FieldwatchDirectionSensorListener(
+    (heading: number): void => { this.onHeading(heading); },
+    (rateRadiansPerSecond: number): void => { this.onRotation(rateRadiansPerSecond); },
+    (message: string): void => { this.onSensorError(message); }
+  );
+  private readonly directionCanvas: CanvasRenderingContext2D = new CanvasRenderingContext2D(new RenderingContextSettings(true));
   private readonly trendSettings: RenderingContextSettings = new RenderingContextSettings(true);
   private readonly trendCtx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.trendSettings);
   private refreshTimer: number = -1;
   private tickTimer: number = -1;
+  private directionSensorRunning: boolean = false;
+  private rotationRate: number = 0;
+  private lastDirectionSampleAt: number = 0;
 
   aboutToAppear(): void {
+    this.directionAssist = fieldwatchApplication.getState().settings.huntDirectionAssist;
+    this.syncDirectionSensor();
     this.tickSupported = this.feedback.hapticAvailable();
     this.refresh();
     this.refreshTimer = setInterval((): void => { this.refresh(); }, 1000);
@@ -42,16 +62,120 @@ export struct FieldwatchHuntPage {
   }
 
   aboutToDisappear(): void {
+    this.directionSensor.stop();
+    this.directionSensorRunning = false;
     if (this.refreshTimer >= 0) { clearInterval(this.refreshTimer); this.refreshTimer = -1; }
     this.clearTick();
     this.feedback.release();
+  }
+
+  onHeading(heading: number): void {
+    this.directionHeading = heading;
+    const now: number = Date.now();
+    if (this.rotationRate < 0.12 || now - this.lastDirectionSampleAt < 250) return;
+    const session: HuntSession | undefined = fieldwatchApplication.getHunt();
+    if (session === undefined || !huntRssiMeasured(session.lastRssi)) return;
+    if (this.directionMap.addSample(heading, session.lastRssi)) {
+      this.lastDirectionSampleAt = now;
+      this.directionCoverage = this.directionMap.coverage();
+      this.directionReady = this.directionMap.ready();
+      this.directionDelta = this.directionMap.relativeDelta(heading);
+      this.drawDirectionMap();
+    }
+  }
+
+  onRotation(rateRadiansPerSecond: number): void { this.rotationRate = rateRadiansPerSecond; }
+
+  onSensorError(_message: string): void { this.directionUnavailable = true; }
+
+  private directionText(): string {
+    if (this.directionUnavailable) return this.text('app.string.fieldwatch_hunt_direction_unavailable');
+    if (!this.directionReady || this.directionDelta === 127) {
+      const statusKey: string = this.directionCoverage >= HUNT_DIRECTION_SECTOR_COUNT
+        ? 'app.string.fieldwatch_hunt_direction_weak_peak'
+        : 'app.string.fieldwatch_hunt_direction_waiting';
+      return this.text(statusKey);
+    }
+    if (Math.abs(this.directionDelta) <= 11.25) return this.text('app.string.fieldwatch_hunt_direction_align');
+    const angle: string = Math.round(Math.abs(this.directionDelta)).toString();
+    if (this.directionDelta < 0) return this.text('app.string.fieldwatch_hunt_direction_left').replace('%s', angle);
+    return this.text('app.string.fieldwatch_hunt_direction_right').replace('%s', angle);
+  }
+
+  @Builder
+  private buildDirectionMap() {
+    Column({ space: 8 }) {
+      Text($r('app.string.fieldwatch_hunt_direction_title')).fontSize(16).fontWeight(FontWeight.Medium)
+        .fontColor(FieldwatchPaletteHolder.get().text)
+      Text(this.directionAssist ? this.text('app.string.fieldwatch_hunt_direction_hint') : this.text('app.string.fieldwatch_hunt_direction_off'))
+        .fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+      if (this.directionAssist) {
+        Canvas(this.directionCanvas)
+          .width('100%').height(150).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+          .onReady((): void => { this.drawDirectionMap(); })
+        Text(this.directionText()).fontSize(17).fontWeight(FontWeight.Medium)
+          .fontColor(this.directionReady ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().text)
+        Text(this.directionCoverage.toString() + '/' + HUNT_DIRECTION_SECTOR_COUNT.toString()).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim)
+      }
+    }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+  }
+
+  private drawDirectionMap(): void {
+    const ctx: CanvasRenderingContext2D = this.directionCanvas;
+    const width: number = ctx.width;
+    const height: number = ctx.height;
+    if (width <= 0 || height <= 0) return;
+    ctx.clearRect(0, 0, width, height);
+    const centerX: number = width / 2;
+    const centerY: number = height / 2;
+    const radius: number = Math.min(width, height) * 0.39;
+    ctx.strokeStyle = FieldwatchPaletteHolder.get().outline;
+    ctx.lineWidth = 1;
+    for (let ring: number = 1; ring <= 3; ring += 1) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius * ring / 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    for (let sector: number = 0; sector < 16; sector += 1) {
+      const value: number = this.directionMap.sectorRssi(sector);
+      if (value === 127) continue;
+      const angle: number = (huntDirectionSectorHeading(sector) - 90) * Math.PI / 180;
+      const strength: number = Math.max(0.12, Math.min(1, (value + 100) / 65));
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(centerX + Math.cos(angle) * radius * strength, centerY + Math.sin(angle) * radius * strength);
+      ctx.strokeStyle = value >= -60 ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim;
+      ctx.lineWidth = 5;
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+    ctx.fillStyle = FieldwatchPaletteHolder.get().text;
+    ctx.fill();
   }
 
   private text(key: string): string {
     return resolveResourceString(this.getUIContext().getHostContext(), $r(key));
   }
 
+  private syncDirectionSensor(): void {
+    const enabled: boolean = fieldwatchApplication.getState().settings.huntDirectionAssist;
+    this.directionAssist = enabled;
+    const shouldRun: boolean = enabled && fieldwatchApplication.isAppForeground();
+    if (shouldRun && !this.directionSensorRunning && !this.directionUnavailable) {
+      this.directionSensorRunning = this.directionSensor.start(this.directionListener);
+      this.directionUnavailable = !this.directionSensorRunning;
+    } else if (!shouldRun && this.directionSensorRunning) {
+      this.directionSensor.stop();
+      this.directionSensorRunning = false;
+    }
+    if (!enabled) this.directionUnavailable = false;
+  }
+
   private refresh(): void {
+    this.syncDirectionSensor();
     // 每秒把持久化设置同步进来：在设置页改完，回到 Hunt 页最多 1 秒生效。
     const settings = fieldwatchApplication.getState().settings;
     this.huntBeep = settings.huntBeep;
@@ -205,6 +329,7 @@ export struct FieldwatchHuntPage {
         this.buildMetric($r('app.string.fieldwatch_hunt_average'), this.sampleCount > 0 ? Math.round(this.averageRssi).toString() + ' dBm' : this.text('app.string.fieldwatch_hunt_na'))
         this.buildMetric($r('app.string.fieldwatch_hunt_samples'), this.sampleCount.toString())
         this.buildTrend()
+        this.buildDirectionMap()
         Row() {
           Text($r('app.string.fieldwatch_hunt_tick_beep')).layoutWeight(1)
           Toggle({ type: ToggleType.Switch, isOn: this.huntBeep })
@@ -239,6 +364,13 @@ export struct FieldwatchHuntPage {
       false
     ))
     .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP, LayoutSafeAreaEdge.BOTTOM])
+    // 工具箱中的「信号追踪」进入独立 Hunt 页时，整页跟随导航滑入；
+    // 返回时淡出，避免内容瞬间替换造成页面跳变。
+    .transition(TransitionEffect.asymmetric(
+      TransitionEffect.opacity(0).combine(TransitionEffect.translate({ x: '24%' }))
+        .animation({ duration: 260, curve: Curve.FastOutSlowIn }),
+      TransitionEffect.opacity(0).animation({ duration: 170, curve: Curve.FastOutSlowIn })
+    ))
   }
 
   @Builder

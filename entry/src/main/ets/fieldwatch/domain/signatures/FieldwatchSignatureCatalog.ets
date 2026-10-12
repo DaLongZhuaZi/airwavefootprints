@@ -15,7 +15,8 @@ export enum SignaturePackError {
   WRONG_FORMAT = 'wrong_format',
   NO_SIGNATURES = 'no_signatures',
   NO_STOCK = 'no_stock',
-  OUTDATED = 'outdated'
+  OUTDATED = 'outdated',
+  SAVE_FAILED = 'save_failed'
 }
 
 export class SignaturePackParseResult {
@@ -506,4 +507,9 @@ export function overlayStockFleets(existing: SignatureFleet[], incoming: Signatu
   const pruned: SignatureFleet[] = next.filter((fleet: SignatureFleet): boolean => !(fleet.builtIn && fleet.id === 'fleet-unknown' && !incomingIds.has('fleet-unknown')));
   pruned.sort((first: SignatureFleet, second: SignatureFleet): number => first.name.toLowerCase().localeCompare(second.name.toLowerCase()));
   return pruned;
+}
+
+/** 只有更高版本的 stock 才能覆盖本地目录，避免重启时把手动更新回滚。 */
+export function shouldApplyStockCatalogVersion(savedVersion: number, stockVersion: number): boolean {
+  return stockVersion > savedVersion;
 }

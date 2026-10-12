@@ -146,3 +146,19 @@ export function parseWidgetForms(text: string): FieldwatchWidgetForm[] {
   });
   return result;
 }
+
+/** Upsert preserves one formId and its persisted dimension across extension recreation. */
+export function upsertWidgetForm(forms: FieldwatchWidgetForm[], form: FieldwatchWidgetForm): FieldwatchWidgetForm[] {
+  const result: FieldwatchWidgetForm[] = forms.filter((item: FieldwatchWidgetForm): boolean => item.id !== form.id);
+  result.push(new FieldwatchWidgetForm(form.id, form.dimension));
+  return result;
+}
+
+export function removeWidgetForm(forms: FieldwatchWidgetForm[], formId: string): FieldwatchWidgetForm[] {
+  return forms.filter((item: FieldwatchWidgetForm): boolean => item.id !== formId);
+}
+
+export function dimensionOfWidgetForm(forms: FieldwatchWidgetForm[], formId: string): string | undefined {
+  const form: FieldwatchWidgetForm | undefined = forms.find((item: FieldwatchWidgetForm): boolean => item.id === formId);
+  return form === undefined ? undefined : form.dimension;
+}

@@ -21,6 +21,7 @@ export class FieldwatchSettingsRepository {
     settings.watchVoiceWhat = ngfSettingsStoreFacade.getString('fieldwatch.watchVoiceWhat', settings.watchVoiceWhat);
     settings.huntBeep = ngfSettingsStoreFacade.getBoolean('fieldwatch.huntBeep', settings.huntBeep);
     settings.huntVibrate = ngfSettingsStoreFacade.getBoolean('fieldwatch.huntVibrate', settings.huntVibrate);
+    settings.huntDirectionAssist = ngfSettingsStoreFacade.getBoolean('fieldwatch.huntDirectionAssist', settings.huntDirectionAssist);
     settings.showRssiBar = ngfSettingsStoreFacade.getBoolean('fieldwatch.showRssiBar', settings.showRssiBar);
     settings.showFleetName = ngfSettingsStoreFacade.getBoolean('fieldwatch.showFleetName', settings.showFleetName);
     settings.showFrequency = ngfSettingsStoreFacade.getBoolean('fieldwatch.showFrequency', settings.showFrequency);
@@ -49,6 +50,7 @@ export class FieldwatchSettingsRepository {
     ngfSettingsStoreFacade.setString('fieldwatch.watchVoiceWhat', settings.watchVoiceWhat);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.huntBeep', settings.huntBeep);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.huntVibrate', settings.huntVibrate);
+    ngfSettingsStoreFacade.setBoolean('fieldwatch.huntDirectionAssist', settings.huntDirectionAssist);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.showRssiBar', settings.showRssiBar);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.showFleetName', settings.showFleetName);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.showFrequency', settings.showFrequency);
@@ -88,6 +90,7 @@ export class FieldwatchSettingsRepository {
       'watchVoiceWhat=' + settings.watchVoiceWhat + '\n' +
       'huntBeep=' + settings.huntBeep.toString() + '\n' +
       'huntVibrate=' + settings.huntVibrate.toString() + '\n' +
+      'huntDirectionAssist=' + settings.huntDirectionAssist.toString() + '\n' +
       'showRssiBar=' + settings.showRssiBar.toString() + '\n' +
       'showFleetName=' + settings.showFleetName.toString() + '\n' +
       'showFrequency=' + settings.showFrequency.toString() + '\n' +
@@ -129,6 +132,7 @@ export class FieldwatchSettingsRepository {
       else if (key === 'watchVoiceWhat') settings.watchVoiceWhat = value;
       else if (key === 'huntBeep') settings.huntBeep = value === 'true';
       else if (key === 'huntVibrate') settings.huntVibrate = value === 'true';
+      else if (key === 'huntDirectionAssist') settings.huntDirectionAssist = value === 'true';
       else if (key === 'showRssiBar') settings.showRssiBar = value === 'true';
       else if (key === 'showFleetName') settings.showFleetName = value === 'true';
       else if (key === 'showFrequency') settings.showFrequency = value === 'true';

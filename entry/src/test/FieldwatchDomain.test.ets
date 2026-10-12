@@ -3,7 +3,7 @@ import { FieldwatchCompareService, FieldwatchFilterEngine, FieldwatchGeoService,
 import { FieldwatchBleAdvertisementParser, FieldwatchFastPairParser, FieldwatchWifiInformationElementParser } from '../main/ets/fieldwatch/domain/FieldwatchParsers';
 import { FieldwatchExportSerializer } from '../main/ets/fieldwatch/domain/FieldwatchExportSerializer';
 import { ExplainConfidence, FieldwatchDeviceExplain } from '../main/ets/fieldwatch/domain/FieldwatchDeviceExplain';
-import { AppSettings, countSightingsByKind, FilterDefinition, FilterPreset, GpsSample, isRadioPhaseActive, PresenceSpan, WifiScanPhase, RadioFacts, RadioKind, ScanObservation, SignatureClass, Sighting, WatchTarget } from '../main/ets/fieldwatch/domain/FieldwatchModels';
+import { AppSettings, countSightingsByKind, FieldwatchRssiTrend, FilterDefinition, FilterPreset, GpsSample, isRadioPhaseActive, PresenceSpan, WifiScanPhase, RadioFacts, RadioKind, ScanObservation, SignatureClass, Sighting, WatchTarget } from '../main/ets/fieldwatch/domain/FieldwatchModels';
 import { SignatureFleet, SignatureRule, SignatureRuleKind } from '../main/ets/fieldwatch/domain/signatures/FieldwatchSignatureModels';
 import { effectivePeerWindowSec, needsCluster } from '../main/ets/fieldwatch/domain/signatures/FieldwatchSignatureEngine';
 import { FieldwatchSettingsRepository } from '../main/ets/fieldwatch/data/FieldwatchSettingsRepository';
@@ -36,6 +36,97 @@ export default function fieldwatchDomainTest() {
       const first: GpsSample = new GpsSample(22.3, 114.1, 1);
       const second: GpsSample = new GpsSample(22.31, 114.1, 2);
       expect(new FieldwatchGeoService().pathLengthMeters([first, second]) > 1000).assertTrue();
+    });
+
+    it('filters possible co-travel to sustained nearby BLE observations', 0, () => {
+      const now: number = 1000000;
+      const phonePath: GpsSample[] = [
+        new GpsSample(37.7700, -122.4200, now - 60000),
+        new GpsSample(37.7710, -122.4200, now - 30000),
+        new GpsSample(37.7720, -122.4200, now)
+      ];
+      const devicePath: GpsSample[] = [
+        new GpsSample(37.7701, -122.4200, now - 50000),
+        new GpsSample(37.7711, -122.4200, now - 20000),
+        new GpsSample(37.7719, -122.4200, now - 1000)
+      ];
+      const sighting: Sighting = Sighting.fromObservation(new ScanObservation('ble:tag', RadioKind.BLE,
+        'AA:BB:CC:DD:EE:01', 'Tag', -55, now - 50000, new RadioFacts(), devicePath[0]));
+      sighting.ingest(new ScanObservation('ble:tag', RadioKind.BLE, 'AA:BB:CC:DD:EE:01', 'Tag', -58,
+        now - 20000, new RadioFacts(), devicePath[1]));
+      sighting.ingest(new ScanObservation('ble:tag', RadioKind.BLE, 'AA:BB:CC:DD:EE:01', 'Tag', -55,
+        now - 1000, new RadioFacts(), devicePath[2]));
+      const engine: FieldwatchFilterEngine = new FieldwatchFilterEngine();
+      const filter: FilterDefinition = new FilterDefinition();
+      filter.movingWithYou = true;
+      filter.showWifi = false;
+      filter.showNearLink = false;
+      engine.setTravelSamples(phonePath);
+      expect(engine.pass(sighting, filter, [], [], [], now)).assertTrue();
+    });
+
+    it('rejects Wi-Fi, stationary, distant and stale co-travel candidates', 0, () => {
+      const now: number = 2000000;
+      const phonePath: GpsSample[] = [
+        new GpsSample(37.7700, -122.4200, now - 60000),
+        new GpsSample(37.7710, -122.4200, now - 30000),
+        new GpsSample(37.7720, -122.4200, now)
+      ];
+      const near: GpsSample[] = [
+        new GpsSample(37.7701, -122.4200, now - 50000),
+        new GpsSample(37.7711, -122.4200, now - 20000),
+        new GpsSample(37.7719, -122.4200, now - 1000)
+      ];
+      const stationary: GpsSample[] = [
+        new GpsSample(37.7701, -122.4200, now - 50000),
+        new GpsSample(37.7701, -122.4200, now - 20000),
+        new GpsSample(37.7701, -122.4200, now - 1000)
+      ];
+      const distant: GpsSample[] = [
+        new GpsSample(37.7701, -122.4200, now - 50000),
+        new GpsSample(37.7720, -122.4200, now - 20000),
+        new GpsSample(37.7740, -122.4200, now - 1000)
+      ];
+      const oldTrail: GpsSample[] = [
+        new GpsSample(37.7701, -122.4200, now - 200000),
+        new GpsSample(37.7711, -122.4200, now - 100000),
+        new GpsSample(37.7719, -122.4200, now - 1000)
+      ];
+      const engine: FieldwatchFilterEngine = new FieldwatchFilterEngine();
+      engine.setTravelSamples(phonePath);
+      const filter: FilterDefinition = new FilterDefinition();
+      filter.movingWithYou = true;
+      const makeSighting = (key: string, kind: RadioKind, samples: GpsSample[], lastSeen: number): Sighting => {
+        const result: Sighting = Sighting.fromObservation(new ScanObservation(key, kind, key, 'Tag', -55,
+          samples[0].at, new RadioFacts(), samples[0]));
+        for (let index: number = 1; index < samples.length; index += 1) {
+          result.ingest(new ScanObservation(key, kind, key, 'Tag', -55, samples[index].at,
+            new RadioFacts(), samples[index]));
+        }
+        if (lastSeen < result.lastSeen) result.lastSeen = lastSeen;
+        return result;
+      };
+      const wifi: Sighting = makeSighting('wifi:ap', RadioKind.WIFI, near, now - 1000);
+      const still: Sighting = makeSighting('ble:still', RadioKind.BLE, stationary, now - 1000);
+      const away: Sighting = makeSighting('ble:away', RadioKind.BLE, distant, now - 1000);
+      const expiredTrail: Sighting = makeSighting('ble:expired-trail', RadioKind.BLE, oldTrail, now - 1000);
+      const old: Sighting = makeSighting('ble:old', RadioKind.BLE, near, now - 100000);
+      expect(engine.pass(wifi, filter, [], [], [], now)).assertFalse();
+      expect(engine.pass(still, filter, [], [], [], now)).assertFalse();
+      expect(engine.pass(away, filter, [], [], [], now)).assertFalse();
+      expect(engine.pass(expiredTrail, filter, [], [], [], now)).assertFalse();
+      expect(engine.pass(old, filter, [], [], [], now)).assertFalse();
+    });
+
+    it('caps per-sighting location history', 0, () => {
+      const sighting: Sighting = Sighting.fromObservation(new ScanObservation('ble:trail', RadioKind.BLE,
+        'AA', 'Tag', -60, 0, new RadioFacts(), new GpsSample(37.77, -122.42, 0)));
+      for (let index: number = 1; index <= 50; index += 1) {
+        sighting.ingest(new ScanObservation('ble:trail', RadioKind.BLE, 'AA', 'Tag', -60, index,
+          new RadioFacts(), new GpsSample(37.77 + index * 0.00001, -122.42, index)));
+      }
+      expect(sighting.gpsTrail.length).assertEqual(40);
+      expect(sighting.gpsTrail[39].at).assertEqual(50);
     });
 
     it('masks privacy fields', 0, () => {
@@ -71,13 +162,77 @@ export default function fieldwatchDomainTest() {
       expect(csv.indexOf('2412') >= 0).assertTrue();
     });
 
-    it('tracks RSSI samples and trend', 0, () => {
+    it('masks the embedded address inside the key column of csv and jsonl', 0, () => {
+      const settings: AppSettings = new AppSettings();
+      settings.privacyMode = true;
+      const observation: ScanObservation = new ScanObservation('ble:AA:BB:CC:DD:EE:FF', RadioKind.BLE, 'AA:BB:CC:DD:EE:FF', 'Tag', -40, 1);
+      const sighting: Sighting = Sighting.fromObservation(observation);
+      const serializer: FieldwatchExportSerializer = new FieldwatchExportSerializer();
+      // key 内嵌完整地址，隐私模式下不能只掩 address 而把 key 原样导出。
+      const fullMac: RegExp = /[0-9A-F]{2}(:[0-9A-F]{2}){5}/;
+      const csv: string = serializer.serializeCsv([sighting], settings);
+      expect(fullMac.test(csv)).assertFalse();
+      expect(csv.indexOf('**:**:**') >= 0).assertTrue();
+      const jsonl: string = serializer.serializeJsonl([sighting], settings);
+      expect(fullMac.test(jsonl)).assertFalse();
+      expect(jsonl.indexOf('**:**:**') >= 0).assertTrue();
+      // 关闭隐私模式时必须恢复完整地址，避免把脱敏写死成唯一行为。
+      const open: AppSettings = new AppSettings();
+      const raw: string = serializer.serializeJsonl([sighting], open);
+      expect(raw.indexOf('AA:BB:CC:DD:EE:FF') >= 0).assertTrue();
+    });
+
+    it('classifies RSSI trend from timestamped measured samples', 0, () => {
       const engine: FieldwatchSignatureEngine = new FieldwatchSignatureEngine();
-      const sighting: Sighting = Sighting.fromObservation(new ScanObservation('ble:rssi', RadioKind.BLE, 'AA', 'Target', -80, 1));
-      sighting.ingest(new ScanObservation('ble:rssi', RadioKind.BLE, 'AA', 'Target', -60, 2));
-      sighting.ingest(new ScanObservation('ble:rssi', RadioKind.BLE, 'AA', 'Target', -50, 3));
-      expect(engine.rssiAverage(sighting)).assertEqual(-63.333333333333336);
-      expect(engine.rssiTrend(sighting)).assertEqual(30);
+      const values: number[] = [-80, -81, -80, -79, -74, -75, -76, -75];
+      const sighting: Sighting = Sighting.fromObservation(new ScanObservation('ble:rssi', RadioKind.BLE,
+        'AA', 'Target', values[0], 1000));
+      for (let index: number = 1; index < values.length; index += 1) {
+        sighting.ingest(new ScanObservation('ble:rssi', RadioKind.BLE, 'AA', 'Target', values[index],
+          1000 + index * 1000));
+      }
+      expect(sighting.rssiHistory.length).assertEqual(8);
+      expect(engine.rssiAverage(sighting)).assertEqual(-77.5);
+      expect(engine.rssiAverage(sighting, 3000, 8000)).assertEqual(-75);
+      expect(engine.rssiTrend(sighting)).assertEqual(FieldwatchRssiTrend.UP);
+    });
+
+    it('distinguishes fast changes and leaves short histories unknown', 0, () => {
+      const engine: FieldwatchSignatureEngine = new FieldwatchSignatureEngine();
+      const fast: number[] = [-80, -80, -80, -80, -70, -70, -70, -70];
+      const sighting: Sighting = Sighting.fromObservation(new ScanObservation('ble:fast', RadioKind.BLE,
+        'AA', 'Target', fast[0], 1000));
+      for (let index: number = 1; index < fast.length; index += 1) {
+        sighting.ingest(new ScanObservation('ble:fast', RadioKind.BLE, 'AA', 'Target', fast[index],
+          1000 + index * 1000));
+      }
+      expect(engine.rssiTrend(sighting)).assertEqual(FieldwatchRssiTrend.UP_FAST);
+      const falling: number[] = [-70, -70, -70, -70, -80, -80, -80, -80];
+      const fallingSighting: Sighting = Sighting.fromObservation(new ScanObservation('ble:falling', RadioKind.BLE,
+        'BB', 'Target', falling[0], 1000));
+      for (let index: number = 1; index < falling.length; index += 1) {
+        fallingSighting.ingest(new ScanObservation('ble:falling', RadioKind.BLE, 'BB', 'Target', falling[index],
+          1000 + index * 1000));
+      }
+      expect(engine.rssiTrend(fallingSighting)).assertEqual(FieldwatchRssiTrend.DOWN_FAST);
+      const short: Sighting = Sighting.fromObservation(new ScanObservation('ble:short', RadioKind.BLE, 'BB',
+        'Target', -80, 1000));
+      short.ingest(new ScanObservation('ble:short', RadioKind.BLE, 'BB', 'Target', -78, 2000));
+      short.ingest(new ScanObservation('ble:short', RadioKind.BLE, 'BB', 'Target', -76, 3000));
+      expect(engine.rssiTrend(short)).assertEqual(FieldwatchRssiTrend.UNKNOWN);
+    });
+
+    it('ignores unavailable RSSI and caps history at forty samples', 0, () => {
+      const sighting: Sighting = Sighting.fromObservation(new ScanObservation('ble:invalid-rssi', RadioKind.BLE,
+        'AA', 'Target', 127, 0));
+      expect(sighting.rssiHistory.length).assertEqual(0);
+      for (let index: number = 1; index <= 50; index += 1) {
+        sighting.ingest(new ScanObservation('ble:invalid-rssi', RadioKind.BLE, 'AA', 'Target', -60,
+          index * 1000));
+      }
+      expect(sighting.rssiHistory.length).assertEqual(40);
+      expect(sighting.rssiHistory[39].at).assertEqual(50000);
+      expect(sighting.rssiSamples.length).assertEqual(32);
     });
 
     it('orders live list modes by their visual contract', 0, () => {

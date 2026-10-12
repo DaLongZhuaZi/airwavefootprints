@@ -1,20 +1,61 @@
-import { AppSettings, FilterDefinition, FilterLogic, GpsSample, RadioKind, ScanObservation, SignatureClass, Sighting, WatchTarget, foldedSignatureClass } from './FieldwatchModels';
+import { AppSettings, FieldwatchRssiTrend, FilterDefinition, FilterLogic, GpsSample, isMeasuredRssi, RadioGpsSample, RadioKind, RadioRssiSample, ScanObservation, SignatureClass, Sighting, WatchTarget, foldedSignatureClass } from './FieldwatchModels';
 import { FieldwatchRadioDb } from './FieldwatchRadioDb';
 import { SignatureFleet } from './signatures/FieldwatchSignatureModels';
 import { FilterPreset, ServiceDataRecord } from './FieldwatchModels';
 
 /** RSSI 统计辅助；签名匹配已迁移到 domain/signatures 下的完整特征库引擎。 */
 export class FieldwatchSignatureEngine {
-  rssiAverage(sighting: Sighting): number {
-    if (sighting.rssiSamples.length === 0) return sighting.rssi;
+  rssiAverage(sighting: Sighting, windowMs: number = 0, now: number = Date.now()): number {
+    const cutoff: number = windowMs > 0 ? now - windowMs : 0;
     let total: number = 0;
-    sighting.rssiSamples.forEach((value: number): void => { total += value; });
-    return total / sighting.rssiSamples.length;
+    let count: number = 0;
+    sighting.rssiHistory.forEach((sample: RadioRssiSample): void => {
+      if (sample.at >= cutoff && isMeasuredRssi(sample.rssi)) {
+        total += sample.rssi;
+        count += 1;
+      }
+    });
+    if (count > 0) return total / count;
+    if (isMeasuredRssi(sighting.rssi)) return sighting.rssi;
+    return -100;
   }
 
-  rssiTrend(sighting: Sighting): number {
-    if (sighting.rssiSamples.length < 2) return 0;
-    return sighting.rssiSamples[sighting.rssiSamples.length - 1] - sighting.rssiSamples[0];
+  rssiTrend(sighting: Sighting, count: number = 12): FieldwatchRssiTrend {
+    const measured: RadioRssiSample[] = sighting.rssiHistory.filter((sample: RadioRssiSample): boolean =>
+      isMeasuredRssi(sample.rssi));
+    if (measured.length < 4) return FieldwatchRssiTrend.UNKNOWN;
+    const sampleLimit: number = Math.max(4, Math.floor(count));
+    const start: number = Math.max(0, measured.length - sampleLimit);
+    const middle: number = start + Math.floor((measured.length - start) / 2);
+    let olderTotal: number = 0;
+    let olderCount: number = 0;
+    let newerTotal: number = 0;
+    let newerCount: number = 0;
+    for (let index: number = start; index < measured.length; index += 1) {
+      if (index < middle) {
+        olderTotal += measured[index].rssi;
+        olderCount += 1;
+      } else {
+        newerTotal += measured[index].rssi;
+        newerCount += 1;
+      }
+    }
+    const delta: number = newerTotal / newerCount - olderTotal / olderCount;
+    if (delta >= 8) return FieldwatchRssiTrend.UP_FAST;
+    if (delta >= 3) return FieldwatchRssiTrend.UP;
+    if (delta <= -8) return FieldwatchRssiTrend.DOWN_FAST;
+    if (delta <= -3) return FieldwatchRssiTrend.DOWN;
+    return FieldwatchRssiTrend.FLAT;
+  }
+}
+
+class FieldwatchCoTravelContext {
+  public pathLengthMeters: number;
+  public durationMs: number;
+  public here: GpsSample | undefined;
+  public ready: boolean;
+  constructor(pathLengthMeters: number = 0, durationMs: number = 0, here: GpsSample | undefined = undefined, ready: boolean = false) {
+    this.pathLengthMeters = pathLengthMeters; this.durationMs = durationMs; this.here = here; this.ready = ready;
   }
 }
 
@@ -135,21 +176,45 @@ export class FieldwatchFilterEngine {
     return sighting.signatureIds.length === 1;
   }
   /**
-   * 与你同行：该设备在本机 GPS 轨迹附近持续出现（原版 CoTravel.withYou 的简化等价实现）。
-   * 没有定位样本或轨迹太短时一律返回 false，避免把静止设备误判成同行。
+   * 可能同行：该 BLE 设备在本机 GPS 轨迹附近持续出现；这是启发式筛选，不是跟踪确认。
+   * 没有新鲜定位样本或轨迹不足时返回 false。
    */
   private movingWithYou(sighting: Sighting, now: number): boolean {
-    const samples: GpsSample[] = this.travelSamples;
-    if (samples.length < 2) return false;
-    const path: number = this.geo.pathLengthMeters(samples);
-    if (path < 50) return false;
-    if (sighting.location === undefined) return false;
-    return now - sighting.lastSeen <= 45000;
+    if (sighting.kind !== RadioKind.BLE) return false;
+    const context: FieldwatchCoTravelContext = this.coTravelContext;
+    if (!context.ready || context.here === undefined) return false;
+    if (now - context.here.at > 90000) return false;
+    if (now - sighting.lastSeen > 90000 || sighting.rssi < -75) return false;
+    const trail: RadioGpsSample[] = sighting.gpsTrail;
+    if (trail.length < 2) return false;
+    if (this.geo.radioTrailSpanMeters(trail) < 27 || this.geo.radioTrailLengthMeters(trail) < 27) return false;
+    let loudCount: number = 0;
+    trail.forEach((sample: RadioGpsSample): void => { if (sample.rssi >= -75) loudCount += 1; });
+    if (loudCount < Math.floor((trail.length * 2 + 2) / 3)) return false;
+    const last: RadioGpsSample = trail[trail.length - 1];
+    const moved: number = this.geo.distanceCoordinates(context.here.latitude, context.here.longitude,
+      last.latitude, last.longitude);
+    const durationSeconds: number = Math.max(context.durationMs / 1000, 1);
+    const speed: number = Math.min(context.pathLengthMeters / durationSeconds, 40);
+    const allowedMeters: number = Math.max(50, speed * 15) + 25;
+    return moved <= allowedMeters;
   }
   /** 由应用层在每次定位更新时喂入本机轨迹。 */
-  setTravelSamples(samples: GpsSample[]): void { this.travelSamples = samples; }
+  setTravelSamples(samples: GpsSample[]): void {
+    this.travelSamples = samples.slice();
+    if (this.travelSamples.length < 2) {
+      this.coTravelContext = new FieldwatchCoTravelContext();
+      return;
+    }
+    const first: GpsSample = this.travelSamples[0];
+    const last: GpsSample = this.travelSamples[this.travelSamples.length - 1];
+    const pathLengthMeters: number = this.geo.pathLengthMeters(this.travelSamples);
+    const durationMs: number = Math.max(last.at - first.at, 0);
+    this.coTravelContext = new FieldwatchCoTravelContext(pathLengthMeters, durationMs, last, pathLengthMeters >= 45);
+  }
   private travelSamples: GpsSample[] = [];
   private readonly geo: FieldwatchGeoService = new FieldwatchGeoService();
+  private coTravelContext: FieldwatchCoTravelContext = new FieldwatchCoTravelContext();
 
   /** 原版 FilterEngine.defaultPresets 的等价实现。 */
   defaultPresets(): FilterPreset[] {
@@ -187,20 +252,51 @@ export class FieldwatchFilterEngine {
 }
 
 export class FieldwatchGeoService {
-  distanceMeters(first: GpsSample, second: GpsSample): number {
+  distanceCoordinates(firstLatitude: number, firstLongitude: number, secondLatitude: number, secondLongitude: number): number {
     const radius: number = 6371000;
-    const latitudeDelta: number = (second.latitude - first.latitude) * Math.PI / 180;
-    const longitudeDelta: number = (second.longitude - first.longitude) * Math.PI / 180;
-    const firstLatitude: number = first.latitude * Math.PI / 180;
-    const secondLatitude: number = second.latitude * Math.PI / 180;
-    const halfChord: number = Math.sin(latitudeDelta / 2) * Math.sin(latitudeDelta / 2) + Math.cos(firstLatitude) * Math.cos(secondLatitude) * Math.sin(longitudeDelta / 2) * Math.sin(longitudeDelta / 2);
+    const latitudeDelta: number = (secondLatitude - firstLatitude) * Math.PI / 180;
+    const longitudeDelta: number = (secondLongitude - firstLongitude) * Math.PI / 180;
+    const firstLatitudeRadians: number = firstLatitude * Math.PI / 180;
+    const secondLatitudeRadians: number = secondLatitude * Math.PI / 180;
+    const halfChord: number = Math.sin(latitudeDelta / 2) * Math.sin(latitudeDelta / 2)
+      + Math.cos(firstLatitudeRadians) * Math.cos(secondLatitudeRadians)
+      * Math.sin(longitudeDelta / 2) * Math.sin(longitudeDelta / 2);
     return radius * 2 * Math.atan2(Math.sqrt(halfChord), Math.sqrt(1 - halfChord));
+  }
+
+  distanceMeters(first: GpsSample, second: GpsSample): number {
+    return this.distanceCoordinates(first.latitude, first.longitude, second.latitude, second.longitude);
   }
 
   pathLengthMeters(samples: GpsSample[]): number {
     let total: number = 0;
     for (let index: number = 1; index < samples.length; index += 1) total += this.distanceMeters(samples[index - 1], samples[index]);
     return total;
+  }
+
+  radioTrailLengthMeters(samples: RadioGpsSample[]): number {
+    let total: number = 0;
+    for (let index: number = 1; index < samples.length; index += 1) {
+      total += this.distanceCoordinates(samples[index - 1].latitude, samples[index - 1].longitude,
+        samples[index].latitude, samples[index].longitude);
+    }
+    return total;
+  }
+
+  radioTrailSpanMeters(samples: RadioGpsSample[]): number {
+    if (samples.length < 2) return 0;
+    let minLatitude: number = samples[0].latitude;
+    let maxLatitude: number = minLatitude;
+    let minLongitude: number = samples[0].longitude;
+    let maxLongitude: number = minLongitude;
+    for (let index: number = 1; index < samples.length; index += 1) {
+      const sample: RadioGpsSample = samples[index];
+      minLatitude = Math.min(minLatitude, sample.latitude);
+      maxLatitude = Math.max(maxLatitude, sample.latitude);
+      minLongitude = Math.min(minLongitude, sample.longitude);
+      maxLongitude = Math.max(maxLongitude, sample.longitude);
+    }
+    return this.distanceCoordinates(minLatitude, minLongitude, maxLatitude, maxLongitude);
   }
 }
 

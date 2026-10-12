@@ -321,8 +321,19 @@ export struct FieldwatchSignatureEditorPage {
               .onClick((): void => { this.confirmDeleteFleet(); })
           }
           Row({ space: 8 }) {
-            Button($r('app.string.fieldwatch_editor_save')).height(44).layoutWeight(1).onClick((): void => { this.save(); })
-            Button($r('app.string.fieldwatch_editor_cancel')).height(44).layoutWeight(1).onClick((): void => { this.onClose(); })
+            // 底色与文字色成对给定：裸 Button 会落到系统强调色（蓝），与应用的绿色体系不符。
+            Button($r('app.string.fieldwatch_editor_save')).height(44).layoutWeight(1)
+              .borderRadius(12)
+              .backgroundColor(FieldwatchPaletteHolder.get().accent)
+              .fontColor(FieldwatchPaletteHolder.get().onAccent)
+              .onClick((): void => { this.save(); })
+            Button($r('app.string.fieldwatch_editor_cancel')).height(44).layoutWeight(1)
+              .borderRadius(12)
+              .backgroundColor(Color.Transparent)
+              .borderWidth(1)
+              .borderColor(FieldwatchPaletteHolder.get().outline)
+              .fontColor(FieldwatchPaletteHolder.get().text)
+              .onClick((): void => { this.onClose(); })
           }.width('100%')
           if (this.notice.length > 0) Text(this.notice).fontSize(13).fontColor(FieldwatchPaletteHolder.get().warn)
           // **顶部避让必须覆盖底板本身。**
@@ -551,7 +562,13 @@ export struct FieldwatchSignatureEditorPage {
   private buildRulesSection() {
     Row() {
       Text(this.text('app.string.fieldwatch_signatures_rules') + ' (' + this.rules.length.toString() + ')').fontSize(18).fontWeight(FontWeight.Medium).layoutWeight(1)
-      Button($r('app.string.fieldwatch_editor_add_rule')).height(36).onClick((): void => { this.addRule(); })
+      Button($r('app.string.fieldwatch_editor_add_rule')).height(36)
+        .borderRadius(12)
+        .backgroundColor(Color.Transparent)
+        .borderWidth(1)
+        .borderColor(FieldwatchPaletteHolder.get().accent)
+        .fontColor(FieldwatchPaletteHolder.get().accent)
+        .onClick((): void => { this.addRule(); })
     }.width('100%')
     Text($r('app.string.fieldwatch_editor_rules_hint')).fontSize(11)
       .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
@@ -583,7 +600,13 @@ export struct FieldwatchSignatureEditorPage {
         Row() { Text($r('app.string.fieldwatch_editor_decode_include_company')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.decodeIncludeCompany }).onChange((value: boolean): void => { this.decodeIncludeCompany = value; }) }.width('100%')
         Row() {
           Text(this.text('app.string.fieldwatch_signatures_decode') + ' (' + this.decodeFields.length.toString() + ')').fontSize(15).layoutWeight(1)
-          Button($r('app.string.fieldwatch_editor_add_field')).height(36).onClick((): void => { this.openField(-1); })
+          Button($r('app.string.fieldwatch_editor_add_field')).height(36)
+            .borderRadius(12)
+            .backgroundColor(Color.Transparent)
+            .borderWidth(1)
+            .borderColor(FieldwatchPaletteHolder.get().accent)
+            .fontColor(FieldwatchPaletteHolder.get().accent)
+            .onClick((): void => { this.openField(-1); })
         }.width('100%')
         ForEach(this.decodeFields, (field: SignatureDecodeField, index: number): void => {
           Row({ space: 8 }) {
@@ -591,7 +614,13 @@ export struct FieldwatchSignatureEditorPage {
               Text(field.label.length > 0 ? field.label : field.id).fontSize(13).fontColor($r('app.color.text_primary'))
               Text('@' + field.offset.toString() + ' · ' + field.type + ' · ' + field.endian).fontSize(11).fontColor($r('app.color.text_secondary'))
             }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-            Button($r('app.string.fieldwatch_signatures_edit')).height(36).onClick((): void => { this.openField(index); })
+            Button($r('app.string.fieldwatch_signatures_edit')).height(36)
+              .borderRadius(10)
+              .backgroundColor(Color.Transparent)
+              .borderWidth(1)
+              .borderColor(FieldwatchPaletteHolder.get().outline)
+              .fontColor(FieldwatchPaletteHolder.get().text)
+              .onClick((): void => { this.openField(index); })
           }.width('100%').padding(10).backgroundColor($r('app.color.background_secondary')).borderRadius(10)
         }, (field: SignatureDecodeField, index: number): string => field.id + index.toString())
       }
@@ -814,11 +843,17 @@ export struct FieldwatchSignatureEditorPage {
     Column({ space: 8 }) {
       Row() {
         Text(this.text('app.string.fieldwatch_editor_named_values') + ' (' + this.fieldNamed.length.toString() + ')').fontSize(15).fontWeight(FontWeight.Medium).layoutWeight(1)
-        Button($r('app.string.fieldwatch_editor_add_named')).height(36).onClick((): void => {
-          const next: NamedValueDraft[] = this.fieldNamed.slice();
-          next.push(new NamedValueDraft());
-          this.fieldNamed = next;
-        })
+        Button($r('app.string.fieldwatch_editor_add_named')).height(36)
+          .borderRadius(12)
+          .backgroundColor(Color.Transparent)
+          .borderWidth(1)
+          .borderColor(FieldwatchPaletteHolder.get().accent)
+          .fontColor(FieldwatchPaletteHolder.get().accent)
+          .onClick((): void => {
+            const next: NamedValueDraft[] = this.fieldNamed.slice();
+            next.push(new NamedValueDraft());
+            this.fieldNamed = next;
+          })
       }.width('100%')
       Text($r('app.string.fieldwatch_editor_named_hint')).fontSize(11).fontColor($r('app.color.text_secondary'))
       ForEach(this.fieldNamed, (row: NamedValueDraft, index: number): void => {
@@ -831,9 +866,15 @@ export struct FieldwatchSignatureEditorPage {
             TextInput({ text: row.note, placeholder: $r('app.string.fieldwatch_editor_named_note') }).height(38).layoutWeight(1).onChange((value: string): void => { this.updateNamed(index, undefined, undefined, undefined, value); })
             Text($r('app.string.fieldwatch_editor_named_strong')).fontSize(12)
             Toggle({ type: ToggleType.Switch, isOn: row.strong }).onChange((value: boolean): void => { this.updateNamed(index, undefined, undefined, value, undefined); })
-            Button($r('app.string.fieldwatch_editor_cancel')).height(36).onClick((): void => {
-              this.fieldNamed = this.fieldNamed.filter((item: NamedValueDraft, position: number): boolean => position !== index);
-            })
+            Button($r('app.string.fieldwatch_editor_cancel')).height(36)
+              .borderRadius(10)
+              .backgroundColor(Color.Transparent)
+              .borderWidth(1)
+              .borderColor(FieldwatchPaletteHolder.get().outline)
+              .fontColor(FieldwatchPaletteHolder.get().text)
+              .onClick((): void => {
+                this.fieldNamed = this.fieldNamed.filter((item: NamedValueDraft, position: number): boolean => position !== index);
+              })
           }.width('100%')
         }.width('100%').padding(8).backgroundColor($r('app.color.background_secondary')).borderRadius(8)
       }, (row: NamedValueDraft, index: number): string => index.toString() + row.key)
@@ -883,8 +924,18 @@ export struct FieldwatchSignatureEditorPage {
         this.buildGateSection()
         this.buildNamedValueSection()
         Row({ space: 8 }) {
-          Button($r('app.string.fieldwatch_editor_ok')).height(44).layoutWeight(1).onClick((): void => { this.commitField(); })
-          if (this.fieldIndex >= 0) Button($r('app.string.fieldwatch_editor_delete_field')).height(44).layoutWeight(1).onClick((): void => { this.deleteField(); })
+          Button($r('app.string.fieldwatch_editor_ok')).height(44).layoutWeight(1)
+            .borderRadius(12)
+            .backgroundColor(FieldwatchPaletteHolder.get().accent)
+            .fontColor(FieldwatchPaletteHolder.get().onAccent)
+            .onClick((): void => { this.commitField(); })
+          if (this.fieldIndex >= 0) Button($r('app.string.fieldwatch_editor_delete_field')).height(44).layoutWeight(1)
+            .borderRadius(12)
+            .backgroundColor(Color.Transparent)
+            .borderWidth(1)
+            .borderColor(FieldwatchPaletteHolder.get().warn)
+            .fontColor(FieldwatchPaletteHolder.get().warn)
+            .onClick((): void => { this.deleteField(); })
         }.width('100%')
       }.width('100%').padding(20)
     }.width('100%').height('100%')

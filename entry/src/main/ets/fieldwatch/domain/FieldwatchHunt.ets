@@ -22,6 +22,112 @@ export class HuntSample {
   constructor(rssi: number, at: number) { this.rssi = rssi; this.at = at; }
 }
 
+export const HUNT_DIRECTION_SECTOR_COUNT: number = 16;
+export const HUNT_DIRECTION_MIN_COVERAGE: number = 8;
+export const HUNT_DIRECTION_MIN_CONTRAST_DB: number = 3;
+export const HUNT_DIRECTION_INVALID_RSSI: number = 127;
+
+/** RSSI sample paired with the device heading at observation time. */
+export class HuntDirectionSample {
+  public heading: number;
+  public rssi: number;
+  constructor(heading: number, rssi: number) { this.heading = heading; this.rssi = rssi; }
+}
+
+/** Coarse relative direction estimate. Missing sectors remain explicitly unavailable. */
+export class HuntDirectionMap {
+  private readonly totals: number[] = [];
+  private readonly counts: number[] = [];
+
+  constructor() {
+    for (let index: number = 0; index < HUNT_DIRECTION_SECTOR_COUNT; index += 1) {
+      this.totals.push(0);
+      this.counts.push(0);
+    }
+  }
+
+  addSample(heading: number, rssi: number): boolean {
+    if (!Number.isFinite(heading) || !huntRssiMeasured(rssi)) return false;
+    const sector: number = huntDirectionSector(heading);
+    if (sector < 0) return false;
+    this.totals[sector] += rssi;
+    this.counts[sector] += 1;
+    return true;
+  }
+
+  coverage(): number {
+    let covered: number = 0;
+    this.counts.forEach((count: number): void => { if (count > 0) covered += 1; });
+    return covered;
+  }
+
+  sectorRssi(sector: number): number {
+    if (sector < 0 || sector >= HUNT_DIRECTION_SECTOR_COUNT || this.counts[sector] === 0) return HUNT_DIRECTION_INVALID_RSSI;
+    return this.totals[sector] / this.counts[sector];
+  }
+
+  peakHeading(): number {
+    const peak: number = this.peakSector();
+    return peak < 0 ? HUNT_DIRECTION_INVALID_RSSI : huntDirectionSectorHeading(peak);
+  }
+
+  relativeDelta(currentHeading: number): number {
+    const peak: number = this.peakHeading();
+    if (peak === HUNT_DIRECTION_INVALID_RSSI || !Number.isFinite(currentHeading)) return HUNT_DIRECTION_INVALID_RSSI;
+    let delta: number = peak - normalizeHuntHeading(currentHeading);
+    if (delta > 180) delta -= 360;
+    if (delta <= -180) delta += 360;
+    return delta;
+  }
+
+  ready(): boolean {
+    if (this.coverage() < HUNT_DIRECTION_MIN_COVERAGE) return false;
+    const peakValue: number = this.peakRssi();
+    if (peakValue === HUNT_DIRECTION_INVALID_RSSI) return false;
+    let total: number = 0;
+    let count: number = 0;
+    for (let sector: number = 0; sector < HUNT_DIRECTION_SECTOR_COUNT; sector += 1) {
+      const value: number = this.sectorRssi(sector);
+      if (value === HUNT_DIRECTION_INVALID_RSSI) continue;
+      total += value;
+      count += 1;
+    }
+    return count > 0 && peakValue - total / count >= HUNT_DIRECTION_MIN_CONTRAST_DB;
+  }
+
+  private peakSector(): number {
+    let bestSector: number = -1;
+    let bestRssi: number = -127;
+    for (let sector: number = 0; sector < HUNT_DIRECTION_SECTOR_COUNT; sector += 1) {
+      if (this.counts[sector] === 0) continue;
+      const average: number = this.totals[sector] / this.counts[sector];
+      if (average > bestRssi) { bestRssi = average; bestSector = sector; }
+    }
+    return bestSector;
+  }
+
+  private peakRssi(): number {
+    const sector: number = this.peakSector();
+    return sector < 0 ? HUNT_DIRECTION_INVALID_RSSI : this.sectorRssi(sector);
+  }
+}
+
+export function normalizeHuntHeading(heading: number): number {
+  const normalized: number = heading % 360;
+  return normalized < 0 ? normalized + 360 : normalized;
+}
+
+export function huntDirectionSector(heading: number): number {
+  if (!Number.isFinite(heading)) return -1;
+  const normalized: number = normalizeHuntHeading(heading);
+  return Math.floor(normalized / (360 / HUNT_DIRECTION_SECTOR_COUNT));
+}
+
+export function huntDirectionSectorHeading(sector: number): number {
+  if (sector < 0 || sector >= HUNT_DIRECTION_SECTOR_COUNT) return HUNT_DIRECTION_INVALID_RSSI;
+  return (sector + 0.5) * (360 / HUNT_DIRECTION_SECTOR_COUNT);
+}
+
 /** 最近窗口：用于计算“当前响度”。 */
 export const HUNT_RECENT_MS: number = 2000;
 /** 更早窗口：与最近窗口比较得出趋势。 */

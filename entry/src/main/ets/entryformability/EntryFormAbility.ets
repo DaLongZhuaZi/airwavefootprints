@@ -4,7 +4,7 @@ import dataPreferences from '@ohos.data.preferences';
 import { logger } from 'ngf_framework';
 import {
   buildWidgetCardData, encodeWidgetForms, FieldwatchWidgetForm, FieldwatchWidgetState,
-  parseWidgetForms, parseWidgetState, WIDGET_FORMS_KEY
+  dimensionOfWidgetForm, parseWidgetForms, parseWidgetState, removeWidgetForm, upsertWidgetForm, WIDGET_FORMS_KEY
 } from '../fieldwatch/domain/FieldwatchWidgetState';
 
 const TAG: string = 'EntryFormAbility';
@@ -54,17 +54,22 @@ export default class EntryFormAbility extends FormExtensionAbility {
   }
 
   onUpdateForm(formId: string): void {
+    // Ability 重建后，内存尺寸表会丢失；更新回调应恢复主应用推送所需的登记。
+    this.register(formId);
     this.push(formId);
   }
 
   onFormEvent(formId: string, message: string): void {
     // 卡片上的刷新按钮：立刻重算一次。
-    if (message === 'refresh') this.push(formId);
+    if (message === 'refresh') {
+      this.register(formId);
+      this.push(formId);
+    }
   }
 
   onRemoveForm(formId: string): void {
     this.dimensions.delete(formId);
-    this.register(formId);
+    this.unregister(formId);
   }
 
   onAcquireFormState(want: Want): formInfo.FormState {
@@ -100,7 +105,11 @@ export default class EntryFormAbility extends FormExtensionAbility {
   /** 尺寸只在 `onAddForm` 给过；之后按 formId 查表，查不到就按小卡片渲染。 */
   private dimensionOfForm(formId: string): string {
     const known: string | undefined = this.dimensions.get(formId);
-    return known === undefined ? '2*2' : known;
+    if (known !== undefined) return known;
+    const persisted: string | undefined = dimensionOfWidgetForm(this.loadForms(), formId);
+    const dimension: string = persisted === undefined ? '2*2' : persisted;
+    this.dimensions.set(formId, dimension);
+    return dimension;
   }
 
   private buildData(dimension: string): Record<string, string> {
@@ -123,12 +132,37 @@ export default class EntryFormAbility extends FormExtensionAbility {
     try {
       const store: dataPreferences.Preferences = dataPreferences.getPreferencesSync(this.context, { name: PREFERENCES_NAME });
       const existing: FieldwatchWidgetForm[] = parseWidgetForms(store.getSync(WIDGET_FORMS_KEY, '') as string);
-      const kept: FieldwatchWidgetForm[] = existing.filter((item: FieldwatchWidgetForm): boolean => item.id !== formId);
-      if (this.dimensions.has(formId)) kept.push(new FieldwatchWidgetForm(formId, this.dimensionOfForm(formId)));
-      store.putSync(WIDGET_FORMS_KEY, encodeWidgetForms(kept));
-      store.flush();
+      const existingDimension: string | undefined = dimensionOfWidgetForm(existing, formId);
+      const memoryDimension: string | undefined = this.dimensions.get(formId);
+      const dimension: string = memoryDimension !== undefined ? memoryDimension
+        : (existingDimension === undefined ? '2*2' : existingDimension);
+      this.dimensions.set(formId, dimension);
+      store.putSync(WIDGET_FORMS_KEY, encodeWidgetForms(upsertWidgetForm(existing,
+        new FieldwatchWidgetForm(formId, dimension))));
+      void store.flush();
     } catch (error) {
       logger.warn(TAG, '登记卡片失败: ' + error);
+    }
+  }
+
+  private unregister(formId: string): void {
+    try {
+      const store: dataPreferences.Preferences = dataPreferences.getPreferencesSync(this.context, { name: PREFERENCES_NAME });
+      const existing: FieldwatchWidgetForm[] = parseWidgetForms(store.getSync(WIDGET_FORMS_KEY, '') as string);
+      store.putSync(WIDGET_FORMS_KEY, encodeWidgetForms(removeWidgetForm(existing, formId)));
+      void store.flush();
+    } catch (error) {
+      logger.warn(TAG, '移除卡片登记失败: ' + error);
+    }
+  }
+
+  private loadForms(): FieldwatchWidgetForm[] {
+    try {
+      const store: dataPreferences.Preferences = dataPreferences.getPreferencesSync(this.context, { name: PREFERENCES_NAME });
+      return parseWidgetForms(store.getSync(WIDGET_FORMS_KEY, '') as string);
+    } catch (error) {
+      logger.warn(TAG, '读取卡片登记失败: ' + error);
+      return [];
     }
   }
 }

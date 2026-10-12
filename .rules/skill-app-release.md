@@ -44,6 +44,32 @@
   "versionName": "1.0.0"     // 面向用户的展示版本号
   ```
 
+#### 4.1 版本号变化 = 必须同步更新应用内更新日志
+
+版本号（`versionName` 或 `versionCode`）发生任何变化时，**必须**同时更新应用内
+「设置 → 关于 → 更新日志」sheet 的数据源，否则用户在应用里看到的仍是旧内容：
+
+- **数据源位置**：`entry/src/main/ets/fieldwatch/domain/FieldwatchChangelog.ets`
+- **规则**：
+  1. 在 `CHANGELOG_HEAD` 数组**头部**插入一条新的 `ChangelogEntry`，旧条目原样下移，
+     **不合并、不改写历史条目**；
+  2. `versionLabel` 填新的 `versionName`，`buildNumber` 填新的 `versionCode`，
+     `date` 填发布日（`YYYY-MM-DD`）；
+  3. `items` 只写**用户视角**的变化（新能力 / 修复 / 行为变化），一条一句，
+     把几十条内部提交压成几条用户能读懂的话 —— 禁止直接粘提交记录；
+  4. **同步更新**同文件里的 `CHANGELOG_CURRENT_BUILD` 常量为新的 `versionCode`
+     （它与 `app.json5` 必须一致，是校验日志是否已同步的锚点）；
+  5. 文案键（`fieldwatch_settings_changelog` / `fieldwatch_changelog_hint` /
+     `fieldwatch_changelog_empty`）已存在于 base 与 en_US 两份 `string.json`，
+     通常无需新增。
+
+- **手动补录**（版本号没变，但当天合入了需要告知用户的修复）：同样在头部插入，
+  `versionLabel` 用当前版本号即可 —— 阅读者要的是顺序，不是严格的发布史。
+- **为什么是静态清单而不是读 git log**：见 `FieldwatchChangelog.ets` 顶部注释
+  （装机上没有 git；面向用户的说服力只能由人来写）。
+- **验证状态**：已在电波足迹（airwavefootprints）验证 —— 2026-10-12 首个条目
+  `1.0.0 / 1000002` 随构建走真机编译通过。
+
 ---
 
 ## 阶段二：真实的 AGC 上架与签名流程 (AGC Process)

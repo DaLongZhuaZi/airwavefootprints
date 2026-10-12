@@ -13,16 +13,21 @@ export default function fieldwatchSettingsBackupTest() {
       const repository: FieldwatchSettingsRepository = new FieldwatchSettingsRepository();
       const settings: AppSettings = new AppSettings();
       settings.scanIntensity = 'saver';
+      expect(settings.huntDirectionAssist).assertTrue();
+      settings.huntDirectionAssist = false;
       const backup: string = repository.exportBackup(settings);
       expect(backup.indexOf('fieldwatch_settings_v1') === 0).assertTrue();
       expect(backup.indexOf('scanIntensity=saver') >= 0).assertTrue();
       // 雷达显示设置此前也被漏掉，一并补上。
       expect(backup.indexOf('radarLabelFields=') >= 0).assertTrue();
       expect(backup.indexOf('radarIconSize=') >= 0).assertTrue();
+      expect(backup.indexOf('huntDirectionAssist=false') >= 0).assertTrue();
       // 结构化的三行只在本地有内容时才出现，避免写出空壳。
       repository.saveFilterState(new FilterDefinition());
       const withFilter: string = repository.exportBackup(settings);
       expect(withFilter.indexOf('filter=') >= 0).assertTrue();
+      expect(repository.importBackup(backup)).assertTrue();
+      expect(repository.load().huntDirectionAssist).assertFalse();
     });
 
     it('round trips the current filter through a backup', 0, () => {

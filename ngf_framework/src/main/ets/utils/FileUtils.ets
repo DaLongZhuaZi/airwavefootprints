@@ -4,6 +4,8 @@ import { logger } from './Logger';
 import { uiContextManager } from '../platformOhos/UIContextManager';
 
 const TAG: string = 'NGFFileUtils';
+/** 文本读取的分块大小（64 KB）：单次 readSync 不保证读满，必须循环。 */
+const READ_CHUNK_BYTES: number = 65536;
 
 let sandboxBaseDir: string = '';
 
@@ -56,20 +58,45 @@ export class FileUtils {
     return baseDir + '/' + filePath;
   }
 
+  /**
+   * 读取整个文本文件。
+   *
+   * **必须分块循环读**：`readSync` 单次调用不保证填满缓冲区 —— 大文件（目录包约 2 MB）
+   * 只读一次会拿到**被截断的 JSON**，调用方解析失败后会误判「本地目录不存在」，
+   * 进而在启动流程里用内置 stock 覆盖用户目录，**静默销毁用户自定义签名**（真机复现）。
+   */
   static readText(filePath: string): string {
     const resolved: string = FileUtils.resolvePath(filePath);
+    let file: fs.File | null = null;
     try {
-      const file: fs.File = fs.openSync(resolved, fs.OpenMode.READ_ONLY);
+      file = fs.openSync(resolved, fs.OpenMode.READ_ONLY);
       const stat: fs.Stat = fs.statSync(resolved);
-      const buffer: ArrayBuffer = new ArrayBuffer(stat.size);
-      const readResult: number = fs.readSync(file.fd, buffer);
-      fs.closeSync(file);
+      const total: number = stat.size;
+      if (total <= 0) return '';
+      const out: Uint8Array = new Uint8Array(total);
+      const chunk: ArrayBuffer = new ArrayBuffer(READ_CHUNK_BYTES);
+      let written: number = 0;
+      while (written < total) {
+        const want: number = Math.min(READ_CHUNK_BYTES, total - written);
+        const read: number = fs.readSync(file.fd, chunk, { length: want });
+        if (read <= 0) break;
+        out.set(new Uint8Array(chunk, 0, read), written);
+        written += read;
+      }
       const decoder: util.TextDecoder = util.TextDecoder.create('utf-8');
-      return decoder.decodeToString(new Uint8Array(buffer, 0, readResult));
+      return decoder.decodeToString(new Uint8Array(out.buffer, 0, written));
     } catch (error) {
       const message: string = error instanceof Error ? error.message : String(error);
       logger.error(TAG, 'readText 失败: path=' + filePath + ', error=' + message);
       return '';
+    } finally {
+      if (file !== null) {
+        try {
+          fs.closeSync(file);
+        } catch {
+          // ignore
+        }
+      }
     }
   }
 

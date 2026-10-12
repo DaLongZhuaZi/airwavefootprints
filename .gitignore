@@ -127,3 +127,15 @@ desktop.ini
 # 会话期间的临时截图与脚本
 /.tmp-shots/
 
+
+# ── 真机验收期间的取样与截图（仓库根目录）──
+# 这些是本机验收流程留下的证据文件：截图、取样的导出样本、控件布局 dump、
+# 桌面卡片 prefs 等。它们体积大、与源码无关、每次验收都会重新生成，
+# 只作为本机留档，不进版本库。（.agent-state/ 下的检查点会引用它们，故不删除。）
+/fw-*
+/crop-*
+/fps_*.csv
+/widget-*.xml
+/fieldwatch-launcher.*
+/scripts/tmp_*
+/tmp/

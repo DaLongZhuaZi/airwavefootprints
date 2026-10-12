@@ -1,12 +1,12 @@
-import { FileUtils, logger, NGFNotificationRequest, NGFNotificationType, ngfBackgroundTaskManager, ngfLocationManagerFacade, ngfPermissionManagerFacade, ngfScreenKeepAwakeFacade, ngfSystemNotificationManager, ngfSystemShareFacade, resolveResourceString, uiContextManager, LogLevel } from 'ngf_framework';
-import { AppSettings, DecodedFieldValue, FieldwatchLogFootprint, FilterDefinition, FilterLogic, FilterPreset, GpsSample, LogEntry, RadioFacts, RadioKind, RadioSourceSnapshot, ScanObservation, ScanState, SignatureClass, Sighting, SitSummary, WatchTarget, foldedSignatureClass } from '../domain/FieldwatchModels';
+import { logger, NGFNotificationRequest, NGFNotificationType, ngfBackgroundTaskManager, ngfLocationManagerFacade, ngfPermissionManagerFacade, ngfScreenKeepAwakeFacade, ngfSystemNotificationManager, ngfSystemShareFacade, resolveResourceString, uiContextManager, LogLevel } from 'ngf_framework';
+import { AppSettings, DecodedFieldValue, FieldwatchLogFootprint, FieldwatchRssiTrend, FilterDefinition, FilterLogic, FilterPreset, GpsSample, LogEntry, RadioFacts, RadioKind, RadioRssiSample, RadioSourceSnapshot, ScanObservation, ScanState, SignatureClass, Sighting, SitSummary, WatchTarget, foldedSignatureClass } from '../domain/FieldwatchModels';
 import { FieldwatchCompareResult, FieldwatchCompareService, FieldwatchFilterEngine, FieldwatchPrivacyService, FieldwatchSignatureEngine } from '../domain/FieldwatchDomainService';
 import { SignatureFleet } from '../domain/signatures/FieldwatchSignatureModels';
 import { FieldwatchWatchAlert, parseVoiceWhat } from '../platform/FieldwatchWatchAlert';
 import { signatureClassLabel } from '../ui/FieldwatchClassLabels';
 import { HuntCue, HuntRecord, HuntSession, HuntStats } from '../domain/FieldwatchHunt';
 import { matchedSignatureNames, signatureHitCounts } from '../ui/FieldwatchUiState';
-import { SignaturePackError, StockCatalogUpdateResult, overlayStockFleets } from '../domain/signatures/FieldwatchSignatureCatalog';
+import { SignaturePackError, StockCatalogUpdateResult, overlayStockFleets, shouldApplyStockCatalogVersion } from '../domain/signatures/FieldwatchSignatureCatalog';
 import { FieldwatchSignatureEngine as FieldwatchFleetEngine, FieldwatchSignatureFieldDecoder, SignatureMatchContext, SignatureMatchExplanation, signatureContextOfObservation, signatureContextOfSighting } from '../domain/signatures/FieldwatchSignatureEngine';
 import { FieldwatchExportSerializer } from '../domain/FieldwatchExportSerializer';
 import { FieldwatchSettingsRepository } from '../data/FieldwatchSettingsRepository';
@@ -18,7 +18,7 @@ import {
   TrackSuspect, TRACK_MIN_SAMPLES, TRACK_WINDOW_MS, travelSummaryOf, TravelSummary
 } from '../domain/FieldwatchAntiTracking';
 import { FieldwatchCatalogImportOutcome, FieldwatchCatalogRepository } from '../data/FieldwatchCatalogRepository';
-import { FieldwatchCatalogFileGateway } from '../platform/FieldwatchCatalogFileGateway';
+import { FieldwatchCatalogFileGateway, FieldwatchFileActionStatus, FieldwatchFileReadResult, FieldwatchFileSaveResult, FieldwatchFileSelectionKind } from '../platform/FieldwatchCatalogFileGateway';
 import { FieldwatchBleScanner } from '../radio/FieldwatchBleScanner';
 import { FieldwatchNearLinkScanner } from '../radio/FieldwatchNearLinkScanner';
 import { IFieldwatchRadioScanner } from '../radio/FieldwatchRadioScanner';
@@ -60,6 +60,16 @@ export class FieldwatchApplicationState {
   public nearLinkSnapshot: RadioSourceSnapshot = new RadioSourceSnapshot(RadioKind.NEARLINK);
   public activeSit: SitSummary | undefined = undefined;
   public savedSits: SitSummary[] = [];
+}
+
+export class FieldwatchCatalogImportActionResult {
+  public status: FieldwatchFileActionStatus = FieldwatchFileActionStatus.FAILED;
+  public outcome: FieldwatchCatalogImportOutcome | undefined = undefined;
+
+  constructor(status: FieldwatchFileActionStatus, outcome: FieldwatchCatalogImportOutcome | undefined = undefined) {
+    this.status = status;
+    this.outcome = outcome;
+  }
 }
 
 export class FieldwatchApplication {
@@ -161,6 +171,8 @@ export class FieldwatchApplication {
   private nearLinkSupported: boolean = false;
   /** 运行状态通知的刷新计时器；-1 表示未启动。 */
   private stateNotificationTimer: number = -1;
+  /** 卡片心跳必须独立于通知授权，避免无通知权限时状态在 90 秒后过期。 */
+  private widgetHeartbeatTimer: number = -1;
   /** 通知是否已启用；未启用时不发布，避免平台反复报错。 */
   private notificationsEnabled: boolean = false;
   private locationRequest: Promise<GpsSample | undefined> | undefined = undefined;
@@ -326,6 +338,26 @@ export class FieldwatchApplication {
     });
   }
 
+  private syncWidgetHeartbeat(): void {
+    const shouldRun: boolean = this.state.settings.backgroundScanning && !this.appForeground;
+    if (!shouldRun) {
+      if (this.widgetHeartbeatTimer >= 0) {
+        clearInterval(this.widgetHeartbeatTimer);
+        this.widgetHeartbeatTimer = -1;
+      }
+      return;
+    }
+    if (this.widgetHeartbeatTimer >= 0) return;
+    this.widgetHeartbeatTimer = setInterval((): void => {
+      if (!this.state.settings.backgroundScanning || this.appForeground) {
+        clearInterval(this.widgetHeartbeatTimer);
+        this.widgetHeartbeatTimer = -1;
+        return;
+      }
+      this.writeWidgetState();
+    }, 15000);
+  }
+
   /**
    * 待处理的目标标签页（快捷方式 / 卡片带进来的 `targetTab`）。
    *
@@ -394,7 +426,20 @@ export class FieldwatchApplication {
   async ensureCatalogLoaded(): Promise<void> {
     // 构造期上下文可能尚未就绪，名称库与内置目录都在这里重试一次。
     if (!this.radioDb.isReady()) this.loadRadioDb();
-    if (this.state.signatures.length > 0) return;
+    // 构造期若沙箱未就绪，`loadSaved` 会读空并放弃落盘（保护用户文件）；
+    // 页面出现时上下文一定就绪，这里补读一次，否则用户签名整次会话都不可见。
+    if (this.catalogRepository.wasSavedCorrupt()) {
+      const reloaded: SignatureFleet[] = this.catalogRepository.loadSaved();
+      if (reloaded.length > 0) {
+        this.state.signatures = reloaded;
+        this.state.catalogVersion = this.catalogRepository.getSavedVersion();
+        logger.info(TAG, '本地 Catalog 已补读: ' + reloaded.length.toString() + ' 条');
+      }
+    }
+    // **只有「有内容且含内置项」才算就绪**：先前只看长度，导致「文件被写坏成只剩用户签名」
+    // （历史上 `addCandidateToCatalog` 只落盘用户签名）时这里直接返回，内置目录永远补不回来。
+    const hasBuiltIn: boolean = this.state.signatures.filter((item: SignatureFleet): boolean => item.builtIn).length > 0;
+    if (this.state.signatures.length > 0 && hasBuiltIn) return;
     await this.loadBundledCatalog();
   }
 
@@ -441,10 +486,36 @@ export class FieldwatchApplication {
       return;
     }
     const saved: SignatureFleet[] = this.state.signatures;
-    const merged: SignatureFleet[] = overlayStockFleets(saved, stock);
+    const savedVersion: number = this.catalogRepository.getSavedVersion();
+    const stockVersion: number = this.catalogRepository.getStockVersion();
+    // 只有内置目录更新时才覆盖本地目录；手动更新到更高版本后，
+    // 重启不能再用旧 stock 把已有签名回滚。
+    // 保存的目录里**一条内置项都没有**、而 stock 有 → 说明文件被写坏过（历史上
+    // `addCandidateToCatalog` 只落盘用户签名，已真机复现），必须重新叠加 stock 修复。
+    const stockHasBuiltIn: boolean = stock.filter((item: SignatureFleet): boolean => item.builtIn).length > 0;
+    const savedHasBuiltIn: boolean = saved.filter((item: SignatureFleet): boolean => item.builtIn).length > 0;
+    const catalogMissingBuiltIns: boolean = stockHasBuiltIn && saved.length > 0 && !savedHasBuiltIn;
+    if (catalogMissingBuiltIns) {
+      logger.warn(TAG, '本地目录缺少全部内置项（曾是只落盘用户签名的旧缺陷），按损坏处理并重新合并内置目录');
+    }
+    const merged: SignatureFleet[] = (shouldApplyStockCatalogVersion(savedVersion, stockVersion) || catalogMissingBuiltIns)
+      ? overlayStockFleets(saved, stock) : saved;
     this.state.signatures = merged.length > 0 ? merged : stock;
-    this.state.catalogVersion = this.catalogRepository.getStockVersion();
-    this.state.catalogStatus = 'builtin';
+    this.state.catalogVersion = Math.max(savedVersion, stockVersion);
+    this.state.catalogStatus = savedVersion > stockVersion ? 'updated' : 'builtin';
+    // 内置包升级后把合并结果和版本号落盘，后续启动不必再次做旧目录覆盖。
+    //
+    // **本地目录损坏时禁止落盘**：此时 savedVersion 被置 0，一旦覆盖就会把
+    // 用户自定义签名永久销毁（真机复现过）。保留原文件，让用户能用
+    // 「恢复默认目录」或文件导入自行修复。
+    if (stockVersion > savedVersion || catalogMissingBuiltIns) {
+      if (this.catalogRepository.wasSavedCorrupt()) {
+        logger.error(TAG, '本地 Catalog 损坏，已跳过内置目录落盘以免销毁用户签名（本次会话使用内置目录）');
+      } else {
+        const persisted: boolean = this.catalogRepository.save(this.state.signatures, stockVersion);
+        if (!persisted) logger.warn(TAG, '内置 Catalog 合并结果保存失败: version=' + stockVersion.toString());
+      }
+    }
     logger.info(TAG, '特征库就绪: ' + this.state.signatures.length.toString() + ' 条签名, version=' + this.state.catalogVersion.toString());
   }
   // ── 权限：逐条检查 / 逐条请求 / 能力快照（应用商店合规：无权限也要可用） ──
@@ -660,7 +731,7 @@ export class FieldwatchApplication {
   }
 
   /** 导出完整目录到用户选择的位置（系统文件选择器）。 */
-  async exportCatalogToUserFile(): Promise<boolean> {
+  async exportCatalogToUserFile(): Promise<FieldwatchFileSaveResult> {
     return await this.catalogFileGateway.saveToFile('fieldwatch-signatures.json', this.catalogRepository.exportText(this.state.signatures));
   }
 
@@ -669,10 +740,12 @@ export class FieldwatchApplication {
     return await this.catalogFileGateway.saveToDownloads('fieldwatch-signatures.json', this.catalogRepository.exportText(this.state.signatures));
   }
   /** 从用户选择的签名包导入；取消或失败时目录保持不变。 */
-  async importCatalogFromUserFile(): Promise<FieldwatchCatalogImportOutcome | undefined> {
-    const content: string = await this.catalogFileGateway.pickAndRead();
-    if (content.length === 0) return undefined;
-    return this.importCatalogPack(content);
+  async importCatalogFromUserFile(): Promise<FieldwatchCatalogImportActionResult> {
+    const readResult: FieldwatchFileReadResult = await this.catalogFileGateway.pickAndRead();
+    if (readResult.status !== FieldwatchFileActionStatus.SUCCESS) {
+      return new FieldwatchCatalogImportActionResult(readResult.status);
+    }
+    return new FieldwatchCatalogImportActionResult(readResult.status, this.importCatalogPack(readResult.content));
   }
 
   /** 只分享目录摘要，不把 2 MB 目录文本塞进分享面板。 */
@@ -763,11 +836,11 @@ export class FieldwatchApplication {
   /** 开始一次单目标搜寻；同一时间只允许一个 Hunt 会话。 */
   startHunt(sighting: Sighting): void {
     const session: HuntSession = new HuntSession(sighting.key, this.privacyService.displayName(sighting, this.state.settings.privacyMode), Date.now());
-    sighting.rssiSamples.forEach((value: number): void => { session.addSample(value, sighting.lastSeen); });
+    sighting.rssiHistory.forEach((sample: RadioRssiSample): void => { session.addSample(sample.rssi, sample.at); });
     session.lastRssi = sighting.rssi;
     session.lastSeen = sighting.lastSeen;
     this.huntSession = session;
-    logger.info(TAG, '开始搜寻: key=' + sighting.key + ', 历史样本=' + sighting.rssiSamples.length.toString());
+    logger.info(TAG, '开始搜寻: key=' + sighting.key + ', 历史样本=' + sighting.rssiHistory.length.toString());
   }
 
   stopHunt(): void {
@@ -1196,6 +1269,7 @@ export class FieldwatchApplication {
     }
     this.state.settings.backgroundScanning = enabled;
     this.settingsRepository.save(this.state.settings);
+    this.syncWidgetHeartbeat();
     // 允许/取消后台运行会直接改变卡片要显示的「是否在运行」，必须立刻同步。
     this.writeWidgetState();
     return true;
@@ -1230,8 +1304,6 @@ export class FieldwatchApplication {
         // 通知里的计数是给人看的，15 秒的粒度足够，也更少打扰用户。
         this.stateNotificationTimer = setInterval((): void => {
           this.publishStateNotification();
-          // 心跳与计数一起走这条 15 秒的定时器：卡片侧据此判断应用是否还在运行。
-          this.writeWidgetState();
           // 反追踪评估与状态通知同频：15 秒足够，也不需要另开定时器。
           this.scanAntiTracking();
         }, 15000);
@@ -1297,6 +1369,7 @@ export class FieldwatchApplication {
     this.appForeground = false;
     // 卡片口径是「允许后台运行 且 确实在后台」——进后台后要立刻重算。
     this.writeWidgetState();
+    this.syncWidgetHeartbeat();
     if (this.state.settings.backgroundScanning) {
       if (this.state.scanState === ScanState.SCANNING) {
         // 用户明确要求后台继续扫描：保持长时任务与伴随通知。
@@ -1335,6 +1408,7 @@ export class FieldwatchApplication {
 
   async onAbilityForeground(): Promise<void> {
     this.appForeground = true;
+    this.syncWidgetHeartbeat();
     // 回前台后卡片应显示「app 未运行」（此刻并没有在后台采集）。
     this.writeWidgetState();
     // 回到前台：**重新持有长时任务与常驻通知**（前台要求通知常驻）。
@@ -1359,7 +1433,12 @@ export class FieldwatchApplication {
     // （曾在此处加过一套订阅机制，核实后发现与轮询完全重复，已删除——
     //   不要为已覆盖的需求旁路新增平行实现。）
   }
-  async onAbilityDestroy(): Promise<void> { await ngfBackgroundTaskManager.stopContinuousTask(); }
+  async onAbilityDestroy(): Promise<void> {
+    this.appForeground = true;
+    this.syncWidgetHeartbeat();
+    this.stopStateNotification();
+    await ngfBackgroundTaskManager.stopContinuousTask();
+  }
   shareSighting(sighting: Sighting): void { ngfSystemShareFacade.shareText(this.exportSerializer.serializeJsonl([sighting], this.state.settings)); }
   /**
    * 详情页「以文本分享」：把详情纯文本交给系统分享面板。
@@ -1651,7 +1730,7 @@ export class FieldwatchApplication {
     ngfSystemShareFacade.shareText(this.exportText(format, radios));
   }
   /** 经系统文件选择器另存到用户指定位置。 */
-  async saveExportAs(format: number, radios: number): Promise<boolean> {
+  async saveExportAs(format: number, radios: number): Promise<FieldwatchFileSaveResult> {
     return await this.catalogFileGateway.saveToFile(this.exportFileName(format), this.exportText(format, radios));
   }  // ── R6 候选特征（原版 domain/SignatureCandidates.kt） ──
   /** 分析当前日志中的未匹配信号源，返回候选特征报告。 */
@@ -1663,8 +1742,11 @@ export class FieldwatchApplication {
     const id: string = 'user-' + Date.now().toString() + '-' + Math.floor(Math.random() * 10000).toString();
     const fleet: SignatureFleet = this.candidateEngine.toFleet(candidate, id);
     this.state.signatures = this.state.signatures.concat([fleet]);
-    this.catalogRepository.save(this.state.signatures.filter((item: SignatureFleet): boolean => !item.builtIn));
-    logger.info(TAG, '候选特征已写入目录: ' + fleet.name);
+    // **必须写全量**：此前这里传的是「过滤掉 builtIn 之后」的列表，结果只把用户签名
+    // 落盘、把 611 条内置目录从文件里抹掉；而文件里的 catalogVersion 仍是当前 stock 版本，
+    // 下次启动 `stockVersion > savedVersion` 不成立 → 不再合并 stock，用户永久只剩自己的几条。
+    this.catalogRepository.save(this.state.signatures);
+    logger.info(TAG, '候选特征已写入目录: ' + fleet.name + '（目录共 ' + this.state.signatures.length.toString() + ' 条）');
     return id;
   }  shareDebrief(): void { ngfSystemShareFacade.shareText(this.buildDebrief()); }
   shareCompare(): void {
@@ -1683,17 +1765,19 @@ export class FieldwatchApplication {
       + 'Shared signatures: ' + (sharedSignatures.length > 0 ? sharedSignatures.join(', ') : '-') + '\n';
     ngfSystemShareFacade.shareText(report);
   }
-  saveSettingsBackup(): boolean { return this.saveExport('settings.fieldwatch', this.settingsRepository.exportBackup(this.state.settings)); }
-  restoreSettingsBackup(): boolean {
-    const content: string = FileUtils.readText('fieldwatch/exports/settings.fieldwatch');
-    const restored: boolean = this.settingsRepository.importBackup(content);
-    if (restored) this.state.settings = this.settingsRepository.load();
-    return restored;
+  async saveSettingsBackup(): Promise<FieldwatchFileSaveResult> {
+    const stamp: string = new Date().toISOString().substring(0, 19).replace(/[:T]/g, '-');
+    const fileName: string = 'fieldwatch-settings-' + stamp + '.fieldwatch';
+    const content: string = this.settingsRepository.exportBackup(this.state.settings);
+    return await this.catalogFileGateway.saveSettingsBackupToFile(fileName, content);
   }
-
-  private saveExport(fileName: string, content: string): boolean {
-    FileUtils.createDirectory('fieldwatch/exports');
-    return FileUtils.writeText('fieldwatch/exports/' + fileName, content);
+  async restoreSettingsBackup(): Promise<FieldwatchFileActionStatus> {
+    const readResult: FieldwatchFileReadResult = await this.catalogFileGateway.pickAndRead(FieldwatchFileSelectionKind.SETTINGS_BACKUP);
+    if (readResult.status !== FieldwatchFileActionStatus.SUCCESS) return readResult.status;
+    const restored: boolean = this.settingsRepository.importBackup(readResult.content);
+    if (!restored) return FieldwatchFileActionStatus.FAILED;
+    this.state.settings = this.settingsRepository.load();
+    return FieldwatchFileActionStatus.SUCCESS;
   }
   buildDebrief(): string {
     const wifiCount: number = this.state.sightings.filter((item: Sighting): boolean => item.kind === RadioKind.WIFI).length;
@@ -1749,6 +1833,7 @@ export class FieldwatchApplication {
     });
     return names;
   }
+  rssiTrend(sighting: Sighting): FieldwatchRssiTrend { return this.signatureEngine.rssiTrend(sighting); }
   filteredSightings(): Sighting[] { return this.state.sightings.filter((sighting: Sighting): boolean => this.filterEngine.pass(sighting, this.state.filter, this.state.signatures, this.state.watchlist, this.namedRadioKeys(), Date.now())); }
   displayName(sighting: Sighting): string { return this.privacyService.displayName(sighting, this.state.settings.privacyMode); }
 
@@ -2399,6 +2484,10 @@ export class FieldwatchApplication {
   /** 设置器：Hunt 页 geiger tick 触感。 */
   setHuntVibrate(enabled: boolean): void {
     this.state.settings.huntVibrate = enabled;
+    this.settingsRepository.save(this.state.settings);
+  }
+  setHuntDirectionAssist(enabled: boolean): void {
+    this.state.settings.huntDirectionAssist = enabled;
     this.settingsRepository.save(this.state.settings);
   }
   /** 供设置页显示能力可用性：语音引擎是否就绪。 */

@@ -9,7 +9,9 @@ export class FieldwatchExportSerializer {
     const lines: string[] = ['key,kind,address,name,manufacturer,rssi,seen_at,ssid,frequency_mhz,fresh,signatures,decoded'];
     sightings.forEach((sighting: Sighting): void => {
       lines.push(this.csvRow([
-        sighting.key,
+        // `key` 内嵌完整地址（如 `ble:F0:07:1C:43:04:07`）：隐私模式下必须与
+        // `address` 同策略脱敏，否则同一标识会从这一列原样泄漏出去。
+        this.privacy.maskAddress(sighting.key, settings.privacyMode),
         sighting.kind,
         this.privacy.maskAddress(sighting.address, settings.privacyMode),
         sighting.name,
@@ -30,7 +32,9 @@ export class FieldwatchExportSerializer {
     const lines: string[] = [];
     sightings.forEach((sighting: Sighting): void => {
       const address: string = this.privacy.maskAddress(sighting.address, settings.privacyMode);
-      lines.push('{"key":"' + this.json(sighting.key) + '","kind":"' + sighting.kind + '","address":"' + this.json(address) + '","name":"' + this.json(sighting.name) + '","manufacturer":"' + this.json(sighting.facts.manufacturer) + '","rssi":' + sighting.rssi.toString() + ',"seenAt":' + sighting.lastSeen.toString() + ',"fresh":' + sighting.fresh.toString() + ',"signatures":' + this.jsonArray(sighting.signatureIds) + ',"decoded":' + this.jsonDecoded(sighting) + '}');
+      // 同上：`key` 也要按隐私模式脱敏，不能只掩 `address`。
+      const key: string = this.privacy.maskAddress(sighting.key, settings.privacyMode);
+      lines.push('{"key":"' + this.json(key) + '","kind":"' + sighting.kind + '","address":"' + this.json(address) + '","name":"' + this.json(sighting.name) + '","manufacturer":"' + this.json(sighting.facts.manufacturer) + '","rssi":' + sighting.rssi.toString() + ',"seenAt":' + sighting.lastSeen.toString() + ',"fresh":' + sighting.fresh.toString() + ',"signatures":' + this.jsonArray(sighting.signatureIds) + ',"decoded":' + this.jsonDecoded(sighting) + '}');
     });
     return lines.join('\n');
   }

@@ -123,13 +123,47 @@ export struct FieldwatchDeviceDetailPage {
   private refresh(): void {
     const found: Sighting | undefined = fieldwatchApplication.sightingByKey(this.detailKey);
     if (found === undefined) return;
+    // ── 每秒都要跟着动的：当前观测 + 趋势折线 ──
     this.sighting = found;
-    this.signatureNames = fieldwatchApplication.signatureNamesFor(found);
-    this.guess = this.explain.guess(found, this.signatureNames);
-    // 族判定要看**全部在场设备** —— 它的意义就在于「有没有别的 MAC 共享同一个空中唯一 ID」。
-    this.family = fieldwatchApplication.assessFamilyFor(found, this.signatureNames);
-    // 每秒重绘一次：新样本到达后折线要跟着动。
     this.rebuildTrend();
+    // ── 身份相关的三个派生值：**值没变就不重新赋值** ──
+    //
+    // 它们每秒重算一次本身不贵，贵的是**赋新对象**：
+    // ArkUI 按引用判断依赖是否变化，赋一个新对象就等于告诉它
+    // 「这些卡片全脏了」，于是「外观」「特征族」「匹配的特征」几块每秒重建一次。
+    //
+    // 而这几块的内容本来就跟 RSSI 无关（只跟报文里的身份字段有关），
+    // 一秒内基本不会变 —— 保持同一个引用，这些子树就完全不参与重绘。
+    const names: string[] = fieldwatchApplication.signatureNamesFor(found);
+    if (!this.sameStrings(names, this.signatureNames)) this.signatureNames = names;
+    const guess: ExplainGuess = this.explain.guess(found, this.signatureNames);
+    if (this.guess === undefined || !this.sameGuess(guess, this.guess)) this.guess = guess;
+    // 族判定要看**全部在场设备** —— 它的意义就在于「有没有别的 MAC 共享同一个空中唯一 ID」。
+    const family: SignatureFamilyHint = fieldwatchApplication.assessFamilyFor(found, this.signatureNames);
+    if (this.family === undefined || !this.sameFamily(family, this.family)) this.family = family;
+  }
+
+  /** 两个字符串数组是否逐项相同。 */
+  private sameStrings(first: string[], second: string[]): boolean {
+    if (first.length !== second.length) return false;
+    for (let i: number = 0; i < first.length; i += 1) {
+      if (first[i] !== second[i]) return false;
+    }
+    return true;
+  }
+
+  /** 解释结论是否与上一帧一致（比较渲染出来的那几个字段）。 */
+  private sameGuess(first: ExplainGuess, second: ExplainGuess): boolean {
+    return first.headline === second.headline && first.label === second.label
+      && first.because === second.because && first.confidence === second.confidence
+      && first.generic === second.generic;
+  }
+
+  /** 族判定是否与上一帧一致。 */
+  private sameFamily(first: SignatureFamilyHint, second: SignatureFamilyHint): boolean {
+    return first.verdict === second.verdict && first.title === second.title
+      && first.body === second.body && first.liveCount === second.liveCount
+      && first.ruleLabel === second.ruleLabel;
   }
 
   private label(key: string): string {

@@ -6294,7 +6294,7 @@
     },
     {
       "name": "fieldwatch_filter_travel_status",
-      "value": "GPS track %s m. Keep moving (about 50 m) to enable the co-travel test."
+      "value": "GPS track %s m. Move about 45 m to enable the possible co-travel filter."
     },
     {
       "name": "fieldwatch_preset_strong",
@@ -6434,11 +6434,11 @@
     },
     {
       "name": "fieldwatch_filter_moving_hint",
-      "value": "Turn on Settings → Tag detections with GPS, then walk or drive. Only loud BLE advertisers that stay with you remain."
+      "value": "Turn on Settings → Tag detections with GPS, then walk or drive. This heuristic keeps recent, sustained BLE observations near your phone's path; it is not proof of tracking. You can also tap the Possible Co-Travel preset above."
     },
     {
       "name": "fieldwatch_filter_moving_with_you",
-      "value": "Moving with you"
+      "value": "Possible Co-Travel"
     },
     {
       "name": "fieldwatch_filter_ble_only",
@@ -6650,7 +6650,7 @@
     },
     {
       "name": "fieldwatch_hunt_disclaimer",
-      "value": "Hunt compares loudness only. It gives no bearing and is not a direction finder."
+      "value": "RSSI reflects received strength, not distance. Optional relative hints require rotating the device and do not provide coordinates or an absolute bearing."
     },
     {
       "name": "fieldwatch_hunt_none",
@@ -6770,7 +6770,7 @@
     },
     {
       "name": "fieldwatch_local_file_hint",
-      "value": "Files are stored in the app sandbox; public-folder save is pending validation"
+      "value": "Backups include settings, filter presets and the watchlist, but not observation logs or location records. Save and restore use the system file picker."
     },
     {
       "name": "fieldwatch_settings_backup_result",
@@ -7126,7 +7126,7 @@
     },
     {
       "name": "fieldwatch_perm_ble_feature",
-      "value": "Powers: BLE radios on Live, moving-with-you, watch alerts."
+      "value": "Powers: BLE radios on Live, the possible co-travel filter, and watch alerts."
     },
     {
       "name": "fieldwatch_perm_ble_denied",
@@ -7158,7 +7158,7 @@
     },
     {
       "name": "fieldwatch_perm_loc_feature",
-      "value": "Powers: the path canvas, located radios, moving-with-you."
+      "value": "Powers: the path canvas, located radios, and the possible co-travel filter."
     },
     {
       "name": "fieldwatch_perm_loc_denied",
@@ -7655,6 +7655,18 @@
     {
       "name": "fieldwatch_detail_vendor",
       "value": "Vendor"
+    },
+    {
+      "name": "fieldwatch_settings_changelog",
+      "value": "Changelog"
+    },
+    {
+      "name": "fieldwatch_changelog_hint",
+      "value": "What each version brought to you."
+    },
+    {
+      "name": "fieldwatch_changelog_empty",
+      "value": "No changelog entries yet."
     },
     {
       "name": "fieldwatch_settings_about",
@@ -9139,6 +9151,234 @@
     {
       "name": "fieldwatch_legal_oss_repo",
       "value": "https://github.com/DaLongZhuaZi/airwavefootprints"
+    },
+    {
+      "name": "fieldwatch_daily_security_clear",
+      "value": "No persistent-sighting signs met the review threshold"
+    },
+    {
+      "name": "fieldwatch_daily_security_again",
+      "value": "Check Again"
+    },
+    {
+      "name": "fieldwatch_daily_recent",
+      "value": "Recently Observed"
+    },
+    {
+      "name": "fieldwatch_daily_unknown_bluetooth",
+      "value": "Nearby Bluetooth Device"
+    },
+    {
+      "name": "fieldwatch_daily_unknown_nearlink",
+      "value": "Nearby NearLink Device"
+    },
+    {
+      "name": "fieldwatch_daily_seen_recently",
+      "value": "Seen recently · %1 dBm"
+    },
+    {
+      "name": "fieldwatch_live_mode_daily",
+      "value": "Everyday"
+    },
+    {
+      "name": "fieldwatch_live_mode_pro",
+      "value": "Expert"
+    },
+    {
+      "name": "fieldwatch_daily_title",
+      "value": "Nearby Wireless Activity"
+    },
+    {
+      "name": "fieldwatch_daily_subtitle",
+      "value": "Counts and scan status reflect broadcasts observed nearby."
+    },
+    {
+      "name": "fieldwatch_daily_devices",
+      "value": "Nearby Devices"
+    },
+    {
+      "name": "fieldwatch_daily_new",
+      "value": "Recently Seen"
+    },
+    {
+      "name": "fieldwatch_daily_wifi",
+      "value": "Nearby Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_daily_security_title",
+      "value": "Safety Check"
+    },
+    {
+      "name": "fieldwatch_daily_security_hint",
+      "value": "Observe nearby broadcasts for 30 seconds and check for persistent sightings."
+    },
+    {
+      "name": "fieldwatch_daily_security_start",
+      "value": "Start 30-Second Check"
+    },
+    {
+      "name": "fieldwatch_daily_security_running",
+      "value": "Observing nearby broadcasts · %1 sec remaining"
+    },
+    {
+      "name": "fieldwatch_daily_security_done",
+      "value": "Check Complete"
+    },
+    {
+      "name": "fieldwatch_daily_security_watch",
+      "value": "%1 devices may be worth reviewing"
+    },
+    {
+      "name": "fieldwatch_daily_security_geo_limit",
+      "value": "Location history is off, so shared movement cannot be assessed."
+    },
+    {
+      "name": "fieldwatch_daily_security_disclaimer",
+      "value": "This uses broadcasts and local history; it does not confirm device identity or intent."
+    },
+    {
+      "name": "fieldwatch_daily_wifi_count",
+      "value": "%1 Wi-Fi networks observed"
+    },
+    {
+      "name": "fieldwatch_daily_wifi_empty",
+      "value": "No Wi-Fi networks observed yet"
+    },
+    {
+      "name": "fieldwatch_daily_wifi_recommend",
+      "value": "Less busy 2.4 GHz channel: %1"
+    },
+    {
+      "name": "fieldwatch_daily_wifi_open_tool",
+      "value": "Open Wi-Fi Channel Analysis"
+    },
+    {
+      "name": "fieldwatch_daily_open_radar",
+      "value": "Open Professional Radar"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_title",
+      "value": "My Wireless Footprints"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_hint",
+      "value": "Keep a local record of devices seen during this period."
+    },
+    {
+      "name": "fieldwatch_daily_footprint_start",
+      "value": "Start Recording This Session"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_finish",
+      "value": "Finish and Save"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_active",
+      "value": "Recording: %1"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_saved",
+      "value": "%1 local sessions saved"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_name",
+      "value": "Wireless Footprint · %1"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_open",
+      "value": "View Full Footprints"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_title",
+      "value": "Relative Direction"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_hint",
+      "value": "Slowly rotate the device and sample each direction several times. The hint shows only a relative RSSI peak from this sweep."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_waiting",
+      "value": "Keep rotating slowly to cover more directions."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_unavailable",
+      "value": "Direction sensors are unavailable. You can still follow RSSI changes manually."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_off",
+      "value": "Relative direction is off. You can turn it on again in Settings."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_left",
+      "value": "Turn left about %s°"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_right",
+      "value": "Turn right about %s°"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_align",
+      "value": "Aligned with the current relative peak. Keep rotating to compare the signal."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_setting",
+      "value": "Direction Assist"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_setting_hint",
+      "value": "Uses compass and gyroscope sensors to compare signal strength while you rotate. This is a relative hint, not a device location or absolute bearing."
+    },
+    {
+      "name": "fieldwatch_settings_backup_saved",
+      "value": "Backup saved to the selected location."
+    },
+    {
+      "name": "fieldwatch_settings_backup_not_saved",
+      "value": "The backup was not saved. Choose a save location and try again."
+    },
+    {
+      "name": "fieldwatch_settings_backup_restored",
+      "value": "Settings restored from the selected file."
+    },
+    {
+      "name": "fieldwatch_settings_backup_restore_failed",
+      "value": "Settings could not be restored. Check that the selected file is a valid Fieldwatch backup."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_weak_peak",
+      "value": "All directions are covered, but signal strength is similar across sectors; no reliable peak was found."
+    },
+    {
+      "name": "fieldwatch_signatures_export_not_saved",
+      "value": "No save location was returned, so the file was not saved."
+    },
+    {
+      "name": "fieldwatch_reports_save_not_saved",
+      "value": "No save location was returned, so the file was not saved."
+    },
+    {
+      "name": "fieldwatch_settings_backup_save_failed",
+      "value": "Backup failed; nothing was written."
+    },
+    {
+      "name": "fieldwatch_reports_save_failed",
+      "value": "Export failed; nothing was written."
+    },
+    {
+      "name": "fieldwatch_signatures_import_not_selected",
+      "value": "No file was returned. The catalog was not changed."
+    },
+    {
+      "name": "fieldwatch_settings_backup_restore_not_selected",
+      "value": "No backup file was returned. Settings were not changed."
+    },
+    {
+      "name": "fieldwatch_signatures_import_filter",
+      "value": "Fieldwatch signature packs (*.json)|.json"
+    },
+    {
+      "name": "fieldwatch_settings_backup_file_filter",
+      "value": "Fieldwatch settings backups (*.fieldwatch)|.fieldwatch"
     }
   ]
 }

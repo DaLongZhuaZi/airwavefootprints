@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\13359\\.ohos\\config\\default_NGF_JDB3kluqIj7qxGPW8Q8f_cGAegyyShqaVNLCSj8S55M=.cer",
-          "keyAlias": "debugKey",
-          "keyPassword": "0000001BCCB90B430B44928694613A90CD8FC16B52AD8D6FCA3D77419EB66068EC94D9B76FB08C7ABFFD83",
-          "profile": "C:\\Users\\13359\\.ohos\\config\\default_NGF_JDB3kluqIj7qxGPW8Q8f_cGAegyyShqaVNLCSj8S55M=.p7b",
+          "storeFile": "F:/DevEcoStudioKey/airwavefootprintsRelease/NGF.p12",
+          "storePassword": "000000183074754CF36A29D555F63188E9E0C6095DCB5BAC09D9A410F13889C3C093C418083734C7",
+          "keyAlias": "ngf",
+          "keyPassword": "00000018BFE704247D79A8A3769B8FDA282B587D9E0784118D0A68A2F05B67A1A1124E091F0716BC",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\13359\\.ohos\\config\\default_NGF_JDB3kluqIj7qxGPW8Q8f_cGAegyyShqaVNLCSj8S55M=.p12",
-          "storePassword": "0000001BF1CF289831B7F450FB9E0A95B225938F844C625DEF3F63F7AB337F50E6404729A1526F15708A50"
+          "profile": "F:/DevEcoStudioKey/airwavefootprintsRelease/airwavefootprintsRelease.p7b",
+          "certpath": "F:/DevEcoStudioKey/airwavefootprintsRelease/NGF.cer"
         }
       }
     ],

@@ -10,7 +10,8 @@ import {
   signatureClassOf, signatureHexOnly, signatureUuidAliases, cloneSignatureFleet, signatureRadioKindOf
 } from '../main/ets/fieldwatch/domain/signatures/FieldwatchSignatureModels';
 import {
-  SignaturePackError, encodeSignaturePack, mergeSignatureFleets, overlayStockFleets, parseSignaturePack, signatureRuleKey
+  SignaturePackError, encodeSignaturePack, mergeSignatureFleets, overlayStockFleets, parseSignaturePack,
+  shouldApplyStockCatalogVersion, signatureRuleKey
 } from '../main/ets/fieldwatch/domain/signatures/FieldwatchSignatureCatalog';
 import {
   FieldwatchSignatureEngine, FieldwatchSignatureFieldDecoder, SignatureMatchContext, SignatureMatchExplanation
@@ -117,6 +118,17 @@ export default function fieldwatchSignatureTest() {
       expect(decode.fields[0].type).assertEqual(SignatureDecodeType.U8);
       expect(decode.fields[0].live).assertTrue();
       expect((decode.fields[0].enumLabels as Map<string, string>).get('1')).assertEqual('Pairing');
+    });
+
+    it('preserves catalog versions and never lets an older stock roll back a newer local update', 0, () => {
+      const fleet: SignatureFleet = new SignatureFleet('fleet-v102', 'Updated', SignatureClass.OTHER, []);
+      const encoded: string = encodeSignaturePack(new SignaturePack([fleet], 102, 'harmonyos'));
+      const parsed = parseSignaturePack(encoded);
+      expect(parsed.error).assertEqual(SignaturePackError.NONE);
+      expect(parsed.pack.catalogVersion).assertEqual(102);
+      expect(shouldApplyStockCatalogVersion(102, 100)).assertFalse();
+      expect(shouldApplyStockCatalogVersion(100, 102)).assertTrue();
+      expect(shouldApplyStockCatalogVersion(102, 102)).assertFalse();
     });
 
     it('parses a pack that uses explicit nulls like the Kotlin serializer', 0, () => {

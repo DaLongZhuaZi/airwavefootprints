@@ -14,6 +14,8 @@ import {
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
 import { FieldwatchChip } from '../../fieldwatch/ui/FieldwatchChip';
+import { FieldwatchIntensitySlider } from '../../fieldwatch/ui/FieldwatchIntensitySlider';
+import { onboardingTapAccepted } from '../../fieldwatch/domain/FieldwatchOnboardingGuard';
 
 const TAG: string = 'FieldwatchOnboarding';
 
@@ -56,6 +58,15 @@ export struct FieldwatchOnboardingPage {
   /** 引导结束（完成或跳过）后由外层切换主界面。 */
   onFinish: () => void = (): void => {};
   @State private step: number = 0;
+  /**
+   * 换页真正落地的时刻；配合 `ONB_STEP_GUARD_MS` 判定「这次点击还算不算数」。
+   * 只用于判定，不参与渲染，所以不是 `@State`。
+   */
+  private stepChangedAt: number = 0;
+  /** 换页定时器句柄；组件销毁时要清掉，避免回调落到已卸载的页面上。 */
+  private stepTimer: number = -1;
+  /** 「按下」时所在的步骤；用于识别「按下在旧页、抬起在新页」的那次点击。 */
+  private pressedStep: number = -1;
   @State private snapshot: FieldwatchCapabilitySnapshot = new FieldwatchCapabilitySnapshot();
   @State private topInset: number = 0;
   /** 内容过渡：透明度 + 纵向位移，切换步骤时两段式动画。 */
@@ -88,6 +99,24 @@ export struct FieldwatchOnboardingPage {
       this.notificationEnabled = enabled;
     });
   }
+  aboutToDisappear(): void {
+    if (this.stepTimer !== -1) {
+      clearTimeout(this.stepTimer);
+      this.stepTimer = -1;
+    }
+  }
+
+  /**
+   * 这一次点击是否还算数。
+   *
+   * 判定逻辑在 `FieldwatchOnboardingGuard` 里（纯函数，LocalUnit 覆盖）：
+   * 「按下在旧页、抬起在新页」以及「换页后立刻连点第二下」这两种点击都必须作废，
+   * 否则它们会落到已经变成「开始使用」的同一个按钮上、把第 ④ 页直接跳过。
+   */
+  private tapAccepted(): boolean {
+    return onboardingTapAccepted(this.pressedStep, this.step, this.stepChangedAt, Date.now());
+  }
+
   /** 把第 ④ 步三项的当前值从应用层同步进来。 */
   private syncFeatureSettings(): void {
     const settings = fieldwatchApplication.getState().settings;
@@ -169,8 +198,12 @@ export struct FieldwatchOnboardingPage {
       this.contentShift = forward ? -18 : 18;
       this.heroScale = 0.9;
     });
-    setTimeout((): void => {
+    if (this.stepTimer !== -1) clearTimeout(this.stepTimer);
+    this.stepTimer = setTimeout((): void => {
+      this.stepTimer = -1;
       this.step = next;
+      // 换页落地：从这里开始计算点击静默窗口（见 `ONB_STEP_GUARD_MS`）。
+      this.stepChangedAt = Date.now();
     // 进入第 ④ 步时把三项的当前值同步进来（它们不在本页缓存）。
     if (next === 3) this.syncFeatureSettings();
       this.contentShift = forward ? 18 : -18;
@@ -381,18 +414,16 @@ export struct FieldwatchOnboardingPage {
   */
   @Builder private buildFeatureSettings() {
     Column({ space: 14 }) {
-      // ① 扫描强度
-      Column({ space: 8 }) {
+      // ① 扫描强度：固定三节点的进度条（拖动 / 点轨道 / 点标签三种改法都支持）
+      Column({ space: 6 }) {
         Text($r('app.string.fieldwatch_settings_scan')).fontSize(16).fontWeight(FontWeight.Medium)
           .fontColor(FieldwatchPaletteHolder.get().headerText)
-        Row({ space: 8 }) {
-          FieldwatchChip({ label: $r('app.string.wifi_scan_basic'), active: this.scanIntensity === 'basic',
-            onTap: (): void => { this.scanIntensity = 'basic'; fieldwatchApplication.setScanIntensity('basic'); } })
-          FieldwatchChip({ label: $r('app.string.wifi_scan_balanced'), active: this.scanIntensity === 'balanced',
-            onTap: (): void => { this.scanIntensity = 'balanced'; fieldwatchApplication.setScanIntensity('balanced'); } })
-          FieldwatchChip({ label: $r('app.string.wifi_scan_saver'), active: this.scanIntensity === 'saver',
-            onTap: (): void => { this.scanIntensity = 'saver'; fieldwatchApplication.setScanIntensity('saver'); } })
-        }.width('100%')
+        FieldwatchIntensitySlider({ intensity: this.scanIntensity, onPick: (next: string): void => {
+          if (next === this.scanIntensity) return;
+          // 与设置页同一套副作用：立即生效并落盘。
+          this.scanIntensity = next;
+          fieldwatchApplication.setScanIntensity(next);
+        } })
       }.width('100%').alignItems(HorizontalAlign.Start)
 
       // ② 后台运行（开关状态以应用层返回值为准：申请失败时不能显示成「已开启」）
@@ -436,7 +467,13 @@ export struct FieldwatchOnboardingPage {
           }
           .height(46).layoutWeight(1).borderRadius(23)
           .backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline)
-          .onClick((): void => { this.goTo(this.step - 1); })
+          .onTouch((event: TouchEvent): void => {
+            if (event.type === TouchType.Down) this.pressedStep = this.step;
+          })
+          .onClick((): void => {
+            if (!this.tapAccepted()) return;
+            this.goTo(this.step - 1);
+          })
         }
         Button({ type: ButtonType.Normal }) {
           Row({ space: 6 }) {
@@ -448,7 +485,13 @@ export struct FieldwatchOnboardingPage {
         .height(46).layoutWeight(1).borderRadius(23)
         .fontColor($r('app.color.fw_on_accent'))
         .backgroundColor($r('app.color.button_primary'))
+        .onTouch((event: TouchEvent): void => {
+          if (event.type === TouchType.Down) this.pressedStep = this.step;
+        })
         .onClick((): void => {
+          // 主按钮位置不变、文案会变（「继续」→「开始使用」），必须过闸门，
+          // 否则「按下在第 ③ 页、抬起在第 ④ 页」的那一次点击会直接结束引导。
+          if (!this.tapAccepted()) return;
           if (this.step < this.heads.length - 1) this.goTo(this.step + 1);
           else this.finish();
         })
@@ -456,7 +499,13 @@ export struct FieldwatchOnboardingPage {
       if (this.step === 2) {
         Button($r('app.string.fieldwatch_onb_later')).height(44).width('100%')
           .backgroundColor(Color.Transparent).fontColor(FieldwatchPaletteHolder.get().textDim)
-          .onClick((): void => { this.finishWithoutPermissions(); })
+          .onTouch((event: TouchEvent): void => {
+            if (event.type === TouchType.Down) this.pressedStep = this.step;
+          })
+          .onClick((): void => {
+            if (!this.tapAccepted()) return;
+            this.finishWithoutPermissions();
+          })
       }
     }.width('100%').padding({ left: 20, right: 20 })
   }

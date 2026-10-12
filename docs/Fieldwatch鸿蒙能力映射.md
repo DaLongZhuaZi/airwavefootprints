@@ -5,11 +5,11 @@
 | BLE 被动扫描 | `@kit.ConnectivityKit` + `FieldwatchBleScanner` | 部分完成 | API26 真机可持续产生观测；BLE AD 长度/type/payload、Service UUID、Local Name 和 Manufacturer Company ID 的基础解析已通过 LocalUnit；生命周期、生产原始字段样本和完整回归仍待补 |
 | Wi-Fi 被动扫描 | `@kit.ConnectivityKit` 的 `wifiManager`：`startScan` / `getScanInfoList` / `wifiScanStateChange` | 适配器、状态机、缓存和退避已实现，普通路由器真机待验 | API26 SDK 声明已确认；LocalUnit 已覆盖权限/Wi-Fi/位置前置、单飞、解绑、异常退避和重试；最新 HAP U30 重试已取得 `wifiScanStateChange=1`、49 条 AP 结果和 BLE 并行证据；Wi-Fi IE TLV 基础结构解析和单测已通过 |
 | 设备聚合与过滤 | Fieldwatch domain 层 | 部分完成 | 已有 key 聚合、RSSI、签名/关注/重点目标/fresh/缓存 AND-OR 过滤；LocalUnit 已通过；RSSI 平均/趋势已实现；完整类别和解码字段待补 |
-| 设置 | `ngfSettingsStoreFacade` + `ngfThemeManagerFacade` | 部分完成 | 扫描强度、暂停显示、屏幕常亮、位置标记、隐私模式、关注通知、后台扫描、筛选预设、关注列表、应用沙箱备份恢复、Catalog 状态和跟随系统/浅色/深色主题入口已接入；LocalUnit/真机控件已覆盖主要边界；主题视觉、备份跨重启和公共文件能力仍待补 |
+| 设置 | `ngfSettingsStoreFacade` + `ngfThemeManagerFacade` | 部分完成 | 扫描强度、暂停显示、屏幕常亮、位置标记、隐私模式、关注通知、后台扫描、筛选预设、关注列表、应用沙箱备份恢复、Catalog 状态和跟随系统/浅色/深色主题入口已接入；LocalUnit/真机控件已覆盖主要边界；主题视觉和备份跨重启仍待补；公共文件写入已真机闭环 |
 | 日志/Named sit | `ngfRdbManager` + `FieldwatchObservationRepository` | 观测日志闭环、sit 存储和设备快照基础接口 | API26 真机重启后恢复 500 条观测；Compare 设备集合纯逻辑已通过 LocalUnit；schema 3 设备快照迁移和 Reports 真机操作仍待验收 |
 | 位置 | `ngfLocationManagerFacade` | 部分完成 | 开启位置标记后，观测通过 NGF 位置门面附加手机当前位置；15 秒缓存/单飞保护已实现，权限和位置关闭仍待真机验收 |
-| 系统分享 | `ngfSystemShareFacade` | 部分完成 | Reports 已接入 CSV/JSONL/GPX/KML/WiGLE/Debrief 文本分享入口；应用沙箱保存已接入。API26 本地 SDK 未发现可确认的 DocumentSavePicker/公共文件写入声明，公共文件夹另存为保持待验，不能宣称完成 |
-| Catalog | `ngfNetworkClient` + `FieldwatchCatalogRepository` | 部分完成 | 内置/本地目录、用户主动 GitHub 更新、stock 替换和失败保留旧目录已实现；stock 替换且保留用户签名的纯逻辑契约已通过 LocalUnit；网络真机证据和完整字段解码待验收 |
+| 系统分享 | `ngfSystemShareFacade` | 部分完成 | Reports 已接入 CSV/JSONL/GPX/KML/WiGLE/Debrief 文本分享入口；应用沙箱保存已接入。API26 真机已用 `DocumentViewPicker.save` 把观测 CSV 写入公共 Download 目录（163 行、含 signatures/decoded 列）并核对内容；保存选择器默认后缀已修正为与文件类型一致 |
+| Catalog | `ngfNetworkClient` + `FieldwatchCatalogRepository` | 部分完成 | 内置/本地目录、用户主动 GitHub 更新、stock 替换和失败保留旧目录已实现；stock 替换且保留用户签名的纯逻辑契约已通过 LocalUnit；API26 真机更新返回「目录已更新」且版本 102/611 稳定（成功与幂等路径已验），断网失败路径和完整字段解码待验收 |
 | 后台扫描 | `ngfSystem` / `ngfBackgroundTaskManager` | 部分完成 | Settings 显式开关、Ability 前后台/销毁生命周期和连续任务门面已接入；系统保活、功耗和长期运行待真机验证 |
 | 通知 | `ngfSystemNotificationManager` | 部分完成 | Settings 开关、按需权限申请、关注设备首次出现触发、进程内去重和关闭时取消已接入；API26 已验证原生授权对话框，实际通知内容和后台行为待验 |
 | 实况窗 | `ngfLiveViewManagerFacade` | 仅内存状态 | 当前不能作为系统实况窗完成证据 |

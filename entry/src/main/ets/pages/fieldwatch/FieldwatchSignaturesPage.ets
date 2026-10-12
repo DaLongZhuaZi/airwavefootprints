@@ -1,6 +1,6 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 import { logger, NGFHdsTitleBarOptionsFactory, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
-import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
+import { FieldwatchCatalogImportActionResult, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { SignatureClass, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
 import { SignatureFleet, SignatureRule } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
 import { FieldwatchSignatureDetail } from '../../fieldwatch/ui/FieldwatchSignatureDetail';
@@ -10,6 +10,7 @@ import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { SignatureFleetDataSource } from '../../fieldwatch/ui/FieldwatchFleetDataSource';
 import { SignatureSortMode, sortSignatureFleets } from '../../fieldwatch/ui/FieldwatchUiState';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
+import { FieldwatchFileActionStatus, FieldwatchFileSaveResult } from '../../fieldwatch/platform/FieldwatchCatalogFileGateway';
 import { FieldwatchButton, FieldwatchButtonTone, FieldwatchSegmentedChip } from '../../fieldwatch/ui/FieldwatchButton';
 
 
@@ -345,16 +346,23 @@ export struct FieldwatchSignaturesPage {
 
   // ── 目录维护动作（已收进「更多」菜单） ──
   private async runExportFile(): Promise<void> {
-    const saved: boolean = await fieldwatchApplication.exportCatalogToUserFile();
-    this.notice = saved ? this.noticeText('app.string.fieldwatch_signatures_export_done') : this.noticeText('app.string.fieldwatch_signatures_export_failed');
+    const result: FieldwatchFileSaveResult = await fieldwatchApplication.exportCatalogToUserFile();
+    if (result === FieldwatchFileSaveResult.SAVED) this.notice = this.noticeText('app.string.fieldwatch_signatures_export_done');
+    else if (result === FieldwatchFileSaveResult.NOT_SAVED) this.notice = this.noticeText('app.string.fieldwatch_signatures_export_not_saved');
+    else this.notice = this.noticeText('app.string.fieldwatch_signatures_export_failed');
   }
   private async runSaveDownloads(): Promise<void> {
     const saved: boolean = await fieldwatchApplication.exportCatalogToDownloads();
     this.notice = saved ? this.noticeText('app.string.fieldwatch_signatures_export_done') : this.noticeText('app.string.fieldwatch_signatures_export_failed');
   }
   private async runImportFile(): Promise<void> {
-    const outcome: FieldwatchCatalogImportOutcome | undefined = await fieldwatchApplication.importCatalogFromUserFile();
-    if (outcome === undefined) {
+    const actionResult: FieldwatchCatalogImportActionResult = await fieldwatchApplication.importCatalogFromUserFile();
+    if (actionResult.status === FieldwatchFileActionStatus.NOT_SELECTED) {
+      this.notice = this.noticeText('app.string.fieldwatch_signatures_import_not_selected');
+      return;
+    }
+    const outcome: FieldwatchCatalogImportOutcome | undefined = actionResult.outcome;
+    if (actionResult.status === FieldwatchFileActionStatus.FAILED || outcome === undefined) {
       this.notice = this.noticeText('app.string.fieldwatch_signatures_import_failed');
       return;
     }

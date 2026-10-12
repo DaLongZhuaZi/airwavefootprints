@@ -99,6 +99,8 @@ export struct FieldwatchToolboxPage {
   onOpenHunt: () => void = (): void => {};
   /** 当前工具页：0 信道分析 / 1 信号追踪 / 2 反追踪。 */
   @State private tool: number = 0;
+  /** 工具页切换方向：1 表示从右侧进入，-1 表示从左侧进入。 */
+  @State private toolSlide: number = 1;
   @State private band: WifiBand = WifiBand.BAND_24;
   @State private tick: number = 0;
   /** 图表高度：按屏幕高度算，保证「最少半个屏幕」。 */
@@ -144,7 +146,7 @@ export struct FieldwatchToolboxPage {
   private refresh(): void {
     // 外部深链进来的工具页（快捷方式 / 卡片 / `aa start --ps`）。
     const pendingTool: number = fieldwatchApplication.consumePendingTool();
-    if (pendingTool >= 0 && pendingTool !== this.tool) this.tool = pendingTool;
+    if (pendingTool >= 0 && pendingTool !== this.tool) this.switchTool(pendingTool);
     this.tick += 1;
     // 数据变了要重画：Canvas 不会因为状态变化自己刷新。
     setTimeout((): void => {
@@ -166,10 +168,60 @@ export struct FieldwatchToolboxPage {
     Column() {
       this.buildTitle()
       this.buildToolTabs()
-      if (this.tool === 0) this.buildChannelTab()
-      else if (this.tool === 1) this.buildHuntTab()
-      else this.buildAntiTrackTab()
+      this.buildToolContent()
     }.width('100%').height('100%')
+  }
+
+  /** 三个工具页共用一个占位区域，切换时保留旧页的退场动画。 */
+  @Builder
+  private buildToolContent() {
+    Stack({ alignContent: Alignment.TopStart }) {
+      if (this.tool === 0) {
+        Column() { this.buildChannelTab() }
+          .id('fieldwatch-tool-channel')
+          .width('100%').height('100%')
+          .transition(this.toolPageTransition())
+      } else if (this.tool === 1) {
+        Column() { this.buildHuntTab() }
+          .id('fieldwatch-tool-hunt')
+          .width('100%').height('100%')
+          .transition(this.toolPageTransition())
+      } else {
+        Column() { this.buildAntiTrackTab() }
+          .id('fieldwatch-tool-antitrack')
+          .width('100%').height('100%')
+          .transition(this.toolPageTransition())
+      }
+    }
+    .width('100%').layoutWeight(1).clip(true)
+  }
+
+  /** 工具页切换：新页按方向滑入，旧页淡出，避免内容瞬间替换。 */
+  private toolPageTransition(): TransitionEffect {
+    return TransitionEffect.asymmetric(
+      TransitionEffect.opacity(0).combine(TransitionEffect.translate({ x: this.toolSlide * 24 }))
+        .animation({ duration: 220, curve: Curve.FastOutSlowIn }),
+      TransitionEffect.opacity(0).animation({ duration: 150, curve: Curve.FastOutSlowIn })
+    );
+  }
+
+  /** Hunt 标签内部的候选列表与实时搜寻面板使用较轻的上下淡入。 */
+  private huntPanelTransition(): TransitionEffect {
+    return TransitionEffect.asymmetric(
+      TransitionEffect.opacity(0).combine(TransitionEffect.translate({ y: 10 }))
+        .animation({ duration: 200, curve: Curve.FastOutSlowIn }),
+      TransitionEffect.opacity(0).animation({ duration: 130, curve: Curve.FastOutSlowIn })
+    );
+  }
+
+  private switchTool(index: number): void {
+    if (index === this.tool) return;
+    this.toolSlide = index > this.tool ? 1 : -1;
+    this.getUIContext().animateTo({ duration: 220, curve: Curve.FastOutSlowIn }, (): void => {
+      this.tool = index;
+    });
+    // 切到信道页时补画一次：Canvas 首次布局完成前尺寸为 0，onReady 之外要再画。
+    if (index === 0) setTimeout((): void => { this.drawChart(); }, 0);
   }
 
   /**
@@ -208,10 +260,7 @@ export struct FieldwatchToolboxPage {
         .backgroundColor(index === this.tool ? FieldwatchPaletteHolder.get().accent : Color.Transparent)
     }.layoutWeight(1).height(42).justifyContent(FlexAlign.Center)
     .onClick((): void => {
-      if (index === this.tool) return;
-      this.tool = index;
-      // 切到信道页时补画一次：Canvas 首次布局完成前尺寸为 0，onReady 之外要再画。
-      if (index === 0) setTimeout((): void => { this.drawChart(); }, 0);
+      this.switchTool(index);
     })
   }
 
@@ -892,9 +941,10 @@ export struct FieldwatchToolboxPage {
         .onReady((): void => { this.drawHuntTrend(); })
       Button($r('app.string.fieldwatch_toolbox_hunt_resume')).height(40).width('100%')
         .onClick((): void => { this.onOpenHunt(); })
-    }.width('100%').padding(14)
+    }.id('fieldwatch-tool-hunt-live').width('100%').padding(14)
     .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
     .alignItems(HorizontalAlign.Start)
+    .transition(this.huntPanelTransition())
   }
 
   @Builder
@@ -931,7 +981,8 @@ export struct FieldwatchToolboxPage {
         .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .onClick((): void => { this.onStartHunt(item.key); })
       }, (item: Sighting): string => item.key)
-    }.width('100%').alignItems(HorizontalAlign.Start)
+    }.id('fieldwatch-tool-hunt-picker').width('100%').alignItems(HorizontalAlign.Start)
+    .transition(this.huntPanelTransition())
   }
 
   /** 历史汇总：次数、总时长、最佳峰值。 */
@@ -1010,7 +1061,7 @@ export struct FieldwatchToolboxPage {
   }
 
   private huntRssiText(value: number): string {
-    return value >= -127 && value <= 126 ? value.toString() + ' dBm' : '—';
+    return value >= -127 && value <= 126 ? Math.round(value).toString() + ' dBm' : '—';
   }
 
   /** 提示状态的文案键后缀与颜色。 */

@@ -1,49 +1,98 @@
 import { fileIo, picker } from '@kit.CoreFileKit';
 import { util } from '@kit.ArkTS';
-import { logger, uiContextManager } from 'ngf_framework';
+import { logger, resolveResourceString, uiContextManager } from 'ngf_framework';
+import { orderedSaveSuffixes, SAVE_SUFFIX_CHOICES } from '../domain/FieldwatchExportNaming';
 
 const TAG: string = 'FieldwatchCatalogFile';
-const SUFFIX_CHOICES: string[] = ['.json', '.txt', '.csv'];
-const SUFFIX_FILTERS: string[] = ['电波足迹 导出 (.json, .txt, .csv)|.json,.txt,.csv'];
+
+export enum FieldwatchFileSelectionKind {
+  SIGNATURE_PACK = 'signature_pack',
+  SETTINGS_BACKUP = 'settings_backup'
+}
+
+export enum FieldwatchFileSaveResult {
+  SAVED = 'saved',
+  NOT_SAVED = 'not_saved',
+  FAILED = 'failed'
+}
+
+export enum FieldwatchFileActionStatus {
+  SUCCESS = 'success',
+  NOT_SELECTED = 'not_selected',
+  FAILED = 'failed'
+}
+
+export class FieldwatchFileReadResult {
+  public status: FieldwatchFileActionStatus = FieldwatchFileActionStatus.FAILED;
+  public content: string = '';
+
+  constructor(status: FieldwatchFileActionStatus, content: string = '') {
+    this.status = status;
+    this.content = content;
+  }
+}
 
 /**
  * 特征库/报告的用户文件通道：经系统文件选择器导出与导入。
  *
  * 只在用户主动点击时调用；不联网，也不访问未选择的路径。
- * 每一步都写日志，因为 picker 失败时常常既不抛异常也不返回 URI，
- * 没有日志就无法区分「用户取消」和「选择器没起来」。
+ * 选择器无 URI 按“未选择”处理；异常和读取失败单独返回失败状态。
  */
 export class FieldwatchCatalogFileGateway {
   /**
-   * 让用户选择保存位置并写出文本。
-   *
-   * **带回退**：真机实测过「选择器被拉起但 `save()` 不返回 URI」的情况 ——
-   * 用户看不到任何反应，以为功能坏了。因此选择器拿不到位置时，
-   * 自动改走 DOWNLOAD 通道（那条路不需要在选择器里确认，此前已实测可用），
-   * 至少保证文件真的落到下载目录，而不是静默失败。
-   *
-   * 用户主动取消选择器时也会走到回退 —— 这是刻意的：
-   * 无法区分「取消」与「选择器没起来」，宁可多写一个文件，也不要让功能看起来没反应。
+   * 让用户选择保存位置并写出文本。空 URI 按未保存处理；只有用户显式
+   * 选择“保存到下载目录”时才调用 DOWNLOAD 通道。
    */
-  async saveToFile(fileName: string, content: string): Promise<boolean> {
-    const uris: string[] = await this.pickSaveUri(fileName);
-    logger.info(TAG, 'save() 返回 ' + uris.length.toString() + ' 个 URI');
-    if (uris.length === 0) {
-      logger.warn(TAG, '未取得保存位置，回退到下载目录通道');
-      return await this.saveToDownloads(fileName, content);
+  async saveToFile(fileName: string, content: string): Promise<FieldwatchFileSaveResult> {
+    return await this.saveToFileWithChoices(fileName, content, orderedSaveSuffixes(fileName, SAVE_SUFFIX_CHOICES));
+  }
+
+  /**
+   * 设置备份另存为。
+   *
+   * 保存侧只接受**纯后缀**；`fileSuffixChoices` 不是 `fileSuffixFilters`，
+   * 传「描述|后缀」筛选串会被当成后缀名（此前就是这么传的）。
+   */
+  async saveSettingsBackupToFile(fileName: string, content: string): Promise<FieldwatchFileSaveResult> {
+    return await this.saveToFileWithChoices(fileName, content, orderedSaveSuffixes(fileName, ['.fieldwatch']));
+  }
+
+  private async saveToFileWithChoices(fileName: string, content: string, suffixChoices: string[]): Promise<FieldwatchFileSaveResult> {
+    const context = uiContextManager.getFullAbilityContext();
+    if (context === null) {
+      logger.warn(TAG, '导出失败：没有 Ability 上下文');
+      return FieldwatchFileSaveResult.FAILED;
+    }
+    let uri: string = '';
+    try {
+      const documentPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
+      const options: picker.DocumentSaveOptions = new picker.DocumentSaveOptions();
+      options.newFileNames = [fileName];
+      options.fileSuffixChoices = suffixChoices;
+      logger.info(TAG, '即将拉起保存选择器: ' + fileName);
+      const uris: string[] = await documentPicker.save(options);
+      logger.info(TAG, 'save() 返回 ' + (uris === undefined ? 0 : uris.length).toString() + ' 个 URI');
+      if (uris === undefined || uris.length === 0 || uris[0].length === 0) {
+        logger.info(TAG, '未取得保存位置，文件未写出');
+        return FieldwatchFileSaveResult.NOT_SAVED;
+      }
+      uri = uris[0];
+    } catch (error) {
+      logger.warn(TAG, '保存选择器异常: ' + this.errorMessage(error));
+      return FieldwatchFileSaveResult.FAILED;
     }
     try {
-      const file: fileIo.File = fileIo.openSync(uris[0], fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.TRUNC);
+      const file: fileIo.File = fileIo.openSync(uri, fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.TRUNC);
       try {
         const written: number = fileIo.writeSync(file.fd, content);
         logger.info(TAG, '已写出 ' + written.toString() + ' 字节到用户选择的位置');
       } finally {
         fileIo.closeSync(file);
       }
-      return true;
+      return FieldwatchFileSaveResult.SAVED;
     } catch (error) {
       logger.warn(TAG, '写入选定文件失败: ' + this.errorMessage(error));
-      return false;
+      return FieldwatchFileSaveResult.FAILED;
     }
   }
   /**
@@ -82,45 +131,30 @@ export class FieldwatchCatalogFileGateway {
       return false;
     }
   }
-  private async pickSaveUri(fileName: string): Promise<string[]> {
-    const context = uiContextManager.getFullAbilityContext();
-    if (context === null) {
-      logger.warn(TAG, '导出失败：没有 Ability 上下文');
-      return [];
-    }
-    try {
-      const documentPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
-      const options: picker.DocumentSaveOptions = new picker.DocumentSaveOptions();
-      options.newFileNames = [fileName];
-      options.fileSuffixChoices = SUFFIX_CHOICES;
-      logger.info(TAG, '即将拉起保存选择器: ' + fileName);
-      const result: string[] = await documentPicker.save(options);
-      return result === undefined ? [] : result;
-    } catch (error) {
-      logger.warn(TAG, '保存选择器异常: ' + this.errorMessage(error));
-      return [];
-    }
-  }
-
-  /** 让用户选择文件并读出文本。取消返回空字符串。 */
-  async pickAndRead(): Promise<string> {
+  /** 让用户选择文件并读出文本，区分未选文件和读取失败。 */
+  async pickAndRead(selectionKind: FieldwatchFileSelectionKind = FieldwatchFileSelectionKind.SIGNATURE_PACK): Promise<FieldwatchFileReadResult> {
     const context = uiContextManager.getFullAbilityContext();
     if (context === null) {
       logger.warn(TAG, '导入失败：没有 Ability 上下文');
-      return '';
+      return new FieldwatchFileReadResult(FieldwatchFileActionStatus.FAILED);
     }
     try {
       const documentPicker: picker.DocumentViewPicker = new picker.DocumentViewPicker(context);
       const options: picker.DocumentSelectOptions = new picker.DocumentSelectOptions();
       options.maxSelectNumber = 1;
-      options.fileSuffixFilters = SUFFIX_FILTERS;
+      const filter: string = selectionKind === FieldwatchFileSelectionKind.SETTINGS_BACKUP
+        ? resolveResourceString(context, $r('app.string.fieldwatch_settings_backup_file_filter'))
+        : resolveResourceString(context, $r('app.string.fieldwatch_signatures_import_filter'));
+      options.fileSuffixFilters = [filter];
       const uris: string[] = await documentPicker.select(options);
       logger.info(TAG, 'select() 返回 ' + (uris === undefined ? 0 : uris.length).toString() + ' 个 URI');
-      if (uris === undefined || uris.length === 0) return '';
-      return this.readText(uris[0]);
+      if (uris === undefined || uris.length === 0 || uris[0].length === 0) {
+        return new FieldwatchFileReadResult(FieldwatchFileActionStatus.NOT_SELECTED);
+      }
+      return new FieldwatchFileReadResult(FieldwatchFileActionStatus.SUCCESS, this.readText(uris[0]));
     } catch (error) {
-      logger.warn(TAG, '导入签名包失败: ' + this.errorMessage(error));
-      return '';
+      logger.warn(TAG, '选择或读取文件失败: ' + this.errorMessage(error));
+      return new FieldwatchFileReadResult(FieldwatchFileActionStatus.FAILED);
     }
   }
 

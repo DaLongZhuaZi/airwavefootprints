@@ -6306,7 +6306,7 @@
     },
     {
       "name": "fieldwatch_filter_travel_status",
-      "value": "目前 GPS 轨迹 %s 米。继续移动（约 50 米）才能启用同行判定。"
+      "value": "目前 GPS 轨迹 %s 米。继续移动约 45 米后可启用“可能同行”筛选。"
     },
     {
       "name": "fieldwatch_preset_strong",
@@ -6446,11 +6446,11 @@
     },
     {
       "name": "fieldwatch_filter_moving_hint",
-      "value": "打开 设置 → 记录手机听到设备的位置，然后步行或驾车移动。只有一路跟着你、且信号足够强的 BLE 广播源才会留下。也可以直接点上面的「与你同行」预设。"
+      "value": "打开设置中的“记录手机听到设备的位置”，然后步行或驾车移动。筛选会保留近期持续出现、位置与手机路径接近且信号足够强的 BLE 设备；这是启发式提示，不代表跟踪确认。也可以选择上方的“可能同行”预设。"
     },
     {
       "name": "fieldwatch_filter_moving_with_you",
-      "value": "与你同行"
+      "value": "可能同行"
     },
     {
       "name": "fieldwatch_filter_ble_only",
@@ -6662,7 +6662,7 @@
     },
     {
       "name": "fieldwatch_hunt_disclaimer",
-      "value": "寻线只比较信号强弱，不提供方向，也不是测向仪。"
+      "value": "RSSI 只反映接收强弱，不等于距离。可选相对提示需手持设备转动采样，不提供坐标或绝对方位。"
     },
     {
       "name": "fieldwatch_hunt_none",
@@ -6782,7 +6782,7 @@
     },
     {
       "name": "fieldwatch_local_file_hint",
-      "value": "文件保存在应用本地沙箱，公共文件夹另存为待验证"
+      "value": "设置备份只包含设置、筛选预设和关注列表，不包含观测日志或位置记录。保存与恢复均使用系统文件选择器。"
     },
     {
       "name": "fieldwatch_settings_backup_result",
@@ -7138,7 +7138,7 @@
     },
     {
       "name": "fieldwatch_perm_ble_feature",
-      "value": "支撑：实时页的 BLE 与星闪信号源、与你同行判定、关注提醒、设备类型识别。"
+      "value": "支撑：实时页的 BLE 与星闪信号源、可能同行筛选、关注提醒、设备类型识别。"
     },
     {
       "name": "fieldwatch_perm_ble_denied",
@@ -7170,7 +7170,7 @@
     },
     {
       "name": "fieldwatch_perm_loc_feature",
-      "value": "支撑：轨迹画布、带定位的观测、与你同行判定。"
+      "value": "支撑：轨迹画布、带定位的观测、可能同行筛选。"
     },
     {
       "name": "fieldwatch_perm_loc_denied",
@@ -7671,6 +7671,18 @@
     {
       "name": "fieldwatch_detail_vendor",
       "value": "厂商"
+    },
+    {
+      "name": "fieldwatch_settings_changelog",
+      "value": "更新日志"
+    },
+    {
+      "name": "fieldwatch_changelog_hint",
+      "value": "每个版本给用户带来了什么。"
+    },
+    {
+      "name": "fieldwatch_changelog_empty",
+      "value": "暂无更新记录。"
     },
     {
       "name": "fieldwatch_settings_about",
@@ -9155,6 +9167,234 @@
     {
       "name": "fieldwatch_legal_oss_repo",
       "value": "https://github.com/DaLongZhuaZi/airwavefootprints"
+    },
+    {
+      "name": "fieldwatch_daily_security_clear",
+      "value": "暂未发现达到提醒门槛的持续出现迹象"
+    },
+    {
+      "name": "fieldwatch_daily_security_again",
+      "value": "再次检查"
+    },
+    {
+      "name": "fieldwatch_daily_recent",
+      "value": "最近观察到的设备"
+    },
+    {
+      "name": "fieldwatch_daily_unknown_bluetooth",
+      "value": "附近的蓝牙设备"
+    },
+    {
+      "name": "fieldwatch_daily_unknown_nearlink",
+      "value": "附近的星闪设备"
+    },
+    {
+      "name": "fieldwatch_daily_seen_recently",
+      "value": "刚刚观察到 · %1 dBm"
+    },
+    {
+      "name": "fieldwatch_live_mode_daily",
+      "value": "日常"
+    },
+    {
+      "name": "fieldwatch_live_mode_pro",
+      "value": "专业"
+    },
+    {
+      "name": "fieldwatch_daily_title",
+      "value": "附近的无线环境"
+    },
+    {
+      "name": "fieldwatch_daily_subtitle",
+      "value": "设备数量和扫描状态仅反映当前观察到的广播。"
+    },
+    {
+      "name": "fieldwatch_daily_devices",
+      "value": "附近设备"
+    },
+    {
+      "name": "fieldwatch_daily_new",
+      "value": "最近出现"
+    },
+    {
+      "name": "fieldwatch_daily_wifi",
+      "value": "周边 Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_daily_security_title",
+      "value": "安全检查"
+    },
+    {
+      "name": "fieldwatch_daily_security_hint",
+      "value": "观察附近广播 30 秒，并检查已有的持续出现迹象。"
+    },
+    {
+      "name": "fieldwatch_daily_security_start",
+      "value": "开始 30 秒检查"
+    },
+    {
+      "name": "fieldwatch_daily_security_running",
+      "value": "正在观察附近广播，还需 %1 秒"
+    },
+    {
+      "name": "fieldwatch_daily_security_done",
+      "value": "检查完成"
+    },
+    {
+      "name": "fieldwatch_daily_security_watch",
+      "value": "有 %1 台设备值得进一步查看"
+    },
+    {
+      "name": "fieldwatch_daily_security_geo_limit",
+      "value": "未开启位置记录，无法判断设备是否与你共同移动。"
+    },
+    {
+      "name": "fieldwatch_daily_security_disclaimer",
+      "value": "这是基于广播和本机记录的提示，不代表设备身份或意图的确认。"
+    },
+    {
+      "name": "fieldwatch_daily_wifi_count",
+      "value": "已观察到 %1 个 Wi-Fi 网络"
+    },
+    {
+      "name": "fieldwatch_daily_wifi_empty",
+      "value": "暂未观察到 Wi-Fi 网络"
+    },
+    {
+      "name": "fieldwatch_daily_wifi_recommend",
+      "value": "较空闲的 2.4 GHz 信道：%1"
+    },
+    {
+      "name": "fieldwatch_daily_wifi_open_tool",
+      "value": "查看 Wi-Fi 信道分析"
+    },
+    {
+      "name": "fieldwatch_daily_open_radar",
+      "value": "打开专业雷达"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_title",
+      "value": "我的无线足迹"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_hint",
+      "value": "把这一段时间遇到的设备整理成一份本地记录。"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_start",
+      "value": "开始记录这一段"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_finish",
+      "value": "结束并保存"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_active",
+      "value": "正在记录：%1"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_saved",
+      "value": "已有 %1 段本地记录"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_name",
+      "value": "无线足迹 · %1"
+    },
+    {
+      "name": "fieldwatch_daily_footprint_open",
+      "value": "查看完整足迹"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_title",
+      "value": "相对测向"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_hint",
+      "value": "缓慢转动设备，让每个方向都采到几次信号。方向提示只表示本次旋转中的相对强弱峰值。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_waiting",
+      "value": "继续缓慢转动设备以覆盖更多方向。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_unavailable",
+      "value": "方向传感器暂不可用。你仍可根据 RSSI 变化手动寻线。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_off",
+      "value": "相对测向已关闭，可在设置中重新开启。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_left",
+      "value": "向左转约 %s°"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_right",
+      "value": "向右转约 %s°"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_align",
+      "value": "已对准当前相对峰值；继续转动观察信号变化。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_setting",
+      "value": "寻线方向辅助"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_setting_hint",
+      "value": "使用罗盘与陀螺仪比较转动过程中各方向的信号强弱。只提供相对提示，不代表设备坐标或绝对方位。"
+    },
+    {
+      "name": "fieldwatch_settings_backup_saved",
+      "value": "备份已保存到所选位置。"
+    },
+    {
+      "name": "fieldwatch_settings_backup_not_saved",
+      "value": "备份未保存。你可以重新选择保存位置后再试。"
+    },
+    {
+      "name": "fieldwatch_settings_backup_restored",
+      "value": "设置已从所选文件恢复。"
+    },
+    {
+      "name": "fieldwatch_settings_backup_restore_failed",
+      "value": "未能恢复设置。请检查所选文件是否为有效的电波足迹备份。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_weak_peak",
+      "value": "方向已覆盖，但各方向信号强弱接近，暂未发现可靠峰值。"
+    },
+    {
+      "name": "fieldwatch_signatures_export_not_saved",
+      "value": "未获得保存位置，因此文件未保存。"
+    },
+    {
+      "name": "fieldwatch_reports_save_not_saved",
+      "value": "未获得保存位置，因此文件未保存。"
+    },
+    {
+      "name": "fieldwatch_settings_backup_save_failed",
+      "value": "备份保存失败，文件未写出。"
+    },
+    {
+      "name": "fieldwatch_reports_save_failed",
+      "value": "导出失败，文件未写出。"
+    },
+    {
+      "name": "fieldwatch_signatures_import_not_selected",
+      "value": "未获得文件，特征库未更改。"
+    },
+    {
+      "name": "fieldwatch_settings_backup_restore_not_selected",
+      "value": "未获得备份文件，设置未更改。"
+    },
+    {
+      "name": "fieldwatch_signatures_import_filter",
+      "value": "电波足迹特征包 (*.json)|.json"
+    },
+    {
+      "name": "fieldwatch_settings_backup_file_filter",
+      "value": "电波足迹设置备份 (*.fieldwatch)|.fieldwatch"
     }
   ]
 }

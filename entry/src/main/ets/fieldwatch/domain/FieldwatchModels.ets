@@ -116,6 +116,30 @@ export class GpsSample {
   constructor(latitude: number, longitude: number, at: number) { this.latitude = latitude; this.longitude = longitude; this.at = at; }
 }
 
+/** Phone location stamped when a radio packet was heard; kept only in the live Sighting. */
+export class RadioGpsSample {
+  public latitude: number;
+  public longitude: number;
+  public at: number;
+  public rssi: number;
+  constructor(latitude: number, longitude: number, at: number, rssi: number) {
+    this.latitude = latitude; this.longitude = longitude; this.at = at; this.rssi = rssi;
+  }
+}
+
+/** RSSI recorded with its hear-time for rolling averages and trend classification. */
+export class RadioRssiSample {
+  public at: number;
+  public rssi: number;
+  constructor(at: number, rssi: number) { this.at = at; this.rssi = rssi; }
+}
+
+export enum FieldwatchRssiTrend { UP_FAST, UP, FLAT, DOWN, DOWN_FAST, UNKNOWN }
+
+export function isMeasuredRssi(rssi: number): boolean {
+  return rssi >= -127 && rssi <= 126;
+}
+
 /** BLE Service Data（AD 类型 0x16）：UUID 与随载荷。 */
 export class ServiceDataRecord {
   public uuid: string;
@@ -285,6 +309,7 @@ export class PresenceSpan {
 export class Sighting {
   /** 平滑系数：每次向新采样靠近四分之一。见 `rssiDisplay` 的说明。 */
   private static readonly RSSI_SMOOTH_ALPHA: number = 0.25;
+  private static readonly GPS_TRAIL_WINDOW_MS: number = 90000;
   public key: string;
   public kind: RadioKind;
   public address: string;
@@ -292,10 +317,14 @@ export class Sighting {
   public rssi: number;
   public facts: RadioFacts;
   public location: GpsSample | undefined;
+  /** Bounded phone-location trail captured at hear-time for local co-travel filtering. */
+  public gpsTrail: RadioGpsSample[] = [];
   public firstSeen: number; public lastSeen: number; public count: number = 1; public signatureIds: string[] = [];
   /** 命中签名解码出的字段；与 signatureIds 同步更新。 */
   public decodedFields: DecodedFieldValue[] = [];
   public rssiSamples: number[] = [];
+  /** Last 40 measured RSSI values with their observation timestamps. */
+  public rssiHistory: RadioRssiSample[] = [];
   /**
    * **用于显示**的强度：对原始采样做指数加权平滑（EWMA）。
    *
@@ -337,7 +366,11 @@ export class Sighting {
    */
   public gone: boolean = false;
   constructor(key: string, kind: RadioKind, address: string, name: string, rssi: number, seenAt: number, facts: RadioFacts, location: GpsSample | undefined = undefined) {
-    this.key = key; this.kind = kind; this.address = address; this.name = name; this.rssi = rssi; this.facts = facts; this.location = location; this.firstSeen = seenAt; this.lastSeen = seenAt; this.rssiSamples.push(rssi);
+    this.key = key; this.kind = kind; this.address = address; this.name = name; this.rssi = rssi; this.facts = facts; this.location = location; this.firstSeen = seenAt; this.lastSeen = seenAt;
+    if (isMeasuredRssi(rssi) && this.recordRssiSample(seenAt, rssi)) {
+      this.rssiSamples.push(rssi);
+    }
+    this.recordGpsSample(location, seenAt, rssi);
   }
   static fromObservation(observation: ScanObservation): Sighting {
     const sighting: Sighting = new Sighting(observation.key, observation.kind, observation.address, observation.name,
@@ -370,6 +403,7 @@ export class Sighting {
     if (observation.name.length > 0) this.name = observation.name;
     this.facts = observation.facts;
     if (observation.location !== undefined) this.location = observation.location;
+    this.recordGpsSample(observation.location, observation.seenAt, observation.rssi);
     if (this.count <= 1) {
       this.rssiMin = observation.rssi;
       this.rssiMax = observation.rssi;
@@ -381,13 +415,34 @@ export class Sighting {
     if (lastSpan === undefined || lastSpan.end !== undefined) {
       this.presence.push(new PresenceSpan(observation.seenAt));
     }
-    if (this.rssiSamples.length >= 32) this.rssiSamples.shift();
-    this.rssiSamples.push(observation.rssi);
+    if (isMeasuredRssi(observation.rssi) && this.recordRssiSample(observation.seenAt, observation.rssi)) {
+      if (this.rssiSamples.length >= 32) this.rssiSamples.shift();
+      this.rssiSamples.push(observation.rssi);
+    }
     // 平滑值：首帧直接落位，之后每次向新采样靠近四分之一。
     // 取 0.25 是权衡：太小则跟不上真实的接近/远离（用户会觉得迟钝），
     // 太大则压不住逐帧噪声（一个采样跳 10 dBm 会让节点挪动半圈）。
     if (this.count <= 1 || this.rssiDisplay === 0) this.rssiDisplay = observation.rssi;
     else this.rssiDisplay += (observation.rssi - this.rssiDisplay) * Sighting.RSSI_SMOOTH_ALPHA;
+  }
+
+  private recordGpsSample(location: GpsSample | undefined, at: number, rssi: number): void {
+    if (location === undefined) return;
+    const last: RadioGpsSample | undefined = this.gpsTrail.length === 0 ? undefined : this.gpsTrail[this.gpsTrail.length - 1];
+    if (last !== undefined && at <= last.at) return;
+    const cutoff: number = at - Sighting.GPS_TRAIL_WINDOW_MS;
+    while (this.gpsTrail.length > 0 && this.gpsTrail[0].at < cutoff) this.gpsTrail.shift();
+    this.gpsTrail.push(new RadioGpsSample(location.latitude, location.longitude, at, rssi));
+    while (this.gpsTrail.length > 40) this.gpsTrail.shift();
+  }
+
+  private recordRssiSample(at: number, rssi: number): boolean {
+    const last: RadioRssiSample | undefined = this.rssiHistory.length === 0
+      ? undefined : this.rssiHistory[this.rssiHistory.length - 1];
+    if (last !== undefined && at < last.at) return false;
+    if (this.rssiHistory.length >= 40) this.rssiHistory.shift();
+    this.rssiHistory.push(new RadioRssiSample(at, rssi));
+    return true;
   }
 
   /**
@@ -504,6 +559,8 @@ export class AppSettings { public displayPaused: boolean = false; public darkMod
   public huntBeep: boolean = false;
   /** Hunt 页 geiger tick 触感。默认关，与原版一致。 */
   public huntVibrate: boolean = false;
+  /** 单信号寻线页是否启用相对测向辅助。 */
+  public huntDirectionAssist: boolean = true;
   // ── 列表显示的四个开关（§12.2 显示设置）──
   //
   // 原版这四个都是真实设置字段，界面是 `OptionSwitch(tr("Frequency"), showFrequency, ...)`：

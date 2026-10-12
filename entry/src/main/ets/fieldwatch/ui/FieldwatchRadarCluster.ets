@@ -68,8 +68,19 @@ function bucketLabel(point: FieldwatchRadarPoint): string {
  *
  * 去重叠只写 `x/y`，`originX/originY` 保持不变，因此圈层语义不受影响。
  */
-export function buildRadarNodes(points: Array<FieldwatchRadarPoint>, minClusterSize: number = 2): Array<FieldwatchRadarNode> {
-  const sectors: number = 12;
+export function buildRadarNodes(points: Array<FieldwatchRadarPoint>, minClusterSize: number = 2,
+  zoom: number = 1): Array<FieldwatchRadarNode> {
+  // **聚类阈值必须随缩放反比缩放**（地图聚合的标准做法）。
+  //
+  // 归一化坐标在画布上会被 `radarZoom` 拉伸：放大 2 倍后，两个视觉上
+  // 已经分开的点在归一化坐标里仍然「贴得很近」，于是照样被聚成气泡 ——
+  // 表现就是「放大了、周围明明没有信号，却几乎全是聚合点，小圆点不显现」（实测反馈）。
+  //
+  // 聚类距离 = 基准距离 / zoom：放大 N 倍，等效归一化间距也放大 N 倍，
+  // 超过阈值的自然散开成单点。扇区数同理 —— 放大后 30° 的扇区粒度太粗，
+  // 同扇区并不代表视觉上邻近。
+  const effectiveZoom: number = Math.max(1, zoom);
+  const sectors: number = Math.max(12, Math.round(12 * effectiveZoom));
   const buckets: Map<string, Array<FieldwatchRadarPoint>> = new Map();
   points.forEach((point: FieldwatchRadarPoint): void => {
     const angle: number = Math.atan2(point.y - 0.5, point.x - 0.5);
@@ -103,8 +114,9 @@ export function buildRadarNodes(points: Array<FieldwatchRadarPoint>, minClusterS
       });
     }
   });
-  const merged: Array<FieldwatchRadarNode> = mergeNearbySingles(nodes);
-  relaxNodes(merged);
+  const merged: Array<FieldwatchRadarNode> = mergeNearbySingles(nodes, effectiveZoom);
+  // 去重叠的最小间距同样随缩放反比缩放：放大后视觉间距变大，不需要推那么开。
+  relaxNodes(merged, 28, effectiveZoom);
   return merged;
 }
 
@@ -122,8 +134,9 @@ export function buildRadarNodes(points: Array<FieldwatchRadarPoint>, minClusterS
  * 阈值取 `minGap` 的 0.7 倍：比「判为重叠」的距离略小，
  * 避免把视觉上分得开的点也吞进气泡 —— 那会让用户觉得气泡在乱吸。
  */
-export function mergeNearbySingles(nodes: Array<FieldwatchRadarNode>): Array<FieldwatchRadarNode> {
-  const threshold: number = 0.085 * 0.7;
+export function mergeNearbySingles(nodes: Array<FieldwatchRadarNode>, zoom: number = 1): Array<FieldwatchRadarNode> {
+  // 与 buildRadarNodes 同一个口径：距离阈值随缩放反比缩放（见那里的注释）。
+  const threshold: number = (0.085 * 0.7) / Math.max(1, zoom);
   const used: boolean[] = [];
   for (let i: number = 0; i < nodes.length; i += 1) used.push(false);
   const out: Array<FieldwatchRadarNode> = [];
@@ -165,12 +178,14 @@ export function mergeNearbySingles(nodes: Array<FieldwatchRadarNode>): Array<Fie
  *
  * 只改显示坐标；同时把偏移限制在一个上限内，避免把点推到完全错误的圈层上。
  */
-export function relaxNodes(nodes: Array<FieldwatchRadarNode>, passes: number = 28): void {
-  const minGap: number = 0.085;
+export function relaxNodes(nodes: Array<FieldwatchRadarNode>, passes: number = 28, zoom: number = 1): void {
+  const minGap: number = 0.085 / Math.max(1, zoom);
   // 偏移上限从 0.06 放宽到 0.11：原来两点几乎重合时推不开（位移上限太小），
   // 表现就是「两个图标完全叠在一起」。放宽后仍不至于跑出本圈层 ——
   // 圈层间距是 0.125，0.11 以内不会跨圈。
-  const maxDrift: number = 0.11;
+  // 位移上限同样随缩放反比缩放：放大后归一化位移对应的视觉位移更大，
+  // 上限不变会把点推到完全错误的圈层上。
+  const maxDrift: number = 0.11 / Math.max(1, zoom);
   // 均匀网格加速：只有落在相邻格子里的点才可能重叠。
   // 朴素两两比较是 O(passes × n²) —— 138 个点、28 轮 = 每秒 53 万次开方，
   // 全部跑在 UI 线程上，是雷达卡顿的主要来源之一。

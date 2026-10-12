@@ -105,6 +105,9 @@
         }
       },
       {
+        "name": "ohos.permission.GYROSCOPE"
+      },
+      {
         "name": "ohos.permission.VIBRATE",
         "reason": "$string:vibrate_reason",
         "usedScene": {
