@@ -37,7 +37,7 @@ export class ChangelogEntry {
 }
 
 /** 当前构建号：与 `AppScope/app.json5` 的 `versionCode` 保持一致（发布时同步改）。 */
-export const CHANGELOG_CURRENT_BUILD: number = 1000003;
+export const CHANGELOG_CURRENT_BUILD: number = 1010000;
 
 /**
  * 更新日志，**最新在最前**。
@@ -46,6 +46,13 @@ export const CHANGELOG_CURRENT_BUILD: number = 1000003;
  * 后续版本在数组头部插入新条目，旧条目原样下移。
  */
 export const CHANGELOG_HEAD: ChangelogEntry[] = [
+  new ChangelogEntry('1.1.0', 1010000, '2026-10-18', [
+    ngfText('app.string.fw_cl_110_1'),
+    ngfText('app.string.fw_cl_110_2'),
+    ngfText('app.string.fw_cl_110_3'),
+    ngfText('app.string.fw_cl_110_4'),
+    ngfText('app.string.fw_cl_110_5')
+  ]),
   new ChangelogEntry('1.0.0', 1000003, '2026-10-12', [
     ngfText('app.string.fw_cl_49'),
     ngfText('app.string.fw_cl_50'),

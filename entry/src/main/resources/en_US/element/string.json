@@ -10651,6 +10651,26 @@
     {
       "name": "fw_bl_212c",
       "value": ") "
+    },
+    {
+      "name": "fw_cl_110_1",
+      "value": "New Language setting under Display: Follow system / 中文 / English, applied immediately and remembered"
+    },
+    {
+      "name": "fw_cl_110_2",
+      "value": "Full English coverage: over 500 strings across device explanations, device types, candidate signatures, toolbox, reports and settings"
+    },
+    {
+      "name": "fw_cl_110_3",
+      "value": "Less heat and fewer dropped frames: resource lookup, advertisement parsing, radar drawing and hidden-page rebuilds reworked; paging and scrolling feel smoother"
+    },
+    {
+      "name": "fw_cl_110_4",
+      "value": "Device detail and report explanations now come from localized resources instead of hardcoded text"
+    },
+    {
+      "name": "fw_cl_110_5",
+      "value": "Fixed: the privacy statement and changelog still showed Chinese in English mode"
     }
   ]
 }
