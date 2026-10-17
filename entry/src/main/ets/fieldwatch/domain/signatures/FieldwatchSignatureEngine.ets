@@ -35,8 +35,128 @@ export class SignatureMatchContext {
   public vendorIeOuis: string[] = [];
   public lastSeen: number = 0;
 
-  addressHex(): string { return signatureHexOnly(this.address); }
+  // ── 归一化缓存 ──
+  //
+  // **为什么必须缓存**：一次观测的 context 字段是常量，但规则侧会在 hits() 里
+  // 对同一份字段反复归一化（每条规则一次）。录制实测 signatureHexOnly 独占
+  // 45.6% 的 JS CPU，其中主要就是这类重复计算。这里把「每个字段归一化一次」
+  // 收敛到 context 自身，匹配期只做字段读取。
+  private addressHexCache: string = '';
+  private addressHexCached: boolean = false;
+  private manufacturerHexCache: string = '';
+  private manufacturerHexCached: boolean = false;
+  private serviceUuidAliasCache: string[][] = [];
+  private serviceUuidAliasCached: boolean = false;
+  private serviceDataHexCache: string[] = [];
+  private serviceDataAliasCache: string[][] = [];
+  private serviceDataCached: boolean = false;
+  private vendorIeHexCache: string[] = [];
+  private vendorIeHexCached: boolean = false;
+  private nameLowerCache: string = '';
+  private nameLowerCached: boolean = false;
+
+  addressHex(): string {
+    if (!this.addressHexCached) {
+      this.addressHexCache = signatureHexOnly(this.address);
+      this.addressHexCached = true;
+    }
+    return this.addressHexCache;
+  }
+
   oui(): string { const hex: string = this.addressHex(); return hex.length >= 6 ? hex.substring(0, 6) : hex; }
+
+  /** 名称小写副本。名称包含类规则每条都要比对一次，避免每次重复 toLowerCase。 */
+  nameLower(): string {
+    if (!this.nameLowerCached) {
+      this.nameLowerCache = this.name.toLowerCase();
+      this.nameLowerCached = true;
+    }
+    return this.nameLowerCache;
+  }
+
+  manufacturerDataHexNormalized(): string {
+    if (!this.manufacturerHexCached) {
+      this.manufacturerHexCache = signatureHexOnly(this.manufacturerDataHex);
+      this.manufacturerHexCached = true;
+    }
+    return this.manufacturerHexCache;
+  }
+
+  serviceUuidAliasesAt(index: number): string[] {
+    if (!this.serviceUuidAliasCached) {
+      const aliases: string[][] = [];
+      for (let cursor: number = 0; cursor < this.serviceUuids.length; cursor += 1) {
+        aliases.push(signatureUuidAliases(this.serviceUuids[cursor]));
+      }
+      this.serviceUuidAliasCache = aliases;
+      this.serviceUuidAliasCached = true;
+    }
+    return index >= 0 && index < this.serviceUuidAliasCache.length ? this.serviceUuidAliasCache[index] : [];
+  }
+
+  serviceDataHexAt(index: number): string {
+    this.ensureServiceData();
+    return index >= 0 && index < this.serviceDataHexCache.length ? this.serviceDataHexCache[index] : '';
+  }
+
+  serviceDataAliasesAt(index: number): string[] {
+    this.ensureServiceData();
+    return index >= 0 && index < this.serviceDataAliasCache.length ? this.serviceDataAliasCache[index] : [];
+  }
+
+  vendorIeHexAt(index: number): string {
+    if (!this.vendorIeHexCached) {
+      const hexes: string[] = [];
+      for (let cursor: number = 0; cursor < this.vendorIeOuis.length; cursor += 1) {
+        hexes.push(signatureHexOnly(this.vendorIeOuis[cursor]));
+      }
+      this.vendorIeHexCache = hexes;
+      this.vendorIeHexCached = true;
+    }
+    return index >= 0 && index < this.vendorIeHexCache.length ? this.vendorIeHexCache[index] : '';
+  }
+
+  private fingerprintCache: string = '';
+  private fingerprintCached: boolean = false;
+
+  /**
+   * 匹配相关字段的指纹。
+   *
+   * 只拼接参与规则判定的字段：同指纹 ⇒ 匹配结果必然相同，调用方可直接复用上次结果。
+   * 归一化字段走本类缓存，所以构造指纹本身不产生重复归一化。
+   */
+  matchFingerprint(): string {
+    if (this.fingerprintCached) return this.fingerprintCache;
+    const parts: string[] = [];
+    parts.push(String(this.kind));
+    parts.push(this.addressHex());
+    parts.push(this.name);
+    parts.push(this.hiddenSsid ? '1' : '0');
+    parts.push(this.manufacturerId.toString());
+    parts.push(this.manufacturerDataHexNormalized());
+    for (let index: number = 0; index < this.serviceUuids.length; index += 1) parts.push(this.serviceUuids[index]);
+    for (let index: number = 0; index < this.serviceData.length; index += 1) {
+      parts.push(this.serviceData[index].uuid + '=' + this.serviceDataHexAt(index));
+    }
+    for (let index: number = 0; index < this.vendorIeOuis.length; index += 1) parts.push(this.vendorIeHexAt(index));
+    this.fingerprintCache = parts.join('|');
+    this.fingerprintCached = true;
+    return this.fingerprintCache;
+  }
+
+  private ensureServiceData(): void {
+    if (this.serviceDataCached) return;
+    const hexes: string[] = [];
+    const aliases: string[][] = [];
+    for (let cursor: number = 0; cursor < this.serviceData.length; cursor += 1) {
+      const record: ServiceDataRecord = this.serviceData[cursor];
+      hexes.push(signatureHexOnly(record.dataHex));
+      aliases.push(signatureUuidAliases(record.uuid));
+    }
+    this.serviceDataHexCache = hexes;
+    this.serviceDataAliasCache = aliases;
+    this.serviceDataCached = true;
+  }
 }
 
 export function signatureContextOfObservation(observation: ScanObservation): SignatureMatchContext {
@@ -90,28 +210,32 @@ function globToRegExp(pattern: string): RegExp {
   return new RegExp(body, 'i');
 }
 
-function containsIgnoreCase(haystack: string, needle: string): boolean {
-  if (needle.length === 0) return false;
-  return haystack.toLowerCase().indexOf(needle.toLowerCase()) >= 0;
-}
-
-function matchesPrefix(address: string, prefix: string): boolean {
-  const hex: string = signatureHexOnly(address);
+/** 前缀命中：地址侧读 context 缓存，规则侧入参已是编译期归一化结果。 */
+function matchesPrefix(context: SignatureMatchContext, prefix: string): boolean {
+  const hex: string = context.addressHex();
   const want: string = signatureHexOnly(prefix);
   if (want.length === 0 || hex.length < want.length) return false;
   return hex.substring(0, want.length) === want;
 }
 
-function uuidHits(context: SignatureMatchContext, text: string): boolean {
-  const want: string[] = signatureUuidAliases(text);
+function aliasHits(want: string[], have: string[]): boolean {
+  for (let inner: number = 0; inner < have.length; inner += 1) if (want.indexOf(have[inner]) >= 0) return true;
+  return false;
+}
+
+/**
+ * UUID 别名命中。
+ *
+ * **want 必须是已归一化的别名数组**（规则侧在编译期算好），context 侧读缓存，
+ * 匹配期不再有任何字符串归一化。
+ */
+function uuidHits(context: SignatureMatchContext, want: string[]): boolean {
   if (want.length === 0) return false;
-  for (let index = 0; index < context.serviceUuids.length; index += 1) {
-    const aliases: string[] = signatureUuidAliases(context.serviceUuids[index]);
-    for (let inner = 0; inner < aliases.length; inner += 1) if (want.indexOf(aliases[inner]) >= 0) return true;
+  for (let index: number = 0; index < context.serviceUuids.length; index += 1) {
+    if (aliasHits(want, context.serviceUuidAliasesAt(index))) return true;
   }
-  for (let index = 0; index < context.serviceData.length; index += 1) {
-    const aliases: string[] = signatureUuidAliases(context.serviceData[index].uuid);
-    for (let inner = 0; inner < aliases.length; inner += 1) if (want.indexOf(aliases[inner]) >= 0) return true;
+  for (let index: number = 0; index < context.serviceData.length; index += 1) {
+    if (aliasHits(want, context.serviceDataAliasesAt(index))) return true;
   }
   return false;
 }
@@ -120,8 +244,8 @@ function vendorIeHitsOui(context: SignatureMatchContext, prefix: string): boolea
   if (context.kind !== RadioKind.WIFI) return false;
   const want: string = signatureHexOnly(prefix);
   if (want.length === 0) return false;
-  for (let index = 0; index < context.vendorIeOuis.length; index += 1) {
-    const hex: string = signatureHexOnly(context.vendorIeOuis[index]);
+  for (let index: number = 0; index < context.vendorIeOuis.length; index += 1) {
+    const hex: string = context.vendorIeHexAt(index);
     if (hex.length < 6) continue;
     if (SIGNATURE_WIFI_PROTOCOL_IE_OUIS.indexOf(hex.substring(0, 6)) >= 0) continue;
     if (hex.indexOf(want) === 0) return true;
@@ -166,15 +290,11 @@ function serviceDataHits(context: SignatureMatchContext, aliases: string[], pref
   } else {
     needles.push(prefix);
   }
-  for (let index = 0; index < context.serviceData.length; index += 1) {
-    const record: ServiceDataRecord = context.serviceData[index];
+  for (let index: number = 0; index < context.serviceData.length; index += 1) {
     if (aliases.length > 0) {
-      const recordAliases: string[] = signatureUuidAliases(record.uuid);
-      let uuidOk: boolean = false;
-      for (let inner = 0; inner < recordAliases.length; inner += 1) if (aliases.indexOf(recordAliases[inner]) >= 0) uuidOk = true;
-      if (!uuidOk) continue;
+      if (!aliasHits(aliases, context.serviceDataAliasesAt(index))) continue;
     }
-    const data: string = signatureHexOnly(record.dataHex);
+    const data: string = context.serviceDataHexAt(index);
     // 长度约束按字节算，且对 contains 与 offset 两种模式都生效。
     const bytes: number = Math.floor(data.length / 2);
     if (minLen > 0 && bytes < minLen) continue;
@@ -200,9 +320,12 @@ abstract class SignatureFastRule {
 }
 
 class SignatureContainsRule extends SignatureFastRule {
-  private readonly needle: string;
-  constructor(needle: string, radio: RadioKind | undefined) { super(radio); this.needle = needle; }
-  hits(context: SignatureMatchContext): boolean { return this.radioOk(context) && context.name.length > 0 && containsIgnoreCase(context.name, this.needle); }
+  /** 编译期就小写化的针；匹配期只做一次 indexOf，不再反复 toLowerCase。 */
+  private readonly needleLower: string;
+  constructor(needle: string, radio: RadioKind | undefined) { super(radio); this.needleLower = needle.toLowerCase(); }
+  hits(context: SignatureMatchContext): boolean {
+    return this.radioOk(context) && context.name.length > 0 && context.nameLower().indexOf(this.needleLower) >= 0;
+  }
 }
 
 class SignatureGlobRule extends SignatureFastRule {
@@ -214,7 +337,7 @@ class SignatureGlobRule extends SignatureFastRule {
 class SignatureUuidRule extends SignatureFastRule {
   private readonly aliases: string[];
   constructor(aliases: string[], radio: RadioKind | undefined) { super(radio); this.aliases = aliases; }
-  hits(context: SignatureMatchContext): boolean { return this.radioOk(context) && uuidHits(context, this.aliases.length > 0 ? this.aliases[0] : ''); }
+  hits(context: SignatureMatchContext): boolean { return this.radioOk(context) && uuidHits(context, this.aliases); }
 }
 
 class SignatureManufacturerIdRule extends SignatureFastRule {
@@ -240,7 +363,7 @@ class SignatureManufacturerDataRule extends SignatureFastRule {
     if (this.prefix.length === 0) return false;
     if (this.companyId !== 0 && context.manufacturerId !== this.companyId) return false;
     // 数据已剥掉公司 ID 那 2 字节，offset 直接作用在剩余负载上。
-    return payloadPrefixHits(signatureHexOnly(context.manufacturerDataHex), this.prefix, this.offset, this.minLen, this.maxLen);
+    return payloadPrefixHits(context.manufacturerDataHexNormalized(), this.prefix, this.offset, this.minLen, this.maxLen);
   }
 }
 
@@ -327,8 +450,8 @@ class CompiledSignatureIndex {
           this.mark(hits, map.get(universal));
         }
       }
-      for (let index = 0; index < context.vendorIeOuis.length; index += 1) {
-        const hex: string = signatureHexOnly(context.vendorIeOuis[index]);
+      for (let index: number = 0; index < context.vendorIeOuis.length; index += 1) {
+        const hex: string = context.vendorIeHexAt(index);
         if (hex.length < 6) continue;
         const ie6: string = hex.substring(0, 6);
         if (SIGNATURE_WIFI_PROTOCOL_IE_OUIS.indexOf(ie6) >= 0) continue;
@@ -340,8 +463,8 @@ class CompiledSignatureIndex {
       if (rule.radio !== undefined && rule.radio !== context.kind) continue;
       if (rule.bssid && addressHex.length > 0 && addressHex.indexOf(rule.hex) === 0) hits[rule.planIndex] = true;
       if (rule.vendor && context.kind === RadioKind.WIFI) {
-        for (let inner = 0; inner < context.vendorIeOuis.length; inner += 1) {
-          const hex: string = signatureHexOnly(context.vendorIeOuis[inner]);
+        for (let inner: number = 0; inner < context.vendorIeOuis.length; inner += 1) {
+          const hex: string = context.vendorIeHexAt(inner);
           if (hex.length < 6) continue;
           if (SIGNATURE_WIFI_PROTOCOL_IE_OUIS.indexOf(hex.substring(0, 6)) >= 0) continue;
           if (hex.indexOf(rule.hex) === 0) hits[rule.planIndex] = true;
@@ -433,7 +556,7 @@ function compileFastRule(rule: SignatureRule): SignatureFastRule | undefined {
 function ruleHits(context: SignatureMatchContext, rule: SignatureRule): boolean {
   if (rule.kind !== SignatureRuleKind.RADIO_KIND && rule.radio !== undefined && context.kind !== rule.radio) return false;
   if (rule.kind === SignatureRuleKind.OUI || rule.kind === SignatureRuleKind.MAC_PREFIX) {
-    if (matchesPrefix(context.address, rule.text)) return true;
+    if (matchesPrefix(context, rule.text)) return true;
     if (rule.kind === SignatureRuleKind.OUI && vendorIeHitsOui(context, rule.text)) return true;
     if (rule.kind === SignatureRuleKind.OUI && recoveredWifiOuiHits(context, rule.text)) return true;
     return false;
@@ -442,30 +565,29 @@ function ruleHits(context: SignatureMatchContext, rule: SignatureRule): boolean 
   return fast === undefined ? false : fast.hits(context);
 }
 
-function mfgPrefixOf(dataHex: string): string {
-  const hex: string = signatureHexOnly(dataHex);
-  return hex.length >= 2 ? hex.substring(0, 2) : hex;
-}
+/** Find My 配件 UUID 别名是常量，编译期算一次即可。 */
+const FIND_MY_UUID_ALIASES: string[] = signatureUuidAliases('FD44');
 
 function isAppleContinuity(context: SignatureMatchContext): boolean {
   if (context.manufacturerId !== APPLE_COMPANY_ID) return false;
-  return APPLE_CONTINUITY_PREFIXES.indexOf(mfgPrefixOf(context.manufacturerDataHex)) >= 0;
+  const hex: string = context.manufacturerDataHexNormalized();
+  const prefix: string = hex.length >= 2 ? hex.substring(0, 2) : hex;
+  return APPLE_CONTINUITY_PREFIXES.indexOf(prefix) >= 0;
 }
 
 function hasFindMyAccessoryUuid(context: SignatureMatchContext): boolean {
-  const want: string[] = signatureUuidAliases('FD44');
-  const all: string[] = context.serviceUuids.slice();
-  context.serviceData.forEach((record: ServiceDataRecord): void => { all.push(record.uuid); });
-  for (let index = 0; index < all.length; index += 1) {
-    const aliases: string[] = signatureUuidAliases(all[index]);
-    for (let inner = 0; inner < aliases.length; inner += 1) if (want.indexOf(aliases[inner]) >= 0) return true;
+  for (let index: number = 0; index < context.serviceUuids.length; index += 1) {
+    if (aliasHits(FIND_MY_UUID_ALIASES, context.serviceUuidAliasesAt(index))) return true;
+  }
+  for (let index: number = 0; index < context.serviceData.length; index += 1) {
+    if (aliasHits(FIND_MY_UUID_ALIASES, context.serviceDataAliasesAt(index))) return true;
   }
   return false;
 }
 
 function isTeslaPhoneKeyIBeacon(context: SignatureMatchContext): boolean {
   if (context.manufacturerId !== APPLE_COMPANY_ID) return false;
-  return signatureHexOnly(context.manufacturerDataHex).indexOf(TESLA_IBEACON_MFG_PREFIX) === 0;
+  return context.manufacturerDataHexNormalized().indexOf(TESLA_IBEACON_MFG_PREFIX) === 0;
 }
 
 export class SignatureMatchExplanation {
@@ -531,7 +653,7 @@ export class FieldwatchSignatureEngine {
       if (aliases.length > 1) rules.push(new SignatureRule(SignatureRuleKind.SERVICE_UUID, aliases[1]));
     });
     if (context.manufacturerId > 0) {
-      const prefix: string = signatureHexOnly(context.manufacturerDataHex).substring(0, 2);
+      const prefix: string = context.manufacturerDataHexNormalized().substring(0, 2);
       if (prefix.length > 0) rules.push(new SignatureRule(SignatureRuleKind.MANUFACTURER_DATA, '', context.manufacturerId, prefix));
       else rules.push(new SignatureRule(SignatureRuleKind.MANUFACTURER_ID, '', context.manufacturerId));
     }

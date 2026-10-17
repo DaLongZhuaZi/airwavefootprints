@@ -31,6 +31,7 @@ export class FieldwatchSettingsRepository {
     settings.backgroundScanning = ngfSettingsStoreFacade.getBoolean('fieldwatch.backgroundScanning', settings.backgroundScanning);
     settings.scanIntensity = ngfSettingsStoreFacade.getString('fieldwatch.scanIntensity', settings.scanIntensity);
     settings.liveMode = ngfSettingsStoreFacade.getString('fieldwatch.liveMode', settings.liveMode);
+    settings.dailyMode = ngfSettingsStoreFacade.getBoolean('fieldwatch.dailyMode', settings.dailyMode);
     settings.radarLabelFields = ngfSettingsStoreFacade.getString('fieldwatch.radarLabelFields', settings.radarLabelFields);
     settings.radarLabelFontSize = ngfSettingsStoreFacade.getNumber('fieldwatch.radarLabelFontSize', settings.radarLabelFontSize);
     settings.radarIconSize = ngfSettingsStoreFacade.getNumber('fieldwatch.radarIconSize', settings.radarIconSize);
@@ -50,6 +51,7 @@ export class FieldwatchSettingsRepository {
     ngfSettingsStoreFacade.setString('fieldwatch.watchVoiceWhat', settings.watchVoiceWhat);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.huntBeep', settings.huntBeep);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.huntVibrate', settings.huntVibrate);
+    ngfSettingsStoreFacade.setBoolean('fieldwatch.dailyMode', settings.dailyMode);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.huntDirectionAssist', settings.huntDirectionAssist);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.showRssiBar', settings.showRssiBar);
     ngfSettingsStoreFacade.setBoolean('fieldwatch.showFleetName', settings.showFleetName);

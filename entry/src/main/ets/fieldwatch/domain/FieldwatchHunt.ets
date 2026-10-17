@@ -147,6 +147,36 @@ export const HUNT_TICK_SLOW_MS: number = 1400;
 /** 单次 Hunt 保留的最大样本数。 */
 export const HUNT_MAX_SAMPLES: number = 240;
 
+/**
+ * 判据用的时间窗。
+ *
+ * **为什么需要它**：默认值（近窗 2 秒 / 远窗 3.5–8 秒 / 静默 8 秒）是给 **BLE** 调的 ——
+ * BLE 稳态每秒十几到几十条包。而 **Wi-Fi 扫描是几十秒一次的突发**：用 BLE 的窗，
+ * 两次扫描之间会一直显示「安静」，`CLOSER/FURTHER/SAME` 几乎永远出不来
+ * （真机实测：平板正连着路由器，向导却停在「暂时听不到它了」）。
+ *
+ * 所以窗要跟着**无线种类**走，而不是跟着 dB 走 —— 文档说「Wi-Fi 的 RSSI 同样适用」是对的，
+ * 但没说时间窗也适用。
+ */
+export class HuntWindows {
+  public recentMs: number = HUNT_RECENT_MS;
+  public earlierFromMs: number = HUNT_EARLIER_FROM_MS;
+  public earlierToMs: number = HUNT_EARLIER_TO_MS;
+  public quietMs: number = HUNT_QUIET_MS;
+}
+
+/** Wi-Fi 用：按扫描节奏放宽（近窗=最近一次扫描，远窗=再上一次，静默=漏掉一次扫描）。 */
+export const HUNT_WIFI_WINDOWS: HuntWindows = buildWifiWindows();
+
+function buildWifiWindows(): HuntWindows {
+  const windows: HuntWindows = new HuntWindows();
+  windows.recentMs = 35000;
+  windows.earlierFromMs = 70000;
+  windows.earlierToMs = 35000;
+  windows.quietMs = 45000;
+  return windows;
+}
+
 /** 蓝牙用 127 表示“不可用”，那不是发射功率也不是真实听感。 */
 export function huntRssiMeasured(rssi: number): boolean {
   return rssi >= -127 && rssi <= 126;
@@ -198,12 +228,13 @@ export function huntLastMeasured(rssi: number, samples: HuntSample[]): number {
  * @param lastSeen 最后一次收到该目标的时间；0 表示还没有收到过。
  * @param missing 目标是否已离开实时集合。
  */
-export function huntCue(samples: HuntSample[], now: number, lastSeen: number, missing: boolean): HuntCue {
+export function huntCue(samples: HuntSample[], now: number, lastSeen: number, missing: boolean,
+  windows: HuntWindows = new HuntWindows()): HuntCue {
   if (missing) return HuntCue.GONE;
   if (lastSeen <= 0) return HuntCue.WAITING;
-  if (now - lastSeen > HUNT_QUIET_MS) return HuntCue.QUIET;
+  if (now - lastSeen > windows.quietMs) return HuntCue.QUIET;
   const usable: HuntSample[] = samples.filter((sample: HuntSample): boolean => huntRssiMeasured(sample.rssi));
-  const recent: HuntSample[] = usable.filter((sample: HuntSample): boolean => sample.at >= now - HUNT_RECENT_MS);
+  const recent: HuntSample[] = usable.filter((sample: HuntSample): boolean => sample.at >= now - windows.recentMs);
   let loud: number = -127;
   let hasLoud: boolean = false;
   if (recent.length > 0) {
@@ -211,11 +242,11 @@ export function huntCue(samples: HuntSample[], now: number, lastSeen: number, mi
     hasLoud = true;
   } else {
     for (let index = usable.length - 1; index >= 0; index -= 1) {
-      if (now - usable[index].at <= HUNT_QUIET_MS) { loud = usable[index].rssi; hasLoud = true; break; }
+      if (now - usable[index].at <= windows.quietMs) { loud = usable[index].rssi; hasLoud = true; break; }
     }
   }
   if (hasLoud && loud >= HUNT_VERY_CLOSE_DBM) return HuntCue.VERY_CLOSE;
-  const earlier: HuntSample[] = usable.filter((sample: HuntSample): boolean => sample.at <= now - HUNT_EARLIER_TO_MS && sample.at >= now - HUNT_EARLIER_FROM_MS);
+  const earlier: HuntSample[] = usable.filter((sample: HuntSample): boolean => sample.at <= now - windows.earlierToMs && sample.at >= now - windows.earlierFromMs);
   if (recent.length < 2 || earlier.length < 2) return HuntCue.WAITING;
   const delta: number = huntAverage(recent) - huntAverage(earlier);
   if (delta >= HUNT_STEP_DB) return HuntCue.CLOSER;
@@ -307,5 +338,8 @@ export class HuntSession {
     const usable: HuntSample[] = this.samples.filter((sample: HuntSample): boolean => sample.at >= this.lastSeen - HUNT_RECENT_MS);
     return usable.length > 0 ? huntAverage(usable) : huntAverage(this.samples);
   }
-  cue(now: number): HuntCue { return huntCue(this.samples, now, this.lastSeen, this.missing); }
+  /** 提示状态；`windows` 让调用方按无线种类换时间窗（Wi-Fi 的扫描节奏比 BLE 慢一个量级）。 */
+  cue(now: number, windows: HuntWindows = new HuntWindows()): HuntCue {
+    return huntCue(this.samples, now, this.lastSeen, this.missing, windows);
+  }
 }

@@ -6554,7 +6554,7 @@
     },
     {
       "name": "fieldwatch_hunt_title",
-      "value": "Hunt"
+      "value": "Track"
     },
     {
       "name": "fieldwatch_hunt_start",
@@ -9379,6 +9379,318 @@
     {
       "name": "fieldwatch_settings_backup_file_filter",
       "value": "Fieldwatch settings backups (*.fieldwatch)|.fieldwatch"
+    },
+    {
+      "name": "fieldwatch_find_title",
+      "value": "Find my things"
+    },
+    {
+      "name": "fieldwatch_find_intro",
+      "value": "Pick one of your paired devices — no scanning needed."
+    },
+    {
+      "name": "fieldwatch_find_loading",
+      "value": "Reading your devices…"
+    },
+    {
+      "name": "fieldwatch_find_paired_section",
+      "value": "Your devices (paired in system settings)"
+    },
+    {
+      "name": "fieldwatch_find_claim",
+      "value": "Claim"
+    },
+    {
+      "name": "fieldwatch_find_claimed",
+      "value": "Claimed"
+    },
+    {
+      "name": "fieldwatch_find_claim_router",
+      "value": "Yes, claim it"
+    },
+    {
+      "name": "fieldwatch_find_wifi_card",
+      "value": "Is “%s” — the network you are on — your router?"
+    },
+    {
+      "name": "fieldwatch_find_wifi_hint",
+      "value": "Networks sharing a name cannot be told apart; matching will use the name."
+    },
+    {
+      "name": "fieldwatch_find_owned_section",
+      "value": "My things"
+    },
+    {
+      "name": "fieldwatch_find_none_paired",
+      "value": "No paired devices yet. Headphones, watches and speakers appear here once paired in system Bluetooth."
+    },
+    {
+      "name": "fieldwatch_find_none_owned",
+      "value": "Nothing claimed yet. Tap a device above to start finding it."
+    },
+    {
+      "name": "fieldwatch_find_bluetooth_off",
+      "value": "Bluetooth is off. Turn it on to see the devices you have paired."
+    },
+    {
+      "name": "fieldwatch_find_unstable_hint",
+      "value": "This kind of device is not confirmed to keep a stable address, so you may need to claim it again later."
+    },
+    {
+      "name": "fieldwatch_find_not_mine",
+      "value": "Not mine"
+    },
+    {
+      "name": "fieldwatch_find_unnamed",
+      "value": "Unnamed device"
+    },
+    {
+      "name": "fieldwatch_find_sub_connected",
+      "value": "It is connected to this phone right now — check your pocket first"
+    },
+    {
+      "name": "fieldwatch_find_sub_paired",
+      "value": "Paired in system settings"
+    },
+    {
+      "name": "fieldwatch_find_sub_router",
+      "value": "You are online through this router"
+    },
+    {
+      "name": "fieldwatch_find_never_seen",
+      "value": "Not seen yet"
+    },
+    {
+      "name": "fieldwatch_find_seen_just_now",
+      "value": "Seen just now"
+    },
+    {
+      "name": "fieldwatch_find_seen_minutes",
+      "value": "Seen %d min ago"
+    },
+    {
+      "name": "fieldwatch_find_seen_hours",
+      "value": "Seen %d h ago"
+    },
+    {
+      "name": "fieldwatch_find_seen_days",
+      "value": "Seen %d d ago"
+    },
+    {
+      "name": "fieldwatch_find_removed",
+      "value": "Removed “%s”"
+    },
+    {
+      "name": "fieldwatch_find_save_failed",
+      "value": "Could not save this device — please try again"
+    },
+    {
+      "name": "fieldwatch_toolbox_tab_find",
+      "value": "Find"
+    },
+    {
+      "name": "fieldwatch_find_close",
+      "value": "Stop"
+    },
+    {
+      "name": "fieldwatch_find_found",
+      "value": "Found it"
+    },
+    {
+      "name": "fieldwatch_find_help_title",
+      "value": "Try these"
+    },
+    {
+      "name": "fieldwatch_find_help_wake",
+      "value": "Open the case, or take it out of your bag"
+    },
+    {
+      "name": "fieldwatch_find_help_wake_any",
+      "value": "Wake it up: press it, shake it, or get it moving"
+    },
+    {
+      "name": "fieldwatch_find_help_power",
+      "value": "It may be out of battery — charge it for 5 minutes"
+    },
+    {
+      "name": "fieldwatch_find_help_return",
+      "value": "Too far from where you last saw it? Go back there first"
+    },
+    {
+      "name": "fieldwatch_find_help_connected",
+      "value": "Also check whether it is connected to this phone — if it is, it is nearby"
+    },
+    {
+      "name": "fieldwatch_find_last_seen_title",
+      "value": "Last seen"
+    },
+    {
+      "name": "fieldwatch_find_sound",
+      "value": "Sound"
+    },
+    {
+      "name": "fieldwatch_find_vibrate",
+      "value": "Vibration"
+    },
+    {
+      "name": "fieldwatch_find_cue_very_close",
+      "value": "Right here!"
+    },
+    {
+      "name": "fieldwatch_find_cue_closer",
+      "value": "Getting closer"
+    },
+    {
+      "name": "fieldwatch_find_cue_further",
+      "value": "Getting farther"
+    },
+    {
+      "name": "fieldwatch_find_cue_same",
+      "value": "Somewhere around here"
+    },
+    {
+      "name": "fieldwatch_find_cue_waiting",
+      "value": "Listening…"
+    },
+    {
+      "name": "fieldwatch_find_cue_quiet",
+      "value": "Cannot hear it right now"
+    },
+    {
+      "name": "fieldwatch_find_cue_gone",
+      "value": "It is not nearby"
+    },
+    {
+      "name": "fieldwatch_find_hint_very_close",
+      "value": "Most likely on you or in your bag — check your pockets first."
+    },
+    {
+      "name": "fieldwatch_find_hint_closer",
+      "value": "Right direction — keep going."
+    },
+    {
+      "name": "fieldwatch_find_hint_further",
+      "value": "Wrong way — turn around or step back."
+    },
+    {
+      "name": "fieldwatch_find_hint_same",
+      "value": "Walk slowly and watch how it changes."
+    },
+    {
+      "name": "fieldwatch_find_hint_waiting",
+      "value": "Give it a few seconds. Move the target a little — open the case, for example."
+    },
+    {
+      "name": "fieldwatch_find_hint_quiet",
+      "value": "Metal or a wall may be in the way — try another direction slowly."
+    },
+    {
+      "name": "fieldwatch_find_hint_gone",
+      "value": "Check when and where you last saw it."
+    },
+    {
+      "name": "fieldwatch_find_help_addr_changed",
+      "value": "It is nearby but on a different address — switching to matching by name."
+    },
+    {
+      "name": "fieldwatch_find_shake_title",
+      "value": "Pick up the one you want and give it a shake"
+    },
+    {
+      "name": "fieldwatch_find_shake_hint",
+      "value": "%d devices nearby share this name. The one whose signal moves most when shaken gets selected automatically."
+    },
+    {
+      "name": "fieldwatch_find_shake_row",
+      "value": "Nearby device %d"
+    },
+    {
+      "name": "fieldwatch_find_shake_confirmed",
+      "value": "That's the one"
+    },
+    {
+      "name": "fieldwatch_find_not_it",
+      "value": "Not this one"
+    },
+    {
+      "name": "fieldwatch_find_excluded",
+      "value": "Excluded that one — looking for another"
+    },
+    {
+      "name": "fieldwatch_daily_find",
+      "value": "Find my things"
+    },
+    {
+      "name": "fieldwatch_daily_find_hint",
+      "value": "Find headphones, watches, keys: pick one of your paired devices — no scanning needed."
+    },
+    {
+      "name": "fieldwatch_find_hint_very_close_fixed",
+      "value": "Strong signal — you are right next to it."
+    },
+    {
+      "name": "fieldwatch_find_static_suspect",
+      "value": "It stays strong but the heat never changes. It might be another unit of the same model — pick it up and shake it to see if the heat follows."
+    },
+    {
+      "name": "fieldwatch_find_scan_open",
+      "value": "Not there? Pick from nearby devices"
+    },
+    {
+      "name": "fieldwatch_find_scan_hint",
+      "value": "Only devices with a name, nearest first."
+    },
+    {
+      "name": "fieldwatch_find_scan_empty",
+      "value": "Nothing claimable nearby yet. Turn the device on and bring it closer."
+    },
+    {
+      "name": "fieldwatch_find_sub_nearby",
+      "value": "Found nearby"
+    },
+    {
+      "name": "fieldwatch_restricted_enable_nl",
+      "value": "Enable NearLink scanning"
+    },
+    {
+      "name": "bluetooth_scan_reason",
+      "value": "Radio Footprints needs Bluetooth scanning to passively observe nearby BLE broadcasts. It will not connect to or control the devices it observes."
+    },
+    {
+      "name": "MultitonEntryAbility_label",
+      "value": "Multiton (demo)"
+    },
+    {
+      "name": "MultitonEntryAbility_desc",
+      "value": "Multiton demo"
+    },
+    {
+      "name": "fieldwatch_hunt_trend_hint",
+      "value": "Higher means a stronger signal at that moment, further right means newer. The flat line marks the strongest reading so far."
+    },
+    {
+      "name": "fieldwatch_hunt_metric_hint",
+      "value": "Peak = the strongest reading, range = weakest to strongest, average = mean strength, samples = how many packets arrived. Closer to 0 dBm means stronger."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_map_hint",
+      "value": "A longer spoke means a stronger signal was heard from that direction. The centre is you, not a position on a map."
+    },
+    {
+      "name": "fieldwatch_hunt_direction_coverage",
+      "value": "Directions covered: %d/16 — turn a full circle before trusting the peak."
+    },
+    {
+      "name": "fieldwatch_onb_permission_skip_hint",
+      "value": "You can skip these permissions and still use the basic features."
+    },
+    {
+      "name": "fieldwatch_settings_mode_title",
+      "value": "Mode"
+    },
+    {
+      "name": "fieldwatch_settings_mode_hint",
+      "value": "Choose whether the Live tab opens in Daily or Pro view."
     }
   ]
 }

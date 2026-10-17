@@ -6566,7 +6566,7 @@
     },
     {
       "name": "fieldwatch_hunt_title",
-      "value": "寻线"
+      "value": "寻踪"
     },
     {
       "name": "fieldwatch_hunt_start",
@@ -6574,7 +6574,7 @@
     },
     {
       "name": "fieldwatch_hunt_stop",
-      "value": "停止寻线"
+      "value": "停止寻踪"
     },
     {
       "name": "fieldwatch_hunt_cue_very_close",
@@ -6666,7 +6666,7 @@
     },
     {
       "name": "fieldwatch_hunt_none",
-      "value": "未在搜寻"
+      "value": "未在选择寻踪目标"
     },
     {
       "name": "fieldwatch_hunt_na",
@@ -9318,7 +9318,7 @@
     },
     {
       "name": "fieldwatch_hunt_direction_unavailable",
-      "value": "方向传感器暂不可用。你仍可根据 RSSI 变化手动寻线。"
+      "value": "方向传感器暂不可用。你仍可根据信号强弱变化手动寻踪。"
     },
     {
       "name": "fieldwatch_hunt_direction_off",
@@ -9395,6 +9395,302 @@
     {
       "name": "fieldwatch_settings_backup_file_filter",
       "value": "电波足迹设置备份 (*.fieldwatch)|.fieldwatch"
+    },
+    {
+      "name": "fieldwatch_find_title",
+      "value": "找东西"
+    },
+    {
+      "name": "fieldwatch_find_intro",
+      "value": "先从你配过对的设备里选一台，不用扫描。"
+    },
+    {
+      "name": "fieldwatch_find_loading",
+      "value": "正在读你的设备…"
+    },
+    {
+      "name": "fieldwatch_find_paired_section",
+      "value": "你的设备（系统里配过对）"
+    },
+    {
+      "name": "fieldwatch_find_claim",
+      "value": "认领"
+    },
+    {
+      "name": "fieldwatch_find_claimed",
+      "value": "已认领"
+    },
+    {
+      "name": "fieldwatch_find_claim_router",
+      "value": "就是它，认领"
+    },
+    {
+      "name": "fieldwatch_find_wifi_card",
+      "value": "你现在连着的「%s」是你家路由器吗？"
+    },
+    {
+      "name": "fieldwatch_find_wifi_hint",
+      "value": "名字相同的网络分不出是哪一台，认领后按名字认。"
+    },
+    {
+      "name": "fieldwatch_find_owned_section",
+      "value": "我的东西"
+    },
+    {
+      "name": "fieldwatch_find_none_paired",
+      "value": "还没有配过对的设备。耳机、手表、音箱在系统蓝牙里配过对之后会出现在这里。"
+    },
+    {
+      "name": "fieldwatch_find_none_owned",
+      "value": "还没有认领过东西。上面点一台就能开始找。"
+    },
+    {
+      "name": "fieldwatch_find_bluetooth_off",
+      "value": "蓝牙没开。打开蓝牙后才能看到你配过对的设备。"
+    },
+    {
+      "name": "fieldwatch_find_unstable_hint",
+      "value": "这类设备的地址稳定性还没确认，下次可能要重新认领。"
+    },
+    {
+      "name": "fieldwatch_find_not_mine",
+      "value": "这不是我的"
+    },
+    {
+      "name": "fieldwatch_find_unnamed",
+      "value": "未命名设备"
+    },
+    {
+      "name": "fieldwatch_find_sub_connected",
+      "value": "它正连着这台手机，先摸摸口袋"
+    },
+    {
+      "name": "fieldwatch_find_sub_paired",
+      "value": "系统里配过对"
+    },
+    {
+      "name": "fieldwatch_find_sub_router",
+      "value": "你正在用这台路由器上网"
+    },
+    {
+      "name": "fieldwatch_find_never_seen",
+      "value": "还没见到过"
+    },
+    {
+      "name": "fieldwatch_find_seen_just_now",
+      "value": "刚刚见到"
+    },
+    {
+      "name": "fieldwatch_find_seen_minutes",
+      "value": "%d 分钟前见到"
+    },
+    {
+      "name": "fieldwatch_find_seen_hours",
+      "value": "%d 小时前见到"
+    },
+    {
+      "name": "fieldwatch_find_seen_days",
+      "value": "%d 天前见到"
+    },
+    {
+      "name": "fieldwatch_find_removed",
+      "value": "已移除「%s」"
+    },
+    {
+      "name": "fieldwatch_find_save_failed",
+      "value": "没能保存这台设备，请稍后再试"
+    },
+    {
+      "name": "fieldwatch_toolbox_tab_find",
+      "value": "找东西"
+    },
+    {
+      "name": "fieldwatch_find_close",
+      "value": "结束寻找"
+    },
+    {
+      "name": "fieldwatch_find_found",
+      "value": "找到了"
+    },
+    {
+      "name": "fieldwatch_find_help_title",
+      "value": "试试这几步"
+    },
+    {
+      "name": "fieldwatch_find_help_wake",
+      "value": "打开耳机盒盖，或把它从包里拿出来"
+    },
+    {
+      "name": "fieldwatch_find_help_wake_any",
+      "value": "把它唤醒：按一下、晃一下，或者让它动起来"
+    },
+    {
+      "name": "fieldwatch_find_help_power",
+      "value": "设备可能没电了，先充 5 分钟"
+    },
+    {
+      "name": "fieldwatch_find_help_return",
+      "value": "离上次见到的地方太远？先回到那里"
+    },
+    {
+      "name": "fieldwatch_find_help_connected",
+      "value": "也可以看它有没有连着这台手机：连着就说明就在附近"
+    },
+    {
+      "name": "fieldwatch_find_last_seen_title",
+      "value": "上次见到"
+    },
+    {
+      "name": "fieldwatch_find_sound",
+      "value": "声音"
+    },
+    {
+      "name": "fieldwatch_find_vibrate",
+      "value": "震动"
+    },
+    {
+      "name": "fieldwatch_find_cue_very_close",
+      "value": "就在附近！"
+    },
+    {
+      "name": "fieldwatch_find_cue_closer",
+      "value": "更近了"
+    },
+    {
+      "name": "fieldwatch_find_cue_further",
+      "value": "更远了"
+    },
+    {
+      "name": "fieldwatch_find_cue_same",
+      "value": "就在这一带"
+    },
+    {
+      "name": "fieldwatch_find_cue_waiting",
+      "value": "正在听…"
+    },
+    {
+      "name": "fieldwatch_find_cue_quiet",
+      "value": "暂时听不到它了"
+    },
+    {
+      "name": "fieldwatch_find_cue_gone",
+      "value": "它不在附近"
+    },
+    {
+      "name": "fieldwatch_find_hint_very_close",
+      "value": "多半就在你身上或包里，先摸一摸口袋和包。"
+    },
+    {
+      "name": "fieldwatch_find_hint_closer",
+      "value": "方向对了，继续往前走。"
+    },
+    {
+      "name": "fieldwatch_find_hint_further",
+      "value": "方向反了，转身或退回去。"
+    },
+    {
+      "name": "fieldwatch_find_hint_same",
+      "value": "慢慢走，边走边看变化。"
+    },
+    {
+      "name": "fieldwatch_find_hint_waiting",
+      "value": "再等几秒。先把目标动一动，比如打开耳机盒盖。"
+    },
+    {
+      "name": "fieldwatch_find_hint_quiet",
+      "value": "可能被金属或墙挡住了，换个方向慢慢走。"
+    },
+    {
+      "name": "fieldwatch_find_hint_gone",
+      "value": "先看看它上次是什么时候、在哪里见到的。"
+    },
+    {
+      "name": "fieldwatch_find_help_addr_changed",
+      "value": "它就在附近，但换了地址，已经改按名字找它。"
+    },
+    {
+      "name": "fieldwatch_find_shake_title",
+      "value": "拿起你要找的那台，晃一晃"
+    },
+    {
+      "name": "fieldwatch_find_shake_hint",
+      "value": "附近有 %d 台同名设备。晃动时信号变化最明显的那台会被自动选中。"
+    },
+    {
+      "name": "fieldwatch_find_shake_row",
+      "value": "附近第 %d 台"
+    },
+    {
+      "name": "fieldwatch_find_shake_confirmed",
+      "value": "就是这台"
+    },
+    {
+      "name": "fieldwatch_find_not_it",
+      "value": "这不是它"
+    },
+    {
+      "name": "fieldwatch_find_excluded",
+      "value": "已排除这一台，继续找别的"
+    },
+    {
+      "name": "fieldwatch_daily_find",
+      "value": "找东西"
+    },
+    {
+      "name": "fieldwatch_daily_find_hint",
+      "value": "找耳机、手表、钥匙：从系统里配过对的设备里选一台，不用扫描。"
+    },
+    {
+      "name": "fieldwatch_find_hint_very_close_fixed",
+      "value": "信号很强，你就在它旁边了。"
+    },
+    {
+      "name": "fieldwatch_find_static_suspect",
+      "value": "它一直很强，但热度没什么变化。也可能是别的同款设备 —— 拿起来晃一晃，看热度会不会跟着变。"
+    },
+    {
+      "name": "fieldwatch_find_scan_open",
+      "value": "没找到？从附近的设备里选"
+    },
+    {
+      "name": "fieldwatch_find_scan_hint",
+      "value": "只列出有名字的设备，离你最近的排前面。"
+    },
+    {
+      "name": "fieldwatch_find_scan_empty",
+      "value": "附近暂时没有能认领的设备。把目标开机、拿到近处再试。"
+    },
+    {
+      "name": "fieldwatch_find_sub_nearby",
+      "value": "附近扫到的"
+    },
+    {
+      "name": "fieldwatch_hunt_trend_hint",
+      "value": "线越高＝那一刻信号越强，越靠右＝越新；那条横线是这段时间里最强的一次。"
+    },
+    {
+      "name": "fieldwatch_hunt_metric_hint",
+      "value": "峰值＝最强的一次，区间＝最弱到最强，均值＝平均强弱，样本＝收到多少次。dBm 越接近 0 越强。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_map_hint",
+      "value": "扇形越长＝那个方向收到过越强的信号；中心是你，不是地图上的位置。"
+    },
+    {
+      "name": "fieldwatch_hunt_direction_coverage",
+      "value": "方向已覆盖 %d/16 —— 转满一圈，峰值才可靠。"
+    },
+    {
+      "name": "fieldwatch_onb_permission_skip_hint",
+      "value": "可不授予权限，仅使用基础功能。"
+    },
+    {
+      "name": "fieldwatch_settings_mode_title",
+      "value": "模式选择"
+    },
+    {
+      "name": "fieldwatch_settings_mode_hint",
+      "value": "决定打开应用时实时页默认显示「日常」还是「专业」。"
     }
   ]
 }

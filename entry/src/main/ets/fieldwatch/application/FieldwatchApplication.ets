@@ -72,10 +72,32 @@ export class FieldwatchCatalogImportActionResult {
   }
 }
 
+/** `matchCache` 的条目：一次匹配的输入指纹与输出（命中的签名 id + 解码字段）。 */
+class SignatureMatchCacheEntry {
+  private readonly fingerprint: string;
+  private readonly hits: string[];
+  private readonly decoded: DecodedFieldValue[];
+  constructor(fingerprint: string, hits: string[], decoded: DecodedFieldValue[]) {
+    this.fingerprint = fingerprint; this.hits = hits; this.decoded = decoded;
+  }
+  matches(fingerprint: string): boolean { return this.fingerprint === fingerprint; }
+  signatureIds(): string[] { return this.hits; }
+  decodedFields(): DecodedFieldValue[] { return this.decoded; }
+}
+
 export class FieldwatchApplication {
   private readonly state: FieldwatchApplicationState = new FieldwatchApplicationState();
   private readonly signatureEngine: FieldwatchSignatureEngine = new FieldwatchSignatureEngine();
   private readonly fleetEngine: FieldwatchFleetEngine = new FieldwatchFleetEngine();
+  // ── 匹配结果缓存 ──
+  //
+  // 一台设备在一次录制里会以 10~100 次/秒的频率被重复上报，而参与匹配的字段
+  // （名称、厂商数据、serviceData、厂商 IE）几乎不变。命中缓存后整轮规则匹配与
+  // 解码都被跳过 —— 这是 `ingestNow` 从「每条观测全量匹配」变成「每条观测一次指纹」
+  // 的关键。指纹由 `SignatureMatchContext.matchFingerprint()` 给出，语义是
+  // 「同指纹必然同结果」，因此不会改变匹配行为。
+  private readonly matchCache: Map<string, SignatureMatchCacheEntry> = new Map();
+  private matchCacheFleets: SignatureFleet[] | undefined = undefined;
   private readonly fieldDecoder: FieldwatchSignatureFieldDecoder = new FieldwatchSignatureFieldDecoder();
   private readonly catalogFileGateway: FieldwatchCatalogFileGateway = new FieldwatchCatalogFileGateway();
   private readonly geoService: FieldwatchGeoService = new FieldwatchGeoService();
@@ -377,6 +399,8 @@ export class FieldwatchApplication {
    * 两者不能用同一个通道 —— 否则「打开关注列表」会被当成「切到第 N 个标签页」。
    */
   private pendingRoute: string = '';
+  /** 待处理的寻踪目标设备键（配合「打开寻踪页」的路由一起用）。 */
+  private pendingHuntKey: string = '';
   /** 待处理的目标工具页（工具箱内部的下标）；-1 表示没有。 */
   private pendingTool: number = -1;
 
@@ -407,9 +431,32 @@ export class FieldwatchApplication {
     // 与 `targetTab` 同一条链（快捷方式 / 卡片 / `aa start --ps` 都能用），
     // 这样「打开反追踪」不必先落到工具箱再让用户点一下。
     else if (name === 'toolbox-channel') { this.pendingTab = 4; this.pendingTool = 0; }
-    else if (name === 'toolbox-hunt') { this.pendingTab = 4; this.pendingTool = 1; }
-    else if (name === 'toolbox-antitrack') { this.pendingTab = 4; this.pendingTool = 2; }
+    // 「寻踪」（原寻线）现在是**独立压栈页面**，不再是工具箱里的一个标签页：
+    // 工具箱里那个内联追踪面板已删除（用户反馈：那种设计不实用）。
+    else if (name === 'toolbox-hunt') { this.pendingRoute = 'fieldwatch.hunt'; }
+    else if (name === 'toolbox-antitrack') { this.pendingTab = 4; this.pendingTool = 1; }
+    // 「找东西」是工具箱的第 3 个工具页（下标 2）。
+    // **必须与工具箱里 `tool` 的下标一致**：漏在这里的话，快捷方式/卡片点了会落到别的工具页。
+    else if (name === 'toolbox-find') { this.pendingTab = 4; this.pendingTool = 2; }
     else if (name === 'settings') this.pendingTab = 5;
+  }
+
+  /**
+   * 请求打开独立的「寻踪」页，并锁定目标设备键。
+   *
+   * 与 `requestTab('toolbox-hunt')` 的区别：那个只负责「打开页面」，
+   * 这个还要告诉页面**找哪一台** —— 找东西页点某台设备时走这条路。
+   */
+  requestHunt(targetKey: string): void {
+    this.pendingHuntKey = targetKey;
+    this.pendingRoute = 'fieldwatch.hunt';
+  }
+
+  /** 取走待处理的寻踪目标键；取走后清空。 */
+  consumePendingHuntKey(): string {
+    const value: string = this.pendingHuntKey;
+    this.pendingHuntKey = '';
+    return value;
   }
 
   /** 取走待处理的目标标签页；取走后清空（只生效一次）。 */
@@ -830,6 +877,8 @@ export class FieldwatchApplication {
       // 编辑一条被删除过的内置行等于把它找回来。
       existing.deleted = false;
     }
+    // 就地改写了已有签名（含 rules 整体替换），匹配缓存必须失效。
+    this.invalidateSignatureMatchCache();
     return this.catalogRepository.save(this.state.signatures);
   }
 
@@ -2086,7 +2135,7 @@ export class FieldwatchApplication {
   private appendLogEntry(entry: LogEntry): void {
     this.state.logs.push(entry);
     const overflow: number = this.state.logs.length - FieldwatchApplication.MAX_LOG_ENTRIES;
-    if (overflow > 0) this.state.logs.splice(0, overflow);
+    if (overflow >= FieldwatchApplication.LOG_TRIM_SLACK) this.state.logs.splice(0, overflow);
   }
   /** 相位变化日志；相同相位重复上报时静默，避免淹没其他无线电的日志。 */
   private logRadioPhase(snapshot: RadioSourceSnapshot): void {
@@ -2194,6 +2243,15 @@ export class FieldwatchApplication {
    * 保留字段是为了不破坏 `clearObservationLog()` 的既有语义。
    */
   private static readonly MAX_LOG_ENTRIES: number = 1000;
+  /**
+   * 内存日志的修剪余量：攒够这么多条再一次性 splice。
+   *
+   * 原来每 push 一条就 `splice(0, 1)` 一次，1000 条数组上每秒 100+ 次的 O(n) 搬移；
+   * 改成批量修剪后同样的容量上限，搬移次数降两个数量级。
+   */
+  private static readonly LOG_TRIM_SLACK: number = 128;
+  /** 匹配缓存上限：按「设备 key」存，超过说明设备表已经异常膨胀。 */
+  private static readonly MATCH_CACHE_LIMIT: number = 2048;
 
   clipDeviceLabel(name: string): string {
     const trimmed: string = name.trim().substring(0, FieldwatchApplication.MAX_DEVICE_LABEL);
@@ -2333,6 +2391,35 @@ export class FieldwatchApplication {
     return location === null ? undefined : new GpsSample(location.latitude, location.longitude, Date.now());
   }
 
+  /**
+   * 取一次匹配结果：命中「同一设备 + 同指纹」的缓存就直接复用，否则跑一轮匹配 + 解码。
+   *
+   * 指纹语义是「同指纹必然同结果」，所以复用不会改变匹配行为，只省掉重复计算。
+   */
+  private resolveSignatureMatch(context: SignatureMatchContext): SignatureMatchCacheEntry {
+    // 特征库整体被替换（新建/导入/恢复/过滤）时引用会变，顺手清缓存；
+    // 就地修改（编辑已有签名）由 saveUserFleet 显式失效。
+    if (this.matchCacheFleets !== this.state.signatures) {
+      this.matchCache.clear();
+      this.matchCacheFleets = this.state.signatures;
+    }
+    const fingerprint: string = context.matchFingerprint();
+    const cached: SignatureMatchCacheEntry | undefined = this.matchCache.get(context.key);
+    if (cached !== undefined && cached.matches(fingerprint)) return cached;
+    const hits: string[] = this.fleetEngine.matchContext(context, this.state.signatures);
+    const decoded: DecodedFieldValue[] = this.decodeFields(hits, context);
+    const entry: SignatureMatchCacheEntry = new SignatureMatchCacheEntry(fingerprint, hits, decoded);
+    if (cached === undefined && this.matchCache.size >= FieldwatchApplication.MATCH_CACHE_LIMIT) this.matchCache.clear();
+    this.matchCache.set(context.key, entry);
+    return entry;
+  }
+
+  /** 特征库被就地修改（编辑已有签名 / 删除）时调用，让匹配缓存失效。 */
+  invalidateSignatureMatchCache(): void {
+    this.matchCache.clear();
+    this.matchCacheFleets = undefined;
+  }
+
   private ingestNow(observation: ScanObservation): void {
     // **不要逐条观测打日志**：BLE 稳态约 17~31 条/秒，每条一行 debug 会在几秒内
     // 把整个日志环形缓冲冲干净 —— Wi-Fi 与星闪的启动行被挤掉后，
@@ -2340,8 +2427,9 @@ export class FieldwatchApplication {
     // 需要「收到了多少」时看下面的汇总行，它每 30 秒给一次累计量。
     this.logIngestThrottled(observation.kind);
     const context: SignatureMatchContext = signatureContextOfObservation(observation);
-    const matched: string[] = this.fleetEngine.matchContext(context, this.state.signatures);
-    const decoded: DecodedFieldValue[] = this.decodeFields(matched, context);
+    const match: SignatureMatchCacheEntry = this.resolveSignatureMatch(context);
+    const matched: string[] = match.signatureIds();
+    const decoded: DecodedFieldValue[] = match.decodedFields();
     const hunt: HuntSession | undefined = this.huntSession;
     if (hunt !== undefined && hunt.targetKey === observation.key) hunt.addSample(observation.rssi, observation.seenAt);
     // 反追踪需要 (时间, 强度) 序列，与 Hunt 各自独立。
@@ -2484,6 +2572,11 @@ export class FieldwatchApplication {
   /** 设置器：Hunt 页 geiger tick 触感。 */
   setHuntVibrate(enabled: boolean): void {
     this.state.settings.huntVibrate = enabled;
+    this.settingsRepository.save(this.state.settings);
+  }
+  /** 设置器：实时页默认形态（日常 / 专业）。引导页与设置页共用。 */
+  setDailyMode(daily: boolean): void {
+    this.state.settings.dailyMode = daily;
     this.settingsRepository.save(this.state.settings);
   }
   setHuntDirectionAssist(enabled: boolean): void {

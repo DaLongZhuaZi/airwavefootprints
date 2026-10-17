@@ -24,11 +24,27 @@ export class FieldwatchStoredSit extends SitSummary {
   }
 }
 
+/** 批量插入的列前缀与单行占位符；行数可变，串在运行时拼。 */
+const OBSERVATION_INSERT_PREFIX: string =
+  'INSERT INTO fieldwatch_observations (observation_key, kind, address, name, rssi, seen_at, ssid, '
+  + 'frequency_mhz, band, channel_width, security_type, fresh) VALUES ';
+const OBSERVATION_ROW_PLACEHOLDER: string = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
 export class FieldwatchObservationRepository {
   private initialized: boolean = false;
   private initializing: Promise<boolean> | undefined;
   private writeChain: Promise<void> = Promise.resolve();
   private writeCount: number = 0;
+  // ── 批量写入缓冲 ──
+  //
+  // **为什么不能逐条写**：高密度环境下观测可达 100+ 条/秒，逐条 executeSql 等于每秒
+  // 上百次独立事务提交，每次都要走一遍权限校验 + fsync。能量录制里 RDB 侧
+  // H:VerifyPermission 被调用 8.6 万次/44s、executeSql 占 1.7% CPU，就是这条路。
+  // 改成「内存排队 + 单条多行 INSERT」后写放大从 O(观测数) 降到 O(批次)。
+  private pending: ScanObservation[] = [];
+  private flushTimer: number = -1;
+  private static readonly BATCH_ROWS: number = 24;
+  private static readonly FLUSH_DELAY_MS: number = 400;
 
   async initialize(): Promise<boolean> {
     if (this.initialized) return true;
@@ -39,25 +55,79 @@ export class FieldwatchObservationRepository {
     return result;
   }
 
+  /**
+   * 观测入队。
+   *
+   * 攒够 BATCH_ROWS 条立即落库，否则等 FLUSH_DELAY_MS 再落库；调用方（采集回调）
+   * 不再逐条等待事务提交。
+   */
   async append(observation: ScanObservation): Promise<void> {
-    this.writeChain = this.writeChain.then(async (): Promise<void> => {
-      if (!await this.initialize()) return;
-      try {
-        await ngfRdbManager.executeSql(
-          'INSERT INTO fieldwatch_observations (observation_key, kind, address, name, rssi, seen_at, ssid, frequency_mhz, band, channel_width, security_type, fresh) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-          [observation.key, observation.kind, observation.address, observation.name, observation.rssi, observation.seenAt, observation.facts.ssid, observation.facts.frequencyMhz, observation.facts.band, observation.facts.channelWidth, observation.facts.securityType, observation.fresh]
-        );
-        this.writeCount += 1;
-        if (this.writeCount % 100 === 0) await this.prune();
-      } catch (error) {
-        logger.warn(TAG, '保存观测失败: ' + this.errorMessage(error));
-      }
-    });
-    await this.writeChain;
+    this.pending.push(observation);
+    if (this.pending.length >= FieldwatchObservationRepository.BATCH_ROWS) {
+      this.cancelFlushTimer();
+      await this.writePending();
+      return;
+    }
+    this.scheduleFlush();
   }
 
+  private scheduleFlush(): void {
+    if (this.flushTimer >= 0) return;
+    this.flushTimer = setTimeout((): void => {
+      this.flushTimer = -1;
+      void this.writePending();
+    }, FieldwatchObservationRepository.FLUSH_DELAY_MS);
+  }
+
+  private cancelFlushTimer(): void {
+    if (this.flushTimer < 0) return;
+    clearTimeout(this.flushTimer);
+    this.flushTimer = -1;
+  }
+
+  /** 把缓冲区一次性写成一条多行 INSERT；串行执行，避免与自己的上一次写入交错。 */
+  private writePending(): Promise<void> {
+    this.writeChain = this.writeChain.then(async (): Promise<void> => {
+      if (this.pending.length === 0) return;
+      const batch: ScanObservation[] = this.pending;
+      this.pending = [];
+      if (!await this.initialize()) return;
+      const placeholders: string[] = [];
+      const args: Array<string | number | boolean> = [];
+      for (let index: number = 0; index < batch.length; index += 1) {
+        const observation: ScanObservation = batch[index];
+        placeholders.push(OBSERVATION_ROW_PLACEHOLDER);
+        args.push(observation.key);
+        args.push(observation.kind);
+        args.push(observation.address);
+        args.push(observation.name);
+        args.push(observation.rssi);
+        args.push(observation.seenAt);
+        args.push(observation.facts.ssid);
+        args.push(observation.facts.frequencyMhz);
+        args.push(observation.facts.band);
+        args.push(observation.facts.channelWidth);
+        args.push(observation.facts.securityType);
+        args.push(observation.fresh);
+      }
+      try {
+        await ngfRdbManager.executeSql(OBSERVATION_INSERT_PREFIX + placeholders.join(', '), args);
+        this.writeCount += batch.length;
+        if (this.writeCount >= 100) {
+          this.writeCount = 0;
+          await this.prune();
+        }
+      } catch (error) {
+        logger.warn(TAG, '批量保存观测失败(' + batch.length.toString() + ' 条): ' + this.errorMessage(error));
+      }
+    });
+    return this.writeChain;
+  }
+
+  /** 立刻把缓冲区写盘（切后台 / 退出前调用）。 */
   async flush(): Promise<void> {
-    await this.writeChain;
+    this.cancelFlushTimer();
+    await this.writePending();
   }
 
   async loadRecent(limit: number = 500): Promise<Array<FieldwatchStoredObservation>> {

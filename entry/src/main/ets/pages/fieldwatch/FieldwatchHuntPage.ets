@@ -1,8 +1,12 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
-import { NGFHdsTitleBarOptionsFactory, resolveResourceString } from 'ngf_framework';
+import {
+  ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory,
+  NGFImmersiveTopChromeUnderlay, resolveResourceString
+} from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { HUNT_DIRECTION_SECTOR_COUNT, HuntCue, HuntDirectionMap, HuntSample, HuntSession, huntCueKey, huntCueLevel, huntDirectionSectorHeading, huntRssiMeasured, huntTickIntervalMs } from '../../fieldwatch/domain/FieldwatchHunt';
 import { FieldwatchDirectionSensor, FieldwatchDirectionSensorListener } from '../../fieldwatch/platform/FieldwatchDirectionSensor';
+import { ShakeSample, staticStrongSuspect } from '../../fieldwatch/domain/FieldwatchShakeConfirm';
 import { FieldwatchHuntCombinedFeedback, IFieldwatchHuntFeedback } from '../../fieldwatch/platform/FieldwatchHuntFeedback';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 
@@ -47,6 +51,15 @@ export struct FieldwatchHuntPage {
   private readonly trendSettings: RenderingContextSettings = new RenderingContextSettings(true);
   private readonly trendCtx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.trendSettings);
   private refreshTimer: number = -1;
+  /** 顶部安全区高度（由宿主传入；与设备详情页同一来源）。 */
+  topInset: number = 0;
+  /** 顶部玻璃底板高度；与设备详情页同值，见 `ngfImmersiveContentTop`。 */
+  private readonly underlayHeight: number = 168;
+
+  /** 内容首行应从哪里开始：底板覆盖带 + 顶部安全区（详见 `ngfImmersiveContentTop`）。 */
+  private contentTop(): number { return ngfImmersiveContentTop(this.underlayHeight, this.topInset); }
+  /** 信号又强又不动（可能是别的同款设备）—— 只提示。 */
+  @State private staticSuspect: boolean = false;
   private tickTimer: number = -1;
   private directionSensorRunning: boolean = false;
   private rotationRate: number = 0;
@@ -115,7 +128,12 @@ export struct FieldwatchHuntPage {
           .onReady((): void => { this.drawDirectionMap(); })
         Text(this.directionText()).fontSize(17).fontWeight(FontWeight.Medium)
           .fontColor(this.directionReady ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().text)
-        Text(this.directionCoverage.toString() + '/' + HUNT_DIRECTION_SECTOR_COUNT.toString()).fontSize(12)
+        Text($r('app.string.fieldwatch_hunt_direction_map_hint')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim)
+        // 原来是光秃秃一个「5/16」，看不出在说什么。
+        Text(this.text('app.string.fieldwatch_hunt_direction_coverage')
+          .replace('%d', this.directionCoverage.toString())
+          .replace('16', HUNT_DIRECTION_SECTOR_COUNT.toString())).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
@@ -176,6 +194,7 @@ export struct FieldwatchHuntPage {
 
   private refresh(): void {
     this.syncDirectionSensor();
+    this.staticSuspect = this.judgeStaticSuspect();
     // 每秒把持久化设置同步进来：在设置页改完，回到 Hunt 页最多 1 秒生效。
     const settings = fieldwatchApplication.getState().settings;
     this.huntBeep = settings.huntBeep;
@@ -229,6 +248,21 @@ export struct FieldwatchHuntPage {
     this.onClose();
   }
 
+  /**
+   * 「很强但一直没变化」：文档要求只提示、不断言 —— 固定设备与口袋里的设备在这一项上一样，
+   * 唯一能分开的是用户拿起来晃一晃。判据与常量都在领域层（`staticStrongSuspect`）。
+   */
+  private judgeStaticSuspect(): boolean {
+    if (this.cue !== HuntCue.VERY_CLOSE) return false;
+    const session: HuntSession | undefined = fieldwatchApplication.getHunt();
+    if (session === undefined) return false;
+    const converted: ShakeSample[] = [];
+    session.samples.forEach((sample: HuntSample): void => {
+      converted.push(new ShakeSample(sample.rssi, sample.at));
+    });
+    return staticStrongSuspect(converted, Date.now());
+  }
+
   private cueColor(): string {
     const level: number = huntCueLevel(this.cue);
     if (level >= 3) return FieldwatchPaletteHolder.get().huntVeryClose;
@@ -256,6 +290,14 @@ export struct FieldwatchHuntPage {
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
         .borderRadius(12)
         .onReady((): void => { this.drawTrend(); })
+      // 折线本身没有说怎么读 —— 补一句大白话（用户要求：术语旁加必要说明）。
+      Text($r('app.string.fieldwatch_hunt_trend_hint')).fontSize(12)
+        .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      // 「一直很强但完全不变」可能是别的同款设备：只提示，不断言。
+      if (this.staticSuspect) {
+        Text($r('app.string.fieldwatch_find_static_suspect')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      }
     }.width('100%').alignItems(HorizontalAlign.Start)
   }
 
@@ -311,7 +353,15 @@ export struct FieldwatchHuntPage {
 
   build() {
     HdsNavDestination() {
-      Scroll() {
+      // **与设备详情页同一套顶栏结构**：玻璃底板 + 滚动内容叠在同一 Stack 里。
+      // 之前缺底板：内容从标题栏底下直接穿过，顶部区域看起来没有避让。
+      Stack({ alignContent: Alignment.TopStart }) {
+        NGFImmersiveTopChromeUnderlay({
+          spec: NGFImmersiveTopChromePresetFactory.build(FieldwatchPaletteHolder.get().night,
+            FieldwatchPaletteHolder.get().panel, FieldwatchPaletteHolder.get().night,
+            FieldwatchPaletteHolder.get().accent, FieldwatchPaletteHolder.get().accent, this.underlayHeight)
+        })
+        Scroll() {
         Column({ space: 14 }) {
         Text($r('app.string.fieldwatch_hunt_title')).fontSize(26).fontWeight(FontWeight.Bold)
         Text(this.targetLabel.length > 0 ? this.targetLabel : this.text('app.string.fieldwatch_hunt_none')).fontSize(15).fontColor($r('app.color.text_secondary'))
@@ -328,6 +378,8 @@ export struct FieldwatchHuntPage {
         this.buildMetric($r('app.string.fieldwatch_hunt_range'), this.rangeText.length > 0 ? this.rangeText + ' dBm' : this.text('app.string.fieldwatch_hunt_na'))
         this.buildMetric($r('app.string.fieldwatch_hunt_average'), this.sampleCount > 0 ? Math.round(this.averageRssi).toString() + ' dBm' : this.text('app.string.fieldwatch_hunt_na'))
         this.buildMetric($r('app.string.fieldwatch_hunt_samples'), this.sampleCount.toString())
+      Text($r('app.string.fieldwatch_hunt_metric_hint')).fontSize(12)
+        .fontColor(FieldwatchPaletteHolder.get().textDim)
         this.buildTrend()
         this.buildDirectionMap()
         Row() {
@@ -352,8 +404,9 @@ export struct FieldwatchHuntPage {
         if (!this.tickSupported && !this.soundSupported) Text($r('app.string.fieldwatch_hunt_tick_unavailable')).fontSize(12).fontColor($r('app.color.text_secondary'))
         Text($r('app.string.fieldwatch_hunt_disclaimer')).fontSize(12).fontColor($r('app.color.text_secondary'))
         Button($r('app.string.fieldwatch_hunt_stop')).height(44).width('100%').onClick((): void => { this.stop(); })
-        }.width('100%').padding({ left: 16, right: 16, top: 16, bottom: 48 })
+        }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: 48 })
       }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+      }
     }
     .titleBar(NGFHdsTitleBarOptionsFactory.build(
       $r('app.string.fieldwatch_hunt_title'),
@@ -363,7 +416,9 @@ export struct FieldwatchHuntPage {
       true,
       false
     ))
-    .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP, LayoutSafeAreaEdge.BOTTOM])
+    // 与设备详情页一致：只向顶部扩展（本页没有底部标签栏，向底部扩展没有意义，
+    // 分屏/悬浮窗形态下反而会把按钮压到屏幕边缘外）。
+    .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP])
     // 工具箱中的「信号追踪」进入独立 Hunt 页时，整页跟随导航滑入；
     // 返回时淡出，避免内容瞬间替换造成页面跳变。
     .transition(TransitionEffect.asymmetric(

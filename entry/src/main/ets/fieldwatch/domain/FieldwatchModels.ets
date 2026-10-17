@@ -604,7 +604,9 @@ export class AppSettings { public displayPaused: boolean = false; public darkMod
   public radarLabelFontSize: number = 12;
   /** 雷达设备图标尺寸（vp）。 */
   public radarIconSize: number = 26;
-  public backgroundScanning: boolean = false; public scanIntensity: string = 'balanced'; public liveMode: string = 'radar'; }
+  public backgroundScanning: boolean = false; public scanIntensity: string = 'balanced'; public liveMode: string = 'radar';
+  /** 实时页默认形态：true = 日常摘要，false = 专业视图（引导页「模式选择」与设置页「显示」共用）。 */
+  public dailyMode: boolean = true; }
 export class LogEntry { public id: string; public observation: ScanObservation; public signatureIds: string[]; constructor(id: string, observation: ScanObservation, signatureIds: string[] = []) { this.id = id; this.observation = observation; this.signatureIds = signatureIds; } }
 export class SitSummary { public id: string; public name: string; public startedAt: number; public endedAt: number; public radioCount: number; public deviceKeys: string[]; constructor(id: string, name: string, startedAt: number, endedAt: number = 0, radioCount: number = 0, deviceKeys: string[] = []) { this.id = id; this.name = name; this.startedAt = startedAt; this.endedAt = endedAt; this.radioCount = radioCount; this.deviceKeys = deviceKeys; } }
 export class SitFile { public summary: SitSummary; public radios: Sighting[]; public path: GpsSample[]; constructor(summary: SitSummary, radios: Sighting[] = [], path: GpsSample[] = []) { this.summary = summary; this.radios = radios; this.path = path; } }

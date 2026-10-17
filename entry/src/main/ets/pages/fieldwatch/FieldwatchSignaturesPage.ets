@@ -1,5 +1,5 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
-import { logger, NGFHdsTitleBarOptionsFactory, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
+import { logger, ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFMaterialSheetOptions, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
 import { FieldwatchCatalogImportActionResult, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { SignatureClass, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
 import { SignatureFleet, SignatureRule } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
@@ -182,7 +182,9 @@ export struct FieldwatchSignaturesPage {
       Text($r('app.string.fieldwatch_signatures_offline')).fontSize(12).fontColor($r('app.color.text_secondary'))
       if (this.visible().length === 0) Text($r('app.string.fieldwatch_signatures_empty')).fontSize(14)
         .fontColor($r('app.color.text_secondary'))
-    }.width('100%').padding({ left: 16, right: 16, top: this.topInset + 8, bottom: 16 })
+    }.width('100%').padding({ left: 16, right: 16,
+      // 内嵌模式由外壳避让（topInset 即可）；独立打开时内容要落在玻璃底板之下。
+      top: this.embedded ? this.topInset + 8 : ngfImmersiveContentTop(this.underlayHeight, this.topInset), bottom: 16 })
   }
 
   @Builder
@@ -236,7 +238,18 @@ export struct FieldwatchSignaturesPage {
         .width('100%').height('100%')
         .bindSheet($$this.sheetOpen, this.buildDetailSheet(), this.sheetOptions())
     } else {
-      HdsNavDestination() { this.buildBody() }
+      // 独立打开时与设备详情页同一套顶栏结构：玻璃底板 + 滚动内容。
+      // 之前内容从标题栏底下直接穿过（内嵌模式不受影响，外壳已提供底板）。
+      HdsNavDestination() {
+        Stack({ alignContent: Alignment.TopStart }) {
+          NGFImmersiveTopChromeUnderlay({
+            spec: NGFImmersiveTopChromePresetFactory.build(FieldwatchPaletteHolder.get().night,
+              FieldwatchPaletteHolder.get().panel, FieldwatchPaletteHolder.get().night,
+              FieldwatchPaletteHolder.get().accent, FieldwatchPaletteHolder.get().accent, this.underlayHeight)
+          })
+          this.buildBody()
+        }.width('100%').height('100%')
+      }
         .titleBar(NGFHdsTitleBarOptionsFactory.build(
           $r('app.string.fieldwatch_signatures_title'),
           $r('app.string.fieldwatch_signatures_description'),
@@ -245,10 +258,13 @@ export struct FieldwatchSignaturesPage {
           true,
           false
         ))
-        .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP, LayoutSafeAreaEdge.BOTTOM])
+        .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP])
         .bindSheet($$this.sheetOpen, this.buildDetailSheet(), this.sheetOptions())
     }
   }
+
+  /** 独立打开时的玻璃底板高度（与设备详情页同值）。 */
+  private readonly underlayHeight: number = 168;
 
   @Builder
   private buildCategoryChips() {

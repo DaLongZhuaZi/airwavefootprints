@@ -22,7 +22,8 @@ export struct FieldwatchSegmentedChip {
 
   build() {
     Button(this.label)
-      .height(this.compact ? 36 : 40)
+      // 用 minHeight 而不是 height：系统大字体下按钮要能长高，固定高度会裁字。
+      .constraintSize({ minHeight: this.compact ? 36 : 40 })
       .fontSize(this.compact ? 13 : 14)
       .borderRadius(12)
       .backgroundColor(this.selected ? $r('app.color.button_primary') : $r('app.color.background_secondary'))
@@ -98,7 +99,8 @@ export struct FieldwatchButton {
 
   build() {
     Button(this.label)
-      .height(this.compact ? 36 : 44)
+      // 同上：大字体下要能长高。
+      .constraintSize({ minHeight: this.compact ? 36 : 44 })
       .fontSize(this.compact ? 13 : 15)
       .borderRadius(12)
       .borderWidth(this.tone === FieldwatchButtonTone.OUTLINE ? 1 : 0)

@@ -15,13 +15,37 @@ export function signatureColorAt(index: number): string {
 }
 
 /** 命中签名的 colorIndex；多个命中时取第一个非 0 的签名，无命中返回 -1。 */
+class SignatureFleetIndex {
+  private static source: SignatureFleet[] | undefined = undefined;
+  private static sourceSize: number = -1;
+  private static byId: Map<string, SignatureFleet> = new Map();
+
+  static lookup(fleets: SignatureFleet[], id: string): SignatureFleet | undefined {
+    if (SignatureFleetIndex.source !== fleets || SignatureFleetIndex.sourceSize !== fleets.length) {
+      const rebuilt: Map<string, SignatureFleet> = new Map();
+      for (let cursor: number = 0; cursor < fleets.length; cursor += 1) rebuilt.set(fleets[cursor].id, fleets[cursor]);
+      SignatureFleetIndex.byId = rebuilt;
+      SignatureFleetIndex.source = fleets;
+      SignatureFleetIndex.sourceSize = fleets.length;
+    }
+    return SignatureFleetIndex.byId.get(id);
+  }
+}
+
+/** 按 id 取签名（走索引缓存）。找不到返回 undefined。 */
+export function fleetById(fleets: SignatureFleet[], id: string): SignatureFleet | undefined {
+  return SignatureFleetIndex.lookup(fleets, id);
+}
+
+/** 命中签名的 colorIndex；多个命中时取第一个非 0 的签名，无命中返回 -1。 */
 export function signatureColorIndex(sighting: Sighting, fleets: SignatureFleet[]): number {
   let result: number = -1;
-  sighting.signatureIds.forEach((id: string): void => {
-    if (result >= 0) return;
-    const fleet: SignatureFleet | undefined = fleets.find((item: SignatureFleet): boolean => item.id === id);
+  const ids: string[] = sighting.signatureIds;
+  for (let index: number = 0; index < ids.length; index += 1) {
+    if (result >= 0) break;
+    const fleet: SignatureFleet | undefined = fleetById(fleets, ids[index]);
     if (fleet !== undefined && fleet.colorIndex > 0) result = fleet.colorIndex;
-  });
+  }
   return result;
 }
 
@@ -472,11 +496,11 @@ export function sparklineCommands(samples: number[], width: number, height: numb
 /** 把签名 id 解析成展示名；找不到时回退为 id，便于发现目录漂移。 */
 export function matchedSignatureNames(ids: string[], fleets: SignatureFleet[]): string[] {
   const names: string[] = [];
-  ids.forEach((id: string): void => {
-    const fleet: SignatureFleet | undefined = fleets.find((item: SignatureFleet): boolean => item.id === id);
-    const label: string = fleet === undefined ? id : fleet.name;
+  for (let index: number = 0; index < ids.length; index += 1) {
+    const fleet: SignatureFleet | undefined = fleetById(fleets, ids[index]);
+    const label: string = fleet === undefined ? ids[index] : fleet.name;
     if (names.indexOf(label) < 0) names.push(label);
-  });
+  }
   return names;
 }
 
@@ -485,7 +509,7 @@ export function signatureHitCounts(sightings: Sighting[], fleets: SignatureFleet
   const counts: Map<string, number> = new Map<string, number>();
   sightings.forEach((sighting: Sighting): void => {
     sighting.signatureIds.forEach((id: string): void => {
-      const fleet: SignatureFleet | undefined = fleets.find((item: SignatureFleet): boolean => item.id === id);
+      const fleet: SignatureFleet | undefined = fleetById(fleets, id);
       const label: string = fleet === undefined ? id : fleet.name;
       const current: number | undefined = counts.get(label);
       counts.set(label, current === undefined ? 1 : current + 1);

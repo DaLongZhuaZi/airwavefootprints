@@ -116,7 +116,10 @@ export function buildRadarNodes(points: Array<FieldwatchRadarPoint>, minClusterS
   });
   const merged: Array<FieldwatchRadarNode> = mergeNearbySingles(nodes, effectiveZoom);
   // 去重叠的最小间距同样随缩放反比缩放：放大后视觉间距变大，不需要推那么开。
-  relaxNodes(merged, 28, effectiveZoom);
+  // 去重叠迭代轮数：28 → 18。收敛主要发生在前 10 轮，后 10 轮对视觉几乎无影响，
+  // 但每轮都要遍历相邻格子里的节点对；配合 rebuildRadarGeometry 的脏检查，
+  // 稳态下这一段的调用频率已经降到「点集变化时」一次。
+  relaxNodes(merged, 18, effectiveZoom);
   return merged;
 }
 

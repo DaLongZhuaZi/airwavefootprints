@@ -140,3 +140,49 @@
 **证据**：应急模式界面截图（仅电话/信息 + 「可能因电量过低导致直接关机」）+ `pidof` 为空；代码核对确认格式芯片无 disabled 逻辑。
 **验证**：设备充电、应用可正常启动后，用同一组坐标复验同一操作；若此时正常，则先前现象按设备侧原因归档。
 **更新时间**：2026-10-12
+
+### PR-011 ArkUI `ForEach` 的 key 必须包含所有会变化的渲染字段
+
+**状态**：active
+**范围**：`entry` 层所有 `ForEach` / `LazyForEach` 列表（实时列表、找东西认领列表与「我的东西」、特征库、记录、会话列表）。
+**指令**：key **不能只写身份字段**（id、地址、key）。凡是行内会变化的内容（计数、连接状态、「已认领」徽标、「上次见到」时间、稳定性提示）都必须一并编进 key；否则 ArkUI 会判定「同一个 key = 同一行」，**复用旧行、不重绘**，界面停在旧值。
+**来源**：同一类缺陷在本项目已出现两次 —— ① 实时列表「会话结束计数不刷新」（key 由 `item.id` 改为 `item.id + ':' + item.name + ':' + item.radioCount`）；② 找东西页删掉档案后，已配对行仍显示「已认领」（key 由 `source:key` 改为再带 `alreadyClaimed` 与 `connected`），同时「我的东西」行 key 补上 `lastSeenAt` 与 `addressStable`。
+**证据**：2026-10-16 真机：点「这不是我的」移除档案后，提示行显示「已移除「YUANDAO OriG in」」、直读设备 RDB 也确认只剩 2 条档案，但该行徽标持续 2 分钟以上仍为「已认领」；把状态字段编进 key 后重新装包，同一行立即显示「认领」。
+**验证**：任何「数据变了但界面没变」的怀疑，先看对应 `ForEach` 的 key 是否覆盖了变化的字段；改动列表行渲染内容时，同步检查 key。
+**更新时间**：2026-10-16
+
+### PR-012 资源键完整性必须双向核对（字面量 / 动态前缀 / module.json5）
+
+**状态**：active
+**范围**：`entry/src/main/resources/{base,en_US}/element/string.json` 与所有引用它们的 `.ets`、`module.json5`。
+**指令**：改动或新增资源键后，必须双向核对：① 代码里引用但资源缺失（会显示空白或抛异常）；② 资源存在但没人引用（死资源，说明功能没接上或有拼写错误）。核对时**三种引用方式都要算**：`$r('app.string.X')` 字面量、`'app.string.X_' + 后缀` 动态前缀（取资源时要按前缀展开）、以及 `module.json5` 里的 `$string:X`（权限 reason、Ability label/description —— 这类**只有 base 有、en_US 没有**时，英文用户会看到中文或空白）。两语言文件键数应当相等。
+**来源**：2026-10-16 对全仓 1168 个字面量键 + 6 个动态前缀做了一次完整核对。
+**证据**：核对出并修掉 4 处：① `fieldwatch_restricted_enable_nl`（星闪权限按钮文案）只有中文，英文用户会看到空白；② `fieldwatch_find_shake_confirmed`「就是这台」是死资源 —— 「晃一晃」确认后只显示一个无字勾，说明这条文案当初就没接上，现已接进确认行；③④ `bluetooth_scan_reason`（**权限弹窗给用户看的理由**）与 `MultitonEntryAbility_label/_desc` 只有中文（由 `module.json5` 引用，纯 `.ets` 扫描看不到）。修完两语言键数均为 2416。
+**验证**：任何新增/改名资源键的改动后，跑一次「引用集（字面量 ∪ 按前缀展开 ∪ module.json5 的 $string） vs 两语言键集」的差集检查，两侧都应为空；`find/own` 前缀下不允许存在未被引用的键。
+**更新时间**：2026-10-16
+
+### PR-013 `hvigorw test` 不编译 UI 层：UI 改动必须用 `assembleHap` 验证编译
+
+**状态**：active
+**范围**：所有 `.ets` 修改，尤其是 `entry/src/main/ets/pages/**` 与 `entry/src/main/ets/fieldwatch/ui/**`。
+**指令**：`hvigorw test` 只编译**测试及其依赖图**（主要是 `fieldwatch/domain/**` 等纯逻辑），**不覆盖页面与 UI 组件**。因此 UI 侧的类型错误、悬空引用在 `test` 里看不到。**只要改了 UI 层，就必须跑 `assembleHap` 并检查退出码**，不能拿「测试通过」当作「编译通过」。
+**来源**：2026-10-17 删除工具箱内联追踪面板时，`hvigorw test` 报 BUILD SUCCESSFUL，而 `assembleHap` 失败两次（`buildMetricCell` 被反追踪段共用；`drawHuntTrend` 仍有调用点）。
+**证据**：同一次改动下 `hvigorw test` ERROR_LINES=0 且 BUILD SUCCESSFUL，`assembleHap` 打印 `Error Message: Property 'drawHuntTrend' does not exist on type 'FieldwatchToolboxPage'` 并 `BUILD FAILED`；更危险的是**失败后 `hdc install` 装的是上一次构建的旧 HAP**，界面看起来「没变化」，容易被误判成逻辑问题。
+**验证**：改动 UI 后固定执行：`hvigorw assembleHap --no-daemon`，确认 `BUILD SUCCESSFUL` 与退出码 0，再安装。
+**更新时间**：2026-10-17
+
+### PR-014 匹配热路径禁止逐字符拼串与运行期重复归一化
+
+**状态**：active
+**范围**：`entry/src/main/ets/fieldwatch/domain/signatures/**` 及其任何「每条扫描观测都会走一遍」的代码路径（`ingestNow`、`matchContext`、`decodeFields`、列表行 builder、雷达几何重建）。
+**指令**：
+1. 字符级规范化（十六进制 / 大小写 / 前缀比较）**禁止**用 `result += ch.toUpperCase()` 这类逐字符拼接；用查表 + 数组 `join`，并为「已是目标形态」的入参保留零分配快路径。
+2. 同一个字段的规范化**每条观测只能算一次**：把结果缓存在 `SignatureMatchContext` 的字段里（`addressHex()` / `manufacturerDataHexNormalized()` / `serviceUuidAliasesAt()` / `serviceDataHexAt()` / `vendorIeHexAt()`），规则侧只读缓存；**规则常量**在 `compile()` 期归一化一次，匹配期不得再调 `signatureHexOnly(rule.text)`。
+3. 已知输入不变时不要重算：可复用的结论用「输入指纹」做键（匹配结果用 `matchFingerprint()`，雷达几何用点数 + 缩放 + 量化 RSSI）。指纹必须覆盖**所有参与判定的字段**，否则会出现「结果不更新」。
+4. 列表行 builder、雷达几何、`explain()` 这类会被每帧调用的方法，**禁止**在其内部对目录数组做 `find` / `filter`；一律走 `fleetById()` 索引或预计算 `Map`。
+5. 高频小写入（观测落库）必须批量：单条多行 `INSERT`，不要逐条 `executeSql`；也**不要**在共享 `ngfRdbManager` 上开显式事务（其他仓库的写入会被卷进同一事务）。
+**来源**：2026-10-17 能量录制分析（`docs/性能分析_20261017_Energy_profiler.md`）：主线程 Running 86.5%、App 1.48 核、GC 39.5% 单核、出帧 16.7 fps。
+**证据**：hiperf JS 归因显示 `signatureHexOnly` 单函数占 **45.6%** 的已归因 JS CPU，根因是「逐字符 `+=` 拼接」叠加「观测侧归一化按规则数重复计算」；RDB 侧 `H:VerifyPermission` 8.6 万次/44s 对应逐条 `executeSql`。按本条规定改造后（见 `docs/性能优化实施方案_20261017.md`），四轮 `assembleHap` + 安装均通过，安装后粗略读数从 148% 单核降到约 53% 单核。
+**验证**：改动了上述任何文件或路径时，交付前自查：① 是否新增了字符级拼串；② 是否在 `hits()` 里对 context 或规则常量重新归一化；③ 是否在 builder 里对目录/观测数组做线性扫描；④ 新增的高频写入是否批量。
+**更新时间**：2026-10-17
+

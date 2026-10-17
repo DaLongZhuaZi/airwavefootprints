@@ -12,7 +12,7 @@ import {
   FieldwatchPermissionSpec
 } from '../../fieldwatch/domain/FieldwatchPermissions';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
-import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
+import { FieldwatchButton, FieldwatchButtonTone, FieldwatchSegmentedChip } from '../../fieldwatch/ui/FieldwatchButton';
 import { FieldwatchChip } from '../../fieldwatch/ui/FieldwatchChip';
 import { FieldwatchIntensitySlider } from '../../fieldwatch/ui/FieldwatchIntensitySlider';
 import { onboardingTapAccepted } from '../../fieldwatch/domain/FieldwatchOnboardingGuard';
@@ -69,6 +69,8 @@ export struct FieldwatchOnboardingPage {
   private pressedStep: number = -1;
   @State private snapshot: FieldwatchCapabilitySnapshot = new FieldwatchCapabilitySnapshot();
   @State private topInset: number = 0;
+  /** 实时页默认形态（日常 / 专业）；与设置页「显示」分区是同一项设置。 */
+  @State private dailyMode: boolean = true;
   /** 内容过渡：透明度 + 纵向位移，切换步骤时两段式动画。 */
   @State private contentOpacity: number = 1;
   @State private contentShift: number = 0;
@@ -85,6 +87,8 @@ export struct FieldwatchOnboardingPage {
   private readonly heads: OnboardingStepHead[] = buildStepHeads();
 
   aboutToAppear(): void {
+    // 回看引导时也要显示当前设置（不是写死的默认值）。
+    this.dailyMode = fieldwatchApplication.getState().settings.dailyMode;
     this.readTopInset();
     this.snapshot = fieldwatchApplication.permissionSnapshot();
     // 第 ④ 步的三项**不在这里缓存副本**。
@@ -412,8 +416,34 @@ export struct FieldwatchOnboardingPage {
   * 页面内不重复实现任何逻辑：文案、取值、副作用都复用设置页那一套，
   * 否则「引导里改的」与「设置页改的」迟早会不一致（陷阱 16）。
   */
+  /** 选「日常 / 专业」：立即落盘，下次进入实时页生效。 */
+  private pickDailyMode(daily: boolean): void {
+    if (this.dailyMode === daily) return;
+    this.dailyMode = daily;
+    fieldwatchApplication.setDailyMode(daily);
+  }
+
   @Builder private buildFeatureSettings() {
     Column({ space: 14 }) {
+      // ⓪ 模式选择：实时页默认进「日常」还是「专业」
+      Column({ space: 6 }) {
+        Text($r('app.string.fieldwatch_settings_mode_title')).fontSize(16).fontWeight(FontWeight.Medium)
+          .fontColor(FieldwatchPaletteHolder.get().headerText)
+        // 与实时页同一写法：每个芯片包一层 layoutWeight 容器，各占一半。
+        Row({ space: 8 }) {
+          Column() {
+            FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_daily'),
+              selected: this.dailyMode, fillWidth: true, onTap: (): void => { this.pickDailyMode(true); } })
+          }.layoutWeight(1)
+          Column() {
+            FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_pro'),
+              selected: !this.dailyMode, fillWidth: true, onTap: (): void => { this.pickDailyMode(false); } })
+          }.layoutWeight(1)
+        }.width('100%')
+        Text($r('app.string.fieldwatch_settings_mode_hint')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim)
+      }.width('100%').alignItems(HorizontalAlign.Start)
+
       // ① 扫描强度：固定三节点的进度条（拖动 / 点轨道 / 点标签三种改法都支持）
       Column({ space: 6 }) {
         Text($r('app.string.fieldwatch_settings_scan')).fontSize(16).fontWeight(FontWeight.Medium)
@@ -496,16 +526,12 @@ export struct FieldwatchOnboardingPage {
           else this.finish();
         })
       }.width('100%')
+      // 权限页底部不再放「先用基础功能」按钮（用户要求）：改成一行说明，
+      // 让「拒绝也能继续」这件事可读，但不额外提供一个会跳过的操作入口。
       if (this.step === 2) {
-        Button($r('app.string.fieldwatch_onb_later')).height(44).width('100%')
-          .backgroundColor(Color.Transparent).fontColor(FieldwatchPaletteHolder.get().textDim)
-          .onTouch((event: TouchEvent): void => {
-            if (event.type === TouchType.Down) this.pressedStep = this.step;
-          })
-          .onClick((): void => {
-            if (!this.tapAccepted()) return;
-            this.finishWithoutPermissions();
-          })
+        Text($r('app.string.fieldwatch_onb_permission_skip_hint'))
+          .fontSize(12).textAlign(TextAlign.Center).width('100%')
+          .fontColor(FieldwatchPaletteHolder.get().textDim)
       }
     }.width('100%').padding({ left: 20, right: 20 })
   }

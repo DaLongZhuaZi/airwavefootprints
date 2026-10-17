@@ -14,6 +14,7 @@ import {
   HuntCue, HuntRecord, HuntSample, HuntSession, HuntStats, huntCueKey, huntRssiMeasured
 } from '../../fieldwatch/domain/FieldwatchHunt';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
+import { FieldwatchFindPage } from './FieldwatchFindPage';
 
 /**
  * 横轴的一段连续频率区间。
@@ -97,7 +98,7 @@ export struct FieldwatchToolboxPage {
   onStartHunt: (deviceKey: string) => void = (deviceKey: string): void => {};
   /** 继续当前 Hunt（不重启会话，保留已有样本）。 */
   onOpenHunt: () => void = (): void => {};
-  /** 当前工具页：0 信道分析 / 1 信号追踪 / 2 反追踪。 */
+  /** 当前工具页：0 信道分析 / 1 反追踪 / 2 找东西。（原「信号追踪」内联面板已删除：追踪统一由独立「寻踪」页承担。） */
   @State private tool: number = 0;
   /** 工具页切换方向：1 表示从右侧进入，-1 表示从左侧进入。 */
   @State private toolSlide: number = 1;
@@ -114,8 +115,6 @@ export struct FieldwatchToolboxPage {
   private refreshTimer: number = -1;
   private readonly chartSettings: RenderingContextSettings = new RenderingContextSettings(true);
   private readonly chartCtx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.chartSettings);
-  private readonly huntTrendSettings: RenderingContextSettings = new RenderingContextSettings(true);
-  private readonly huntTrendCtx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.huntTrendSettings);
 
   aboutToAppear(): void {
     this.readChartHeight();
@@ -151,7 +150,6 @@ export struct FieldwatchToolboxPage {
     // 数据变了要重画：Canvas 不会因为状态变化自己刷新。
     setTimeout((): void => {
       this.drawChart();
-      this.drawHuntTrend();
     }, 0);
   }
 
@@ -182,15 +180,18 @@ export struct FieldwatchToolboxPage {
           .width('100%').height('100%')
           .transition(this.toolPageTransition())
       } else if (this.tool === 1) {
-        Column() { this.buildHuntTab() }
-          .id('fieldwatch-tool-hunt')
-          .width('100%').height('100%')
-          .transition(this.toolPageTransition())
-      } else {
         Column() { this.buildAntiTrackTab() }
           .id('fieldwatch-tool-antitrack')
           .width('100%').height('100%')
           .transition(this.toolPageTransition())
+      } else {
+        Column() {
+          // 找东西页自含认领与向导（向导渲染在它内部），不向父层要回调。
+          FieldwatchFindPage({ topInset: this.topInset })
+        }
+        .id('fieldwatch-tool-find')
+        .width('100%').height('100%')
+        .transition(this.toolPageTransition())
       }
     }
     .width('100%').layoutWeight(1).clip(true)
@@ -243,15 +244,16 @@ export struct FieldwatchToolboxPage {
   private buildToolTabs() {
     Row() {
       this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_channel'), 0)
-      this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_hunt'), 1)
-      this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_antitrack'), 2)
+      this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_antitrack'), 1)
+      this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_find'), 2)
     }.width('100%').padding({ left: 8, right: 8 })
   }
 
   @Builder
   private buildToolTab(label: ResourceStr, index: number) {
     Column({ space: 6 }) {
-      Text(label).fontSize(14).maxLines(1)
+      // 四个工具页在窄屏上本就挤，大字体时更要能缩：给字号上下限而不是固定 14。
+      Text(label).fontSize(14).minFontSize(9).maxFontSize(14).maxLines(1)
         .fontColor(index === this.tool ? FieldwatchPaletteHolder.get().accent
           : FieldwatchPaletteHolder.get().textDim)
         .fontWeight(index === this.tool ? FontWeight.Medium : FontWeight.Normal)
@@ -888,65 +890,10 @@ export struct FieldwatchToolboxPage {
     return index >= 0 && index < sorted.length ? sorted[index].rssi : -127;
   }
 
-  // ── ② 信号追踪（Hunt）──
-  @Builder
-  private buildHuntTab() {
-    Scroll() {
-      Column({ space: 12 }) {
-        // ── 面板 1：当前会话 / 候选目标 ──
-        if (this.huntSession() !== undefined) this.buildHuntLivePanel()
-        else this.buildHuntPickerPanel()
-        // ── 面板 2：历史汇总 ──
-        this.buildHuntStatsPanel()
-        // ── 面板 3：搜寻记录 ──
-        this.buildHuntHistoryPanel()
-      }.width('100%').alignItems(HorizontalAlign.Start)
-      .padding({ left: 16, right: 16, top: 12, bottom: 48 })
-    }.width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
-    // **必须顶对齐**：`Scroll` 默认会把内容垂直居中，
-    // 结果是标签页条与内容之间空出一大段（实测截图）。
-    .align(Alignment.TopStart)
-  }
 
-  /** 正在搜寻时的分析面板：状态、指标、趋势。 */
-  @Builder
-  private buildHuntLivePanel() {
-    Column({ space: 10 }) {
-      Row({ space: 8 }) {
-        Circle().width(10).height(10).fill(this.huntCueColor())
-        Text($r('app.string.fieldwatch_toolbox_hunt_active')).fontSize(13)
-          .fontColor(FieldwatchPaletteHolder.get().textDim)
-        Blank()
-        Text(this.huntLabel()).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text).maxLines(1)
-      }.width('100%')
-      Text(this.huntCueText()).fontSize(22).fontWeight(FontWeight.Bold).fontColor(this.huntCueColor())
-      // 指标网格：两列三行。
-      Row({ space: 10 }) {
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_current'), this.huntRssiText(this.huntCurrent()))
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_peak'), this.huntRssiText(this.huntPeak()))
-      }.width('100%')
-      Row({ space: 10 }) {
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_range'), this.huntRange())
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_average'), this.huntRssiText(this.huntAverage()))
-      }.width('100%')
-      Row({ space: 10 }) {
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_samples'), this.huntSamples())
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_elapsed'), this.huntElapsed())
-      }.width('100%')
-      // 迷你趋势：与 Hunt 页同一种读法（横轴样本先后、参考线为峰值）。
-      Canvas(this.huntTrendCtx)
-        .width('100%').height(96)
-        .backgroundColor(FieldwatchPaletteHolder.get().panel)
-        .borderRadius(10)
-        .onReady((): void => { this.drawHuntTrend(); })
-      Button($r('app.string.fieldwatch_toolbox_hunt_resume')).height(40).width('100%')
-        .onClick((): void => { this.onOpenHunt(); })
-    }.id('fieldwatch-tool-hunt-live').width('100%').padding(14)
-    .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
-    .alignItems(HorizontalAlign.Start)
-    .transition(this.huntPanelTransition())
-  }
+  // ── ② 反追踪安全 ──（原「信号追踪」内联面板已删除：追踪统一由独立「寻踪」页面承担）
 
+  /** 指标格：标签 + 数值。信道页与反追踪页共用（删「信号追踪」时误删过一次，勿再删）。 */
   @Builder
   private buildMetricCell(label: ResourceStr, value: string) {
     Column({ space: 2 }) {
@@ -955,232 +902,6 @@ export struct FieldwatchToolboxPage {
     }.layoutWeight(1).alignItems(HorizontalAlign.Start)
   }
 
-  /** 未在搜寻时的候选面板。 */
-  @Builder
-  private buildHuntPickerPanel() {
-    Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_toolbox_hunt_pick')).fontSize(13)
-        .fontColor(FieldwatchPaletteHolder.get().textDim)
-      ForEach(this.huntCandidates(), (item: Sighting): void => {
-        Row({ space: 10 }) {
-          Column({ space: 4 }) {
-            Text(item.name.length > 0 ? item.name : item.key).fontSize(15)
-              .fontColor(FieldwatchPaletteHolder.get().text).maxLines(1)
-            Text(this.kindLabel(item)).fontSize(12)
-              .fontColor(FieldwatchPaletteHolder.get().textDim)
-          }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-          // 强度条：比一个数字更快看出谁最强。
-          Row() {
-            Row().height(6).borderRadius(3).width(this.rssiBarPercent(item.rssi).toString() + '%')
-              .backgroundColor(FieldwatchPaletteHolder.get().accent)
-          }.width(70).height(6).borderRadius(3)
-          .backgroundColor(FieldwatchPaletteHolder.get().outline)
-          Text(item.rssi.toString() + ' dBm').fontSize(13)
-            .fontColor(FieldwatchPaletteHolder.get().accent).width(62).textAlign(TextAlign.End)
-        }.width('100%').padding(12)
-        .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
-        .onClick((): void => { this.onStartHunt(item.key); })
-      }, (item: Sighting): string => item.key)
-    }.id('fieldwatch-tool-hunt-picker').width('100%').alignItems(HorizontalAlign.Start)
-    .transition(this.huntPanelTransition())
-  }
-
-  /** 历史汇总：次数、总时长、最佳峰值。 */
-  @Builder
-  private buildHuntStatsPanel() {
-    Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_toolbox_hunt_stats')).fontSize(14)
-        .fontColor(FieldwatchPaletteHolder.get().text)
-      Row({ space: 10 }) {
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_sessions'), this.huntStats().sessions.toString())
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_total_time'), this.huntTotalTime())
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_hunt_best_peak'), this.huntRssiText(this.huntStats().bestPeak))
-      }.width('100%')
-    }.width('100%').padding(14)
-    .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
-    .alignItems(HorizontalAlign.Start)
-  }
-
-  /** 搜寻记录列表。 */
-  @Builder
-  private buildHuntHistoryPanel() {
-    Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_toolbox_hunt_history')).fontSize(14)
-        .fontColor(FieldwatchPaletteHolder.get().text)
-      if (this.huntHistory().length === 0) {
-        Text($r('app.string.fieldwatch_toolbox_hunt_no_history')).fontSize(12)
-          .fontColor(FieldwatchPaletteHolder.get().textDim)
-      }
-      ForEach(this.huntHistory(), (record: HuntRecord): void => {
-        Column({ space: 4 }) {
-          Row({ space: 8 }) {
-            Text(record.label.length > 0 ? record.label : record.targetKey).fontSize(14)
-              .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(1)
-            Text(this.durationText(record.durationMs())).fontSize(12)
-              .fontColor(FieldwatchPaletteHolder.get().textDim)
-          }.width('100%')
-          Text(this.huntRecordDetail(record)).fontSize(12)
-            .fontColor(FieldwatchPaletteHolder.get().textDim)
-        }.width('100%').padding(12)
-        .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(10)
-        .alignItems(HorizontalAlign.Start)
-      }, (record: HuntRecord): string => record.targetKey + record.endedAt.toString())
-    }.width('100%').alignItems(HorizontalAlign.Start)
-  }
-
-  private huntCurrent(): number {
-    const session: HuntSession | undefined = this.huntSession();
-    return session === undefined ? 127 : session.lastRssi;
-  }
-
-  private huntPeak(): number {
-    const session: HuntSession | undefined = this.huntSession();
-    return session === undefined ? -127 : session.peak();
-  }
-
-  private huntAverage(): number {
-    const session: HuntSession | undefined = this.huntSession();
-    return session === undefined ? 0 : session.average();
-  }
-
-  private huntSamples(): string {
-    const session: HuntSession | undefined = this.huntSession();
-    return session === undefined ? '0' : session.samples.length.toString();
-  }
-
-  private huntRange(): string {
-    const session: HuntSession | undefined = this.huntSession();
-    if (session === undefined) return '—';
-    const range: string = session.rangeText();
-    return range.length > 0 ? range + ' dBm' : '—';
-  }
-
-  private huntElapsed(): string {
-    const session: HuntSession | undefined = this.huntSession();
-    return session === undefined ? '—' : this.durationText(Date.now() - session.startedAt);
-  }
-
-  private huntRssiText(value: number): string {
-    return value >= -127 && value <= 126 ? Math.round(value).toString() + ' dBm' : '—';
-  }
-
-  /** 提示状态的文案键后缀与颜色。 */
-  private huntCueText(): string {
-    const session: HuntSession | undefined = this.huntSession();
-    const cue: HuntCue = session === undefined ? HuntCue.GONE : fieldwatchApplication.huntCueNow();
-    return this.text('app.string.fieldwatch_hunt_cue_' + huntCueKey(cue));
-  }
-
-  /** 返回 `string` 而不是 `ResourceColor`：canvas 的 `strokeStyle` 不收 ResourceColor。 */
-  private huntCueColor(): string {
-    const session: HuntSession | undefined = this.huntSession();
-    const cue: HuntCue = session === undefined ? HuntCue.GONE : fieldwatchApplication.huntCueNow();
-    if (cue === HuntCue.VERY_CLOSE || cue === HuntCue.CLOSER) return '#3DFF9A';
-    if (cue === HuntCue.FURTHER) return '#FF6B7A';
-    if (cue === HuntCue.SAME) return FieldwatchPaletteHolder.get().accent;
-    return FieldwatchPaletteHolder.get().textDim;
-  }
-
-  private huntStats(): HuntStats {
-    const bump: number = this.tick;
-    const stats: HuntStats = fieldwatchApplication.huntStats();
-    return bump >= 0 ? stats : stats;
-  }
-
-  private huntHistory(): HuntRecord[] {
-    const bump: number = this.tick;
-    const list: HuntRecord[] = fieldwatchApplication.getHuntHistory();
-    return bump >= 0 ? list : list;
-  }
-
-  private huntTotalTime(): string { return this.durationText(this.huntStats().totalMs); }
-
-  private huntRecordDetail(record: HuntRecord): string {
-    const template: string = this.text('app.string.fieldwatch_toolbox_hunt_record_detail');
-    return template.replace('%1', record.samples.toString())
-      .replace('%2', this.huntRssiText(record.peak))
-      .replace('%3', this.huntRssiText(Math.round(record.average)));
-  }
-
-  /** 毫秒 -> 「N 秒 / N 分 M 秒 / N 小时 M 分」。 */
-  private durationText(ms: number): string {
-    if (ms <= 0) return '0 秒';
-    const totalSeconds: number = Math.round(ms / 1000);
-    if (totalSeconds < 60) return totalSeconds.toString() + ' 秒';
-    const minutes: number = Math.floor(totalSeconds / 60);
-    if (minutes < 60) return minutes.toString() + ' 分 ' + (totalSeconds % 60).toString() + ' 秒';
-    return Math.floor(minutes / 60).toString() + ' 小时 ' + (minutes % 60).toString() + ' 分';
-  }
-
-  /** RSSI -> 强度条百分比（-95..-30 dBm）。 */
-  private rssiBarPercent(rssi: number): number {
-    const ratio: number = (rssi + 95) / 65;
-    return Math.round(Math.max(4, Math.min(100, ratio * 100)));
-  }
-
-  /** 工具箱里的迷你趋势图：与 Hunt 页同一套读法。 */
-  private drawHuntTrend(): void {
-    const ctx: CanvasRenderingContext2D = this.huntTrendCtx;
-    const width: number = ctx.width;
-    const height: number = ctx.height;
-    if (width <= 0 || height <= 0) return;
-    ctx.clearRect(0, 0, width, height);
-    const session: HuntSession | undefined = this.huntSession();
-    if (session === undefined || session.samples.length < 2) return;
-    const samples: HuntSample[] = session.samples.filter((sample: HuntSample): boolean => huntRssiMeasured(sample.rssi));
-    if (samples.length < 2) return;
-    let low: number = 127;
-    let high: number = -127;
-    samples.forEach((sample: HuntSample): void => {
-      if (sample.rssi < low) low = sample.rssi;
-      if (sample.rssi > high) high = sample.rssi;
-    });
-    const top: number = high + 4;
-    const span: number = Math.max(1, top - (low - 4));
-    const pad: number = 8;
-    const usableH: number = height - pad * 2;
-    const xOf = (index: number): number => pad + index / (samples.length - 1) * (width - pad * 2);
-    const yOf = (rssi: number): number => pad + (top - rssi) / span * usableH;
-    ctx.beginPath();
-    ctx.moveTo(pad, yOf(high));
-    ctx.lineTo(width - pad, yOf(high));
-    ctx.strokeStyle = FieldwatchPaletteHolder.get().outline;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(xOf(0), yOf(samples[0].rssi));
-    for (let i: number = 1; i < samples.length; i += 1) ctx.lineTo(xOf(i), yOf(samples[i].rssi));
-    ctx.strokeStyle = this.huntCueColor();
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-
-  private huntSession(): HuntSession | undefined {
-    const bump: number = this.tick;
-    const session: HuntSession | undefined = fieldwatchApplication.getHunt();
-    return bump >= 0 ? session : session;
-  }
-
-  private huntLabel(): string {
-    const session: HuntSession | undefined = this.huntSession();
-    return session === undefined ? '' : (session.label.length > 0 ? session.label : session.targetKey);
-  }
-
-  private huntCandidates(): Sighting[] {
-    const bump: number = this.tick;
-    const list: Sighting[] = fieldwatchApplication.getState().sightings.slice()
-      .sort((a: Sighting, b: Sighting): number => b.rssi - a.rssi)
-      .slice(0, 8);
-    return bump >= 0 ? list : list;
-  }
-
-  private kindLabel(item: Sighting): string {
-    if (item.kind === RadioKind.WIFI) return this.text('app.string.fieldwatch_toolbox_kind_wifi');
-    if (item.kind === RadioKind.NEARLINK) return this.text('app.string.fieldwatch_toolbox_kind_nearlink');
-    return this.text('app.string.fieldwatch_toolbox_kind_ble');
-  }
-
-  // ── ③ 反追踪安全 ──
   @Builder
   private buildAntiTrackTab() {
     Scroll() {

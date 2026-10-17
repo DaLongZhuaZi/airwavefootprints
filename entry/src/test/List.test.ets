@@ -24,6 +24,14 @@ import fieldwatchWatchAlertTest from './FieldwatchWatchAlert.test';
 import fieldwatchToolboxTest from './FieldwatchToolbox.test';
 import fieldwatchWidgetTest from './FieldwatchWidget.test';
 import fieldwatchExportNamingTest from './FieldwatchExportNaming.test';
+import fieldwatchPairedDevicesTest from './FieldwatchPairedDevices.test';
+import fieldwatchOwnDeviceMatcherTest from './FieldwatchOwnDeviceMatcher.test';
+import fieldwatchWifiLinkTest from './FieldwatchWifiLink.test';
+import fieldwatchOwnDeviceRepositoryTest from './FieldwatchOwnDeviceRepository.test';
+import fieldwatchFindClaimTest from './FieldwatchFindClaim.test';
+import fieldwatchShakeConfirmTest from './FieldwatchShakeConfirm.test';
+import fieldwatchOwnDeviceTrackerTest from './FieldwatchOwnDeviceTracker.test';
+import fieldwatchHuntWindowsTest from './FieldwatchHuntWindows.test';
 
 export default function testsuite() {
   localUnitTest();
@@ -48,4 +56,12 @@ export default function testsuite() {
   fieldwatchToolboxTest();
   fieldwatchWidgetTest();
   fieldwatchExportNamingTest();
+  fieldwatchPairedDevicesTest();
+  fieldwatchOwnDeviceMatcherTest();
+  fieldwatchWifiLinkTest();
+  fieldwatchOwnDeviceRepositoryTest();
+  fieldwatchFindClaimTest();
+  fieldwatchShakeConfirmTest();
+  fieldwatchOwnDeviceTrackerTest();
+  fieldwatchHuntWindowsTest();
 }
