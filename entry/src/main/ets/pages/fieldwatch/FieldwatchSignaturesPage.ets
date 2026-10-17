@@ -12,6 +12,7 @@ import { SignatureSortMode, sortSignatureFleets } from '../../fieldwatch/ui/Fiel
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchFileActionStatus, FieldwatchFileSaveResult } from '../../fieldwatch/platform/FieldwatchCatalogFileGateway';
 import { FieldwatchButton, FieldwatchButtonTone, FieldwatchSegmentedChip } from '../../fieldwatch/ui/FieldwatchButton';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 
 @Component
@@ -151,7 +152,7 @@ export struct FieldwatchSignaturesPage {
   }
 
   private hitsText(count: number): string {
-    const template: string = resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_signatures_hits'));
+    const template: string = fieldwatchText('app.string.fieldwatch_signatures_hits');
     return template.replace('%s', count.toString());
   }
 
@@ -169,19 +170,19 @@ export struct FieldwatchSignaturesPage {
   @Builder
   private buildHeader() {
     Column({ space: 12 }) {
-      Text($r('app.string.fieldwatch_signatures_title')).fontSize(26).fontWeight(FontWeight.Bold)
-      Text($r('app.string.fieldwatch_signatures_description')).fontSize(13).fontColor($r('app.color.text_secondary'))
+      Text(fieldwatchText('app.string.fieldwatch_signatures_title')).fontSize(26).fontWeight(FontWeight.Bold)
+      Text(fieldwatchText('app.string.fieldwatch_signatures_description')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
       // 「目录版本 / 签名总数」原先在这里占一整行，但它属于**元信息**，
       // 和标题、搜索框并列时会打断「标题 -> 描述 -> 搜索」的阅读顺序。
       // 移到下方统计行的中央（见 `buildToolbar`），与「显示 N / N」同行。
-      TextInput({ placeholder: $r('app.string.fieldwatch_signatures_search') }).height(44)
+      TextInput({ placeholder: fieldwatchText('app.string.fieldwatch_signatures_search') }).height(44)
         .onChange((value: string): void => { this.query = value; })
       this.buildCategoryChips()
       this.buildToolbar()
       if (this.notice.length > 0) Text(this.notice).fontSize(13).fontColor(FieldwatchPaletteHolder.get().warn)
-      Text($r('app.string.fieldwatch_signatures_offline')).fontSize(12).fontColor($r('app.color.text_secondary'))
-      if (this.visible().length === 0) Text($r('app.string.fieldwatch_signatures_empty')).fontSize(14)
-        .fontColor($r('app.color.text_secondary'))
+      Text(fieldwatchText('app.string.fieldwatch_signatures_offline')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+      if (this.visible().length === 0) Text(fieldwatchText('app.string.fieldwatch_signatures_empty')).fontSize(14)
+        .fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').padding({ left: 16, right: 16,
       // 内嵌模式由外壳避让（topInset 即可）；独立打开时内容要落在玻璃底板之下。
       top: this.embedded ? this.topInset + 8 : ngfImmersiveContentTop(this.underlayHeight, this.topInset), bottom: 16 })
@@ -251,8 +252,8 @@ export struct FieldwatchSignaturesPage {
         }.width('100%').height('100%')
       }
         .titleBar(NGFHdsTitleBarOptionsFactory.build(
-          $r('app.string.fieldwatch_signatures_title'),
-          $r('app.string.fieldwatch_signatures_description'),
+          fieldwatchText('app.string.fieldwatch_signatures_title'),
+          fieldwatchText('app.string.fieldwatch_signatures_description'),
           FieldwatchPaletteHolder.get().night,
           hdsMaterial.MaterialLevel.GENTLE,
           true,
@@ -270,7 +271,7 @@ export struct FieldwatchSignaturesPage {
   private buildCategoryChips() {
     Scroll() {
       Row({ space: 8 }) {
-        FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_signatures_category_all'), selected: this.categoryIndex < 0,
+        FieldwatchSegmentedChip({ label: fieldwatchText('app.string.fieldwatch_signatures_category_all'), selected: this.categoryIndex < 0,
           onTap: (): void => { this.categoryIndex = -1; this.category = undefined; } })
         ForEach(visibleSignatureClasses(), (item: SignatureClass): void => {
           FieldwatchSegmentedChip({ label: signatureClassLabel(item),
@@ -309,13 +310,13 @@ export struct FieldwatchSignaturesPage {
   /** 顶部只保留两类控件：主操作（新建）+ 元信息（条数 / 排序 / 更多）。 */
   @Builder private buildToolbar() {
     Row({ space: 8 }) {
-      FieldwatchButton({ label: $r('app.string.fieldwatch_signatures_new'), tone: FieldwatchButtonTone.PRIMARY,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_signatures_new'), tone: FieldwatchButtonTone.PRIMARY,
         fillWidth: false, onTap: (): void => { this.onEditFleet('', ''); } }).layoutWeight(1)
       // 关注列表入口。放在这一行而不是「更多」菜单里：
       // 卡片点击会直达该页，用户需要在同一处也能自己找得到。
-      FieldwatchButton({ label: $r('app.string.fieldwatch_watchlist_title'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_watchlist_title'), tone: FieldwatchButtonTone.OUTLINE,
         fillWidth: false, onTap: (): void => { this.onOpenWatchlist(); } }).layoutWeight(1)
-      Button($r('app.string.fieldwatch_signatures_more')).height(44).width(96)
+      Button(fieldwatchText('app.string.fieldwatch_signatures_more')).height(44).width(96)
         .backgroundColor($r('app.color.background_secondary'))
         .bindMenu(this.buildMoreMenu())
     }.width('100%')
@@ -324,9 +325,9 @@ export struct FieldwatchSignaturesPage {
     // 用 `Blank()` 把中间项夹在正中：两侧都留弹性空间，
     // 中间那一项才会落在行中央，而不是被左边那串数字挤偏。
     Row({ space: 8 }) {
-      Text(this.statsText()).fontSize(12).fontColor($r('app.color.text_secondary'))
+      Text(this.statsText()).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       Blank()
-      Text(this.catalogMetaText()).fontSize(12).fontColor($r('app.color.text_secondary'))
+      Text(this.catalogMetaText()).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       Blank()
       Button(this.sortLabelText()).height(36).fontSize(13)
         .backgroundColor($r('app.color.background_secondary'))
@@ -339,19 +340,19 @@ export struct FieldwatchSignaturesPage {
   /** 维护类操作全部收进「更多」，避免和筛选控件抢注意力。 */
   @Builder private buildMoreMenu() {
     Column() {
-      this.buildMenuItem($r('app.string.fieldwatch_signatures_seed_watch'), (): void => {
+      this.buildMenuItem(fieldwatchText('app.string.fieldwatch_signatures_seed_watch'), (): void => {
         const added: number = fieldwatchApplication.seedBuiltInWatchTargets();
         const template: string = added > 0
           ? this.noticeText('app.string.fieldwatch_signatures_seed_done')
           : this.noticeText('app.string.fieldwatch_signatures_seed_none');
         this.notice = added > 0 ? template.replace('%s', added.toString()) : template;
       })
-      this.buildMenuItem($r('app.string.fieldwatch_signatures_share'), (): void => { fieldwatchApplication.shareCatalogSummary(); })
-      this.buildMenuItem($r('app.string.fieldwatch_signatures_export_file'), (): void => { void this.runExportFile(); })
-      this.buildMenuItem($r('app.string.fieldwatch_signatures_import_file'), (): void => { void this.runImportFile(); })
-      this.buildMenuItem($r('app.string.fieldwatch_signatures_save_downloads'), (): void => { void this.runSaveDownloads(); })
-      this.buildMenuItem($r('app.string.fieldwatch_signatures_update'), (): void => { void this.runUpdate(); })
-      this.buildMenuItem($r('app.string.fieldwatch_signatures_restore'), (): void => { this.confirmRestore(); })
+      this.buildMenuItem(fieldwatchText('app.string.fieldwatch_signatures_share'), (): void => { fieldwatchApplication.shareCatalogSummary(); })
+      this.buildMenuItem(fieldwatchText('app.string.fieldwatch_signatures_export_file'), (): void => { void this.runExportFile(); })
+      this.buildMenuItem(fieldwatchText('app.string.fieldwatch_signatures_import_file'), (): void => { void this.runImportFile(); })
+      this.buildMenuItem(fieldwatchText('app.string.fieldwatch_signatures_save_downloads'), (): void => { void this.runSaveDownloads(); })
+      this.buildMenuItem(fieldwatchText('app.string.fieldwatch_signatures_update'), (): void => { void this.runUpdate(); })
+      this.buildMenuItem(fieldwatchText('app.string.fieldwatch_signatures_restore'), (): void => { this.confirmRestore(); })
     }.width(220).padding({ top: 6, bottom: 6 })
   }
   @Builder private buildMenuItem(label: ResourceStr, onTap: () => void) {
@@ -421,21 +422,21 @@ export struct FieldwatchSignaturesPage {
     Row({ space: 10 }) {
       Column({ space: 4 }) {
         Row({ space: 4 }) {
-          Text(fleet.name).fontSize(15).fontColor($r('app.color.text_primary')).maxLines(1)
+          Text(fleet.name).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text).maxLines(1)
           // 已关注：名称旁边给一个 symbol + 文字。
           // 只看名称的话，用户没法在 240 多条里认出自己关注了哪几个。
           if (fieldwatchApplication.isSignatureWatched(fleet.id)) {
             SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(13)
-              .fontColor([$r('app.color.button_primary')])
-            Text($r('app.string.fieldwatch_signatures_watched')).fontSize(12)
-              .fontColor($r('app.color.button_primary'))
+              .fontColor([FieldwatchPaletteHolder.get().accent])
+            Text(fieldwatchText('app.string.fieldwatch_signatures_watched')).fontSize(12)
+              .fontColor(FieldwatchPaletteHolder.get().accent)
           }
         }.width('100%')
-        Text(signatureClassLabel(foldedSignatureClass(fleet.category))).fontSize(13).fontColor($r('app.color.text_secondary')).maxLines(1)
+        Text(signatureClassLabel(foldedSignatureClass(fleet.category))).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(1)
         Text((fleet.builtIn ? this.noticeText('app.string.fieldwatch_signatures_stock') : this.noticeText('app.string.fieldwatch_signatures_user'))
           + ' · ' + this.noticeText('app.string.fieldwatch_signatures_rules') + ': ' + fleet.rules.length.toString()
           + ' · ' + this.hitsText(fieldwatchApplication.countMatches(fleet.id)))
-          .fontSize(12).fontColor($r('app.color.text_secondary'))
+          .fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       Toggle({ type: ToggleType.Switch, isOn: fleet.enabled }).onChange((value: boolean): void => {
         fieldwatchApplication.setFleetEnabled(fleet.id, value);

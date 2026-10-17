@@ -26,9 +26,9 @@ export struct FieldwatchSegmentedChip {
       .constraintSize({ minHeight: this.compact ? 36 : 40 })
       .fontSize(this.compact ? 13 : 14)
       .borderRadius(12)
-      .backgroundColor(this.selected ? $r('app.color.button_primary') : $r('app.color.background_secondary'))
+      .backgroundColor(this.selected ? FieldwatchPaletteHolder.get().accent : $r('app.color.background_secondary'))
       // 文字色与底色成对：选中是深绿，未选中是正文色，两种状态都清晰。
-      .fontColor(this.selected ? $r('app.color.fw_on_accent') : $r('app.color.text_primary'))
+      .fontColor(this.selected ? FieldwatchPaletteHolder.get().onAccent : FieldwatchPaletteHolder.get().text)
       .width(this.fillWidth ? '100%' : undefined)
       .onClick((): void => { this.onTap(); })
   }
@@ -80,14 +80,14 @@ export struct FieldwatchButton {
   onTap: () => void = (): void => {};
 
   private bgColor(): ResourceColor {
-    if (this.tone === FieldwatchButtonTone.PRIMARY) return $r('app.color.button_primary');
-    if (this.tone === FieldwatchButtonTone.DANGER) return $r('app.color.button_warning');
-    if (this.tone === FieldwatchButtonTone.WARN) return $r('app.color.button_secondary');
+    if (this.tone === FieldwatchButtonTone.PRIMARY) return FieldwatchPaletteHolder.get().accent;
+    if (this.tone === FieldwatchButtonTone.DANGER) return FieldwatchPaletteHolder.get().signalRed;
+    if (this.tone === FieldwatchButtonTone.WARN) return FieldwatchPaletteHolder.get().amber;
     return Color.Transparent;
   }
   /** 文字色与底色成对定义，不允许调用方单独覆盖，保证对比度不会被改坏。 */
   private fgColor(): ResourceColor {
-    if (this.tone === FieldwatchButtonTone.PRIMARY) return $r('app.color.fw_on_accent');
+    if (this.tone === FieldwatchButtonTone.PRIMARY) return FieldwatchPaletteHolder.get().onAccent;
     if (this.tone === FieldwatchButtonTone.DANGER) return $r('app.color.fw_on_danger');
     if (this.tone === FieldwatchButtonTone.WARN) return $r('app.color.fw_on_warning');
     return FieldwatchPaletteHolder.get().text;

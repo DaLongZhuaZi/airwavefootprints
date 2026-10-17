@@ -1,3 +1,4 @@
+import { ngfText } from 'ngf_framework';
 /**
  * 更新日志（应用内「关于 → 更新日志」sheet 的数据源）。
  *
@@ -46,9 +47,9 @@ export const CHANGELOG_CURRENT_BUILD: number = 1000003;
  */
 export const CHANGELOG_HEAD: ChangelogEntry[] = [
   new ChangelogEntry('1.0.0', 1000003, '2026-10-12', [
-    '首个公开发布版本：实时雷达、强度 / 时间线 / 信号轨迹 / 分类四种视图与工具箱（信道分析、信号追踪、反追踪）',
-    '611 条内置特征签名、候选特征发现与「添加到目录」；支持目录导出 / 导入 / 更新与恢复默认',
-    '观测会话（开始 / 结束 / 对比）、CSV / JSONL / GPX / KML / WiGLE 导出与复盘 PDF',
-    '隐私模式（地址脱敏）与严格离线：除主动更新特征目录外不产生任何联网'
+    ngfText('app.string.fw_cl_49'),
+    ngfText('app.string.fw_cl_50'),
+    ngfText('app.string.fw_cl_51'),
+    ngfText('app.string.fw_cl_52')
   ])
 ];

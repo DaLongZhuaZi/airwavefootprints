@@ -26,7 +26,7 @@ import { http } from '@kit.NetworkKit';
 import { cryptoFramework } from '@kit.CryptoArchitectureKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { BusinessError } from '@kit.BasicServicesKit';
-import { logger } from 'ngf_framework';
+import { logger, ngfText } from 'ngf_framework';
 
 const TAG: string = 'FieldwatchFeedback';
 
@@ -170,7 +170,7 @@ export class FeedbackUploadProgress {
 
 /** 用户主动取消上传；与真实错误区分开，UI 提示完全不同。 */
 export class FeedbackUploadCancelledError extends Error {
-  public constructor() { super('上传已取消'); }
+  public constructor() { super(ngfText('app.string.fw_fs_173')); }
 }
 
 /** 分块大小 4 MiB（服务端 `chunk_size` 也是它）。 */
@@ -307,7 +307,7 @@ export class FieldwatchFeedbackService {
         const buffer: ArrayBuffer = new ArrayBuffer(readSize);
         const readBytes: number = await fileIo.read(source.fd, buffer, { length: readSize });
         if (readBytes !== readSize) {
-          throw new Error('读取附件失败: expected=' + readSize.toString() + ' actual=' + readBytes.toString());
+          throw new Error(ngfText('app.string.fw_fs_310') + readSize.toString() + ' actual=' + readBytes.toString());
         }
         await md.update({ data: new Uint8Array(buffer) });
         offset += readBytes;
@@ -337,10 +337,10 @@ export class FieldwatchFeedbackService {
     try {
       const stat: fileIo.Stat = await fileIo.stat(source.fd);
       if (stat.size !== session.requested_size) {
-        throw new Error('本地文件大小在上传前发生变化');
+        throw new Error(ngfText('app.string.fw_fs_340'));
       }
       let offset: number = session.received_size;
-      if (offset < 0 || offset > session.requested_size) throw new Error('上传会话偏移无效');
+      if (offset < 0 || offset > session.requested_size) throw new Error(ngfText('app.string.fw_fs_343'));
       if (shouldCancel()) throw new FeedbackUploadCancelledError();
       fileIo.lseek(source.fd, offset, fileIo.WhenceType.SEEK_SET);
       while (offset < session.requested_size) {
@@ -350,12 +350,12 @@ export class FieldwatchFeedbackService {
         const buffer: ArrayBuffer = new ArrayBuffer(readSize);
         const readBytes: number = await fileIo.read(source.fd, buffer, { length: readSize });
         if (readBytes !== readSize) {
-          throw new Error('读取附件失败: expected=' + readSize.toString() + ' actual=' + readBytes.toString());
+          throw new Error(ngfText('app.string.fw_fs_310') + readSize.toString() + ' actual=' + readBytes.toString());
         }
         const result: FeedbackUploadChunkResult | undefined = await this.uploadChunkWithRetry(
           session.upload_id, offset, buffer, shouldCancel);
-        if (result === undefined) throw new Error('分块上传失败');
-        if (result.received_size <= offset && !result.complete) throw new Error('服务器未推进上传偏移');
+        if (result === undefined) throw new Error(ngfText('app.string.fw_fs_357'));
+        if (result.received_size <= offset && !result.complete) throw new Error(ngfText('app.string.fw_fs_358'));
         offset = result.received_size;
         const progress: FeedbackUploadProgress = new FeedbackUploadProgress();
         progress.completed = offset;

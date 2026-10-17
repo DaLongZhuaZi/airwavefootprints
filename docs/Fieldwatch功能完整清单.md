@@ -61,6 +61,13 @@ Fieldwatch 是一个以离线、被动观测为核心的现场无线电观察工
    - 清除日志和管理已保存的 sit。
 5. **Settings（设置）**
    - 管理扫描、显示、关注、位置、TAK / CoT、日志、签名目录、设置备份和隐私选项。
+   - **显示 → 语言**：三选项「跟随系统 / 中文 / English」。
+     - 「跟随系统」清除覆盖值，回落到系统语言；另两项写入覆盖值。
+     - 覆盖值经 `ngfI18nManagerFacade` 持久化（`PersistentStorage`），由 `EntryAbility` 在
+       `loadResult` 回调后重新施加 —— `ApplicationContext.setLanguage` 要求窗口与页面已就绪，
+       在 `onCreate` 里调用会被系统拒绝（表现为冷启动丢语言）。
+     - 切换后立即清空资源文本缓存（`invalidateFieldwatchText`），界面当帧换语言。
+     - 「中文 / English」按各自语言书写，不随界面语言翻译（系统语言列表通行做法）。
 
 ### 2.3 设备详情
 

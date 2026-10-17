@@ -3,7 +3,7 @@ import { deviceInfo } from '@kit.BasicServicesKit';
 import { util } from '@kit.ArkTS';
 import { webview } from '@kit.ArkWeb';
 import { BusinessError } from '@kit.BasicServicesKit';
-import { logger } from 'ngf_framework';
+import { logger, ngfText } from 'ngf_framework';
 import { picker } from '@kit.CoreFileKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { common } from '@kit.AbilityKit';
@@ -20,6 +20,7 @@ import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchAp
 import { LogEntry } from '../../fieldwatch/domain/FieldwatchModels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 /** 待上传附件在本地的状态。 */
 enum LocalAttachmentStatus {
@@ -553,9 +554,9 @@ export struct FieldwatchFeedbackPage {
     const state = fieldwatchApplication.getState();
     const lines: string[] = [];
     const cutoff: number = minutes > 0 ? Date.now() - minutes * 60 * 1000 : 0;
-    lines.push('# 电波足迹 · 记录导出');
-    lines.push('# 导出时间: ' + new Date().toISOString());
-    lines.push('# 应用版本: ' + deviceInfo.displayVersion + ' / ' + deviceInfo.osFullName);
+    lines.push(ngfText('app.string.fw_fb_557'));
+    lines.push(ngfText('app.string.fw_fb_558') + new Date().toISOString());
+    lines.push(ngfText('app.string.fw_fb_559') + deviceInfo.displayVersion + ' / ' + deviceInfo.osFullName);
     lines.push('');
     // `state.logs` 是「记录」—— 用户主动保存的观测条目，不是技术日志。
     // 现场问题几乎都能在最近的记录里复现，所以导出它比导出 hilog 有用。
@@ -816,8 +817,8 @@ export struct FieldwatchFeedbackPage {
         }.width('100%').height('100%')
       }
       .titleBar(NGFHdsTitleBarOptionsFactory.build(
-        $r('app.string.fieldwatch_feedback_title'),
-        $r('app.string.fieldwatch_feedback_subtitle'),
+        fieldwatchText('app.string.fieldwatch_feedback_title'),
+        fieldwatchText('app.string.fieldwatch_feedback_subtitle'),
         FieldwatchPaletteHolder.get().night,
         hdsMaterial.MaterialLevel.GENTLE,
         true,
@@ -861,13 +862,13 @@ export struct FieldwatchFeedbackPage {
         LoadingProgress().width(26).height(26)
           .color(FieldwatchPaletteHolder.get().accent)
         Column({ space: 3 }) {
-          Text($r('app.string.fieldwatch_feedback_turnstile_title')).fontSize(14)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_turnstile_title')).fontSize(14)
             .fontColor(FieldwatchPaletteHolder.get().text)
           Text(this.turnstileHint.length > 0
-            ? this.turnstileHint : $r('app.string.fieldwatch_feedback_turnstile_wait'))
+            ? this.turnstileHint : fieldwatchText('app.string.fieldwatch_feedback_turnstile_wait'))
             .fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(2)
         }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-        Text($r('app.string.fieldwatch_feedback_turnstile_cancel')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_turnstile_cancel')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().accent)
           .onClick((): void => { fieldwatchDeepLinkBridge.accept('airwavefootprints://turnstile?token='); })
       }.width('100%').padding(14)
@@ -901,19 +902,19 @@ export struct FieldwatchFeedbackPage {
     Column({ space: 12 }) {
       this.buildBannerCard()
       this.buildSearchCard()
-      if (this.loading) Text($r('app.string.fieldwatch_feedback_loading')).fontSize(12)
+      if (this.loading) Text(fieldwatchText('app.string.fieldwatch_feedback_loading')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
       if (this.notice.length > 0) Text(this.notice).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().warn)
       if (this.items.length === 0 && !this.loading && this.notice.length === 0) {
-        Text($r('app.string.fieldwatch_feedback_no_items')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_no_items')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }
       ForEach(this.items, (item: FeedbackIssueSummary): void => {
         this.buildIssueCard(item)
       }, (item: FeedbackIssueSummary): string => item.id)
       if (this.items.length > 0 && this.items.length < this.total) {
-        Button($r('app.string.fieldwatch_feedback_load_more')).height(40).width('100%')
+        Button(fieldwatchText('app.string.fieldwatch_feedback_load_more')).height(40).width('100%')
           .backgroundColor(FieldwatchPaletteHolder.get().accent)
           .fontColor(FieldwatchPaletteHolder.get().night)
           .onClick((): void => { void this.loadList(this.page + 1); })
@@ -932,28 +933,28 @@ export struct FieldwatchFeedbackPage {
             .fontColor([FieldwatchPaletteHolder.get().night])
         }
         Column({ space: 3 }) {
-          Text($r('app.string.fieldwatch_feedback_banner_title')).fontSize(18)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_banner_title')).fontSize(18)
             .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
-          Text($r('app.string.fieldwatch_feedback_banner_sub')).fontSize(12)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_banner_sub')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
         }.layoutWeight(1).alignItems(HorizontalAlign.Start)
         Row({ space: 4 }) {
           SymbolGlyph($r('sys.symbol.plus')).fontSize(15)
             .fontColor([FieldwatchPaletteHolder.get().night])
-          Text($r('app.string.fieldwatch_feedback_new_short')).fontSize(14)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_new_short')).fontSize(14)
             .fontColor(FieldwatchPaletteHolder.get().night)
         }.padding({ left: 14, right: 14, top: 8, bottom: 8 })
         .borderRadius(18).backgroundColor(FieldwatchPaletteHolder.get().accent)
         .onClick((): void => { this.notice = ''; this.goToMode('compose'); })
       }.width('100%')
-      Text($r('app.string.fieldwatch_feedback_banner_note')).fontSize(12)
+      Text(fieldwatchText('app.string.fieldwatch_feedback_banner_note')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%').textAlign(TextAlign.Center)
       Row({ space: 8 }) {
-        Text($r('app.string.fieldwatch_feedback_badge_anon')).fontSize(11)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_badge_anon')).fontSize(11)
           .fontColor(FieldwatchPaletteHolder.get().accent)
           .padding({ left: 8, right: 8, top: 3, bottom: 3 }).borderRadius(9)
           .backgroundColor(FieldwatchPaletteHolder.get().accent + '1F')
-        Text($r('app.string.fieldwatch_feedback_badge_admin')).fontSize(11)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_badge_admin')).fontSize(11)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }.width('100%').justifyContent(FlexAlign.Center)
     }.width('100%').padding(14)
@@ -969,7 +970,7 @@ export struct FieldwatchFeedbackPage {
         Row({ space: 8 }) {
           SymbolGlyph($r('sys.symbol.magnifyingglass')).fontSize(16)
             .fontColor([FieldwatchPaletteHolder.get().textDim])
-          TextInput({ text: this.search, placeholder: $r('app.string.fieldwatch_feedback_search') })
+          TextInput({ text: this.search, placeholder: fieldwatchText('app.string.fieldwatch_feedback_search') })
             .layoutWeight(1).height(36).fontSize(14).backgroundColor(Color.Transparent)
             .onChange((value: string): void => { this.search = value; })
             .onSubmit((): void => { void this.loadList(1); })
@@ -982,21 +983,21 @@ export struct FieldwatchFeedbackPage {
         }.onClick((): void => { void this.loadList(1); })
       }.width('100%')
       Row({ space: 6 }) {
-        Text($r('app.string.fieldwatch_feedback_label_type')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_label_type')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width(30)
-        this.buildTypeChip($r('app.string.fieldwatch_feedback_all'), '')
+        this.buildTypeChip(fieldwatchText('app.string.fieldwatch_feedback_all'), '')
         ForEach(ISSUE_TYPES, (item: string): void => {
           this.buildTypeChip($r('app.string.fieldwatch_feedback_type_' + item), item)
         }, (item: string): string => item)
       }.width('100%')
       Row({ space: 6 }) {
-        Text($r('app.string.fieldwatch_feedback_label_status')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_label_status')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width(30)
-        this.buildStatusChip($r('app.string.fieldwatch_feedback_all'), '')
-        this.buildStatusChip($r('app.string.fieldwatch_feedback_status_open'), 'open')
-        this.buildStatusChip($r('app.string.fieldwatch_feedback_status_in_progress'), 'in_progress')
-        this.buildStatusChip($r('app.string.fieldwatch_feedback_status_resolved'), 'resolved')
-        this.buildStatusChip($r('app.string.fieldwatch_feedback_status_closed'), 'closed')
+        this.buildStatusChip(fieldwatchText('app.string.fieldwatch_feedback_all'), '')
+        this.buildStatusChip(fieldwatchText('app.string.fieldwatch_feedback_status_open'), 'open')
+        this.buildStatusChip(fieldwatchText('app.string.fieldwatch_feedback_status_in_progress'), 'in_progress')
+        this.buildStatusChip(fieldwatchText('app.string.fieldwatch_feedback_status_resolved'), 'resolved')
+        this.buildStatusChip(fieldwatchText('app.string.fieldwatch_feedback_status_closed'), 'closed')
       }.width('100%')
     }.width('100%').padding(14)
     .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
@@ -1096,7 +1097,7 @@ export struct FieldwatchFeedbackPage {
     Column({ space: 12 }) {
       Row({ space: 8 }) {
         Blank()
-        Text($r('app.string.fieldwatch_feedback_back')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_back')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().accent)
           .onClick((): void => { this.notice = ''; this.goToMode('list'); void this.loadList(1); })
       }.width('100%')
@@ -1121,7 +1122,7 @@ export struct FieldwatchFeedbackPage {
           SymbolGlyph($r('sys.symbol.plus')).fontSize(15)
             .fontColor([FieldwatchPaletteHolder.get().night])
           Text(detail.supported_by_device
-            ? $r('app.string.fieldwatch_feedback_supported_already') : $r('app.string.fieldwatch_feedback_support'))
+            ? fieldwatchText('app.string.fieldwatch_feedback_supported_already') : fieldwatchText('app.string.fieldwatch_feedback_support'))
             .fontSize(14).fontColor(FieldwatchPaletteHolder.get().night)
         }.padding({ left: 14, right: 14, top: 8, bottom: 8 })
         .borderRadius(18)
@@ -1132,7 +1133,7 @@ export struct FieldwatchFeedbackPage {
       if (this.notice.length > 0) Text(this.notice).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().warn)
       // 正文作为时间线的第一条（漫匣把描述也放在时间线里）。
-      this.buildTimelineCard($r('app.string.fieldwatch_feedback_author_anon'), detail.description,
+      this.buildTimelineCard(fieldwatchText('app.string.fieldwatch_feedback_author_anon'), detail.description,
         detail.created_at, false)
       ForEach(detail.posts, (post: FeedbackIssuePost): void => {
         this.buildTimelineCard(post.author_kind, post.body, post.created_at,
@@ -1145,13 +1146,13 @@ export struct FieldwatchFeedbackPage {
         Row({ space: 8 }) {
           SymbolGlyph($r('sys.symbol.square_and_pencil')).fontSize(18)
             .fontColor([FieldwatchPaletteHolder.get().accent])
-          Text($r('app.string.fieldwatch_feedback_reply_title')).fontSize(15)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_reply_title')).fontSize(15)
             .fontColor(FieldwatchPaletteHolder.get().text)
         }.width('100%').justifyContent(FlexAlign.Center)
-        Text($r('app.string.fieldwatch_feedback_reply_sub')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_reply_sub')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
           .width('100%').textAlign(TextAlign.Center)
-        TextArea({ text: this.replyText, placeholder: $r('app.string.fieldwatch_feedback_reply_hint') })
+        TextArea({ text: this.replyText, placeholder: fieldwatchText('app.string.fieldwatch_feedback_reply_hint') })
           .height(120).width('100%').fontSize(15)
           .backgroundColor(FieldwatchPaletteHolder.get().night).borderRadius(14)
           .onChange((value: string): void => { this.replyText = value; })
@@ -1159,7 +1160,7 @@ export struct FieldwatchFeedbackPage {
       .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
       .alignItems(HorizontalAlign.Start)
       this.buildAttachmentCard()
-      Button($r('app.string.fieldwatch_feedback_submit_reply')).height(46).width('100%')
+      Button(fieldwatchText('app.string.fieldwatch_feedback_submit_reply')).height(46).width('100%')
         .backgroundColor(FieldwatchPaletteHolder.get().accent)
         .fontColor(FieldwatchPaletteHolder.get().night)
         .onClick((): void => { void this.sendReply(); })
@@ -1179,7 +1180,7 @@ export struct FieldwatchFeedbackPage {
         }
         Column({ space: 2 }) {
           Text(author).fontSize(14).fontColor(FieldwatchPaletteHolder.get().text)
-          Text($r('app.string.fieldwatch_feedback_badge_anon')).fontSize(11)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_badge_anon')).fontSize(11)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
         }.layoutWeight(1).alignItems(HorizontalAlign.Start)
         Text(this.formatStamp(createdAt)).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -1198,20 +1199,20 @@ export struct FieldwatchFeedbackPage {
       Row({ space: 8 }) {
         SymbolGlyph($r('sys.symbol.dot_radiowaves_left_and_right')).fontSize(18)
           .fontColor([FieldwatchPaletteHolder.get().accent])
-        Text($r('app.string.fieldwatch_feedback_diagnostic')).fontSize(15)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_diagnostic')).fontSize(15)
           .fontColor(FieldwatchPaletteHolder.get().text)
         Blank()
-        Text($r('app.string.fieldwatch_feedback_diagnostic_note_short')).fontSize(11)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_diagnostic_note_short')).fontSize(11)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }.width('100%')
       Row({ space: 10 }) {
-        this.buildMetaColumn($r('app.string.fieldwatch_feedback_meta_model'),
+        this.buildMetaColumn(fieldwatchText('app.string.fieldwatch_feedback_meta_model'),
           detail.diagnostic === undefined || detail.diagnostic.model.length === 0
             ? this.text('app.string.fieldwatch_feedback_not_provided') : detail.diagnostic.model)
-        this.buildMetaColumn($r('app.string.fieldwatch_feedback_meta_system'),
+        this.buildMetaColumn(fieldwatchText('app.string.fieldwatch_feedback_meta_system'),
           detail.diagnostic === undefined || detail.diagnostic.system_version.length === 0
             ? this.text('app.string.fieldwatch_feedback_not_provided') : detail.diagnostic.system_version)
-        this.buildMetaColumn($r('app.string.fieldwatch_feedback_meta_app'),
+        this.buildMetaColumn(fieldwatchText('app.string.fieldwatch_feedback_meta_app'),
           detail.diagnostic === undefined || detail.diagnostic.app_version.length === 0
             ? this.text('app.string.fieldwatch_feedback_not_provided')
             : detail.diagnostic.app_version)
@@ -1237,15 +1238,15 @@ export struct FieldwatchFeedbackPage {
         SymbolGlyph($r('sys.symbol.doc_text')).fontSize(20)
           .fontColor([FieldwatchPaletteHolder.get().accent])
         Column({ space: 2 }) {
-          Text($r('app.string.fieldwatch_feedback_attachments')).fontSize(15)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_attachments')).fontSize(15)
             .fontColor(FieldwatchPaletteHolder.get().text)
-          Text($r('app.string.fieldwatch_feedback_attachment_kinds')).fontSize(12)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_attachment_kinds')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
         }.layoutWeight(1).alignItems(HorizontalAlign.Start)
         Row({ space: 4 }) {
           SymbolGlyph($r('sys.symbol.folder')).fontSize(15)
             .fontColor([FieldwatchPaletteHolder.get().text])
-          Text($r('app.string.fieldwatch_feedback_pick_file')).fontSize(13)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_pick_file')).fontSize(13)
             .fontColor(FieldwatchPaletteHolder.get().text)
         }.padding({ left: 12, right: 12, top: 7, bottom: 7 }).borderRadius(16)
         .backgroundColor(FieldwatchPaletteHolder.get().night)
@@ -1256,15 +1257,15 @@ export struct FieldwatchFeedbackPage {
         Row({ space: 6 }) {
           SymbolGlyph($r('sys.symbol.arrow_clockwise')).fontSize(14)
             .fontColor([FieldwatchPaletteHolder.get().textDim])
-          Text($r('app.string.fieldwatch_feedback_log_from_app')).fontSize(13)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_log_from_app')).fontSize(13)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
         }.width('100%').justifyContent(FlexAlign.Center)
         Row({ space: 6 }) {
-          this.buildLogRangeChip($r('app.string.fieldwatch_feedback_log_15m'), 15)
-          this.buildLogRangeChip($r('app.string.fieldwatch_feedback_log_1h'), 60)
-          this.buildLogRangeChip($r('app.string.fieldwatch_feedback_log_3h'), 180)
-          this.buildLogRangeChip($r('app.string.fieldwatch_feedback_log_all'), 0)
-          Text($r('app.string.fieldwatch_feedback_log_clear')).fontSize(13).height(32)
+          this.buildLogRangeChip(fieldwatchText('app.string.fieldwatch_feedback_log_15m'), 15)
+          this.buildLogRangeChip(fieldwatchText('app.string.fieldwatch_feedback_log_1h'), 60)
+          this.buildLogRangeChip(fieldwatchText('app.string.fieldwatch_feedback_log_3h'), 180)
+          this.buildLogRangeChip(fieldwatchText('app.string.fieldwatch_feedback_log_all'), 0)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_log_clear')).fontSize(13).height(32)
             .layoutWeight(1).textAlign(TextAlign.Center).borderRadius(16)
             .backgroundColor(FieldwatchPaletteHolder.get().accent)
             .fontColor(FieldwatchPaletteHolder.get().night)
@@ -1279,7 +1280,7 @@ export struct FieldwatchFeedbackPage {
               .layoutWeight(1).maxLines(1)
             Text(this.formatBytes(item.size)).fontSize(11)
               .fontColor(FieldwatchPaletteHolder.get().textDim)
-            Text($r('app.string.fieldwatch_feedback_remove')).fontSize(12)
+            Text(fieldwatchText('app.string.fieldwatch_feedback_remove')).fontSize(12)
               .fontColor(FieldwatchPaletteHolder.get().warn)
               .onClick((): void => { this.removeAttachment(item.localId); })
           }.width('100%')
@@ -1304,7 +1305,7 @@ export struct FieldwatchFeedbackPage {
             .color(FieldwatchPaletteHolder.get().accent)
           Text(this.uploadText).fontSize(12).layoutWeight(1).maxLines(1)
             .fontColor(FieldwatchPaletteHolder.get().accent)
-          Text($r('app.string.fieldwatch_feedback_upload_cancel')).fontSize(12)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_upload_cancel')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().warn)
             .onClick((): void => { this.uploadCancelled = true; })
         }.width('100%').padding(10).borderRadius(10)
@@ -1337,14 +1338,14 @@ export struct FieldwatchFeedbackPage {
     Column({ space: 12 }) {
       Row({ space: 8 }) {
         Blank()
-        Text($r('app.string.fieldwatch_feedback_cancel')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_feedback_cancel')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().accent)
           .onClick((): void => { this.notice = ''; this.goToMode('list'); })
       }.width('100%')
-      Text($r('app.string.fieldwatch_feedback_create_title')).fontSize(20)
+      Text(fieldwatchText('app.string.fieldwatch_feedback_create_title')).fontSize(20)
         .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
         .width('100%').textAlign(TextAlign.Center)
-      Text($r('app.string.fieldwatch_feedback_create_sub')).fontSize(13)
+      Text(fieldwatchText('app.string.fieldwatch_feedback_create_sub')).fontSize(13)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
         .width('100%').textAlign(TextAlign.Center)
       // 类型只给 AF 实际的四类（software / ui / suggestion / other）。
@@ -1353,11 +1354,11 @@ export struct FieldwatchFeedbackPage {
           this.buildDraftTypeChip($r('app.string.fieldwatch_feedback_type_' + item), item)
         }, (item: string): string => item)
       }.width('100%')
-      TextInput({ text: this.draftTitle, placeholder: $r('app.string.fieldwatch_feedback_draft_title') })
+      TextInput({ text: this.draftTitle, placeholder: fieldwatchText('app.string.fieldwatch_feedback_draft_title') })
         .height(48).width('100%').fontSize(15)
         .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
         .onChange((value: string): void => { this.draftTitle = value; })
-      TextArea({ text: this.draftBody, placeholder: $r('app.string.fieldwatch_feedback_draft_body') })
+      TextArea({ text: this.draftBody, placeholder: fieldwatchText('app.string.fieldwatch_feedback_draft_body') })
         .height(150).width('100%').fontSize(15)
         .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
         .onChange((value: string): void => { this.draftBody = value; })
@@ -1366,7 +1367,7 @@ export struct FieldwatchFeedbackPage {
       this.buildAttachmentCard()
       if (this.notice.length > 0) Text(this.notice).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().warn)
-      Button($r('app.string.fieldwatch_feedback_submit_issue')).height(46).width('100%')
+      Button(fieldwatchText('app.string.fieldwatch_feedback_submit_issue')).height(46).width('100%')
         .backgroundColor(FieldwatchPaletteHolder.get().accent)
         .fontColor(FieldwatchPaletteHolder.get().night)
         .enabled(!this.submitting)
@@ -1426,10 +1427,10 @@ export struct FieldwatchFeedbackPage {
         Row({ space: 8 }) {
           SymbolGlyph($r('sys.symbol.paperclip')).fontSize(16)
             .fontColor([FieldwatchPaletteHolder.get().accent])
-          Text($r('app.string.fieldwatch_feedback_attachments')).fontSize(15)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_attachments')).fontSize(15)
             .fontColor(FieldwatchPaletteHolder.get().text)
           Blank()
-          Text($r('app.string.fieldwatch_feedback_attachment_note')).fontSize(11)
+          Text(fieldwatchText('app.string.fieldwatch_feedback_attachment_note')).fontSize(11)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
         }.width('100%')
         ForEach(detail.attachments, (item: FeedbackAttachment): void => {
@@ -1438,7 +1439,7 @@ export struct FieldwatchFeedbackPage {
               .layoutWeight(1).maxLines(1)
             Text(this.formatBytes(item.size)).fontSize(11)
               .fontColor(FieldwatchPaletteHolder.get().textDim)
-            Text($r('app.string.fieldwatch_feedback_open')).fontSize(12)
+            Text(fieldwatchText('app.string.fieldwatch_feedback_open')).fontSize(12)
               .fontColor(FieldwatchPaletteHolder.get().accent)
               .onClick((): void => { void this.openAttachment(item); })
           }.width('100%').padding(10)

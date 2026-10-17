@@ -1,7 +1,7 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 // `NavigationSystemTransitionType` 是 ArkUI 全局枚举，与 `NavigationMode`、
 // `BarPosition` 一样**不需要 import** —— 从 kit 导入会报「no exported member」。
-import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
+import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString, ngfText } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { foldedSignatureClass, RadioKind, SignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
 import {
@@ -11,6 +11,7 @@ import {
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchSegmentedChip } from '../../fieldwatch/ui/FieldwatchButton';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 const RULE_KINDS: SignatureRuleKind[] = [
   SignatureRuleKind.OUI, SignatureRuleKind.MAC_PREFIX, SignatureRuleKind.NAME_CONTAINS, SignatureRuleKind.NAME_GLOB,
@@ -189,7 +190,7 @@ export struct FieldwatchSignatureEditorPage {
   private editorTitle(): ResourceStr {
     const name: string = this.nameText.trim();
     if (name.length > 0) return name;
-    return $r('app.string.fieldwatch_editor_title_new');
+    return fieldwatchText('app.string.fieldwatch_editor_title_new');
   }
 
   /** 顶栏副标题：**当前类别**，与「匹配」段的分类同一处取值、同一个折叠口径。 */
@@ -315,19 +316,19 @@ export struct FieldwatchSignatureEditorPage {
           // ── 删除特征：原版在页面最底部单独一张卡片 ──
           // 只有已存在的特征才谈得上删除（新建时 fleetId 是临时 id）。
           if (this.editing) {
-            Button($r('app.string.fieldwatch_editor_delete_fleet')).height(44).width('100%')
+            Button(fieldwatchText('app.string.fieldwatch_editor_delete_fleet')).height(44).width('100%')
               .backgroundColor(FieldwatchPaletteHolder.get().panel)
               .fontColor(FieldwatchPaletteHolder.get().warn)
               .onClick((): void => { this.confirmDeleteFleet(); })
           }
           Row({ space: 8 }) {
             // 底色与文字色成对给定：裸 Button 会落到系统强调色（蓝），与应用的绿色体系不符。
-            Button($r('app.string.fieldwatch_editor_save')).height(44).layoutWeight(1)
+            Button(fieldwatchText('app.string.fieldwatch_editor_save')).height(44).layoutWeight(1)
               .borderRadius(12)
               .backgroundColor(FieldwatchPaletteHolder.get().accent)
               .fontColor(FieldwatchPaletteHolder.get().onAccent)
               .onClick((): void => { this.save(); })
-            Button($r('app.string.fieldwatch_editor_cancel')).height(44).layoutWeight(1)
+            Button(fieldwatchText('app.string.fieldwatch_editor_cancel')).height(44).layoutWeight(1)
               .borderRadius(12)
               .backgroundColor(Color.Transparent)
               .borderWidth(1)
@@ -437,11 +438,11 @@ export struct FieldwatchSignatureEditorPage {
         (text: string): void => { this.nameText = text; })
       this.inputRow('app.string.fieldwatch_editor_notes', this.notesText,
         (text: string): void => { this.notesText = text; })
-      Text($r('app.string.fieldwatch_editor_notes_hint')).fontSize(11)
+      Text(fieldwatchText('app.string.fieldwatch_editor_notes_hint')).fontSize(11)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       this.inputRow('app.string.fieldwatch_editor_attention', this.attentionText,
         (text: string): void => { this.attentionText = text; })
-      Text($r('app.string.fieldwatch_editor_attention_hint')).fontSize(11)
+      Text(fieldwatchText('app.string.fieldwatch_editor_attention_hint')).fontSize(11)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
     }.width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
   }
@@ -452,10 +453,10 @@ export struct FieldwatchSignatureEditorPage {
   private buildMatchingCard() {
     Column({ space: 10 }) {
       this.sectionCard('app.string.fieldwatch_editor_sec_matching', '')
-      Text($r('app.string.fieldwatch_editor_category')).fontSize(13)
+      Text(fieldwatchText('app.string.fieldwatch_editor_category')).fontSize(13)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       this.buildCategoryChips()
-      Text($r('app.string.fieldwatch_editor_category_hint')).fontSize(11)
+      Text(fieldwatchText('app.string.fieldwatch_editor_category_hint')).fontSize(11)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       this.switchRow('app.string.fieldwatch_editor_match_any', 'app.string.fieldwatch_editor_match_any_hint',
         this.matchAny, (value: boolean): void => { this.matchAny = value; })
@@ -467,7 +468,7 @@ export struct FieldwatchSignatureEditorPage {
         (text: string): void => { this.minPeersText = text; })
       this.inputRow('app.string.fieldwatch_editor_peer_window', this.peerWindowText,
         (text: string): void => { this.peerWindowText = text; })
-      Text($r('app.string.fieldwatch_editor_peer_hint')).fontSize(11)
+      Text(fieldwatchText('app.string.fieldwatch_editor_peer_hint')).fontSize(11)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       this.switchRow('app.string.fieldwatch_signatures_enabled', '', this.fleetEnabled,
         (value: boolean): void => { this.fleetEnabled = value; })
@@ -496,7 +497,7 @@ export struct FieldwatchSignatureEditorPage {
             .onClick((): void => { this.colorIndex = index; })
           }, (color: string, index: number): string => color + index.toString())
       }.width('100%')
-      Text($r('app.string.fieldwatch_editor_color_hint')).fontSize(11)
+      Text(fieldwatchText('app.string.fieldwatch_editor_color_hint')).fontSize(11)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
     }.width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
   }
@@ -521,8 +522,8 @@ export struct FieldwatchSignatureEditorPage {
         Blank()
         Row({ space: 4 }) {
           Text(this.categoryExpanded
-            ? $r('app.string.fieldwatch_editor_collapse')
-            : $r('app.string.fieldwatch_editor_expand'))
+            ? fieldwatchText('app.string.fieldwatch_editor_collapse')
+            : fieldwatchText('app.string.fieldwatch_editor_expand'))
             .fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
           SymbolGlyph($r(this.categoryExpanded ? 'sys.symbol.chevron_up' : 'sys.symbol.chevron_down'))
             .fontSize(13).fontColor([FieldwatchPaletteHolder.get().textDim])
@@ -562,7 +563,7 @@ export struct FieldwatchSignatureEditorPage {
   private buildRulesSection() {
     Row() {
       Text(this.text('app.string.fieldwatch_signatures_rules') + ' (' + this.rules.length.toString() + ')').fontSize(18).fontWeight(FontWeight.Medium).layoutWeight(1)
-      Button($r('app.string.fieldwatch_editor_add_rule')).height(36)
+      Button(fieldwatchText('app.string.fieldwatch_editor_add_rule')).height(36)
         .borderRadius(12)
         .backgroundColor(Color.Transparent)
         .borderWidth(1)
@@ -570,9 +571,9 @@ export struct FieldwatchSignatureEditorPage {
         .fontColor(FieldwatchPaletteHolder.get().accent)
         .onClick((): void => { this.addRule(); })
     }.width('100%')
-    Text($r('app.string.fieldwatch_editor_rules_hint')).fontSize(11)
+    Text(fieldwatchText('app.string.fieldwatch_editor_rules_hint')).fontSize(11)
       .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-    if (this.rules.length === 0) Text($r('app.string.fieldwatch_editor_no_rules')).fontSize(13)
+    if (this.rules.length === 0) Text(fieldwatchText('app.string.fieldwatch_editor_no_rules')).fontSize(13)
       .fontColor(FieldwatchPaletteHolder.get().textDim)
     ForEach(this.rules, (rule: SignatureRule, index: number): void => {
       this.buildRuleRow(rule, index)
@@ -588,19 +589,19 @@ export struct FieldwatchSignatureEditorPage {
   @Builder
   private buildDecodeSection() {
     Column({ space: 8 }) {
-      Row() { Text($r('app.string.fieldwatch_signatures_decode')).fontSize(18).fontWeight(FontWeight.Medium).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.decodeEnabled }).onChange((value: boolean): void => { this.decodeEnabled = value; if (value && this.decodeFields.length === 0) this.decodeFields = [new SignatureDecodeField()]; }) }.width('100%')
-      Text($r('app.string.fieldwatch_editor_decode_fields_hint')).fontSize(12).fontColor($r('app.color.text_secondary'))
+      Row() { Text(fieldwatchText('app.string.fieldwatch_signatures_decode')).fontSize(18).fontWeight(FontWeight.Medium).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.decodeEnabled }).onChange((value: boolean): void => { this.decodeEnabled = value; if (value && this.decodeFields.length === 0) this.decodeFields = [new SignatureDecodeField()]; }) }.width('100%')
+      Text(fieldwatchText('app.string.fieldwatch_editor_decode_fields_hint')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       if (this.decodeEnabled) {
         Row({ space: 8 }) {
           FieldwatchSegmentedChip({ label: 'manufacturerData', selected: this.decodeSource === SignatureDecodeSource.MANUFACTURER_DATA, onTap: (): void => { this.decodeSource = SignatureDecodeSource.MANUFACTURER_DATA; } })
           FieldwatchSegmentedChip({ label: 'serviceData', selected: this.decodeSource === SignatureDecodeSource.SERVICE_DATA, onTap: (): void => { this.decodeSource = SignatureDecodeSource.SERVICE_DATA; } })
         }.width('100%')
-        TextInput({ text: this.decodeService, placeholder: $r('app.string.fieldwatch_editor_decode_service') }).height(42).onChange((value: string): void => { this.decodeService = value; })
-        TextInput({ text: this.decodeCompany, placeholder: $r('app.string.fieldwatch_editor_rule_company') }).type(InputType.Number).height(42).onChange((value: string): void => { this.decodeCompany = value; })
-        Row() { Text($r('app.string.fieldwatch_editor_decode_include_company')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.decodeIncludeCompany }).onChange((value: boolean): void => { this.decodeIncludeCompany = value; }) }.width('100%')
+        TextInput({ text: this.decodeService, placeholder: fieldwatchText('app.string.fieldwatch_editor_decode_service') }).height(42).onChange((value: string): void => { this.decodeService = value; })
+        TextInput({ text: this.decodeCompany, placeholder: fieldwatchText('app.string.fieldwatch_editor_rule_company') }).type(InputType.Number).height(42).onChange((value: string): void => { this.decodeCompany = value; })
+        Row() { Text(fieldwatchText('app.string.fieldwatch_editor_decode_include_company')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.decodeIncludeCompany }).onChange((value: boolean): void => { this.decodeIncludeCompany = value; }) }.width('100%')
         Row() {
           Text(this.text('app.string.fieldwatch_signatures_decode') + ' (' + this.decodeFields.length.toString() + ')').fontSize(15).layoutWeight(1)
-          Button($r('app.string.fieldwatch_editor_add_field')).height(36)
+          Button(fieldwatchText('app.string.fieldwatch_editor_add_field')).height(36)
             .borderRadius(12)
             .backgroundColor(Color.Transparent)
             .borderWidth(1)
@@ -611,10 +612,10 @@ export struct FieldwatchSignatureEditorPage {
         ForEach(this.decodeFields, (field: SignatureDecodeField, index: number): void => {
           Row({ space: 8 }) {
             Column({ space: 2 }) {
-              Text(field.label.length > 0 ? field.label : field.id).fontSize(13).fontColor($r('app.color.text_primary'))
-              Text('@' + field.offset.toString() + ' · ' + field.type + ' · ' + field.endian).fontSize(11).fontColor($r('app.color.text_secondary'))
+              Text(field.label.length > 0 ? field.label : field.id).fontSize(13).fontColor(FieldwatchPaletteHolder.get().text)
+              Text('@' + field.offset.toString() + ' · ' + field.type + ' · ' + field.endian).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
             }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-            Button($r('app.string.fieldwatch_signatures_edit')).height(36)
+            Button(fieldwatchText('app.string.fieldwatch_signatures_edit')).height(36)
               .borderRadius(10)
               .backgroundColor(Color.Transparent)
               .borderWidth(1)
@@ -647,7 +648,7 @@ export struct FieldwatchSignatureEditorPage {
           .font({ size: 13 })
           .onSelect((at: number): void => { this.setRuleKind(index, RULE_KINDS[at]); })
         TextInput({ text: this.ruleValueText(rule) })
-        TextInput({ text: this.ruleValueText(rule), placeholder: $r('app.string.fieldwatch_editor_rule_value') })
+        TextInput({ text: this.ruleValueText(rule), placeholder: fieldwatchText('app.string.fieldwatch_editor_rule_value') })
           // **就地改，不替换数组。**
           // 替换数组会让 ForEach 重建这个 TextInput，输入焦点与光标每敲一个字就丢一次。
           .onChange((value: string): void => { this.setRuleValueText(rule, value); })
@@ -731,7 +732,7 @@ export struct FieldwatchSignatureEditorPage {
     if (rule.kind === SignatureRuleKind.RADIO_KIND) {
       const lowered: string = value.trim().toLowerCase();
       rule.radio = lowered.indexOf('wi-fi') >= 0 ? RadioKind.WIFI
-        : (value.indexOf('星闪') >= 0 ? RadioKind.NEARLINK : RadioKind.BLE);
+        : (value.indexOf(ngfText('app.string.fw_ed_744')) >= 0 ? RadioKind.NEARLINK : RadioKind.BLE);
       return;
     }
     rule.text = value;
@@ -740,7 +741,7 @@ export struct FieldwatchSignatureEditorPage {
   /** 无线电种类 → 显示名。三态必须各自区分，否则星闪会被误认为 BLE。 */
   private radioLabelOf(kind: RadioKind): string {
     if (kind === RadioKind.WIFI) return 'Wi-Fi';
-    if (kind === RadioKind.NEARLINK) return '星闪';
+    if (kind === RadioKind.NEARLINK) return ngfText('app.string.fw_ed_744');
     return 'BLE';
   }
 
@@ -803,11 +804,11 @@ export struct FieldwatchSignatureEditorPage {
   @Builder
   private buildGateSection() {
     Column({ space: 8 }) {
-      Row() { Text($r('app.string.fieldwatch_editor_gate')).fontSize(15).fontWeight(FontWeight.Medium).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.fieldGate.enabled }).onChange((value: boolean): void => { this.fieldGate.enabled = value; }) }.width('100%')
-      Text($r('app.string.fieldwatch_editor_gate_hint')).fontSize(11).fontColor($r('app.color.text_secondary'))
+      Row() { Text(fieldwatchText('app.string.fieldwatch_editor_gate')).fontSize(15).fontWeight(FontWeight.Medium).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.fieldGate.enabled }).onChange((value: boolean): void => { this.fieldGate.enabled = value; }) }.width('100%')
+      Text(fieldwatchText('app.string.fieldwatch_editor_gate_hint')).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
       if (this.fieldGate.enabled) {
         this.buildGateEditor(this.fieldGate, false)
-        Row() { Text($r('app.string.fieldwatch_editor_gate_and')).fontSize(13).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.fieldGateAnd.enabled }).onChange((value: boolean): void => { this.fieldGateAnd.enabled = value; }) }.width('100%')
+        Row() { Text(fieldwatchText('app.string.fieldwatch_editor_gate_and')).fontSize(13).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.fieldGateAnd.enabled }).onChange((value: boolean): void => { this.fieldGateAnd.enabled = value; }) }.width('100%')
         if (this.fieldGateAnd.enabled) { this.buildGateEditor(this.fieldGateAnd, true) }
       }
     }.width('100%').alignItems(HorizontalAlign.Start)
@@ -816,7 +817,7 @@ export struct FieldwatchSignatureEditorPage {
   @Builder
   private buildGateEditor(draft: GateDraft, isAnd: boolean) {
     Column({ space: 6 }) {
-      Text($r('app.string.fieldwatch_editor_gate_op')).fontSize(12).fontColor($r('app.color.text_secondary'))
+      Text(fieldwatchText('app.string.fieldwatch_editor_gate_op')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       Scroll() {
         Row({ space: 8 }) {
           ForEach(GATE_OPS, (item: SignatureDecodeWhenOp): void => {
@@ -826,10 +827,10 @@ export struct FieldwatchSignatureEditorPage {
         }
       }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring).width('100%')
       Row({ space: 8 }) {
-        TextInput({ text: draft.offset, placeholder: $r('app.string.fieldwatch_editor_field_offset') }).type(InputType.Number).height(40).layoutWeight(1).onChange((value: string): void => { draft.offset = value; this.touchGate(isAnd); })
-        TextInput({ text: draft.length, placeholder: $r('app.string.fieldwatch_editor_field_length') }).type(InputType.Number).height(40).layoutWeight(1).onChange((value: string): void => { draft.length = value; this.touchGate(isAnd); })
+        TextInput({ text: draft.offset, placeholder: fieldwatchText('app.string.fieldwatch_editor_field_offset') }).type(InputType.Number).height(40).layoutWeight(1).onChange((value: string): void => { draft.offset = value; this.touchGate(isAnd); })
+        TextInput({ text: draft.length, placeholder: fieldwatchText('app.string.fieldwatch_editor_field_length') }).type(InputType.Number).height(40).layoutWeight(1).onChange((value: string): void => { draft.length = value; this.touchGate(isAnd); })
       }.width('100%')
-      TextInput({ text: draft.valueHex, placeholder: $r('app.string.fieldwatch_editor_gate_value') }).height(40).onChange((value: string): void => { draft.valueHex = value; this.touchGate(isAnd); })
+      TextInput({ text: draft.valueHex, placeholder: fieldwatchText('app.string.fieldwatch_editor_gate_value') }).height(40).onChange((value: string): void => { draft.valueHex = value; this.touchGate(isAnd); })
     }.width('100%').alignItems(HorizontalAlign.Start)
   }
 
@@ -843,7 +844,7 @@ export struct FieldwatchSignatureEditorPage {
     Column({ space: 8 }) {
       Row() {
         Text(this.text('app.string.fieldwatch_editor_named_values') + ' (' + this.fieldNamed.length.toString() + ')').fontSize(15).fontWeight(FontWeight.Medium).layoutWeight(1)
-        Button($r('app.string.fieldwatch_editor_add_named')).height(36)
+        Button(fieldwatchText('app.string.fieldwatch_editor_add_named')).height(36)
           .borderRadius(12)
           .backgroundColor(Color.Transparent)
           .borderWidth(1)
@@ -855,18 +856,18 @@ export struct FieldwatchSignatureEditorPage {
             this.fieldNamed = next;
           })
       }.width('100%')
-      Text($r('app.string.fieldwatch_editor_named_hint')).fontSize(11).fontColor($r('app.color.text_secondary'))
+      Text(fieldwatchText('app.string.fieldwatch_editor_named_hint')).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
       ForEach(this.fieldNamed, (row: NamedValueDraft, index: number): void => {
         Column({ space: 6 }) {
           Row({ space: 8 }) {
-            TextInput({ text: row.key, placeholder: $r('app.string.fieldwatch_editor_named_key') }).height(38).layoutWeight(1).onChange((value: string): void => { this.updateNamed(index, value, undefined, undefined, undefined); })
-            TextInput({ text: row.label, placeholder: $r('app.string.fieldwatch_editor_named_label') }).height(38).layoutWeight(1).onChange((value: string): void => { this.updateNamed(index, undefined, value, undefined, undefined); })
+            TextInput({ text: row.key, placeholder: fieldwatchText('app.string.fieldwatch_editor_named_key') }).height(38).layoutWeight(1).onChange((value: string): void => { this.updateNamed(index, value, undefined, undefined, undefined); })
+            TextInput({ text: row.label, placeholder: fieldwatchText('app.string.fieldwatch_editor_named_label') }).height(38).layoutWeight(1).onChange((value: string): void => { this.updateNamed(index, undefined, value, undefined, undefined); })
           }.width('100%')
           Row({ space: 8 }) {
-            TextInput({ text: row.note, placeholder: $r('app.string.fieldwatch_editor_named_note') }).height(38).layoutWeight(1).onChange((value: string): void => { this.updateNamed(index, undefined, undefined, undefined, value); })
-            Text($r('app.string.fieldwatch_editor_named_strong')).fontSize(12)
+            TextInput({ text: row.note, placeholder: fieldwatchText('app.string.fieldwatch_editor_named_note') }).height(38).layoutWeight(1).onChange((value: string): void => { this.updateNamed(index, undefined, undefined, undefined, value); })
+            Text(fieldwatchText('app.string.fieldwatch_editor_named_strong')).fontSize(12)
             Toggle({ type: ToggleType.Switch, isOn: row.strong }).onChange((value: boolean): void => { this.updateNamed(index, undefined, undefined, value, undefined); })
-            Button($r('app.string.fieldwatch_editor_cancel')).height(36)
+            Button(fieldwatchText('app.string.fieldwatch_editor_cancel')).height(36)
               .borderRadius(10)
               .backgroundColor(Color.Transparent)
               .borderWidth(1)
@@ -899,14 +900,14 @@ export struct FieldwatchSignatureEditorPage {
   private buildFieldSheet() {
     Scroll() {
       Column({ space: 10 }) {
-        Text(this.fieldIndex >= 0 ? $r('app.string.fieldwatch_editor_edit_field') : $r('app.string.fieldwatch_editor_add_field')).fontSize(20).fontWeight(FontWeight.Bold)
-        TextInput({ text: this.fieldId, placeholder: $r('app.string.fieldwatch_editor_field_id') }).height(42).onChange((value: string): void => { this.fieldId = value; })
-        TextInput({ text: this.fieldLabel, placeholder: $r('app.string.fieldwatch_editor_field_label') }).height(42).onChange((value: string): void => { this.fieldLabel = value; })
+        Text(this.fieldIndex >= 0 ? fieldwatchText('app.string.fieldwatch_editor_edit_field') : fieldwatchText('app.string.fieldwatch_editor_add_field')).fontSize(20).fontWeight(FontWeight.Bold)
+        TextInput({ text: this.fieldId, placeholder: fieldwatchText('app.string.fieldwatch_editor_field_id') }).height(42).onChange((value: string): void => { this.fieldId = value; })
+        TextInput({ text: this.fieldLabel, placeholder: fieldwatchText('app.string.fieldwatch_editor_field_label') }).height(42).onChange((value: string): void => { this.fieldLabel = value; })
         Row({ space: 8 }) {
-          TextInput({ text: this.fieldOffset, placeholder: $r('app.string.fieldwatch_editor_field_offset') }).type(InputType.Number).height(42).layoutWeight(1).onChange((value: string): void => { this.fieldOffset = value; })
-          TextInput({ text: this.fieldLength, placeholder: $r('app.string.fieldwatch_editor_field_length') }).type(InputType.Number).height(42).layoutWeight(1).onChange((value: string): void => { this.fieldLength = value; })
+          TextInput({ text: this.fieldOffset, placeholder: fieldwatchText('app.string.fieldwatch_editor_field_offset') }).type(InputType.Number).height(42).layoutWeight(1).onChange((value: string): void => { this.fieldOffset = value; })
+          TextInput({ text: this.fieldLength, placeholder: fieldwatchText('app.string.fieldwatch_editor_field_length') }).type(InputType.Number).height(42).layoutWeight(1).onChange((value: string): void => { this.fieldLength = value; })
         }.width('100%')
-        Text($r('app.string.fieldwatch_editor_field_type')).fontSize(14).fontColor($r('app.color.text_secondary'))
+        Text(fieldwatchText('app.string.fieldwatch_editor_field_type')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
         Scroll() {
           Row({ space: 8 }) {
             ForEach(DECODE_TYPES, (item: SignatureDecodeType): void => {
@@ -914,22 +915,22 @@ export struct FieldwatchSignatureEditorPage {
             }, (item: SignatureDecodeType): string => item)
           }
         }.scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring).width('100%')
-        Text($r('app.string.fieldwatch_editor_field_endian')).fontSize(14).fontColor($r('app.color.text_secondary'))
+        Text(fieldwatchText('app.string.fieldwatch_editor_field_endian')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
         Row({ space: 8 }) {
           FieldwatchSegmentedChip({ label: 'le', selected: this.fieldEndian === SignatureDecodeEndian.LE, onTap: (): void => { this.fieldEndian = SignatureDecodeEndian.LE; } })
           FieldwatchSegmentedChip({ label: 'be', selected: this.fieldEndian === SignatureDecodeEndian.BE, onTap: (): void => { this.fieldEndian = SignatureDecodeEndian.BE; } })
         }.width('100%')
-        TextInput({ text: this.fieldUnit, placeholder: $r('app.string.fieldwatch_editor_field_unit') }).height(42).onChange((value: string): void => { this.fieldUnit = value; })
-        Row() { Text($r('app.string.fieldwatch_editor_field_live')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.fieldLive }).onChange((value: boolean): void => { this.fieldLive = value; }) }.width('100%')
+        TextInput({ text: this.fieldUnit, placeholder: fieldwatchText('app.string.fieldwatch_editor_field_unit') }).height(42).onChange((value: string): void => { this.fieldUnit = value; })
+        Row() { Text(fieldwatchText('app.string.fieldwatch_editor_field_live')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.fieldLive }).onChange((value: boolean): void => { this.fieldLive = value; }) }.width('100%')
         this.buildGateSection()
         this.buildNamedValueSection()
         Row({ space: 8 }) {
-          Button($r('app.string.fieldwatch_editor_ok')).height(44).layoutWeight(1)
+          Button(fieldwatchText('app.string.fieldwatch_editor_ok')).height(44).layoutWeight(1)
             .borderRadius(12)
             .backgroundColor(FieldwatchPaletteHolder.get().accent)
             .fontColor(FieldwatchPaletteHolder.get().onAccent)
             .onClick((): void => { this.commitField(); })
-          if (this.fieldIndex >= 0) Button($r('app.string.fieldwatch_editor_delete_field')).height(44).layoutWeight(1)
+          if (this.fieldIndex >= 0) Button(fieldwatchText('app.string.fieldwatch_editor_delete_field')).height(44).layoutWeight(1)
             .borderRadius(12)
             .backgroundColor(Color.Transparent)
             .borderWidth(1)

@@ -950,55 +950,55 @@
     },
     {
       "name": "auto_str_1092",
-      "value": "たった今"
+      "value": "Just now"
     },
     {
       "name": "auto_str_1093",
-      "value": "{}分前"
+      "value": "{} min ago"
     },
     {
       "name": "auto_str_1094",
-      "value": "{}時間前"
+      "value": "{} h ago"
     },
     {
       "name": "auto_str_1095",
-      "value": "{}日前"
+      "value": "{} d ago"
     },
     {
       "name": "auto_str_1096",
-      "value": "{}週間前"
+      "value": "{} wk ago"
     },
     {
       "name": "auto_str_1097",
-      "value": "{}ヶ月前"
+      "value": "{} mo ago"
     },
     {
       "name": "auto_str_1098",
-      "value": "{}秒後"
+      "value": "in {} s"
     },
     {
       "name": "auto_str_1099",
-      "value": "{}分後"
+      "value": "in {} min"
     },
     {
       "name": "auto_str_1100",
-      "value": "{}時間後"
+      "value": "in {} h"
     },
     {
       "name": "auto_str_1101",
-      "value": "{}日後"
+      "value": "in {} d"
     },
     {
       "name": "auto_str_1102",
-      "value": "{}週間後"
+      "value": "in {} wk"
     },
     {
       "name": "auto_str_1103",
-      "value": "{}ヶ月後"
+      "value": "in {} mo"
     },
     {
       "name": "auto_str_1104",
-      "value": "{}年後"
+      "value": "in {} y"
     },
     {
       "name": "auto_str_1105",
@@ -9050,99 +9050,99 @@
     },
     {
       "name": "fieldwatch_legal_privacy_p1",
-      "value": "关于电波足迹与隐私的声明"
+      "value": "About Fieldwatch and your privacy"
     },
     {
       "name": "fieldwatch_legal_privacy_p2",
-      "value": "更新日期：2026.10.10"
+      "value": "Last updated: 2026-10-10"
     },
     {
       "name": "fieldwatch_legal_privacy_p3",
-      "value": "电波足迹 是由 周龙溢 （以下简称“我们”）为您提供的，用于无线信号扫描与收集的应用。本隐私声明由我们为处理您的个人信息而制定。"
+      "value": "Fieldwatch is an app for scanning and collecting wireless signals, provided to you by Zhou Longyi (\"we\"). This privacy statement explains how we handle your personal information."
     },
     {
       "name": "fieldwatch_legal_privacy_p4",
-      "value": "我们非常重视您的个人信息和隐私保护，将会按照法律要求和业界成熟的安全标准，为您的个人信息提供相应的安全保护措施。"
+      "value": "We take your personal information and privacy seriously and protect it in line with legal requirements and established industry security standards."
     },
     {
       "name": "fieldwatch_legal_privacy_p5",
-      "value": "1. 我们如何收集和使用您的个人信息"
+      "value": "1. How we collect and use your personal information"
     },
     {
       "name": "fieldwatch_legal_privacy_p6",
-      "value": "我们仅在有合法性基础的情形下才会使用您的个人信息。根据适用的法律，我们可能会基于您的同意、为履行/订立您与我们的合同所必需、履行法定义务所必需等合法性基础，使用您的个人信息。"
+      "value": "We use your personal information only where we have a lawful basis. Depending on applicable law, that basis may be your consent, the performance of a contract with you, or compliance with a legal obligation."
     },
     {
       "name": "fieldwatch_legal_privacy_p7",
-      "value": "1.1 我们为您提供了基本功能服务和全量功能服务，您可以前往启动引导进行选择，不同设备或版本其路径可能存在差异，具体以您当前使用的设备为准。在基本功能服务下不收集个人信息，仅提供基于WiFi扫描的基本功能，不提供基于蓝牙与星闪的精准扫描等其他附加功能，这可能会影响您的使用体验。"
+      "value": "1.1 We offer a basic service and a full service; you choose during onboarding (the path may differ between devices and versions). The basic service collects no personal information and only provides Wi-Fi based scanning, without BLE or NearLink precision scanning and other extras, which may affect your experience."
     },
     {
       "name": "fieldwatch_legal_privacy_p8",
-      "value": "2. 设备权限调用"
+      "value": "2. Device permissions"
     },
     {
       "name": "fieldwatch_legal_privacy_p9",
-      "value": "位置（获取设备模糊位置信息）"
+      "value": "Location (approximate device location)"
     },
     {
       "name": "fieldwatch_legal_privacy_p10",
-      "value": "在开启「记录手机听到设备的位置」功能后，为观测附加位置标记并绘制轨迹"
+      "value": "After you enable \"Tag detections with GPS\", we attach a location to observations and draw the track"
     },
     {
       "name": "fieldwatch_legal_privacy_p11",
-      "value": "设备发现和连接（允许接入并使用星闪功能、接入蓝牙并使用蓝牙能力）"
+      "value": "Device discovery and connection (NearLink and Bluetooth access)"
     },
     {
       "name": "fieldwatch_legal_privacy_p12",
-      "value": "接收周围 BLE 与星闪设备主动广播的信号，在「实时」页展示附近无线信号源"
+      "value": "Receive the signals that nearby BLE and NearLink devices advertise, and show nearby radios on the Live tab"
     },
     {
       "name": "fieldwatch_legal_privacy_p13",
-      "value": "运动数据（读取用户当前的运动状态）"
+      "value": "Motion data (your current activity state)"
     },
     {
       "name": "fieldwatch_legal_privacy_p14",
-      "value": "识别设备的运动状态（静止 / 步行 / 骑行 / 驾车），辅助「与你同行」功能判定的准确性"
+      "value": "Detect whether you are still, walking, cycling or driving, to make the \"possible co-travel\" heuristic more accurate"
     },
     {
       "name": "fieldwatch_legal_privacy_p15",
-      "value": "3. 管理您的个人信息"
+      "value": "3. Managing your personal information"
     },
     {
       "name": "fieldwatch_legal_privacy_p16",
-      "value": "如您对您的数据主体权利有进一步要求或存在任何疑问、意见或建议，可通过本声明中“如何联系我们”章节中所述方式与我们取得联系，并行使您的相关权利。"
+      "value": "If you have further requests about your data-subject rights, or any questions, comments or suggestions, contact us as described in \"How to contact us\" below to exercise those rights."
     },
     {
       "name": "fieldwatch_legal_privacy_p17",
-      "value": "4. 信息存储地点及期限"
+      "value": "4. Where and how long information is stored"
     },
     {
       "name": "fieldwatch_legal_privacy_p18",
-      "value": "4.1 我们承诺，除法律法规另有规定外，我们对您的信息的保存期限应当为实现处理目的所必要的最短时间。"
+      "value": "4.1 Unless the law requires otherwise, we keep your information only for as long as is necessary for the purpose it was collected."
     },
     {
       "name": "fieldwatch_legal_privacy_p19",
-      "value": "4.2 上述信息将会传输并保存至中国境内的服务器。"
+      "value": "4.2 The information above is transmitted to and stored on servers located in mainland China."
     },
     {
       "name": "fieldwatch_legal_privacy_p20",
-      "value": "5. 如何联系我们"
+      "value": "5. How to contact us"
     },
     {
       "name": "fieldwatch_legal_privacy_p21",
-      "value": "您可通过以下方式联系我们，并行使您的相关权利，我们会尽快回复。"
+      "value": "You can reach us through the channel below to exercise your rights; we will reply as soon as we can."
     },
     {
       "name": "fieldwatch_legal_privacy_p22",
-      "value": "邮箱：1335941759@qq.com"
+      "value": "Email: 1335941759@qq.com"
     },
     {
       "name": "fieldwatch_legal_privacy_p23",
-      "value": "如果您对我们的回复不满意, 特别是当个人信息处理行为损害了您的合法权益时您还可以通过向有管辖权的人民法院提起诉讼、向行业自律协会或政府相关管理机构投诉等外部途径进行解决。 您也可以向我们了解可能适用的相关投诉途径的信息。"
+      "value": "If you are not satisfied with our reply, especially where our processing has harmed your lawful rights, you may also seek external remedies, such as filing a lawsuit in a competent people's court or complaining to an industry association or a government regulator. You may also ask us about the available complaint channels."
     },
     {
       "name": "fieldwatch_legal_privacy_p24",
-      "value": "生效日期：2026.10.8"
+      "value": "Effective date: 2026-10-08"
     },
     {
       "name": "fieldwatch_legal_oss_repo_label",
@@ -9691,6 +9691,966 @@
     {
       "name": "fieldwatch_settings_mode_hint",
       "value": "Choose whether the Live tab opens in Daily or Pro view."
+    },
+    {
+      "name": "fieldwatch_settings_language",
+      "value": "Language"
+    },
+    {
+      "name": "fieldwatch_settings_language_system",
+      "value": "Follow system"
+    },
+    {
+      "name": "fw_dx_71",
+      "value": "Limited discoverable: briefly looking for nearby connections."
+    },
+    {
+      "name": "fw_dx_72",
+      "value": "Discoverable: other BLE devices can find it."
+    },
+    {
+      "name": "fw_dx_73",
+      "value": "BLE only: no classic Bluetooth (the radio used by headsets and file transfer)."
+    },
+    {
+      "name": "fw_dx_74",
+      "value": "May also support classic Bluetooth (BR/EDR) in addition to BLE."
+    },
+    {
+      "name": "fw_dx_75",
+      "value": "Dual-mode chip: BLE and classic Bluetooth can work at the same time."
+    },
+    {
+      "name": "fw_dx_81",
+      "value": " - long-range BLE (slower, farther)"
+    },
+    {
+      "name": "fw_dx_82",
+      "value": " - faster BLE (Bluetooth 5)"
+    },
+    {
+      "name": "fw_dx_83",
+      "value": " - standard BLE radio"
+    },
+    {
+      "name": "fw_dx_97",
+      "value": "Locally administered BSSID. Car, mesh and guest APs often keep this address for a long time; it is not a phone-style rotating MAC."
+    },
+    {
+      "name": "fw_dx_99",
+      "value": "Public factory address (stable, assigned by IEEE)."
+    },
+    {
+      "name": "fw_dx_100",
+      "value": "Random / privacy address. The MAC changes, so it is not a persistent identity."
+    },
+    {
+      "name": "fw_dx_101",
+      "value": " · universal IEEE address (stable OUI)."
+    },
+    {
+      "name": "fw_dx_102",
+      "value": "Universal IEEE address (stable OUI)."
+    },
+    {
+      "name": "fw_dx_107",
+      "value": "Unavailable"
+    },
+    {
+      "name": "fw_dx_108",
+      "value": "Very strong"
+    },
+    {
+      "name": "fw_dx_109",
+      "value": "Strong"
+    },
+    {
+      "name": "fw_dx_110",
+      "value": "Moderate"
+    },
+    {
+      "name": "fw_dx_111",
+      "value": "Weak"
+    },
+    {
+      "name": "fw_dx_112",
+      "value": "Very weak"
+    },
+    {
+      "name": "fw_dx_149",
+      "value": "WPA3 password (SAE handshake)"
+    },
+    {
+      "name": "fw_dx_150",
+      "value": "Enhanced Open (encrypted, no password)"
+    },
+    {
+      "name": "fw_dx_151",
+      "value": "WPA2 password (PSK)"
+    },
+    {
+      "name": "fw_dx_152",
+      "value": "Wi-Fi password (WPA/PSK)"
+    },
+    {
+      "name": "fw_dx_153",
+      "value": "Enterprise login (802.1X)"
+    },
+    {
+      "name": "fw_dx_154",
+      "value": "WEP (old, broken)"
+    },
+    {
+      "name": "fw_dx_155",
+      "value": "Open network, or the encryption could not be parsed"
+    },
+    {
+      "name": "fw_dx_156",
+      "value": "AES encryption"
+    },
+    {
+      "name": "fw_dx_157",
+      "value": "TKIP (older, weaker cipher suite)"
+    },
+    {
+      "name": "fw_dx_158",
+      "value": "WPS pairing enabled"
+    },
+    {
+      "name": "fw_dx_159",
+      "value": "Mesh node"
+    },
+    {
+      "name": "fw_dx_160",
+      "value": "Ad-hoc network"
+    },
+    {
+      "name": "fw_dx_161",
+      "value": "Infrastructure access point"
+    },
+    {
+      "name": "fw_dx_173",
+      "value": "Generic Access"
+    },
+    {
+      "name": "fw_dx_174",
+      "value": "Attribute Protocol"
+    },
+    {
+      "name": "fw_dx_175",
+      "value": "Model / serial / firmware"
+    },
+    {
+      "name": "fw_dx_176",
+      "value": "Battery"
+    },
+    {
+      "name": "fw_dx_177",
+      "value": "Keyboard, mouse or gamepad"
+    },
+    {
+      "name": "fw_dx_178",
+      "value": "Heart-rate sensor"
+    },
+    {
+      "name": "fw_dx_179",
+      "value": "Blood-pressure sensor"
+    },
+    {
+      "name": "fw_dx_180",
+      "value": "Environmental sensor (temperature, humidity)"
+    },
+    {
+      "name": "fw_dx_181",
+      "value": "LE cycling power / speed"
+    },
+    {
+      "name": "fw_dx_183",
+      "value": "Google Fast Pair (usually earbuds or speakers)"
+    },
+    {
+      "name": "fw_dx_185",
+      "value": "Apple Find My related"
+    },
+    {
+      "name": "fw_dx_186",
+      "value": "Tile tracker"
+    },
+    {
+      "name": "fw_dx_187",
+      "value": "Tuya IoT"
+    },
+    {
+      "name": "fw_dx_189",
+      "value": "HP printer"
+    },
+    {
+      "name": "fw_dx_190",
+      "value": "Sonos speaker"
+    },
+    {
+      "name": "fw_dx_192",
+      "value": "ASSA ABLOY access control"
+    },
+    {
+      "name": "fw_dx_193",
+      "value": "August Home lock"
+    },
+    {
+      "name": "fw_dx_195",
+      "value": "Apple (not ASSA ABLOY)"
+    },
+    {
+      "name": "fw_dx_233",
+      "value": "Wi-Fi access point"
+    },
+    {
+      "name": "fw_dx_235",
+      "value": "It is broadcasting, but declares no product class: no Appearance, no Class of Device, and no recognisable service."
+    },
+    {
+      "name": "fw_dx_249",
+      "value": "Unknown radio"
+    },
+    {
+      "name": "fw_dx_260",
+      "value": "is most likely"
+    },
+    {
+      "name": "fw_dx_261",
+      "value": "is possibly"
+    },
+    {
+      "name": "fw_dx_263",
+      "value": "This comes from what the device advertises, not from visual recognition."
+    },
+    {
+      "name": "fw_dx_275",
+      "value": "Headphones or headset"
+    },
+    {
+      "name": "fw_dx_277",
+      "value": "Speaker"
+    },
+    {
+      "name": "fw_dx_278",
+      "value": "Mouse"
+    },
+    {
+      "name": "fw_dx_279",
+      "value": "Keyboard"
+    },
+    {
+      "name": "fw_dx_280",
+      "value": "Gamepad"
+    },
+    {
+      "name": "fw_dx_281",
+      "value": "Watch or wearable"
+    },
+    {
+      "name": "fw_dx_282",
+      "value": "Phone"
+    },
+    {
+      "name": "fw_dx_284",
+      "value": "Computer or tablet"
+    },
+    {
+      "name": "fw_dx_285",
+      "value": "Finder tag / tracker"
+    },
+    {
+      "name": "fw_dx_286",
+      "value": "Remote control"
+    },
+    {
+      "name": "fw_dx_287",
+      "value": "Input device (keyboard, mouse and similar)"
+    },
+    {
+      "name": "fw_dx_288",
+      "value": "Heart-rate monitor"
+    },
+    {
+      "name": "fw_dx_290",
+      "value": "Health sensor"
+    },
+    {
+      "name": "fw_dx_291",
+      "value": "Display or TV stick"
+    },
+    {
+      "name": "fw_dx_292",
+      "value": "Clock"
+    },
+    {
+      "name": "fw_dx_293",
+      "value": "Smart glasses"
+    },
+    {
+      "name": "fw_dx_295",
+      "value": "It declares the Appearance "
+    },
+    {
+      "name": "fw_dx_310",
+      "value": "Audio device"
+    },
+    {
+      "name": "fw_dx_315",
+      "value": "Input device"
+    },
+    {
+      "name": "fw_dx_317",
+      "value": "Input accessory"
+    },
+    {
+      "name": "fw_dx_323",
+      "value": "Computer"
+    },
+    {
+      "name": "fw_dx_324",
+      "value": "Watch"
+    },
+    {
+      "name": "fw_dx_333",
+      "value": "Class of Device says it is"
+    },
+    {
+      "name": "fw_dx_351",
+      "value": "LE Audio earbuds or speaker"
+    },
+    {
+      "name": "fw_dx_353",
+      "value": "Blood-pressure monitor"
+    },
+    {
+      "name": "fw_dx_354",
+      "value": "Environmental sensor"
+    },
+    {
+      "name": "fw_dx_355",
+      "value": "Earbuds or speaker"
+    },
+    {
+      "name": "fw_dx_356",
+      "value": "SmartTag service UUID."
+    },
+    {
+      "name": "fw_dx_357",
+      "value": "Apple Find My accessory"
+    },
+    {
+      "name": "fw_dx_378",
+      "value": "Matched signature "
+    },
+    {
+      "name": "fw_dx_387",
+      "value": "Access point with a hidden SSID"
+    },
+    {
+      "name": "fw_dt_40",
+      "value": "Phone"
+    },
+    {
+      "name": "fw_dt_41",
+      "value": "Computer"
+    },
+    {
+      "name": "fw_dt_42",
+      "value": "Laptop"
+    },
+    {
+      "name": "fw_dt_43",
+      "value": "Tablet"
+    },
+    {
+      "name": "fw_dt_44",
+      "value": "All-in-one PC"
+    },
+    {
+      "name": "fw_dt_45",
+      "value": "Mini PC"
+    },
+    {
+      "name": "fw_dt_46",
+      "value": "Watch"
+    },
+    {
+      "name": "fw_dt_47",
+      "value": "HID device"
+    },
+    {
+      "name": "fw_dt_48",
+      "value": "Keyboard"
+    },
+    {
+      "name": "fw_dt_49",
+      "value": "Mouse"
+    },
+    {
+      "name": "fw_dt_50",
+      "value": "Gamepad"
+    },
+    {
+      "name": "fw_dt_51",
+      "value": "Stylus"
+    },
+    {
+      "name": "fw_dt_52",
+      "value": "Trackpad"
+    },
+    {
+      "name": "fw_dt_53",
+      "value": "Audio player"
+    },
+    {
+      "name": "fw_dt_54",
+      "value": "Smart speaker"
+    },
+    {
+      "name": "fw_dt_55",
+      "value": "Soundbar"
+    },
+    {
+      "name": "fw_dt_56",
+      "value": "Audio capture device"
+    },
+    {
+      "name": "fw_dt_57",
+      "value": "Karaoke microphone"
+    },
+    {
+      "name": "fw_dt_58",
+      "value": "Lavalier microphone"
+    },
+    {
+      "name": "fw_dt_59",
+      "value": "Wearable audio"
+    },
+    {
+      "name": "fw_dt_60",
+      "value": "In-ear earbuds"
+    },
+    {
+      "name": "fw_dt_61",
+      "value": "On-ear headphones"
+    },
+    {
+      "name": "fw_dt_62",
+      "value": "Over-ear headphones"
+    },
+    {
+      "name": "fw_dt_63",
+      "value": "Neckband earbuds"
+    },
+    {
+      "name": "fw_dt_64",
+      "value": "Personal care device"
+    },
+    {
+      "name": "fw_dt_65",
+      "value": "Electric toothbrush"
+    },
+    {
+      "name": "fw_dt_66",
+      "value": "Smart cup"
+    },
+    {
+      "name": "fw_dt_67",
+      "value": "Electric shaver"
+    },
+    {
+      "name": "fw_dt_68",
+      "value": "HVAC device"
+    },
+    {
+      "name": "fw_dt_69",
+      "value": "Air purifier"
+    },
+    {
+      "name": "fw_dt_70",
+      "value": "Humidifier"
+    },
+    {
+      "name": "fw_dt_71",
+      "value": "Air circulator fan"
+    },
+    {
+      "name": "fw_dt_72",
+      "value": "Electric mobility device"
+    },
+    {
+      "name": "fw_dt_73",
+      "value": "Electric scooter"
+    },
+    {
+      "name": "fw_dt_74",
+      "value": "E-bike"
+    },
+    {
+      "name": "fw_dt_75",
+      "value": "Lighting"
+    },
+    {
+      "name": "fw_dt_76",
+      "value": "Smart desk lamp"
+    },
+    {
+      "name": "fw_dt_77",
+      "value": "Remote control"
+    },
+    {
+      "name": "fw_dt_78",
+      "value": "TV remote"
+    },
+    {
+      "name": "fw_dt_79",
+      "value": "Imaging device"
+    },
+    {
+      "name": "fw_dt_80",
+      "value": "Smart screen"
+    },
+    {
+      "name": "fw_dt_81",
+      "value": "IP camera"
+    },
+    {
+      "name": "fw_dt_82",
+      "value": "Screen casting device"
+    },
+    {
+      "name": "fw_dt_83",
+      "value": "Network device"
+    },
+    {
+      "name": "fw_dt_84",
+      "value": "IoT gateway"
+    },
+    {
+      "name": "fw_dt_85",
+      "value": "Access control device"
+    },
+    {
+      "name": "fw_dt_86",
+      "value": "Smart lock"
+    },
+    {
+      "name": "fw_dt_87",
+      "value": "Smart key"
+    },
+    {
+      "name": "fw_dt_88",
+      "value": "Car key"
+    },
+    {
+      "name": "fw_dt_89",
+      "value": "Car lock"
+    },
+    {
+      "name": "fw_dt_90",
+      "value": "Unclassified device"
+    },
+    {
+      "name": "fw_cand_156",
+      "value": "Tagged"
+    },
+    {
+      "name": "fw_cand_157",
+      "value": "Matched signature "
+    },
+    {
+      "name": "fw_cand_158",
+      "value": ". A second signature may still tag this radio at the same time (service UUID, vendor OUI)."
+    },
+    {
+      "name": "fw_cand_162",
+      "value": "This one only"
+    },
+    {
+      "name": "fw_cand_163",
+      "value": "No clusterable over-the-air unique ID. Random addresses, household-style names and generic chips are skipped."
+    },
+    {
+      "name": "fw_cand_184",
+      "value": "No other MAC in range shares this over-the-air unique ID. A signature built from here will tag little more than this one address."
+    },
+    {
+      "name": "fw_cand_192",
+      "value": "Strong signature family"
+    },
+    {
+      "name": "fw_cand_193",
+      "value": "Sharers in range: "
+    },
+    {
+      "name": "fw_cand_194",
+      "value": "This is a catalog-level pattern, not a single MAC."
+    },
+    {
+      "name": "fw_cand_200",
+      "value": "Name pattern"
+    },
+    {
+      "name": "fw_cand_201",
+      "value": "Vendor IE"
+    },
+    {
+      "name": "fw_cand_202",
+      "value": "Service UUID"
+    },
+    {
+      "name": "fw_cand_203",
+      "value": "Vendor data prefix"
+    },
+    {
+      "name": "fw_cand_205",
+      "value": "Over-the-air unique ID"
+    },
+    {
+      "name": "fw_cand_339",
+      "value": " access points"
+    },
+    {
+      "name": "fw_cand_340",
+      "value": " hits in the log "
+    },
+    {
+      "name": "fw_cand_348",
+      "value": "Same name wildcard on "
+    },
+    {
+      "name": "fw_cand_349",
+      "value": "Same vendor IE seen on "
+    },
+    {
+      "name": "fw_cand_350",
+      "value": "Same service UUID seen on "
+    },
+    {
+      "name": "fw_cand_351",
+      "value": "Same manufacturer data prefix seen on "
+    },
+    {
+      "name": "fw_cand_352",
+      "value": "Same IEEE OUI seen on "
+    },
+    {
+      "name": "fw_cand_353",
+      "value": " radios - not a household SSID."
+    },
+    {
+      "name": "fw_cand_354",
+      "value": " BLE advertisers."
+    },
+    {
+      "name": "fw_pg_1422",
+      "value": " radios · "
+    },
+    {
+      "name": "fw_pg_1443",
+      "value": "…total "
+    },
+    {
+      "name": "fw_pg_2222",
+      "value": "Wi-Fi 4 and earlier"
+    },
+    {
+      "name": "fw_pg_2261",
+      "value": "Open (no password)"
+    },
+    {
+      "name": "fw_pg_2262",
+      "value": "WEP (outdated)"
+    },
+    {
+      "name": "fw_pg_2711",
+      "value": "First "
+    },
+    {
+      "name": "fw_pg_3981",
+      "value": " radios · unmatched "
+    },
+    {
+      "name": "fw_pg_3982",
+      "value": " · skipped random "
+    },
+    {
+      "name": "fw_pg_4268",
+      "value": " radios"
+    },
+    {
+      "name": "fw_pg_4582",
+      "value": " devices"
+    },
+    {
+      "name": "fw_pg_4836",
+      "value": " results"
+    },
+    {
+      "name": "fw_pg_5497",
+      "value": "A modern manga reader for HarmonyOS"
+    },
+    {
+      "name": "fw_pg_5500",
+      "value": "Create eye-catching handheld danmaku with ease"
+    },
+    {
+      "name": "fw_pg_5503",
+      "value": "Metadata editing and cover management for many formats"
+    },
+    {
+      "name": "fw_pg_5506",
+      "value": "AI pair programming on the go"
+    },
+    {
+      "name": "fw_pg_5509",
+      "value": "Coming soon"
+    },
+    {
+      "name": "fw_tb_1041",
+      "value": " min"
+    },
+    {
+      "name": "fw_tb_1043",
+      "value": " pts"
+    },
+    {
+      "name": "fw_fb_557",
+      "value": "# Fieldwatch · observation export"
+    },
+    {
+      "name": "fw_fb_558",
+      "value": "# Exported: "
+    },
+    {
+      "name": "fw_fb_559",
+      "value": "# App version: "
+    },
+    {
+      "name": "fw_ed_744",
+      "value": "NearLink"
+    },
+    {
+      "name": "fw_dd_527",
+      "value": " dBm - the transmit power it declares, not a distance"
+    },
+    {
+      "name": "fw_nl_48",
+      "value": "NearLink capability probe failed: "
+    },
+    {
+      "name": "fw_nl_52",
+      "value": "This device does not support NearLink"
+    },
+    {
+      "name": "fw_nl_60",
+      "value": "NearLink is off. Turn it on and try again"
+    },
+    {
+      "name": "fw_nl_64",
+      "value": "Failed to read NearLink state: "
+    },
+    {
+      "name": "fw_nl_154",
+      "value": "NearLink scan permission not granted"
+    },
+    {
+      "name": "fw_nl_157",
+      "value": "NearLink scan failed ("
+    },
+    {
+      "name": "fw_sr_225",
+      "value": "Preset 1"
+    },
+    {
+      "name": "fw_ws_76",
+      "value": "s ago"
+    },
+    {
+      "name": "fw_ws_77",
+      "value": " min ago"
+    },
+    {
+      "name": "fw_ws_78",
+      "value": " h ago"
+    },
+    {
+      "name": "fw_ws_104",
+      "value": "App not running"
+    },
+    {
+      "name": "fw_ws_105",
+      "value": "Enable background running and switch away; scan status appears here"
+    },
+    {
+      "name": "fw_ws_109",
+      "value": " · NearLink "
+    },
+    {
+      "name": "fw_ws_110",
+      "value": " · Paused"
+    },
+    {
+      "name": "fw_ws_114",
+      "value": "Watched · "
+    },
+    {
+      "name": "fw_ws_117",
+      "value": "Signature family · "
+    },
+    {
+      "name": "fw_ws_119",
+      "value": "No watched target or signature family hit yet"
+    },
+    {
+      "name": "fw_fs_173",
+      "value": "Upload cancelled"
+    },
+    {
+      "name": "fw_fs_310",
+      "value": "Failed to read attachment: expected="
+    },
+    {
+      "name": "fw_fs_340",
+      "value": "The local file size changed before upload"
+    },
+    {
+      "name": "fw_fs_343",
+      "value": "Invalid upload session offset"
+    },
+    {
+      "name": "fw_fs_357",
+      "value": "Chunk upload failed"
+    },
+    {
+      "name": "fw_fs_358",
+      "value": "Server did not advance the upload offset"
+    },
+    {
+      "name": "fw_cl_49",
+      "value": "First public release: live radar, four views (strength / timeline / trail / class) and a toolbox (channel analysis, signal tracking, anti-tracking)."
+    },
+    {
+      "name": "fw_cl_50",
+      "value": "611 built-in signatures, candidate discovery and add-to-catalog; catalog export / import / update and restore defaults."
+    },
+    {
+      "name": "fw_cl_51",
+      "value": "Observation sits (start / stop / compare), CSV / JSONL / GPX / KML / WiGLE export and debrief PDF."
+    },
+    {
+      "name": "fw_cl_52",
+      "value": "Privacy mode (address masking) and strict offline: no network traffic except an explicit catalog update."
+    },
+    {
+      "name": "fw_bl_31",
+      "value": "Bluetooth is off. Turn it on and try again"
+    },
+    {
+      "name": "fw_wf_146",
+      "value": "Failed to register for Wi-Fi scan state changes"
+    },
+    {
+      "name": "fw_wf_161",
+      "value": "Wi-Fi info permission not granted. Please grant it again"
+    },
+    {
+      "name": "fw_wf_165",
+      "value": "Wi-Fi is off. Turn it on first"
+    },
+    {
+      "name": "fw_wf_170",
+      "value": "Location services are off; Wi-Fi scanning needs them"
+    },
+    {
+      "name": "fw_wf_200",
+      "value": "The system is temporarily rejecting or throttling Wi-Fi scans"
+    },
+    {
+      "name": "fw_wf_357",
+      "value": "Wi-Fi scan failed"
+    },
+    {
+      "name": "fw_cand_193b",
+      "value": "Possible signature family"
+    },
+    {
+      "name": "fw_cand_194d",
+      "value": "."
+    },
+    {
+      "name": "fw_cand_195",
+      "value": "The sample is thin - possibly a catalog-level pattern."
+    },
+    {
+      "name": "fw_cand_341",
+      "value": ". Shared over-the-air ID, not a single MAC."
+    },
+    {
+      "name": "fw_cand_349b",
+      "value": " radios - not a household SSID."
+    },
+    {
+      "name": "fw_cand_350b",
+      "value": " BSSIDs. Not WPS / P2P."
+    },
+    {
+      "name": "fw_cand_351b",
+      "value": " BLE advertisers."
+    },
+    {
+      "name": "fw_cand_352b",
+      "value": " stable BSSIDs. Not a chip-module prefix."
+    },
+    {
+      "name": "fw_dx_234",
+      "value": "Bluetooth LE advertiser"
+    },
+    {
+      "name": "fw_dx_250",
+      "value": "Not enough clues."
+    },
+    {
+      "name": "fw_dx_262",
+      "value": "might be"
+    },
+    {
+      "name": "fw_dx_350",
+      "value": "It offers the HID (human interface) service."
+    },
+    {
+      "name": "fw_dx_352",
+      "value": "It offers the Bluetooth LE Audio service."
+    },
+    {
+      "name": "fw_dx_358",
+      "value": "Find My related UUID."
+    },
+    {
+      "name": "fw_dx_388",
+      "value": "It is broadcasting but deliberately hides the network name."
+    },
+    {
+      "name": "fw_pg_2711b",
+      "value": "last now"
+    },
+    {
+      "name": "fw_pg_2711c",
+      "value": "last "
+    },
+    {
+      "name": "fw_pg_3982b",
+      "value": " · skipped household "
+    },
+    {
+      "name": "fw_bl_212b",
+      "value": "BLE scan failed ("
+    },
+    {
+      "name": "fw_bl_212c",
+      "value": ") "
     }
   ]
 }

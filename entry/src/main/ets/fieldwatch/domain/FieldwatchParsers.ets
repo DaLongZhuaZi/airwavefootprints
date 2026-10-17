@@ -1,4 +1,5 @@
 import { RadioKind, ServiceDataRecord } from './FieldwatchModels';
+import { bytesRangeToHex, bytesToHex, hexToBytes } from './FieldwatchHex';
 
 export class FieldwatchParseResult {
   public protocol: string;
@@ -150,39 +151,34 @@ export class BleAdvertisementFacts {
   public mfgRecords: ServiceDataRecord[] = [];
 }
 
-function hexOfBytes(bytes: Uint8Array): string {
-  let result: string = '';
-  for (let index = 0; index < bytes.length; index += 1) {
-    const value: string = bytes[index].toString(16).toUpperCase();
-    result += value.length === 1 ? '0' + value : value;
-  }
-  return result;
-}
-
-function bytesOfHex(hex: string): Uint8Array {
-  const normalized: string = hex.replace(/:/g, '');
-  const length: number = Math.floor(normalized.length / 2);
-  const bytes: Uint8Array = new Uint8Array(length);
-  for (let index = 0; index < length; index += 1) {
-    const parsed: number = parseInt(normalized.substring(index * 2, index * 2 + 2), 16);
-    bytes[index] = Number.isNaN(parsed) ? 0 : parsed;
-  }
-  return bytes;
-}
-
 /**
  * 按蓝牙 Core Spec 的 AD 结构（length + type + payload）解码广播包。
  * 覆盖 Flags、16/32/128 位 Service UUID、Local Name、TX Power、Service Data 和 Manufacturer Specific Data。
  */
 export class FieldwatchBleAdvertisementDecoder {
+  /** 十六进制入口：先校验再转字节。**热路径不走这里**（见 decodeBytes）。 */
   decode(rawHex: string): BleAdvertisementFacts {
-    const facts: BleAdvertisementFacts = new BleAdvertisementFacts();
     const normalized: string = rawHex.replace(/:/g, '');
     if (normalized.length === 0 || normalized.length % 2 !== 0 || !/^[0-9A-Fa-f]+$/.test(normalized)) {
-      facts.error = 'invalid_hex';
-      return facts;
+      const invalid: BleAdvertisementFacts = new BleAdvertisementFacts();
+      invalid.error = 'invalid_hex';
+      return invalid;
     }
-    const bytes: Uint8Array = bytesOfHex(normalized);
+    return this.decodeFromBytes(hexToBytes(normalized));
+  }
+
+  /**
+   * 字节入口：**直接按字节解析，不再绕一趟十六进制**。
+   *
+   * 原实现是 decode(hexOfBytes(raw))：字节 → 十六进制串 → 去冒号 → 正则校验 → 再转回字节，
+   * 四个步骤对每条广播都要走一遍。这里直接进 AD 循环。
+   */
+  decodeBytes(raw: Uint8Array): BleAdvertisementFacts {
+    return this.decodeFromBytes(raw);
+  }
+
+  private decodeFromBytes(bytes: Uint8Array): BleAdvertisementFacts {
+    const facts: BleAdvertisementFacts = new BleAdvertisementFacts();
     facts.byteLength = bytes.length;
     let cursor: number = 0;
     while (cursor < bytes.length) {
@@ -203,9 +199,6 @@ export class FieldwatchBleAdvertisementDecoder {
     return facts;
   }
 
-  decodeBytes(raw: Uint8Array): BleAdvertisementFacts {
-    return this.decode(hexOfBytes(raw));
-  }
 
   private applyAd(facts: BleAdvertisementFacts, adType: number, payload: Uint8Array): void {
     if (adType === 0x01 && payload.length >= 1) {
@@ -236,13 +229,13 @@ export class FieldwatchBleAdvertisementDecoder {
     }
     if (adType === 0x02 || adType === 0x03) {
       for (let index = 0; index + 1 < payload.length; index += 2) {
-        const uuid: string = hexOfBytes(payload.slice(index, index + 2));
+        const uuid: string = bytesRangeToHex(payload, index, index + 2);
         facts.serviceUuids.push(uuid.substring(2, 4) + uuid.substring(0, 2));
       }
       return;
     }
     if (adType === 0x04 || adType === 0x05) {
-      for (let index = 0; index + 3 < payload.length; index += 4) facts.serviceUuids.push(hexOfBytes(payload.slice(index, index + 4)).split('').reverse().join(''));
+      for (let index = 0; index + 3 < payload.length; index += 4) facts.serviceUuids.push(bytesRangeToHex(payload, index, index + 4).split('').reverse().join(''));
       return;
     }
     if (adType === 0x06 || adType === 0x07) {
@@ -257,15 +250,15 @@ export class FieldwatchBleAdvertisementDecoder {
       return;
     }
     if (adType === 0x16 && payload.length >= 3) {
-      const uuid: string = hexOfBytes(payload.slice(0, 2));
+      const uuid: string = bytesRangeToHex(payload, 0, 2);
       const serviceUuid: string = uuid.substring(2, 4) + uuid.substring(0, 2);
-      facts.serviceData.push(new ServiceDataRecord(serviceUuid, hexOfBytes(payload.slice(2))));
+      facts.serviceData.push(new ServiceDataRecord(serviceUuid, bytesRangeToHex(payload, 2, payload.length)));
       if (facts.serviceUuids.indexOf(serviceUuid) < 0) facts.serviceUuids.push(serviceUuid);
       return;
     }
     if (adType === 0x20 && payload.length >= 5) {
-      const uuid: string = hexOfBytes(payload.slice(0, 4)).split('').reverse().join('');
-      facts.serviceData.push(new ServiceDataRecord(uuid, hexOfBytes(payload.slice(4))));
+      const uuid: string = bytesRangeToHex(payload, 0, 4).split('').reverse().join('');
+      facts.serviceData.push(new ServiceDataRecord(uuid, bytesRangeToHex(payload, 4, payload.length)));
       if (facts.serviceUuids.indexOf(uuid) < 0) facts.serviceUuids.push(uuid);
       return;
     }
@@ -275,13 +268,13 @@ export class FieldwatchBleAdvertisementDecoder {
         const value: string = payload[inner].toString(16).toUpperCase();
         uuid += value.length === 1 ? '0' + value : value;
       }
-      facts.serviceData.push(new ServiceDataRecord(uuid, hexOfBytes(payload.slice(16))));
+      facts.serviceData.push(new ServiceDataRecord(uuid, bytesRangeToHex(payload, 16, payload.length)));
       if (facts.serviceUuids.indexOf(uuid) < 0) facts.serviceUuids.push(uuid);
       return;
     }
     if (adType === 0xFF && payload.length >= 3) {
       const companyId: number = payload[0] + payload[1] * 256;
-      const body: string = hexOfBytes(payload.slice(2));
+      const body: string = bytesToHex(payload.slice(2));
       // **每一条 0xFF 都收进 mfgRecords**：广播里可以有多条（不同 Company ID），
       // 原版按记录逐条展示。此前只留第一条，后面的直接被丢掉。
       // ServiceDataRecord 复用在这里只是「uuid 位放公司 ID、dataHex 放载荷」的载体。

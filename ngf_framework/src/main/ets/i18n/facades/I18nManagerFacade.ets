@@ -56,6 +56,39 @@ class I18nManagerFacade implements II18nManager {
     this.notifyCallbacks(systemLocale);
   }
 
+  /**
+   * 当前语言覆盖值；**空串表示「跟随系统」**。
+   *
+   * 设置页需要用它在三个按钮之间显示选中态：光看 `getCurrentLocale()` 分不清
+   * 「用户显式选了中文」和「系统语言本来就是中文」。
+   */
+  getLocaleOverride(): string {
+    const override = AppStorage.get<string>(STORAGE_KEY_LOCALE_OVERRIDE);
+    if (override === undefined || override === null) return '';
+    return override;
+  }
+
+  /**
+   * 冷启动时重新应用持久化的语言（覆盖值优先，否则回落到系统语言）。
+   *
+   * **必须在 `onWindowStageCreate` 的 `loadContent` 回调之后调用**：
+   * `ApplicationContext.setLanguage` 要求「窗口已创建且页面已加载」，
+   * 在 `onCreate` 里调用会被系统拒绝（异常被本类吞掉，表现为「冷启动丢语言覆盖」）。
+   */
+  reapplyPersistedLocale(): void {
+    const override = this.getLocaleOverride();
+    if (override.length > 0) {
+      this.applySystemLocale(override);
+      logger.info(TAG, '冷启动恢复语言覆盖: ' + override);
+      return;
+    }
+    const systemLocale = AppStorage.get<string>(STORAGE_KEY_SYSTEM_LOCALE);
+    const fallback = (systemLocale === undefined || systemLocale === null || systemLocale.length === 0)
+      ? i18n.System.getSystemLocaleInstance().toString() : systemLocale;
+    this.applySystemLocale(fallback);
+    logger.info(TAG, '冷启动应用系统语言: ' + fallback);
+  }
+
   resolveString(key: string | Resource): string {
     return this.resolveStringWithArgs(key, []);
   }

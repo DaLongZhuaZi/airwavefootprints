@@ -148,6 +148,9 @@ export default class EntryAbility extends UIAbility {
         return;
       }
       logger.info(TAG, '页面内容加载成功');
+      // 语言覆盖要等页面加载完成后才能应用（`setLanguage` 的硬性要求），
+      // 早于此时调用会被系统拒绝，表现就是「冷启动后语言设置失效」。
+      ngfI18nManagerFacade.reapplyPersistedLocale();
     });
   }
 

@@ -3,12 +3,13 @@ import { hdsMaterial, HdsNavigation, HdsTabs, HdsTabsController } from '@kit.UID
 import { common, ConfigurationConstant } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import window from '@ohos.window';
-import { NGFThemeMode, ngfDeviceAdaptationFacade, NGFDeviceInfo, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfThemeManagerFacade, ngfVisualEffectsFacade, resolveResourceString, uiContextManager } from 'ngf_framework';
+import { ngfI18nManagerFacade, NGFThemeMode, ngfDeviceAdaptationFacade, NGFDeviceInfo, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfThemeManagerFacade, ngfVisualEffectsFacade, resolveResourceString, uiContextManager, ngfText } from 'ngf_framework';
 import { FieldwatchApplication, FieldwatchApplicationState, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { FieldwatchRowMetrics, rowMetricsFor } from '../../fieldwatch/ui/FieldwatchSignalRow';
 import { FieldwatchLiveMode, FieldwatchNavigationTab, FieldwatchRadarPoint, FieldwatchUiState, buildRadarPoints, groupByBrand, planRadarLabels, RadarLabelPlan, sparkRangeOf, SparkRange, formatClockTime, fleetById, liveDecodeLabels, matchedSignatureNames, remainingAttemptSeconds, sparklineCommands, signatureColorAt, signatureColorIndex, sortSightingsForLiveMode, visibleSightingsAfterPause, wifiPhaseNeedsAction, wifiFactValue } from '../../fieldwatch/ui/FieldwatchUiState';
-import { logger, ngfSystemNotificationManager } from 'ngf_framework';
-import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
+import { logger, ngfPlatformWindowManagerFacade, ngfSystemNotificationManager } from 'ngf_framework';
+import { FieldwatchPalette, FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
+import { fieldwatchText, invalidateFieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 import { buildRadarNodes, FieldwatchRadarNode } from '../../fieldwatch/ui/FieldwatchRadarCluster';
 import { nearLinkClassLabel } from '../../fieldwatch/ui/FieldwatchDeviceTypeIcon';
 import { FieldwatchChip, FieldwatchPresetChip, FieldwatchSwitchRow } from '../../fieldwatch/ui/FieldwatchChip';
@@ -71,18 +72,18 @@ function themeModeName(mode: NGFThemeMode): string {
  * 未知值原样返回，将来新增相位时至少不显示空白。
  */
 function wifiPhaseLabel(context: Context | undefined, phase: string): string {
-  if (phase === WifiScanPhase.IDLE) return resolveResourceString(context, $r('app.string.fieldwatch_wifi_phase_idle'));
-  if (phase === WifiScanPhase.PRECHECK) return resolveResourceString(context, $r('app.string.fieldwatch_wifi_phase_precheck'));
-  if (phase === WifiScanPhase.WAITING_FOR_RETRY) return resolveResourceString(context, $r('app.string.wifi_waiting_system'));
-  if (phase === WifiScanPhase.SCANNING) return resolveResourceString(context, $r('app.string.wifi_scanning'));
-  if (phase === WifiScanPhase.READY) return resolveResourceString(context, $r('app.string.wifi_updated'));
-  if (phase === WifiScanPhase.STALE) return resolveResourceString(context, $r('app.string.wifi_cached'));
-  if (phase === WifiScanPhase.LOCATION_DISABLED) return resolveResourceString(context, $r('app.string.wifi_location_disabled'));
-  if (phase === WifiScanPhase.WIFI_DISABLED) return resolveResourceString(context, $r('app.string.wifi_disabled'));
-  if (phase === WifiScanPhase.PERMISSION_DENIED) return resolveResourceString(context, $r('app.string.wifi_permission_denied'));
-  if (phase === WifiScanPhase.UNSUPPORTED) return resolveResourceString(context, $r('app.string.wifi_unsupported'));
-  if (phase === WifiScanPhase.SYSTEM_REJECTED) return resolveResourceString(context, $r('app.string.wifi_system_rejected'));
-  if (phase === WifiScanPhase.ERROR) return resolveResourceString(context, $r('app.string.wifi_error'));
+  if (phase === WifiScanPhase.IDLE) return fieldwatchText('app.string.fieldwatch_wifi_phase_idle');
+  if (phase === WifiScanPhase.PRECHECK) return fieldwatchText('app.string.fieldwatch_wifi_phase_precheck');
+  if (phase === WifiScanPhase.WAITING_FOR_RETRY) return fieldwatchText('app.string.wifi_waiting_system');
+  if (phase === WifiScanPhase.SCANNING) return fieldwatchText('app.string.wifi_scanning');
+  if (phase === WifiScanPhase.READY) return fieldwatchText('app.string.wifi_updated');
+  if (phase === WifiScanPhase.STALE) return fieldwatchText('app.string.wifi_cached');
+  if (phase === WifiScanPhase.LOCATION_DISABLED) return fieldwatchText('app.string.wifi_location_disabled');
+  if (phase === WifiScanPhase.WIFI_DISABLED) return fieldwatchText('app.string.wifi_disabled');
+  if (phase === WifiScanPhase.PERMISSION_DENIED) return fieldwatchText('app.string.wifi_permission_denied');
+  if (phase === WifiScanPhase.UNSUPPORTED) return fieldwatchText('app.string.wifi_unsupported');
+  if (phase === WifiScanPhase.SYSTEM_REJECTED) return fieldwatchText('app.string.wifi_system_rejected');
+  if (phase === WifiScanPhase.ERROR) return fieldwatchText('app.string.wifi_error');
   return phase;
 }
 
@@ -569,7 +570,7 @@ struct FieldwatchRootPage {
     .hideTitleBar(true)
     .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP])
     .width('100%').height('100%')
-    .backgroundColor($r('app.color.background_primary'))
+    .backgroundColor(FieldwatchPaletteHolder.get().night)
   }
 
   @Builder
@@ -616,16 +617,16 @@ struct FieldwatchRootPage {
   @Builder
   private buildPhoneLayout() {
     HdsTabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
-      TabContent() { FieldwatchLivePage({ visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
-      TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
+      TabContent() { FieldwatchLivePage({ visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
+      TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
             // `onEditFleet` 必须传：它的默认值是空函数，漏传就变成「点了没反应」。
       TabContent() { FieldwatchSignaturesPage({ topInset: this.topInsetVp, embedded: true, landscape: this.isLandscape,
         onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); },
         onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, onOpenWatchlist: (): void => { this.openWatchlist(); }, pageVisible: this.selectedTab === 2 })
-      }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2))
-      TabContent() { FieldwatchReportsPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3))
-      TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
-      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }) }.tabBar(this.buildTabItem($r('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
+      }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2))
+      TabContent() { FieldwatchReportsPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3))
+      TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
+      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
     }
     .width('100%').height('100%').backgroundColor(FieldwatchPaletteHolder.get().night).barMode(BarMode.Fixed).barOverlap(true).barFloatingStyle({ adaptToHandedness: true, systemMaterialEffect: { materialType: hdsMaterial.MaterialType.IMMERSIVE, materialLevel: hdsMaterial.MaterialLevel.EXQUISITE }, thermoCtrl: true, barOpacity: 0.94, barBottomMargin: this.bottomInsetVp })
     .onChange((index: number): void => { this.selectedTab = index; })
@@ -674,19 +675,19 @@ struct FieldwatchRootPage {
       // **特征库原先只在竖屏标签栏里有，横屏侧栏漏了** ——
       // 横屏用户根本进不去（实测反馈）。两处顺序必须对齐，
       // 否则同一个人在两种握持下会看到两套导航。
-      this.buildRailItem($r('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0)
-      this.buildRailItem($r('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1)
+      this.buildRailItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0)
+      this.buildRailItem(fieldwatchText('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1)
       // symbol 与竖屏底部标签栏用同一个（`dot_radiowaves_left_and_right`）——
       // 两种握持下同一个功能应当长得一样。
-      this.buildRailItem($r('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2)
-      this.buildRailItem($r('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3)
+      this.buildRailItem(fieldwatchText('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2)
+      this.buildRailItem(fieldwatchText('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3)
       // 工具箱与设置同样**两处都要有**：本文件上方已经因为「特征库只在竖屏有」踩过一次，
       // 横屏用户进不去（实测反馈）。新增标签页时竖屏底栏与横屏侧栏必须同时改。
-      this.buildRailItem($r('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4)
-      this.buildRailItem($r('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5)
+      this.buildRailItem(fieldwatchText('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4)
+      this.buildRailItem(fieldwatchText('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5)
       Blank()
       if (this.railExpanded) {
-        Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.live_devices_label'))
+        Text(fieldwatchText('app.string.live_devices_label')
           + ' ' + this.deviceCount.toString())
           .fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
           .width('100%').textAlign(TextAlign.Center).maxLines(1)
@@ -799,8 +800,8 @@ struct FieldwatchRootPage {
         pageVisible: this.selectedTab === 2
       }).width('100%').height('100%')
       else if (this.selectedTab === 3) FieldwatchReportsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
-      else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }).width('100%').height('100%')
-      else FieldwatchSettingsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }).width('100%').height('100%')
+      else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }).width('100%').height('100%')
+      else FieldwatchSettingsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }).width('100%').height('100%')
     }.width('100%').height('100%')
     /**
      * **切换过渡（方向感知）。**
@@ -844,6 +845,14 @@ struct FieldwatchDailyMetric {
     }.layoutWeight(1).alignItems(HorizontalAlign.Start)
   }
 }
+
+/** 雷达圈层比例：固定值，提到模块级避免每帧重建一次数组字面量。 */
+const RADAR_RING_SCALES: number[] = [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
+/** 扫描拖尾的分段数与跨度：16 段跨 0.5 rad，视觉上是一条连续渐变光带。 */
+const RADAR_TRAIL_STEPS: number = 16;
+const RADAR_TRAIL_SPAN: number = 0.5;
+/** 放不下标签的点降级成圆点时的半径。 */
+const RADAR_DOT_RADIUS: number = 4;
 
 @Component
 struct FieldwatchLivePage {
@@ -1030,6 +1039,22 @@ struct FieldwatchLivePage {
    * 而且每个点仍然保留自己的颜色（种类与强度语义不丢）。
    */
   @State private dotKeys: string = '|';
+  /**
+   * `dotKeys` 的 Set 镜像。
+   *
+   * 画布与图标层每帧都要判「这个点画不画圆点」，原来用 `dotKeys.indexOf('|' + key + '|')`：
+   * 每次比较都拼一个新字符串、再在几百个键的长串里线性检索。换成 Set 后是 O(1) 且零分配。
+   */
+  private dotKeySet: Set<string> = new Set<string>();
+  /** 圆点集指纹（点集 + 归一化坐标）；变了底板缓存才要重烤。 */
+  private dotToken: string = '';
+  /** 圆点按「配色档 + 无线电类型」预分桶，drawRadar 每帧直接遍历，不再逐点解析颜色。 */
+  private dotBuckets: Map<string, Array<FieldwatchRadarPoint>> = new Map<string, Array<FieldwatchRadarPoint>>();
+  /** 雷达静态底板的离屏位图，以及生成它的输入指纹（尺寸 / 圆心 / 半径 / 配色）。 */
+  private radarBackdrop: ImageBitmap | undefined = undefined;
+  private backdropKey: string = '';
+  /** 离屏画布不可用时置位，之后一直走逐帧绘制，不在每帧重试。 */
+  private backdropDisabled: boolean = false;
   /** 顶部浮层的实测高度（vp）：五个视图据此避让，不遮挡。 */
   @State private liveHeaderH: number = 0;
   /** 聚合气泡相对普通图标的额外尺寸（vp）。 */
@@ -1254,7 +1279,7 @@ struct FieldwatchLivePage {
       Row().width('100%').height('100%').backgroundColor(Color.Transparent)
         .onTouch((event: TouchEvent): void => { this.handleRadarTouch(event); })
         .onHover((isHover: boolean, event: HoverEvent): void => { this.handleRadarHover(isHover, event); })
-      if (this.sightings.length === 0) Text($r('app.string.fieldwatch_no_observations')).fontSize(14).fontColor($r('app.color.text_secondary'))
+      if (this.sightings.length === 0) Text(fieldwatchText('app.string.fieldwatch_no_observations')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').height('100%')
       .onAreaChange((_oldValue: Area, newValue: Area): void => { this.syncRadarSize(newValue); })
       // 地图式交互：单指拖动平移、双指捏合围绕手指焦点缩放。
@@ -1394,7 +1419,7 @@ struct FieldwatchLivePage {
    */
   @Builder private buildClusterPopup(node: FieldwatchRadarNode) {
     Column({ space: 4 }) {
-      Text('+' + node.count.toString() + ' 台 · ' + node.clusterLabel)
+      Text('+' + node.count.toString() + ngfText('app.string.fw_pg_1422') + node.clusterLabel)
         .fontSize(13).fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
         .padding({ bottom: 2 })
       ForEach(node.memberKeys.slice(0, 8), (key: string): void => {
@@ -1415,7 +1440,7 @@ struct FieldwatchLivePage {
         })
       }, (key: string): string => key)
       if (node.memberKeys.length > 8) {
-        Text('…共 ' + node.memberKeys.length.toString() + ' 台')
+        Text(ngfText('app.string.fw_pg_1443') + node.memberKeys.length.toString() + ngfText('app.string.fw_pg_4268'))
           .fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
       }
     }.padding(10).alignItems(HorizontalAlign.Start).width(220)
@@ -1428,7 +1453,7 @@ struct FieldwatchLivePage {
   }
   @Builder private buildRadarIcons() {
     // 渲染期不再重算过滤：读 rebuildRadarGeometry 里算好的缓存（条件逐字相同）。
-    ForEach(this.unclusteredVisiblePoints.filter((point: FieldwatchRadarPoint): boolean => this.dotKeys.indexOf('|' + point.key + '|') < 0), (point: FieldwatchRadarPoint): void => {
+    ForEach(this.unclusteredVisiblePoints.filter((point: FieldwatchRadarPoint): boolean => !this.dotKeySet.has(point.key)), (point: FieldwatchRadarPoint): void => {
       Row({ space: 6 }) {
         // 图标是主体：它精确落在该信号的真实强度半径上，也是唯一可点击的区域。
         SymbolGlyph($r(point.symbol))
@@ -1567,7 +1592,43 @@ struct FieldwatchLivePage {
       },
       fontPx, 78, 92);
     this.labelPlan = plan;
+    // 先派生私有索引，再写 @State：@State 赋值会触发图标层重渲染，
+    // 那次 build 必须能读到已经就绪的 dotKeySet。
+    this.rebuildDotIndex(plan);
     this.dotKeys = plan.dotKeys;
+  }
+
+  /**
+   * 由标签排布结果派生「画圆点的点集」并按配色预分桶。
+   *
+   * 这一步只在点集 / 缩放 / 标签设置变化时跑（即 `rebuildRadarGeometry` 里），
+   * 之后 drawRadar 每帧直接遍历桶，不再做字符串检索与颜色解析。
+   */
+  private rebuildDotIndex(plan: RadarLabelPlan): void {
+    const keySet: Set<string> = new Set<string>();
+    const buckets: Map<string, Array<FieldwatchRadarPoint>> = new Map<string, Array<FieldwatchRadarPoint>>();
+    const points: Array<FieldwatchRadarPoint> = this.unclusteredVisiblePoints;
+    for (let index: number = 0; index < points.length; index += 1) {
+      const point: FieldwatchRadarPoint = points[index];
+      if (plan.dotKeys.indexOf('|' + point.key + '|') < 0) continue;
+      keySet.add(point.key);
+      const bucketKey: string = point.colorIndex.toString() + '|' + point.kind;
+      const bucket: Array<FieldwatchRadarPoint> | undefined = buckets.get(bucketKey);
+      if (bucket === undefined) buckets.set(bucketKey, [point]); else bucket.push(point);
+    }
+    this.dotKeySet = keySet;
+    this.dotBuckets = buckets;
+    // 圆点从「每帧重画」改成「烤进底板」后，必须有一个指纹告诉底板什么时候该重烤：
+    // 点集本身变了、或任一点的位置动了，都要重烤；只有扫描角在动时不重烤。
+    let token: number = (keySet.size * 131 + buckets.size) | 0;
+    buckets.forEach((bucket: Array<FieldwatchRadarPoint>): void => {
+      for (let index: number = 0; index < bucket.length; index += 1) {
+        const item: FieldwatchRadarPoint = bucket[index];
+        // 100 分之一精度足够：更细的变化在画面上看不出来，却会让缓存每秒失效。
+        token = (token * 31 + Math.round(item.x * 100) + Math.round(item.y * 100)) | 0;
+      }
+    });
+    this.dotToken = token.toString();
   }
 
   private visibleRadarPoints(): Array<FieldwatchRadarPoint> {
@@ -1803,6 +1864,15 @@ struct FieldwatchLivePage {
     const span: number = Math.min(width, height);
     return height / 2 + (ny - 0.5) * span * this.radarZoomLive + this.panPxY();
   }
+  /**
+   * 每帧绘制雷达。
+   *
+   * 已优化到「静态底板一次成型、每帧只画动态部分」：
+   * - 底色 + 8 个圈层 + 十字 + 距离刻度是**常量**，只在尺寸/圆心/半径/配色变化时重画，
+   *   结果缓存成离屏位图，稳态下每帧只 `drawImage` 一次（省掉 clearRect + fillRect + 11 次 path）。
+   * - 拖尾 16 段共用同一套 strokeStyle/lineWidth，只有 alpha 逐段变化（原来每段都重设）。
+   * - 圆点按配色预分桶（`rebuildDotIndex`），每帧不再逐点拼字符串判 dotKeys、也不再逐点解析颜色。
+   */
   private drawRadar(): void {
     const width: number = this.animW;
     const height: number = this.animH;
@@ -1813,36 +1883,33 @@ struct FieldwatchLivePage {
     const centerX: number = width / 2 + this.panPxX();
     const centerY: number = height / 2 + this.panPxY();
     const maxRadius: number = (Math.min(width, height) / 2 - 34) * this.radarZoomLive;
-    // **雷达点用缓存，不在每帧里重算。**
-    //
-    // `drawRadar` 每 16ms 跑一次（60fps），而观测点每秒才变一次 ——
-    // 之前每一帧都 `buildRadarPoints(全部观测)`，几十上百个点 × 60 次/秒，
-    // 纯 CPU 白烧；这是「别的页面也卡、手机发热」的主要来源之一。
-    // 点集在 `rebuildRadarGeometry()`（每秒）里更新，这里直接用。
-    const points: Array<FieldwatchRadarPoint> = this.radarPoints;
-    this.context.clearRect(0, 0, width, height);
-    this.context.fillStyle = FieldwatchPaletteHolder.get().night; this.context.fillRect(0, 0, width, height);
-    this.context.strokeStyle = FieldwatchPaletteHolder.get().outline;
-    this.context.lineWidth = 2;
-    [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1].forEach((scale: number): void => { this.context.beginPath(); this.context.arc(centerX, centerY, maxRadius * scale, 0, Math.PI * 2); this.context.stroke(); });
-    this.context.strokeStyle = FieldwatchPaletteHolder.get().divider; this.context.lineWidth = 1;
-    this.context.beginPath(); this.context.moveTo(centerX - maxRadius, centerY); this.context.lineTo(centerX + maxRadius, centerY); this.context.stroke();
-    this.context.beginPath(); this.context.moveTo(centerX, centerY - maxRadius); this.context.lineTo(centerX, centerY + maxRadius); this.context.stroke();
+    const palette: FieldwatchPalette = FieldwatchPaletteHolder.get();
+    // 离屏位图按整数像素建，绘制矩形也用它；圆心与半径仍用真实（可能带小数）的值，
+    // 这样缓存路径与直绘路径的几何完全一致，图标层不会出现亚像素错位。
+    const rectW: number = Math.ceil(width);
+    const rectH: number = Math.ceil(height);
+    // 手势期间圆心/半径每帧都在变，缓存必然失效；这时直接画，避免「多画一遍离屏」。
+    const interacting: boolean = this.radarGestureActive || this.radarPanActive;
+    const backdropKey: string = interacting ? ''
+      : this.radarBackdropKey(rectW, rectH, centerX, centerY, maxRadius, palette);
+    if (backdropKey.length > 0 && this.radarBackdrop !== undefined && backdropKey === this.backdropKey) {
+      this.context.drawImage(this.radarBackdrop, 0, 0);
+    } else {
+      this.paintRadarBackdrop(this.context, rectW, rectH, centerX, centerY, maxRadius, palette, width, height);
+      if (backdropKey.length > 0) this.cacheRadarBackdrop(backdropKey, rectW, rectH, centerX, centerY, maxRadius, palette, width, height);
+    }
     // 拖尾：在扫描线后方画一段逐渐变淡的扇形，替代原来的单根硬线。
     // 拖尾角度固定（不随帧率变化），因此视觉上是连续的光带而不是闪烁。
-    const trailSpan: number = 0.5;
-    const steps: number = 16;
     // **逐条画，每段一个透明度** —— 这是「逐渐变淡的光带」的来源。
-    //
     // 曾尝试合并成一次 `stroke` 来省状态切换，但那样只能有一个 alpha，
-    // 光带会变成均匀亮度（视觉变化，已回退）。
-    // 圆点那边可以合并（同色同半径，合并后逐像素一致），这里不行。
-    for (let step: number = steps; step >= 1; step -= 1) {
-      const back: number = trailSpan * (step / steps);
-      const alpha: number = 0.02 + 0.22 * (1 - step / steps);
+    // 光带会变成均匀亮度（视觉变化，已回退）。同色同线宽可以共用状态：
+    // 这里把 strokeStyle/lineWidth 提到循环外，循环里只改 globalAlpha。
+    this.context.strokeStyle = palette.accent;
+    this.context.lineWidth = 2;
+    for (let step: number = RADAR_TRAIL_STEPS; step >= 1; step -= 1) {
+      const back: number = RADAR_TRAIL_SPAN * (step / RADAR_TRAIL_STEPS);
+      const alpha: number = 0.02 + 0.22 * (1 - step / RADAR_TRAIL_STEPS);
       this.context.globalAlpha = alpha;
-      this.context.strokeStyle = FieldwatchPaletteHolder.get().accent;
-      this.context.lineWidth = 2;
       this.context.beginPath();
       this.context.moveTo(centerX, centerY);
       this.context.lineTo(
@@ -1853,48 +1920,127 @@ struct FieldwatchLivePage {
     }
     // 扫描线本体
     this.context.globalAlpha = 1;
-    this.context.strokeStyle = FieldwatchPaletteHolder.get().accent;
+    this.context.strokeStyle = palette.accent;
     this.context.lineWidth = 3;
     this.context.beginPath();
     this.context.moveTo(centerX, centerY);
     this.context.lineTo(centerX + Math.cos(this.radarAngle) * maxRadius, centerY + Math.sin(this.radarAngle) * maxRadius);
     this.context.stroke();
-    this.context.font = '18px sans-serif'; this.context.fillStyle = FieldwatchPaletteHolder.get().textDim; this.context.fillText('-40', centerX + 8, centerY - maxRadius * 0.25); this.context.fillText('-60', centerX + 8, centerY - maxRadius * 0.5); this.context.fillText('-80', centerX + 8, centerY - maxRadius * 0.75); this.context.fillText('-100', centerX + 8, centerY - maxRadius + 20);
-    // **放不下图标的点降级为小圆点，画在这里。**
-    //
-    // 完整图标要占「图标 + 名称 + 强度」的宽度，拥挤时根本摆不开；
-    // 但小圆点只占几个像素，同样空间能显示的信号数量高一个量级，
-    // 而且保留颜色（种类与签名语义不丢）。
-    //
-    // 判断由 `labelPlan` 统一给出 —— 标签放得下的走 ArkUI 图标层，
-    // 放不下的在这里画点，两边不会同时画同一个信号。
-    const dotRadius: number = 4;
-    // **按颜色分桶合并** —— 原来每个圆点一次 `beginPath`/`fill`（状态切换 × N），
-    // 现在同色只画一次（beginPath + arc × N + 一次 fill），视觉完全一致。
-    const colorBuckets: Map<string, Array<FieldwatchRadarPoint>> = new Map<string, Array<FieldwatchRadarPoint>>();
-    points.forEach((point: FieldwatchRadarPoint): void => {
-      if (this.dotKeys.indexOf('|' + point.key + '|') < 0) return;
-      const signatureColor: string = signatureColorAt(point.colorIndex);
+    // **放不下图标的点降级为小圆点** —— 已随底板一起烤进离屏位图（见 paintRadarDots /
+    // paintRadarBackdrop）。此前这里逐帧重建圆点路径，是 62fps 下的主要开销之一。
+    // 标签不再画在 Canvas 上：它与图标是两个坐标系，必然分离。
+    // 现在图标与文字合成一个 ArkUI 单元，共用同一套变换，永远贴在一起。
+  }
+
+  /** 静态底板的输入指纹：任一要素变化都要重画，否则沿用缓存位图。 */
+  private radarBackdropKey(rectW: number, rectH: number, centerX: number, centerY: number,
+    maxRadius: number, palette: FieldwatchPalette): string {
+    return rectW.toString() + '|' + rectH.toString() + '|'
+      + Math.round(centerX).toString() + '|' + Math.round(centerY).toString() + '|'
+      + Math.round(maxRadius).toString() + '|' + this.dotToken + '|'
+      + palette.night + '|' + palette.outline + '|' + palette.divider + '|' + palette.textDim;
+  }
+
+  /**
+   * 画降级小圆点（放不下图标的那些信号）。
+   *
+   * **按配色分桶合并**：每个圆点一次 beginPath/fill 太贵，同色只画一次
+   * （beginPath + arc × N + 一次 fill），视觉完全一致。
+   *
+   * 这条路径现在被『底板烘焙』调用（圆点已经烤进离屏位图），每帧不再重画；
+   * 手势期间走直绘路径时仍会调用，行为与改造前一致。
+   */
+  private paintRadarDots(ctx: CanvasRenderer, width: number, height: number, palette: FieldwatchPalette): void {
+    this.dotBuckets.forEach((bucket: Array<FieldwatchRadarPoint>, bucketKey: string): void => {
+      const separator: number = bucketKey.indexOf('|');
+      const colorIndex: number = Number(bucketKey.substring(0, separator));
+      const kind: string = bucketKey.substring(separator + 1);
+      const signatureColor: string = signatureColorAt(colorIndex);
       const color: string = signatureColor.length > 0 ? signatureColor
-        : (point.kind === RadioKind.WIFI ? FieldwatchPaletteHolder.get().cyan : FieldwatchPaletteHolder.get().accent);
-      const bucket: Array<FieldwatchRadarPoint> | undefined = colorBuckets.get(color);
-      if (bucket === undefined) colorBuckets.set(color, [point]); else bucket.push(point);
-    });
-    colorBuckets.forEach((bucket: Array<FieldwatchRadarPoint>, color: string): void => {
-      this.context.fillStyle = color;
-      this.context.beginPath();
-      bucket.forEach((point: FieldwatchRadarPoint): void => {
+        : (kind === RadioKind.WIFI ? palette.cyan : palette.accent);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      for (let index: number = 0; index < bucket.length; index += 1) {
+        const point: FieldwatchRadarPoint = bucket[index];
         const x: number = this.canvasX(point.x, width, height);
         const y: number = this.canvasY(point.y, width, height);
         // `arc()` 会从当前路径位置连到新圆弧的起点；同色批量绘制时，
         // 不显式移动就会把多个圆点连成填充三角形/色块。
-        this.context.moveTo(x + dotRadius, y);
-        this.context.arc(x, y, dotRadius, 0, Math.PI * 2);
-      });
-      this.context.fill();
+        ctx.moveTo(x + RADAR_DOT_RADIUS, y);
+        ctx.arc(x, y, RADAR_DOT_RADIUS, 0, Math.PI * 2);
+      }
+      ctx.fill();
     });
-    // 标签不再画在 Canvas 上：它与图标是两个坐标系，必然分离。
-    // 现在图标与文字合成一个 ArkUI 单元，共用同一套变换，永远贴在一起。
+  }
+
+  /**
+   * 画雷达静态底板：底色 + 圈层 + 十字 + 距离刻度 + 降级小圆点。
+   *
+   * 离线画布与主画布共用这一份实现，保证两条路径像素一致。
+   * 参数里的 rectW/rectH 是绘制矩形尺寸（整数），centerX/centerY/maxRadius 用真实值，
+   * 这样缓存位图与直绘的几何完全相同。
+   */
+  private paintRadarBackdrop(ctx: CanvasRenderer, rectW: number, rectH: number,
+    centerX: number, centerY: number, maxRadius: number, palette: FieldwatchPalette,
+    spanW: number, spanH: number): void {
+    ctx.clearRect(0, 0, rectW, rectH);
+    ctx.fillStyle = palette.night;
+    ctx.fillRect(0, 0, rectW, rectH);
+    ctx.strokeStyle = palette.outline;
+    ctx.lineWidth = 2;
+    for (let index: number = 0; index < RADAR_RING_SCALES.length; index += 1) {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, maxRadius * RADAR_RING_SCALES[index], 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = palette.divider;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(centerX - maxRadius, centerY);
+    ctx.lineTo(centerX + maxRadius, centerY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY - maxRadius);
+    ctx.lineTo(centerX, centerY + maxRadius);
+    ctx.stroke();
+    ctx.font = '18px sans-serif';
+    ctx.fillStyle = palette.textDim;
+    ctx.fillText('-40', centerX + 8, centerY - maxRadius * 0.25);
+    ctx.fillText('-60', centerX + 8, centerY - maxRadius * 0.5);
+    ctx.fillText('-80', centerX + 8, centerY - maxRadius * 0.75);
+    ctx.fillText('-100', centerX + 8, centerY - maxRadius + 20);
+    // 圆点与底板同属『静态层』：它们只在数据/几何变化时变，不随扫描角变化，
+    // 因此一起烤进离屏位图，稳态下每帧只剩一次 drawImage + 扫描线。
+    // 圆点必须用**真实（可能带小数）的画布尺寸**换算位置：
+    // 位图按 `ceil()` 建，用整数尺寸算 `min(w,h)` 会与图标层差最多 1px，
+    // 表现是「圆点相对圆环偏了一点点」。
+    this.paintRadarDots(ctx, spanW, spanH, palette);
+  }
+
+  /**
+   * 把静态底板烤进离屏位图。
+   *
+   * 只在指纹变化时调用（尺寸 / 圆心 / 半径 / 配色），稳态下每帧只做一次 `drawImage`。
+   * 离屏画布不可用时置 `backdropDisabled` 并永久回退逐帧绘制，避免每帧都抛一次异常。
+   */
+  private cacheRadarBackdrop(key: string, rectW: number, rectH: number, centerX: number,
+    centerY: number, maxRadius: number, palette: FieldwatchPalette,
+    spanW: number, spanH: number): void {
+    if (this.backdropDisabled) return;
+    try {
+      const offscreen: OffscreenCanvas = new OffscreenCanvas(rectW, rectH);
+      const offCtx: OffscreenCanvasRenderingContext2D = offscreen.getContext('2d');
+      this.paintRadarBackdrop(offCtx, rectW, rectH, centerX, centerY, maxRadius, palette, spanW, spanH);
+      if (this.radarBackdrop !== undefined) this.radarBackdrop.close();
+      this.radarBackdrop = offscreen.transferToImageBitmap();
+      this.backdropKey = key;
+    } catch (error) {
+      // ArkTS 的 Canvas 在极少数设备上不允许创建离屏画布；这里降级为逐帧绘制，功能不受影响。
+      this.backdropDisabled = true;
+      this.radarBackdrop = undefined;
+      this.backdropKey = '';
+      logger.warn(TAG, '雷达静态底板离屏缓存不可用，回退逐帧绘制: ' + error);
+    }
   }
   /**
    * 切换实时视图。
@@ -2046,7 +2192,7 @@ struct FieldwatchLivePage {
   private nearLinkClassText(sighting: Sighting): string {
     const label: string = nearLinkClassLabel(sighting.facts.nearLinkDeviceClass);
     return label.length > 0 ? label
-      : resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_detail_nl_unknown'));
+      : fieldwatchText('app.string.fieldwatch_detail_nl_unknown');
   }
   // ── 详情页新增字段的取值助手 ──
 
@@ -2073,7 +2219,7 @@ struct FieldwatchLivePage {
     const mhz: number = sighting.facts.frequencyMhz;
     const width: number = sighting.facts.channelWidth;
     if (mhz <= 0) return '';
-    if (mhz < 2500) return width >= 40 ? 'Wi-Fi 4 (802.11n)' : 'Wi-Fi 4 及更早';
+    if (mhz < 2500) return width >= 40 ? 'Wi-Fi 4 (802.11n)' : ngfText('app.string.fw_pg_2222');
     if (mhz < 5925) return width >= 80 ? 'Wi-Fi 5 (802.11ac)' : 'Wi-Fi 4 (802.11n)';
     return 'Wi-Fi 6E / 7 (6 GHz)';
   }
@@ -2112,8 +2258,8 @@ struct FieldwatchLivePage {
   private securityText(sighting: Sighting): string {
     if (sighting.kind !== RadioKind.WIFI) return this.notApplicableText();
     const value: number = sighting.facts.securityType;
-    if (value === 1) return '开放（无密码）';
-    if (value === 2) return 'WEP（已过时）';
+    if (value === 1) return ngfText('app.string.fw_pg_2261');
+    if (value === 2) return ngfText('app.string.fw_pg_2262');
     if (value === 3) return 'WPA2 / PSK';
     if (value === 4) return 'WPA3 / SAE';
     return this.notApplicableText();
@@ -2121,8 +2267,8 @@ struct FieldwatchLivePage {
   /** 地址类型：'固定' / '随机' / 空（平台没给）。 */
   private addressTypeText(sighting: Sighting): string {
     const value: string = sighting.facts.addressType;
-    if (value === 'public') return resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_addr_public'));
-    if (value === 'random') return resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_addr_random'));
+    if (value === 'public') return fieldwatchText('app.string.fieldwatch_addr_public');
+    if (value === 'random') return fieldwatchText('app.string.fieldwatch_addr_random');
     return '';
   }
   /**
@@ -2253,12 +2399,12 @@ struct FieldwatchLivePage {
     return name.length > 0 ? name : '0x' + id.toString(16).toUpperCase().padStart(4, '0');
   }
   @Builder private buildDeviceEditBlock(sighting: Sighting) {
-    this.detailSection($r('app.string.fieldwatch_sec_notes'))
+    this.detailSection(fieldwatchText('app.string.fieldwatch_sec_notes'))
     // @Builder 内不能声明局部变量（ArkTS 限制），取值一律走方法调用。
     if (!this.detailEditOpen) {
-      this.detailLine($r('app.string.fieldwatch_detail_custom_name'), this.savedLabelOrNone(sighting))
-      this.detailLine($r('app.string.fieldwatch_detail_notes'), this.savedNoteOrNone(sighting))
-      Button($r('app.string.fieldwatch_detail_edit')).backgroundColor(Color.Transparent).borderWidth(1)
+      this.detailLine(fieldwatchText('app.string.fieldwatch_detail_custom_name'), this.savedLabelOrNone(sighting))
+      this.detailLine(fieldwatchText('app.string.fieldwatch_detail_notes'), this.savedNoteOrNone(sighting))
+      Button(fieldwatchText('app.string.fieldwatch_detail_edit')).backgroundColor(Color.Transparent).borderWidth(1)
         .borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text)
         .width('100%').onClick((): void => {
           // 打开编辑时把已保存的值灌进草稿，取消则原样丢弃。
@@ -2270,22 +2416,22 @@ struct FieldwatchLivePage {
       // 随机地址设备：明确说明为什么不能命名，而不是给一个点了没用的输入框。
       if (fieldwatchApplication.canSetCustomName(sighting)) {
         TextInput({ text: this.detailNameDraft,
-          placeholder: $r('app.string.fieldwatch_detail_custom_name') }).height(44)
+          placeholder: fieldwatchText('app.string.fieldwatch_detail_custom_name') }).height(44)
           .maxLength(FieldwatchApplication.MAX_DEVICE_LABEL)
           .onChange((value: string): void => { this.detailNameDraft = value; })
-        this.detailHint($r('app.string.fieldwatch_detail_custom_name_hint'), FieldwatchPaletteHolder.get().textDim)
+        this.detailHint(fieldwatchText('app.string.fieldwatch_detail_custom_name_hint'), FieldwatchPaletteHolder.get().textDim)
       } else {
-        this.detailHint($r('app.string.fieldwatch_detail_custom_name_blocked'), FieldwatchPaletteHolder.get().amber)
+        this.detailHint(fieldwatchText('app.string.fieldwatch_detail_custom_name_blocked'), FieldwatchPaletteHolder.get().amber)
       }
       TextInput({ text: this.detailNotesDraft,
-        placeholder: $r('app.string.fieldwatch_detail_notes') }).height(44)
+        placeholder: fieldwatchText('app.string.fieldwatch_detail_notes') }).height(44)
         .maxLength(FieldwatchApplication.MAX_DEVICE_NOTE)
         .onChange((value: string): void => { this.detailNotesDraft = value; })
-      this.detailHint($r('app.string.fieldwatch_detail_notes_hint'), FieldwatchPaletteHolder.get().textDim)
+      this.detailHint(fieldwatchText('app.string.fieldwatch_detail_notes_hint'), FieldwatchPaletteHolder.get().textDim)
       Row({ space: 8 }) {
-        Button($r('app.string.fieldwatch_detail_save')).layoutWeight(1)
-          .height(44).borderRadius(12).backgroundColor($r('app.color.button_primary'))
-          .fontColor($r('app.color.fw_on_accent'))
+        Button(fieldwatchText('app.string.fieldwatch_detail_save')).layoutWeight(1)
+          .height(44).borderRadius(12).backgroundColor(FieldwatchPaletteHolder.get().accent)
+          .fontColor(FieldwatchPaletteHolder.get().onAccent)
           .onClick((): void => {
             if (fieldwatchApplication.canSetCustomName(sighting)) {
               fieldwatchApplication.upsertDeviceLabel(sighting.key, this.detailNameDraft);
@@ -2295,7 +2441,7 @@ struct FieldwatchLivePage {
             this.detailEditOpen = false;
             // 不需要手动触发刷新：本页每秒重读一次状态，改完会在下一拍显示出来。
           })
-        Button($r('app.string.fieldwatch_detail_hide')).layoutWeight(1)
+        Button(fieldwatchText('app.string.fieldwatch_detail_hide')).layoutWeight(1)
           .height(44).borderRadius(12).backgroundColor(Color.Transparent).borderWidth(1)
           .borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text)
           .onClick((): void => { this.detailEditOpen = false; })
@@ -2304,121 +2450,121 @@ struct FieldwatchLivePage {
   }
   @Builder private buildDetailFields(sighting: Sighting) {
     // ── 头部 ──
-    Row({ space: 10 }) { FieldwatchDeviceTypeIcon({ kind: sighting.kind, category: this.categoryFor(sighting), tint: this.tintFor(sighting) }); Text(fieldwatchApplication.displayName(sighting)).fontSize(18).fontColor($r('app.color.text_primary')) }
+    Row({ space: 10 }) { FieldwatchDeviceTypeIcon({ kind: sighting.kind, category: this.categoryFor(sighting), tint: this.tintFor(sighting) }); Text(fieldwatchApplication.displayName(sighting)).fontSize(18).fontColor(FieldwatchPaletteHolder.get().text) }
     if (this.isGone(sighting)) {
-      this.detailHint($r('app.string.fieldwatch_detail_gone'), FieldwatchPaletteHolder.get().amber)
+      this.detailHint(fieldwatchText('app.string.fieldwatch_detail_gone'), FieldwatchPaletteHolder.get().amber)
     }
 
     // ── 身份 ──
-    this.detailSection($r('app.string.fieldwatch_sec_identity'))
-    this.detailLine($r('app.string.fieldwatch_detail_type'), sighting.kind.toUpperCase())
-    this.detailLine($r('app.string.fieldwatch_detail_name'), this.nameText(sighting))
-    this.detailLine($r('app.string.fieldwatch_detail_address'), fieldwatchApplication.describeAddress(sighting))
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_address_type'), this.addressTypeText(sighting))
+    this.detailSection(fieldwatchText('app.string.fieldwatch_sec_identity'))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_type'), sighting.kind.toUpperCase())
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_name'), this.nameText(sighting))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_address'), fieldwatchApplication.describeAddress(sighting))
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_address_type'), this.addressTypeText(sighting))
     // 星闪的真实 MAC 属系统级权限，应用拿不到。地址很可能是系统分配的匿名标识、
     // 会随时间变化 —— 必须明确告诉用户，否则他会把它当成稳定的设备标识。
     if (sighting.kind === RadioKind.NEARLINK) {
-      Text($r('app.string.fieldwatch_detail_nl_address_note')).fontSize(11)
+      Text(fieldwatchText('app.string.fieldwatch_detail_nl_address_note')).fontSize(11)
         .fontColor(FieldwatchPaletteHolder.get().amber)
     }
     // 厂商来自 OUI 名称库；查不到就不占一行，避免满屏「未知」。
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_vendor'), sighting.facts.manufacturer)
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_vendor'), sighting.facts.manufacturer)
     // 网络名称用独立的 label：复用「名称」会让身份区块里出现两行「名称」。
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_ssid'), sighting.facts.ssid)
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_ssid'), sighting.facts.ssid)
 
     // ── 信号 ──
-    this.detailSection($r('app.string.fieldwatch_sec_signal'))
-    this.detailLine($r('app.string.fieldwatch_detail_rssi'), sighting.rssi.toString() + ' dBm')
-    this.detailLine($r('app.string.fieldwatch_detail_location'), this.locationText(sighting))
+    this.detailSection(fieldwatchText('app.string.fieldwatch_sec_signal'))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_rssi'), sighting.rssi.toString() + ' dBm')
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_location'), this.locationText(sighting))
     // 发射功率：-128 表示广告里没带这一项。
     if (sighting.facts.txPower > -128) {
-      this.detailLine($r('app.string.fieldwatch_detail_tx_power'), sighting.facts.txPower.toString() + ' dBm')
-      this.detailHint($r('app.string.fieldwatch_detail_tx_power_hint'), FieldwatchPaletteHolder.get().textDim)
+      this.detailLine(fieldwatchText('app.string.fieldwatch_detail_tx_power'), sighting.facts.txPower.toString() + ' dBm')
+      this.detailHint(fieldwatchText('app.string.fieldwatch_detail_tx_power_hint'), FieldwatchPaletteHolder.get().textDim)
     }
-    this.detailLine($r('app.string.fieldwatch_detail_frequency'), wifiFactValue(sighting.kind, sighting.facts.frequencyMhz, ' MHz', this.notApplicableText()))
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_channel'), this.channelText(sighting))
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_generation'), this.generationText(sighting))
-    this.detailLine($r('app.string.fieldwatch_detail_band'), this.bandText(sighting))
-    this.detailLine($r('app.string.fieldwatch_detail_channel_width'), this.channelWidthText(sighting))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_frequency'), wifiFactValue(sighting.kind, sighting.facts.frequencyMhz, ' MHz', this.notApplicableText()))
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_channel'), this.channelText(sighting))
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_generation'), this.generationText(sighting))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_band'), this.bandText(sighting))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_channel_width'), this.channelWidthText(sighting))
 
     // ── 蓝牙广播 ──
     if (sighting.kind === RadioKind.BLE) {
-      this.detailSection($r('app.string.fieldwatch_sec_ble'))
-      this.detailLine($r('app.string.fieldwatch_detail_nl_connectable'),
+      this.detailSection(fieldwatchText('app.string.fieldwatch_sec_ble'))
+      this.detailLine(fieldwatchText('app.string.fieldwatch_detail_nl_connectable'),
         resolveResourceString(this.getUIContext().getHostContext(),
-          sighting.facts.connectable ? $r('app.string.fieldwatch_detail_nl_yes') : $r('app.string.fieldwatch_detail_nl_no')))
-      this.detailLineIfAny($r('app.string.fieldwatch_detail_appearance'), this.appearanceText(sighting))
-      this.detailLineIfAny($r('app.string.fieldwatch_detail_appearance_code'), this.appearanceCodeText(sighting))
+          sighting.facts.connectable ? fieldwatchText('app.string.fieldwatch_detail_nl_yes') : fieldwatchText('app.string.fieldwatch_detail_nl_no')))
+      this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_appearance'), this.appearanceText(sighting))
+      this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_appearance_code'), this.appearanceCodeText(sighting))
       if (sighting.facts.advertiseFlags >= 0) {
-        this.detailLine($r('app.string.fieldwatch_detail_flags'), '0x' + sighting.facts.advertiseFlags.toString(16).toUpperCase().padStart(2, '0'))
+        this.detailLine(fieldwatchText('app.string.fieldwatch_detail_flags'), '0x' + sighting.facts.advertiseFlags.toString(16).toUpperCase().padStart(2, '0'))
       }
     }
     // 星闪独有的两项信息：设备类型由广播直接声明（不靠特征库推断），
     // 以及设备是否声明可连接。BLE 侧没有等价字段。
     if (sighting.kind === RadioKind.NEARLINK) {
-      this.detailSection($r('app.string.fieldwatch_sec_ble'))
-      this.detailLine($r('app.string.fieldwatch_detail_nl_class'), this.nearLinkClassText(sighting))
-      this.detailLine($r('app.string.fieldwatch_detail_nl_connectable'),
+      this.detailSection(fieldwatchText('app.string.fieldwatch_sec_ble'))
+      this.detailLine(fieldwatchText('app.string.fieldwatch_detail_nl_class'), this.nearLinkClassText(sighting))
+      this.detailLine(fieldwatchText('app.string.fieldwatch_detail_nl_connectable'),
         resolveResourceString(this.getUIContext().getHostContext(),
-          sighting.facts.nearLinkConnectable ? $r('app.string.fieldwatch_detail_nl_yes')
-            : $r('app.string.fieldwatch_detail_nl_no')))
+          sighting.facts.nearLinkConnectable ? fieldwatchText('app.string.fieldwatch_detail_nl_yes')
+            : fieldwatchText('app.string.fieldwatch_detail_nl_no')))
     }
 
     // ── Wi-Fi 接入点 ──
     if (sighting.kind === RadioKind.WIFI) {
-      this.detailSection($r('app.string.fieldwatch_sec_wifi'))
-      this.detailLine($r('app.string.fieldwatch_detail_security'), this.securityText(sighting))
+      this.detailSection(fieldwatchText('app.string.fieldwatch_sec_wifi'))
+      this.detailLine(fieldwatchText('app.string.fieldwatch_detail_security'), this.securityText(sighting))
       if (sighting.facts.hiddenSsid) {
-        this.detailLine($r('app.string.fieldwatch_detail_hidden_ssid'), resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_detail_hidden_yes')))
+        this.detailLine(fieldwatchText('app.string.fieldwatch_detail_hidden_ssid'), fieldwatchText('app.string.fieldwatch_detail_hidden_yes'))
       }
-      this.detailLineIfAny($r('app.string.fieldwatch_detail_vendor_ie'), this.vendorIeText(sighting))
+      this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_vendor_ie'), this.vendorIeText(sighting))
     }
 
     // ── 解码字段 ──
-    this.detailSection($r('app.string.fieldwatch_sec_decoded'))
-    this.detailLine($r('app.string.fieldwatch_detail_decoded'), this.decodedText(sighting))
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_service_uuids'), this.serviceUuidText(sighting))
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_service_data'), this.serviceDataText(sighting))
+    this.detailSection(fieldwatchText('app.string.fieldwatch_sec_decoded'))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_decoded'), this.decodedText(sighting))
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_service_uuids'), this.serviceUuidText(sighting))
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_service_data'), this.serviceDataText(sighting))
 
     // ── 广播里的厂商数据 ──
     // 整段只在**确实有厂商数据**时出现：否则会出现一个只有标题、下面空白的区块。
     if (sighting.kind === RadioKind.BLE && (sighting.facts.manufacturerId > 0 || sighting.facts.manufacturerDataHex.length > 0)) {
-      this.detailSection($r('app.string.fieldwatch_sec_maker'))
-      this.detailLineIfAny($r('app.string.fieldwatch_detail_vendor'), this.companyText(sighting))
-      this.detailLineIfAny($r('app.string.fieldwatch_detail_raw_payload'),
+      this.detailSection(fieldwatchText('app.string.fieldwatch_sec_maker'))
+      this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_vendor'), this.companyText(sighting))
+      this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_raw_payload'),
         sighting.facts.manufacturerDataHex.length > 0
           ? Math.floor(sighting.facts.manufacturerDataHex.length / 2).toString() + ' B: ' + sighting.facts.manufacturerDataHex
           : '')
     }
 
     // ── 本次会话 ──
-    this.detailSection($r('app.string.fieldwatch_sec_session'))
-    this.detailLine($r('app.string.fieldwatch_detail_seen_count'), sighting.count.toString())
-    this.detailLine($r('app.string.fieldwatch_detail_fresh'), sighting.fresh ? resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_detail_fresh_value')) : resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_detail_cached_value')))
-    this.detailLineIfAny($r('app.string.fieldwatch_detail_raw_ad'), sighting.facts.rawAdHex)
+    this.detailSection(fieldwatchText('app.string.fieldwatch_sec_session'))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_seen_count'), sighting.count.toString())
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_fresh'), sighting.fresh ? fieldwatchText('app.string.fieldwatch_detail_fresh_value') : fieldwatchText('app.string.fieldwatch_detail_cached_value'))
+    this.detailLineIfAny(fieldwatchText('app.string.fieldwatch_detail_raw_ad'), sighting.facts.rawAdHex)
 
     // ── 特征族 ──
-    this.detailSection($r('app.string.fieldwatch_sec_family'))
-    this.detailLine($r('app.string.fieldwatch_detail_signatures'), this.signatureText(sighting))
-    this.detailLine($r('app.string.fieldwatch_detail_signature_reason'), this.signatureReasonText(sighting))
+    this.detailSection(fieldwatchText('app.string.fieldwatch_sec_family'))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_signatures'), this.signatureText(sighting))
+    this.detailLine(fieldwatchText('app.string.fieldwatch_detail_signature_reason'), this.signatureReasonText(sighting))
 
     // ── 额外关注 ──
     if (this.attentionText(sighting).length > 0) {
-      this.detailSection($r('app.string.fieldwatch_sec_attention'))
+      this.detailSection(fieldwatchText('app.string.fieldwatch_sec_attention'))
       this.detailHint(this.attentionText(sighting), FieldwatchPaletteHolder.get().amber)
-      this.detailHint($r('app.string.fieldwatch_detail_attention_note'), FieldwatchPaletteHolder.get().textDim)
+      this.detailHint(fieldwatchText('app.string.fieldwatch_detail_attention_note'), FieldwatchPaletteHolder.get().textDim)
     }
 
     // ── 备注：自定义名称 + 观察者备注（可编辑）──
     this.buildDeviceEditBlock(sighting)
 
     Row({ space: 8 }) {
-      Button(this.isWatched(sighting) ? $r('app.string.fieldwatch_detail_unwatch') : $r('app.string.fieldwatch_detail_watch')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { fieldwatchApplication.toggleWatch(sighting); })
+      Button(this.isWatched(sighting) ? fieldwatchText('app.string.fieldwatch_detail_unwatch') : fieldwatchText('app.string.fieldwatch_detail_watch')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { fieldwatchApplication.toggleWatch(sighting); })
       // 跳转前必须先关掉详情 Sheet：Sheet 绑在本页，跳转不会自动收起它，
       // 结果搜寻页/编辑器会渲染在 Sheet 后面，看起来像「打开失败」。
-      Button($r('app.string.fieldwatch_hunt_start')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { this.onStartHunt(sighting.key); })
-      Button($r('app.string.fieldwatch_signatures_create_from_device')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { this.onCreateSignature(sighting.key); })
-      Button($r('app.string.fieldwatch_detail_share')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { fieldwatchApplication.shareSighting(sighting); })
+      Button(fieldwatchText('app.string.fieldwatch_hunt_start')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { this.onStartHunt(sighting.key); })
+      Button(fieldwatchText('app.string.fieldwatch_signatures_create_from_device')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { this.onCreateSignature(sighting.key); })
+      Button(fieldwatchText('app.string.fieldwatch_detail_share')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { fieldwatchApplication.shareSighting(sighting); })
     }.width('100%')
   }
   private isWatched(sighting: Sighting): boolean { return fieldwatchApplication.getState().watchlist.some((target: WatchTarget): boolean => target.deviceKey === sighting.key && target.alert); }
@@ -2426,7 +2572,7 @@ struct FieldwatchLivePage {
   private previewHint(sighting: Sighting): string {
     const names: string[] = matchedSignatureNames(sighting.signatureIds, fieldwatchApplication.getState().signatures);
     if (names.length > 0) return names[0];
-    return resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_device_preview_open'));
+    return fieldwatchText('app.string.fieldwatch_device_preview_open');
   }
   private tintFor(sighting: Sighting): string {
     const color: string = signatureColorAt(signatureColorIndex(sighting, fieldwatchApplication.getState().signatures));
@@ -2442,10 +2588,10 @@ struct FieldwatchLivePage {
   }
   private locationText(sighting: Sighting): string {
     const text: string = fieldwatchApplication.describeLocation(sighting);
-    return text.length > 0 ? text : resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_none'));
+    return text.length > 0 ? text : fieldwatchText('app.string.fieldwatch_settings_none');
   }
-  private notApplicableText(): string { return resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_detail_not_applicable')); }
-  private noneText(): string { return resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_none')); }
+  private notApplicableText(): string { return fieldwatchText('app.string.fieldwatch_detail_not_applicable'); }
+  private noneText(): string { return fieldwatchText('app.string.fieldwatch_settings_none'); }
   private signatureText(sighting: Sighting): string {
     if (sighting.signatureIds.length === 0) return this.noneText();
     const fleets: SignatureFleet[] = fieldwatchApplication.getState().signatures;
@@ -2486,9 +2632,9 @@ struct FieldwatchLivePage {
   }
   private nameText(sighting: Sighting): string {
     const text: string = fieldwatchApplication.describeName(sighting);
-    return text.length > 0 ? text : resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_none'));
+    return text.length > 0 ? text : fieldwatchText('app.string.fieldwatch_settings_none');
   }
-  @Builder private detailLine(label: ResourceStr, value: string) { Row() { Text(label).width(126).fontColor($r('app.color.text_secondary')); Text(value).layoutWeight(1).fontColor($r('app.color.text_primary')) }.width('100%') }
+  @Builder private detailLine(label: ResourceStr, value: string) { Row() { Text(label).width(126).fontColor(FieldwatchPaletteHolder.get().textDim); Text(value).layoutWeight(1).fontColor(FieldwatchPaletteHolder.get().text) }.width('100%') }
   /**
    * 原版头部统计行：BLE / Wi-Fi / 星闪 / 总信号源。
    *
@@ -2562,7 +2708,7 @@ struct FieldwatchLivePage {
     const now: number = Date.now();
     const firstMillis: number = item.firstSeen;
     const lastMillis: number = item.lastSeen;
-    return '首 ' + this.durationText(now - firstMillis) + ' · ' + (lastMillis >= now - 2000 ? '末 now' : '末 ' + this.durationText(now - lastMillis));
+    return ngfText('app.string.fw_pg_2711') + this.durationText(now - firstMillis) + ' · ' + (lastMillis >= now - 2000 ? ngfText('app.string.fw_pg_2711b') : ngfText('app.string.fw_pg_2711c') + this.durationText(now - lastMillis));
   }
   private durationText(millis: number): string {
     const seconds: number = Math.max(0, Math.floor(millis / 1000));
@@ -2689,7 +2835,7 @@ struct FieldwatchLivePage {
         .width(40).height(40).borderRadius(20).backgroundColor(FieldwatchPaletteHolder.get().badgeBg)
       Column({ space: 3 }) {
         Text(signatureClassLabel(cls)).fontSize(18).fontColor(FieldwatchPaletteHolder.get().text)
-        Text(this.classFleetCount(cls).toString() + ' ' + resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_class_fleet_unit'))).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+        Text(this.classFleetCount(cls).toString() + ' ' + fieldwatchText('app.string.fieldwatch_class_fleet_unit')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       Text(this.classCount(cls).toString()).fontSize(15).fontColor(FieldwatchPaletteHolder.get().textDim)
       // 箭头随展开状态旋转，给用户明确的反馈。
@@ -2813,8 +2959,8 @@ struct FieldwatchLivePage {
   /** 分类视图顶部的「显示全部 / 仅显示有结果」二选一。 */
   @Builder private buildClassFilterRow() {
     Row({ space: 8 }) {
-      this.buildClassFilterChip($r('app.string.fieldwatch_class_show_all'), false)
-      this.buildClassFilterChip($r('app.string.fieldwatch_class_only_hits'), true)
+      this.buildClassFilterChip(fieldwatchText('app.string.fieldwatch_class_show_all'), false)
+      this.buildClassFilterChip(fieldwatchText('app.string.fieldwatch_class_only_hits'), true)
     }.width('100%')
   }
 
@@ -2909,7 +3055,7 @@ struct FieldwatchLivePage {
           .stroke(this.tintFor(item)).strokeWidth(2).fill(Color.Transparent)
           .strokeLineJoin(LineJoinStyle.Round).strokeLineCap(LineCapStyle.Round)
       } else {
-        Text($r('app.string.fieldwatch_trail_waiting')).fontSize(10).fontColor(FieldwatchPaletteHolder.get().textDim)
+        Text(fieldwatchText('app.string.fieldwatch_trail_waiting')).fontSize(10).fontColor(FieldwatchPaletteHolder.get().textDim)
       }
     }
     .width(FieldwatchLivePage.SPARK_W).height(FieldwatchLivePage.SPARK_H)
@@ -3048,7 +3194,7 @@ struct FieldwatchLivePage {
   private rowM(): FieldwatchRowMetrics { return rowMetricsFor(this.compactRows); }
 
   private sightingCountText(count: number): string {
-    const template: string = resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_sighting_count'));
+    const template: string = fieldwatchText('app.string.fieldwatch_sighting_count');
     return template.replace('%s', count.toString());
   }
   private listSubtitle(item: Sighting): string {
@@ -3088,20 +3234,20 @@ struct FieldwatchLivePage {
     Column({ space: 10 }) {
       Row({ space: 8 }) {
         SymbolGlyph($r('sys.symbol.exclamationmark_circle')).fontSize(16).fontColor([FieldwatchPaletteHolder.get().warn])
-        Text($r('app.string.fieldwatch_restricted_title')).fontSize(15).fontWeight(FontWeight.Medium)
+        Text(fieldwatchText('app.string.fieldwatch_restricted_title')).fontSize(15).fontWeight(FontWeight.Medium)
           .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
       }.width('100%')
-      Text($r('app.string.fieldwatch_restricted_body')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
-      Text($r('app.string.fieldwatch_restricted_baseline')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+      Text(fieldwatchText('app.string.fieldwatch_restricted_body')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+      Text(fieldwatchText('app.string.fieldwatch_restricted_baseline')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       Row({ space: 8 }) {
         // 用统一按钮：底色与文字色成对定义，不会再出现「荧光绿底 + 默认白字」。
-        FieldwatchButton({ label: $r('app.string.fieldwatch_restricted_enable_ble'), tone: FieldwatchButtonTone.PRIMARY,
+        FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_restricted_enable_ble'), tone: FieldwatchButtonTone.PRIMARY,
           compact: true, fillWidth: false, disabled: this.permissionBusy,
           onTap: (): void => { void this.enableScanning(); } }).layoutWeight(1)
         // Wi-Fi 扫描不需要授权，因此这里没有对应的「开启」按钮。
         // 星闪：仅在设备支持且尚未授权时出现，与蓝牙按钮同一套流程。
         if (fieldwatchApplication.nearLinkAvailable() && this.nearLinkMissing) {
-          FieldwatchButton({ label: $r('app.string.fieldwatch_restricted_enable_nl'), tone: FieldwatchButtonTone.OUTLINE,
+          FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_restricted_enable_nl'), tone: FieldwatchButtonTone.OUTLINE,
             compact: true, fillWidth: false, disabled: this.permissionBusy,
             onTap: (): void => { void this.enableNearLinkScanning(); } }).layoutWeight(1)
         }
@@ -3231,20 +3377,20 @@ struct FieldwatchLivePage {
   private buildDailyOverview() {
     Scroll() {
       Column({ space: 14 }) {
-        Text($r('app.string.fieldwatch_daily_subtitle')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_daily_subtitle')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
         Row({ space: 12 }) {
-          FieldwatchDailyMetric({ label: $r('app.string.fieldwatch_daily_devices'),
+          FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_devices'),
             value: this.dailySightings.length.toString() })
-          FieldwatchDailyMetric({ label: $r('app.string.fieldwatch_daily_new'),
+          FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_new'),
             value: this.recentlySeenCount().toString() })
-          FieldwatchDailyMetric({ label: $r('app.string.fieldwatch_daily_wifi'),
+          FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_wifi'),
             value: this.observedCount(RadioKind.WIFI).toString() })
         }.width('100%').padding({ top: 12, bottom: 12 })
 
         if (this.recentDailySightings().length > 0) {
           Column({ space: 8 }) {
-            Text($r('app.string.fieldwatch_daily_recent')).fontSize(14)
+            Text(fieldwatchText('app.string.fieldwatch_daily_recent')).fontSize(14)
               .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
             ForEach(this.recentDailySightings(), (item: Sighting): void => {
               Row({ space: 10 }) {
@@ -3269,27 +3415,27 @@ struct FieldwatchLivePage {
           Row({ space: 8 }) {
             SymbolGlyph($r('sys.symbol.doc_text')).fontSize(18)
               .fontColor([FieldwatchPaletteHolder.get().accent])
-            Text($r('app.string.fieldwatch_daily_footprint_title')).fontSize(16)
+            Text(fieldwatchText('app.string.fieldwatch_daily_footprint_title')).fontSize(16)
               .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
           }.width('100%')
-          Text($r('app.string.fieldwatch_daily_footprint_hint')).fontSize(12)
+          Text(fieldwatchText('app.string.fieldwatch_daily_footprint_hint')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
           if (this.dailyActiveFootprint.length > 0) {
             Text(this.radioLabel('app.string.fieldwatch_daily_footprint_active')
               .replace('%1', this.dailyActiveFootprint)).fontSize(14)
               .fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
-            FieldwatchButton({ label: $r('app.string.fieldwatch_daily_footprint_finish'),
+            FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_footprint_finish'),
               tone: FieldwatchButtonTone.WARN, compact: true,
               onTap: (): void => { this.finishFootprintSession(); } })
           } else {
-            FieldwatchButton({ label: $r('app.string.fieldwatch_daily_footprint_start'),
+            FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_footprint_start'),
               tone: FieldwatchButtonTone.PRIMARY, compact: true,
               onTap: (): void => { this.startFootprintSession(); } })
           }
           Text(this.radioLabel('app.string.fieldwatch_daily_footprint_saved')
             .replace('%1', this.dailyFootprintCount.toString()))
             .fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-          FieldwatchButton({ label: $r('app.string.fieldwatch_daily_footprint_open'),
+          FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_footprint_open'),
             tone: FieldwatchButtonTone.OUTLINE, compact: true,
             onTap: (): void => { this.onOpenFootprints(); } })
         }
@@ -3300,10 +3446,10 @@ struct FieldwatchLivePage {
           Row({ space: 8 }) {
             SymbolGlyph($r('sys.symbol.checkmark_shield')).fontSize(18)
               .fontColor([FieldwatchPaletteHolder.get().accent])
-            Text($r('app.string.fieldwatch_daily_security_title')).fontSize(16)
+            Text(fieldwatchText('app.string.fieldwatch_daily_security_title')).fontSize(16)
               .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
           }.width('100%')
-          Text($r('app.string.fieldwatch_daily_security_hint')).fontSize(12)
+          Text(fieldwatchText('app.string.fieldwatch_daily_security_hint')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
           if (this.safetyCheckActive) {
             Text(this.radioLabel('app.string.fieldwatch_daily_security_running')
@@ -3312,21 +3458,21 @@ struct FieldwatchLivePage {
           } else if (this.safetyCheckComplete) {
             Text(this.safetyFollowCount > 0
               ? this.radioLabel('app.string.fieldwatch_daily_security_watch').replace('%1', this.safetyFollowCount.toString())
-              : $r('app.string.fieldwatch_daily_security_clear'))
+              : fieldwatchText('app.string.fieldwatch_daily_security_clear'))
               .fontSize(15).fontWeight(FontWeight.Medium)
               .fontColor(this.safetyFollowCount > 0 ? FieldwatchPaletteHolder.get().warn : FieldwatchPaletteHolder.get().text)
               .width('100%')
             if (!this.safetyHasMovementData) {
-              Text($r('app.string.fieldwatch_daily_security_geo_limit')).fontSize(12)
+              Text(fieldwatchText('app.string.fieldwatch_daily_security_geo_limit')).fontSize(12)
                 .fontColor(FieldwatchPaletteHolder.get().warn).width('100%')
             }
           }
-          Text($r('app.string.fieldwatch_daily_security_disclaimer')).fontSize(11)
+          Text(fieldwatchText('app.string.fieldwatch_daily_security_disclaimer')).fontSize(11)
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
           if (!this.safetyCheckActive) {
             FieldwatchButton({
-              label: this.safetyCheckComplete ? $r('app.string.fieldwatch_daily_security_again')
-                : $r('app.string.fieldwatch_daily_security_start'),
+              label: this.safetyCheckComplete ? fieldwatchText('app.string.fieldwatch_daily_security_again')
+                : fieldwatchText('app.string.fieldwatch_daily_security_start'),
               tone: FieldwatchButtonTone.PRIMARY,
               compact: true,
               onTap: (): void => { this.startSafetyCheck(); }
@@ -3340,14 +3486,14 @@ struct FieldwatchLivePage {
           Row({ space: 8 }) {
             SymbolGlyph($r('sys.symbol.wifi')).fontSize(18)
               .fontColor([FieldwatchPaletteHolder.get().cyan])
-            Text($r('app.string.fieldwatch_daily_wifi')).fontSize(16)
+            Text(fieldwatchText('app.string.fieldwatch_daily_wifi')).fontSize(16)
               .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
             Blank()
             Text(this.wifiStatusText()).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
           }.width('100%')
           Text(this.nearbyWifiSummary()).fontSize(13).fontColor(FieldwatchPaletteHolder.get().text)
             .width('100%').maxLines(2)
-          FieldwatchButton({ label: $r('app.string.fieldwatch_daily_wifi_open_tool'),
+          FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_wifi_open_tool'),
             tone: FieldwatchButtonTone.OUTLINE, compact: true,
             onTap: (): void => { this.onOpenWifiAnalysis(); } })
         }
@@ -3359,7 +3505,7 @@ struct FieldwatchLivePage {
           Row({ space: 8 }) {
             SymbolGlyph($r('sys.symbol.magnifyingglass')).fontSize(18)
               .fontColor([FieldwatchPaletteHolder.get().amber])
-            Text($r('app.string.fieldwatch_daily_find')).fontSize(16)
+            Text(fieldwatchText('app.string.fieldwatch_daily_find')).fontSize(16)
               .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
             Blank()
             SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(16)
@@ -3367,14 +3513,14 @@ struct FieldwatchLivePage {
           }.width('100%').alignItems(VerticalAlign.Center)
           // **不设 maxLines**：这条 30 字文案在 1.75× 最大字号下需要 3 行，
           // 限成 2 行会直接截断（按字宽算过：683vp ÷ 300vp ≈ 3 行）。
-          Text($r('app.string.fieldwatch_daily_find_hint')).fontSize(13)
+          Text(fieldwatchText('app.string.fieldwatch_daily_find_hint')).fontSize(13)
             .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
         }
         .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)
         .onClick((): void => { this.onOpenFind(); })
 
-        FieldwatchButton({ label: $r('app.string.fieldwatch_daily_open_radar'),
+        FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_open_radar'),
           tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.openProfessionalRadar(); } })
       }
       .width('100%').padding({ left: 16, right: 16, top: 14, bottom: 112 })
@@ -3387,7 +3533,7 @@ struct FieldwatchLivePage {
   @Builder private buildLiveOverlay() {
     Column({ space: 10 }) {
       Row() {
-        Text(this.dailyMode ? $r('app.string.fieldwatch_daily_title') : $r('app.string.fieldwatch_app_title'))
+        Text(this.dailyMode ? fieldwatchText('app.string.fieldwatch_daily_title') : fieldwatchText('app.string.fieldwatch_app_title'))
           .fontSize(22).fontWeight(FontWeight.Bold).fontColor(FieldwatchPaletteHolder.get().headerText)
         Blank()
         // 右上角显示当前工作模式（观测总数在下方统计行里，不重复占位）。
@@ -3396,12 +3542,12 @@ struct FieldwatchLivePage {
       Text(this.statsLine()).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       Row({ space: 8 }) {
         Column() {
-          FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_daily'), selected: this.dailyMode,
+          FieldwatchSegmentedChip({ label: fieldwatchText('app.string.fieldwatch_live_mode_daily'), selected: this.dailyMode,
             // 这里也落盘：与设置页「模式选择」是同一项，不落盘会导致「这次切了、下次又变回去」。
             fillWidth: true, onTap: (): void => { this.dailyMode = true; fieldwatchApplication.setDailyMode(true); } })
         }.layoutWeight(1)
         Column() {
-          FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_pro'), selected: !this.dailyMode,
+          FieldwatchSegmentedChip({ label: fieldwatchText('app.string.fieldwatch_live_mode_pro'), selected: !this.dailyMode,
             fillWidth: true, onTap: (): void => { this.dailyMode = false; fieldwatchApplication.setDailyMode(false); } })
         }.layoutWeight(1)
       }.width('100%')
@@ -3428,11 +3574,11 @@ struct FieldwatchLivePage {
          * 窄屏自动折成两行，每个芯片按内容宽度完整显示。
          */
         Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
-          this.buildViewChip($r('app.string.fieldwatch_view_radar'), FieldwatchLiveMode.RADAR)
-          this.buildViewChip($r('app.string.fieldwatch_view_strength'), FieldwatchLiveMode.STRENGTH)
-          this.buildViewChip($r('app.string.fieldwatch_view_timeline'), FieldwatchLiveMode.TIMELINE)
-          this.buildViewChip($r('app.string.fieldwatch_view_trail'), FieldwatchLiveMode.TRAIL)
-          this.buildViewChip($r('app.string.fieldwatch_view_class'), FieldwatchLiveMode.CLASS)
+          this.buildViewChip(fieldwatchText('app.string.fieldwatch_view_radar'), FieldwatchLiveMode.RADAR)
+          this.buildViewChip(fieldwatchText('app.string.fieldwatch_view_strength'), FieldwatchLiveMode.STRENGTH)
+          this.buildViewChip(fieldwatchText('app.string.fieldwatch_view_timeline'), FieldwatchLiveMode.TIMELINE)
+          this.buildViewChip(fieldwatchText('app.string.fieldwatch_view_trail'), FieldwatchLiveMode.TRAIL)
+          this.buildViewChip(fieldwatchText('app.string.fieldwatch_view_class'), FieldwatchLiveMode.CLASS)
         }.width('100%')
       }
     }.width('100%')
@@ -3553,7 +3699,7 @@ struct FieldwatchFiltersPage {
   // ── 1 预设 ──
   @Builder private buildPresets() {
     Column({ space: 10 }) {
-      this.section($r('app.string.fieldwatch_filter_presets'), this.label('app.string.fieldwatch_filter_presets_hint'))
+      this.section(fieldwatchText('app.string.fieldwatch_filter_presets'), this.label('app.string.fieldwatch_filter_presets_hint'))
       Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
         ForEach(this.presets, (preset: FilterPreset): void => {
           FieldwatchPresetChip({ label: this.presetLabel(preset), active: this.presetName === preset.name,
@@ -3562,9 +3708,9 @@ struct FieldwatchFiltersPage {
         }, (preset: FilterPreset): string => preset.name + '-' + this.tick.toString())
       }.width('100%')
       Row({ space: 8 }) {
-        TextInput({ text: this.presetName, placeholder: $r('app.string.fieldwatch_filter_save_as') }).layoutWeight(1).height(42)
+        TextInput({ text: this.presetName, placeholder: fieldwatchText('app.string.fieldwatch_filter_save_as') }).layoutWeight(1).height(42)
           .onChange((value: string): void => { this.presetName = value; })
-        Button($r('app.string.fieldwatch_filter_save')).height(44).fontSize(15).backgroundColor(Color.Transparent).borderRadius(12).borderWidth(1)
+        Button(fieldwatchText('app.string.fieldwatch_filter_save')).height(44).fontSize(15).backgroundColor(Color.Transparent).borderRadius(12).borderWidth(1)
           .fontColor(FieldwatchPaletteHolder.get().accent).borderColor(FieldwatchPaletteHolder.get().accent)
           .onClick((): void => {
             const name: string = this.presetName.trim();
@@ -3580,19 +3726,19 @@ struct FieldwatchFiltersPage {
   // ── 2 信号类型 ──
   @Builder private buildRadios() {
     Column({ space: 10 }) {
-      this.section($r('app.string.fieldwatch_filter_radios'), this.label('app.string.fieldwatch_filter_radios_hint'))
+      this.section(fieldwatchText('app.string.fieldwatch_filter_radios'), this.label('app.string.fieldwatch_filter_radios_hint'))
       // 三种无线电种类各自单选，全部走 setRadioKind 收敛开关 ——
       // 只改 UI 不改引擎会造成「界面有选项但筛选不生效」。
       Row({ space: 8 }) {
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_both'), active: this.filterBound(this.radioFilterAll()),
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_both'), active: this.filterBound(this.radioFilterAll()),
           onTap: (): void => { fieldwatchApplication.setRadioKind(undefined); this.tick += 1; } })
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_wifi_only'), active: this.filterBound(this.radioFilterIs(RadioKind.WIFI)),
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_wifi_only'), active: this.filterBound(this.radioFilterIs(RadioKind.WIFI)),
           onTap: (): void => { fieldwatchApplication.setRadioKind(RadioKind.WIFI); this.tick += 1; } })
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_ble_only'), active: this.filterBound(this.radioFilterIs(RadioKind.BLE)),
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_ble_only'), active: this.filterBound(this.radioFilterIs(RadioKind.BLE)),
           onTap: (): void => { fieldwatchApplication.setRadioKind(RadioKind.BLE); this.tick += 1; } })
         // 星闪芯片只在设备支持星闪时出现：不支持的设备上不该有永远为空的筛选项。
         if (fieldwatchApplication.nearLinkAvailable()) {
-          FieldwatchChip({ label: $r('app.string.fieldwatch_filter_nearlink_only'), active: this.filterBound(this.radioFilterIs(RadioKind.NEARLINK)),
+          FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_nearlink_only'), active: this.filterBound(this.radioFilterIs(RadioKind.NEARLINK)),
             onTap: (): void => { fieldwatchApplication.setRadioKind(RadioKind.NEARLINK); this.tick += 1; } })
         }
         // 关键：必须在这里**读一次** tick 才能建立响应式依赖。
@@ -3604,7 +3750,7 @@ struct FieldwatchFiltersPage {
   // ── 3 与你同行 ──
   @Builder private buildMovingWithYou() {
     Column({ space: 10 }) {
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_moving_with_you'), hint: '',
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_moving_with_you'), hint: '',
         value: this.filterBound(this.filter().movingWithYou),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setMovingWithYouFilter(checked); this.tick += 1; } })
       Text(this.label('app.string.fieldwatch_filter_moving_hint')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -3615,8 +3761,8 @@ struct FieldwatchFiltersPage {
   // ── 4 新发现 ──
   @Builder private buildNewDetections() {
     Column({ space: 10 }) {
-      this.section($r('app.string.fieldwatch_filter_new_detections'), '')
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_new_only'), hint: this.label('app.string.fieldwatch_filter_new_hint'),
+      this.section(fieldwatchText('app.string.fieldwatch_filter_new_detections'), '')
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_new_only'), hint: this.label('app.string.fieldwatch_filter_new_hint'),
         value: this.filterBound(this.filter().freshOnly),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setFreshOnlyFilter(checked); this.tick += 1; } })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
@@ -3625,17 +3771,17 @@ struct FieldwatchFiltersPage {
   // ── 5 常驻设备 ──
   @Builder private buildWhoStays() {
     Column({ space: 10 }) {
-      this.section($r('app.string.fieldwatch_filter_who_stays'), '')
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_signatures_only'), hint: this.label('app.string.fieldwatch_filter_signatures_only_hint'),
+      this.section(fieldwatchText('app.string.fieldwatch_filter_who_stays'), '')
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_signatures_only'), hint: this.label('app.string.fieldwatch_filter_signatures_only_hint'),
         value: this.filterBound(this.filter().namedOnly),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setNamedOnlyFilter(checked); this.tick += 1; } })
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_watched_only'), hint: this.label('app.string.fieldwatch_filter_watched_hint'),
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_watched_only'), hint: this.label('app.string.fieldwatch_filter_watched_hint'),
         value: this.filterBound(this.filter().watchedOnly),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setWatchedOnlyFilter(checked); this.tick += 1; } })
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_named_radios_only'), hint: this.label('app.string.fieldwatch_filter_named_hint'),
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_named_radios_only'), hint: this.label('app.string.fieldwatch_filter_named_hint'),
         value: this.filterBound(this.filter().customNamesOnly),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setCustomNamesOnlyFilter(checked); this.tick += 1; } })
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_hide_fastpair'), hint: this.label('app.string.fieldwatch_filter_fastpair_hint'),
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_hide_fastpair'), hint: this.label('app.string.fieldwatch_filter_fastpair_hint'),
         value: this.filterBound(this.filter().hideFastPairAccountKey),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setHideFastPairFilter(checked); this.tick += 1; } })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
@@ -3667,12 +3813,12 @@ struct FieldwatchFiltersPage {
   }
   @Builder private buildClasses() {
     Column({ space: 10 }) {
-      this.section($r('app.string.fieldwatch_filter_classes'), this.label('app.string.fieldwatch_filter_classes_hint'))
+      this.section(fieldwatchText('app.string.fieldwatch_filter_classes'), this.label('app.string.fieldwatch_filter_classes_hint'))
       Row({ space: 8 }) {
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_class_show_only'),
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_class_show_only'),
           active: this.filterBound(this.filter().useClassFilter && !this.filter().excludeClasses),
           onTap: (): void => { fieldwatchApplication.setClassFilterMode(false); this.tick += 1; } })
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_class_hide_these'),
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_class_hide_these'),
           active: this.filterBound(this.filter().useClassFilter && this.filter().excludeClasses),
           onTap: (): void => { fieldwatchApplication.setClassFilterMode(true); this.tick += 1; } })
       }.width('100%')
@@ -3685,11 +3831,11 @@ struct FieldwatchFiltersPage {
   // ── 7 已选特征 ──
   @Builder private buildSelectedSignatures() {
     Column({ space: 10 }) {
-      this.section($r('app.string.fieldwatch_filter_selected_signatures'), this.label('app.string.fieldwatch_filter_selected_hint'))
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_show_selected'), hint: '',
+      this.section(fieldwatchText('app.string.fieldwatch_filter_selected_signatures'), this.label('app.string.fieldwatch_filter_selected_hint'))
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_show_selected'), hint: '',
         value: this.filterBound(this.filter().includeSignatures),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setIncludeSignaturesFilter(checked); this.tick += 1; } })
-      FieldwatchSwitchRow({ label: $r('app.string.fieldwatch_filter_hide_selected'), hint: '',
+      FieldwatchSwitchRow({ label: fieldwatchText('app.string.fieldwatch_filter_hide_selected'), hint: '',
         value: this.filterBound(this.filter().excludeSignatures),
         onToggle: (checked: boolean): void => { fieldwatchApplication.setExcludeSignaturesFilter(checked); this.tick += 1; } })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
@@ -3698,7 +3844,7 @@ struct FieldwatchFiltersPage {
   // ── 8 精细筛选 ──
   @Builder private buildFineFilter() {
     Column({ space: 10 }) {
-      this.section($r('app.string.fieldwatch_filter_fine'), '')
+      this.section(fieldwatchText('app.string.fieldwatch_filter_fine'), '')
       Text(this.label('app.string.fieldwatch_filter_rssi_min') + ' ' + this.rssiMinValue.toString() + ' dBm')
         .fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
       Slider({ value: this.rssiMinValue, min: -100, max: -30, step: 1 })
@@ -3707,12 +3853,12 @@ struct FieldwatchFiltersPage {
           this.rssiMinValue = Math.round(value);
           fieldwatchApplication.setRssiMinFilter(this.rssiMinValue);
         })
-      TextInput({ text: this.nameQueryValue, placeholder: $r('app.string.fieldwatch_filter_name_contains') }).height(42)
+      TextInput({ text: this.nameQueryValue, placeholder: fieldwatchText('app.string.fieldwatch_filter_name_contains') }).height(42)
         .onChange((value: string): void => {
           this.nameQueryValue = value;
           fieldwatchApplication.setNameQueryFilter(value);
         })
-      TextInput({ text: this.ouiQueryValue, placeholder: $r('app.string.fieldwatch_filter_oui_contains') }).height(42)
+      TextInput({ text: this.ouiQueryValue, placeholder: fieldwatchText('app.string.fieldwatch_filter_oui_contains') }).height(42)
         .onChange((value: string): void => {
           this.ouiQueryValue = value;
           fieldwatchApplication.setOuiQueryFilter(value);
@@ -3720,12 +3866,12 @@ struct FieldwatchFiltersPage {
       Text(this.label('app.string.fieldwatch_filter_extra_logic')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
       Text(this.label('app.string.fieldwatch_filter_logic_hint')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       Row({ space: 8 }) {
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_and'), active: this.filterBound(this.filter().logic === FilterLogic.AND),
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_and'), active: this.filterBound(this.filter().logic === FilterLogic.AND),
           onTap: (): void => { fieldwatchApplication.setFilterLogic(FilterLogic.AND); this.tick += 1; } })
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_or'), active: this.filterBound(this.filter().logic === FilterLogic.OR),
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_or'), active: this.filterBound(this.filter().logic === FilterLogic.OR),
           onTap: (): void => { fieldwatchApplication.setFilterLogic(FilterLogic.OR); this.tick += 1; } })
       }.width('100%')
-      Button($r('app.string.fieldwatch_filter_reset')).height(44).width('100%').fontSize(15)
+      Button(fieldwatchText('app.string.fieldwatch_filter_reset')).height(44).width('100%').fontSize(15)
         .backgroundColor(Color.Transparent).borderRadius(12).borderWidth(1)
         .fontColor(FieldwatchPaletteHolder.get().warn).borderColor(FieldwatchPaletteHolder.get().outline)
         .onClick((): void => { this.confirmReset(); })
@@ -3748,7 +3894,7 @@ struct FieldwatchFiltersPage {
     //
     // 横屏下没有底部标签栏做「我在哪一页」的提示，标题就是唯一的定位锚点；
     // 筛选与记录原先都没有（实测反馈）。
-    Text($r('app.string.fieldwatch_filters_title')).fontSize(26).fontWeight(FontWeight.Bold)
+    Text(fieldwatchText('app.string.fieldwatch_filters_title')).fontSize(26).fontWeight(FontWeight.Bold)
     if (this.twoColumn) {
       // **手写两列**：每列各自纵向堆叠，互不参照对方高度。
       //
@@ -3832,8 +3978,8 @@ struct FieldwatchReportsPage {
     void fieldwatchApplication.loadSavedSits().then((sits: SitSummary[]): void => { this.savedSits = sits; this.tick += 1; });
     const report: CandidateReport = fieldwatchApplication.candidateReport();
     this.candidates = report.families;
-    this.candidateStats = report.uniqueRadios.toString() + ' 台信号源 · 未匹配 ' + report.unmatchedRadios.toString()
-      + ' · 跳过随机 ' + report.skippedRandomized.toString() + ' · 跳过家用 ' + report.skippedHouseLike.toString();
+    this.candidateStats = report.uniqueRadios.toString() + ngfText('app.string.fw_pg_3981') + report.unmatchedRadios.toString()
+      + ngfText('app.string.fw_pg_3982') + report.skippedRandomized.toString() + ngfText('app.string.fw_pg_3982b') + report.skippedHouseLike.toString();
     void fieldwatchApplication.logFootprint().then((footprint: FieldwatchLogFootprint): void => {
       this.logRows = footprint.rows;
       this.logKb = footprint.kilobytes();
@@ -3862,26 +4008,26 @@ struct FieldwatchReportsPage {
   // ── R1 观测记录 ──
   @Builder private buildSits() {
     Column({ space: 10 }) {
-      this.card($r('app.string.fieldwatch_reports_sits'), this.label('app.string.fieldwatch_reports_sits_hint'))
+      this.card(fieldwatchText('app.string.fieldwatch_reports_sits'), this.label('app.string.fieldwatch_reports_sits_hint'))
       Text(this.activeName.length > 0
         ? this.label('app.string.fieldwatch_reports_sit_running').replace('%s', this.activeName)
         : this.label('app.string.fieldwatch_reports_no_sit_running'))
         .fontSize(13).fontColor(this.activeName.length > 0 ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
       if (this.activeName.length === 0) {
-        this.actionButton($r('app.string.fieldwatch_reports_start_sit'), FieldwatchPaletteHolder.get().accent, (): void => { this.promptStartSit(); })
+        this.actionButton(fieldwatchText('app.string.fieldwatch_reports_start_sit'), FieldwatchPaletteHolder.get().accent, (): void => { this.promptStartSit(); })
       } else {
-        this.actionButton($r('app.string.fieldwatch_reports_finish_sit'), FieldwatchPaletteHolder.get().warn, (): void => {
+        this.actionButton(fieldwatchText('app.string.fieldwatch_reports_finish_sit'), FieldwatchPaletteHolder.get().warn, (): void => {
           void fieldwatchApplication.finishSit().then((ok: boolean): void => { if (ok) this.refresh(); });
         })
       }
-      if (this.savedSits.length === 0) Text($r('app.string.fieldwatch_reports_no_sits')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+      if (this.savedSits.length === 0) Text(fieldwatchText('app.string.fieldwatch_reports_no_sits')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
       // key 必须带上会变的字段：结束时是**原地更新同一个 sit 对象**（id 不变），
       // 只用 id 作键时 ArkUI 判定「key 未变」会跳过重绘 —— 表现为结束后计数仍显示 0、
       // 改名后列表里还是旧名字，必须离开页面再回来才刷新。
       ForEach(this.savedSits, (item: SitSummary): void => { this.buildSitRow(item) },
         (item: SitSummary): string => item.id + ':' + item.name + ':' + item.radioCount.toString())
       if (this.savedSits.length > 0) {
-        this.actionButton($r('app.string.fieldwatch_reports_delete_all_sits'), FieldwatchPaletteHolder.get().signalRed, (): void => { this.confirmDeleteAllSits(); })
+        this.actionButton(fieldwatchText('app.string.fieldwatch_reports_delete_all_sits'), FieldwatchPaletteHolder.get().signalRed, (): void => { this.confirmDeleteAllSits(); })
       }
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
@@ -3892,8 +4038,8 @@ struct FieldwatchReportsPage {
         Text(item.radioCount.toString()).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
       }.width('100%')
       Row({ space: 8 }) {
-        this.rowButton($r('app.string.fieldwatch_reports_rename'), FieldwatchPaletteHolder.get().text, (): void => { this.promptRenameSit(item); })
-        this.rowButton($r('app.string.fieldwatch_filter_delete'), FieldwatchPaletteHolder.get().signalRed, (): void => { this.confirmDeleteSit(item); })
+        this.rowButton(fieldwatchText('app.string.fieldwatch_reports_rename'), FieldwatchPaletteHolder.get().text, (): void => { this.promptRenameSit(item); })
+        this.rowButton(fieldwatchText('app.string.fieldwatch_filter_delete'), FieldwatchPaletteHolder.get().signalRed, (): void => { this.confirmDeleteSit(item); })
       }.width('100%')
     }.width('100%').padding(10).backgroundColor(FieldwatchPaletteHolder.get().panel2).borderRadius(12)
   }
@@ -3946,7 +4092,7 @@ struct FieldwatchReportsPage {
   // ── R2 轨迹 ──
   @Builder private buildPath() {
     Column({ space: 10 }) {
-      this.card($r('app.string.fieldwatch_reports_path'), this.label('app.string.fieldwatch_reports_path_hint'))
+      this.card(fieldwatchText('app.string.fieldwatch_reports_path'), this.label('app.string.fieldwatch_reports_path_hint'))
       Canvas(this.pathContext).width('100%').height(260)
         .backgroundColor(FieldwatchPaletteHolder.get().panel2).borderRadius(12)
         .onReady((): void => { this.drawPath(); })
@@ -4036,16 +4182,16 @@ struct FieldwatchReportsPage {
   // ── R2/R3 观测报告 ──
   @Builder private buildSitReport() {
     Column({ space: 10 }) {
-      this.card($r('app.string.fieldwatch_reports_sit_report'), this.label('app.string.fieldwatch_reports_sit_report_hint'))
-      this.actionButton($r('app.string.fieldwatch_report_debrief'), FieldwatchPaletteHolder.get().text, (): void => { fieldwatchApplication.shareDebrief(); })
+      this.card(fieldwatchText('app.string.fieldwatch_reports_sit_report'), this.label('app.string.fieldwatch_reports_sit_report_hint'))
+      this.actionButton(fieldwatchText('app.string.fieldwatch_report_debrief'), FieldwatchPaletteHolder.get().text, (): void => { fieldwatchApplication.shareDebrief(); })
       Row() {
-        Text($r('app.string.fieldwatch_reports_show_unmatched')).fontSize(15).layoutWeight(1).fontColor(FieldwatchPaletteHolder.get().text)
+        Text(fieldwatchText('app.string.fieldwatch_reports_show_unmatched')).fontSize(15).layoutWeight(1).fontColor(FieldwatchPaletteHolder.get().text)
         Toggle({ type: ToggleType.Switch, isOn: this.showUnmatchedBle }).selectedColor(FieldwatchPaletteHolder.get().accentActive)
           .onChange((value: boolean): void => { this.showUnmatchedBle = value; })
       }.width('100%')
-      Text($r('app.string.fieldwatch_reports_show_unmatched_hint')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
-      this.actionButton($r('app.string.fieldwatch_reports_debrief_pdf'), FieldwatchPaletteHolder.get().text, (): void => { void this.runDebriefPdf(); })
-      this.actionButton($r('app.string.fieldwatch_reports_ai_export'), FieldwatchPaletteHolder.get().accent, (): void => { fieldwatchApplication.aiExportDebrief(); })
+      Text(fieldwatchText('app.string.fieldwatch_reports_show_unmatched_hint')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_debrief_pdf'), FieldwatchPaletteHolder.get().text, (): void => { void this.runDebriefPdf(); })
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_ai_export'), FieldwatchPaletteHolder.get().accent, (): void => { fieldwatchApplication.aiExportDebrief(); })
       Text(this.label('app.string.fieldwatch_reports_located') + ': ' + this.locatedCount.toString()).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
@@ -4053,32 +4199,32 @@ struct FieldwatchReportsPage {
   // ── R4 观测导出：格式 × 信号源 + 分享 + 保存到文件 ──
   @Builder private buildExport() {
     Column({ space: 10 }) {
-      this.card($r('app.string.fieldwatch_reports_export'), this.label('app.string.fieldwatch_reports_export_hint'))
-      Text($r('app.string.fieldwatch_reports_format')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
+      this.card(fieldwatchText('app.string.fieldwatch_reports_export'), this.label('app.string.fieldwatch_reports_export_hint'))
+      Text(fieldwatchText('app.string.fieldwatch_reports_format')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
       Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
         ForEach(EXPORT_FORMATS, (item: string, index: number): void => {
           FieldwatchChip({ label: $r(item), active: this.exportFormat === index, compact: true,
             onTap: (): void => { this.exportFormat = index; this.tick += 1; } })
         }, (item: string): string => item)
       }.width('100%')
-      Text($r('app.string.fieldwatch_reports_radios')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
+      Text(fieldwatchText('app.string.fieldwatch_reports_radios')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
       Row({ space: 8 }) {
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_both'), active: this.exportRadios === 0,
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_both'), active: this.exportRadios === 0,
           onTap: (): void => { this.exportRadios = 0; this.tick += 1; } })
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_wifi_only'), active: this.exportRadios === 1,
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_wifi_only'), active: this.exportRadios === 1,
           onTap: (): void => { this.exportRadios = 1; this.tick += 1; } })
-        FieldwatchChip({ label: $r('app.string.fieldwatch_filter_ble_only'), active: this.exportRadios === 2,
+        FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_filter_ble_only'), active: this.exportRadios === 2,
           onTap: (): void => { this.exportRadios = 2; this.tick += 1; } })
         // 星闪导出只在设备支持时出现，与筛选页保持一致。
         if (fieldwatchApplication.nearLinkAvailable()) {
-          FieldwatchChip({ label: $r('app.string.fieldwatch_export_radios_nearlink'), active: this.exportRadios === 3,
+          FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_export_radios_nearlink'), active: this.exportRadios === 3,
             onTap: (): void => { this.exportRadios = 3; this.tick += 1; } })
         }
       }.width('100%')
-      this.actionButton($r('app.string.fieldwatch_reports_share'), FieldwatchPaletteHolder.get().text, (): void => {
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_share'), FieldwatchPaletteHolder.get().text, (): void => {
         fieldwatchApplication.shareExport(this.exportFormat, this.exportRadios);
       })
-      this.actionButton($r('app.string.fieldwatch_reports_save_file'), FieldwatchPaletteHolder.get().accent, (): void => { void this.runSaveExport(); })
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_save_file'), FieldwatchPaletteHolder.get().accent, (): void => { void this.runSaveExport(); })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
   private async runSaveExport(): Promise<void> {
@@ -4097,20 +4243,20 @@ struct FieldwatchReportsPage {
   // ── R5 对比观测 ──
   @Builder private buildCompare() {
     Column({ space: 10 }) {
-      this.card($r('app.string.fieldwatch_reports_compare'), this.label('app.string.fieldwatch_reports_compare_hint'))
-      this.actionButton($r('app.string.fieldwatch_report_compare'), FieldwatchPaletteHolder.get().text, (): void => { fieldwatchApplication.shareCompare(); })
-      this.actionButton($r('app.string.fieldwatch_reports_compare_pdf'), FieldwatchPaletteHolder.get().text, (): void => { void this.runComparePdf(); })
-      this.actionButton($r('app.string.fieldwatch_reports_ai_export'), FieldwatchPaletteHolder.get().accent, (): void => { fieldwatchApplication.aiExportCompare(); })
+      this.card(fieldwatchText('app.string.fieldwatch_reports_compare'), this.label('app.string.fieldwatch_reports_compare_hint'))
+      this.actionButton(fieldwatchText('app.string.fieldwatch_report_compare'), FieldwatchPaletteHolder.get().text, (): void => { fieldwatchApplication.shareCompare(); })
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_compare_pdf'), FieldwatchPaletteHolder.get().text, (): void => { void this.runComparePdf(); })
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_ai_export'), FieldwatchPaletteHolder.get().accent, (): void => { fieldwatchApplication.aiExportCompare(); })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
   // ── R6 目录 / 候选特征 ──
   @Builder private buildCatalog() {
     Column({ space: 10 }) {
-      this.card($r('app.string.fieldwatch_reports_catalog'), this.label('app.string.fieldwatch_reports_catalog_hint'))
+      this.card(fieldwatchText('app.string.fieldwatch_reports_catalog'), this.label('app.string.fieldwatch_reports_catalog_hint'))
       Text(this.candidateStats).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       if (this.candidates.length === 0) {
-        Text($r('app.string.fieldwatch_reports_no_candidates')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+        Text(fieldwatchText('app.string.fieldwatch_reports_no_candidates')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
       }
       ForEach(this.candidates, (item: SignatureCandidate): void => { this.buildCandidateRow(item) }, (item: SignatureCandidate): string => item.id)
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
@@ -4119,14 +4265,14 @@ struct FieldwatchReportsPage {
     Column({ space: 6 }) {
       Row({ space: 8 }) {
         Text(item.proposedName).fontSize(15).layoutWeight(1).fontColor(FieldwatchPaletteHolder.get().text).maxLines(1)
-        Text(item.distinctRadios.toString() + ' 台')
+        Text(item.distinctRadios.toString() + ngfText('app.string.fw_pg_4268'))
           .fontSize(13).fontColor(item.strong() ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
       }.width('100%')
       Text(item.why).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       if (item.examples.length > 0) {
         Text(item.examples.join(' · ')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(1)
       }
-      this.actionButton($r('app.string.fieldwatch_reports_add_candidate'), FieldwatchPaletteHolder.get().accent, (): void => {
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_add_candidate'), FieldwatchPaletteHolder.get().accent, (): void => {
         fieldwatchApplication.addCandidateToCatalog(item);
         this.refresh();
       })
@@ -4136,10 +4282,10 @@ struct FieldwatchReportsPage {
   // ── R7 记录导出 ──
   @Builder private buildLog() {
     Column({ space: 10 }) {
-      this.card($r('app.string.fieldwatch_reports_log_export'), this.label('app.string.fieldwatch_reports_log_hint'))
+      this.card(fieldwatchText('app.string.fieldwatch_reports_log_export'), this.label('app.string.fieldwatch_reports_log_hint'))
       Text(this.label('app.string.fieldwatch_reports_session_rows') + ': ' + this.logRows.toString() + '  ·  ' + this.logKb.toString() + ' KB')
         .fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
-      this.actionButton($r('app.string.fieldwatch_reports_clear_logs'), FieldwatchPaletteHolder.get().signalRed, (): void => { this.confirmClearLog(); })
+      this.actionButton(fieldwatchText('app.string.fieldwatch_reports_clear_logs'), FieldwatchPaletteHolder.get().signalRed, (): void => { this.confirmClearLog(); })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
   /** 生成对比观测 PDF 并报告结果。 */
@@ -4181,7 +4327,7 @@ struct FieldwatchReportsPage {
       //
       // 横屏下没有底部标签栏做「我在哪一页」的提示，标题就是唯一的定位锚点；
       // 筛选与记录原先都没有（实测反馈）。
-      Text($r('app.string.fieldwatch_reports_title')).fontSize(26).fontWeight(FontWeight.Bold)
+      Text(fieldwatchText('app.string.fieldwatch_reports_title')).fontSize(26).fontWeight(FontWeight.Bold)
     if (this.twoColumn) {
       // **手写两列**：每列各自纵向堆叠，互不参照对方高度。
       //
@@ -4222,6 +4368,13 @@ struct FieldwatchSettingsPage {
    * 横屏且右栏未开时用两列。竖屏与「右栏已开」保持单列。
    */
   @Prop twoColumn: boolean = false;
+  /**
+   * 本页当前是否可见；不可见时每秒的 `refresh()` 直接返回。
+   *
+   * `Tabs` 让所有 TabContent 常驻，这一页每秒会写十来个 @State 字段并做三次
+   * 权限快照查询 —— 用户看着实时页时这些全是白烧的。
+   */
+  @Prop @Watch('onPageVisibleChanged') pageVisible: boolean = true;
   /** 手动重渲染计数器：筛选/设置直接改应用状态，不经过 @State，需要它来触发刷新。 */
   @State private tick: number = 0;
   onOpenSignatures: () => void = (): void => {};
@@ -4254,6 +4407,11 @@ struct FieldwatchSettingsPage {
   @State private dailyMode: boolean = true;
   /** 当前外观主题覆盖（auto / light / dark），用于给三个按钮显示选中态。 */
   @State private themeOverride: string = 'auto';
+  /**
+   * 当前语言覆盖：'' = 跟随系统，其余是显式选择的 locale（zh-Hans / en-US）。
+   * 只看 `getCurrentLocale()` 分不清「用户选了中文」与「系统本来就是中文」，所以单独存覆盖值。
+   */
+  @State private languageOverride: string = '';
   @State private paused: boolean = false;
   @State private locationTagging: boolean = false;
   /** 实时雷达显示设置（改完立即保存，Live 页每秒同步 → 无需重启）。 */
@@ -4305,13 +4463,13 @@ struct FieldwatchSettingsPage {
 
   /** 语音内容三选一的单个选项；选中态与未选中态前景色成对给出，避免深色下发灰。 */
   @Builder
-  voiceChip(value: string, label: Resource) {
+  voiceChip(value: string, label: string) {
     Text(label)
       .fontSize(14)
       .padding({ left: 14, right: 14, top: 8, bottom: 8 })
       .borderRadius(18)
       .backgroundColor(this.watchVoiceWhat === value ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().panel)
-      .fontColor(this.watchVoiceWhat === value ? $r('app.color.fw_on_primary') : $r('app.color.text_secondary'))
+      .fontColor(this.watchVoiceWhat === value ? $r('app.color.fw_on_primary') : FieldwatchPaletteHolder.get().textDim)
       .onClick((): void => { this.watchVoiceWhat = value; fieldwatchApplication.setWatchVoiceWhat(value); })
   }
   @State private backgroundScanning: boolean = false;
@@ -4333,6 +4491,11 @@ struct FieldwatchSettingsPage {
   // 关注列表的计数与条目已随该段迁往独立页面，这里不再保留副本。
   private retryTimer: number = -1;
 
+  /** 切到本页时立刻刷一次，不等 1 秒定时器（`@Watch` 回调不能是 private）。 */
+  onPageVisibleChanged(): void {
+    if (this.pageVisible) this.refresh();
+  }
+
   aboutToAppear(): void {
     // 界面显示的等级必须与实际生效的一致，所以从应用状态读，不写死。
     this.logLevel = fieldwatchApplication.getState().settings.logLevel;
@@ -4353,12 +4516,14 @@ struct FieldwatchSettingsPage {
     // 与基线对照后归因给本应用的后台耗电约 **8.9%/小时**。
     // 这些值在后台没有任何观察者，纯属白算。
     // 保留定时器本身（唤醒开销极小）作为回到前台的探测点。
-    if (!fieldwatchApplication.isAppForeground()) return;
+    if (!this.pageVisible || !fieldwatchApplication.isAppForeground()) return;
     const state = fieldwatchApplication.getState();
     this.scanIntensity = state.settings.scanIntensity;
     this.dailyMode = state.settings.dailyMode;
     // 主题由平台门面持有，必须主动读回来 —— 否则三个按钮永远显示不出选中态。
     this.themeOverride = themeModeName(ngfThemeManagerFacade.getCurrentTheme());
+    // 语言同理：'' 表示跟随系统，其余是显式覆盖值。
+    this.languageOverride = ngfI18nManagerFacade.getLocaleOverride();
     this.paused = state.settings.displayPaused;
     this.locationTagging = state.settings.locationTagging;
     this.capability = fieldwatchApplication.permissionSnapshot();
@@ -4410,11 +4575,11 @@ struct FieldwatchSettingsPage {
    */
   private nearLinkStatusText(): string {
     const context = this.getUIContext().getHostContext();
-    const prefix: string = resolveResourceString(context, $r('app.string.fieldwatch_scan_nearlink_state')) + ': ';
+    const prefix: string = fieldwatchText('app.string.fieldwatch_scan_nearlink_state') + ': ';
     if (!fieldwatchApplication.nearLinkAvailable()) {
-      return prefix + resolveResourceString(context, $r('app.string.fieldwatch_scan_nearlink_unsupported'));
+      return prefix + fieldwatchText('app.string.fieldwatch_scan_nearlink_unsupported');
     }
-    return prefix + this.nearLinkPhase + ' · ' + this.nearLinkCount.toString() + ' 个';
+    return prefix + this.nearLinkPhase + ' · ' + this.nearLinkCount.toString() + ngfText('app.string.fw_pg_4582');
   }
   private catalogStatusText(): string {
     const key: string = this.catalogStatus === 'updating' ? 'app.string.fieldwatch_catalog_status_updating'
@@ -4492,14 +4657,14 @@ struct FieldwatchSettingsPage {
           Row({ space: 4 }) {
             SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(14)
               .fontColor([FieldwatchPaletteHolder.get().accent])
-            Text($r('app.string.fieldwatch_onb_allowed')).fontSize(13)
+            Text(fieldwatchText('app.string.fieldwatch_onb_allowed')).fontSize(13)
               .fontColor(FieldwatchPaletteHolder.get().accent)
           }
         } else {
           Row({ space: 6 }) {
-            FieldwatchButton({ label: $r('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
+            FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
               compact: true, fillWidth: false, onTap: (): void => { void this.requestOnePermission(spec.kind); } })
-            Button($r('app.string.fieldwatch_manual_open_short')).height(32).fontSize(13)
+            Button(fieldwatchText('app.string.fieldwatch_manual_open_short')).height(32).fontSize(13)
               .backgroundColor(Color.Transparent).borderWidth(1)
               .borderColor(FieldwatchPaletteHolder.get().outline)
               .fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -4546,20 +4711,20 @@ struct FieldwatchSettingsPage {
           SymbolGlyph($r('sys.symbol.dot_radiowaves_left_and_right'))
             .fontSize(18).fontColor([FieldwatchPaletteHolder.get().accent])
         }.width(36).height(36).borderRadius(18).backgroundColor(FieldwatchPaletteHolder.get().badgeBg)
-        Text($r('app.string.fieldwatch_perm_notif_title')).fontSize(16).fontWeight(FontWeight.Medium)
+        Text(fieldwatchText('app.string.fieldwatch_perm_notif_title')).fontSize(16).fontWeight(FontWeight.Medium)
           .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
         if (this.notificationEnabled) {
           Row({ space: 4 }) {
             SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(14)
               .fontColor([FieldwatchPaletteHolder.get().accent])
-            Text($r('app.string.fieldwatch_onb_allowed')).fontSize(13)
+            Text(fieldwatchText('app.string.fieldwatch_onb_allowed')).fontSize(13)
               .fontColor(FieldwatchPaletteHolder.get().accent)
           }
         } else {
           Row({ space: 6 }) {
-            FieldwatchButton({ label: $r('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
+            FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
               compact: true, fillWidth: false, onTap: (): void => { void this.requestNotificationPermission(); } })
-            Button($r('app.string.fieldwatch_manual_open_short')).height(32).fontSize(13)
+            Button(fieldwatchText('app.string.fieldwatch_manual_open_short')).height(32).fontSize(13)
               .backgroundColor(Color.Transparent).borderWidth(1)
               .borderColor(FieldwatchPaletteHolder.get().outline)
               .fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -4567,12 +4732,12 @@ struct FieldwatchSettingsPage {
           }
         }
       }.width('100%')
-      Text($r('app.string.fieldwatch_notification_permission_reason')).fontSize(13)
+      Text(fieldwatchText('app.string.fieldwatch_notification_permission_reason')).fontSize(13)
         .fontColor(FieldwatchPaletteHolder.get().text)
       Row({ space: 6 }) {
         SymbolGlyph($r('sys.symbol.list_checkmark')).fontSize(12)
           .fontColor([FieldwatchPaletteHolder.get().textDim])
-        Text($r('app.string.fieldwatch_settings_notif_feature')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_settings_notif_feature')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim).layoutWeight(1)
       }.width('100%')
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
@@ -4589,7 +4754,7 @@ struct FieldwatchSettingsPage {
   private openAppSettings(): void {
     fieldwatchApplication.openAppPermissionSettings((): void => {
       this.getUIContext().getPromptAction().showToast({
-        message: resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_manual_toast')),
+        message: fieldwatchText('app.string.fieldwatch_manual_toast'),
         duration: 3000
       });
     });
@@ -4656,40 +4821,40 @@ struct FieldwatchSettingsPage {
 
   @Builder private buildSettingsScan() {
     Column({ space: 8 }) {
-    Text($r('app.string.fieldwatch_settings_scan')).fontSize(18).fontWeight(FontWeight.Medium)
-    Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_scan_current')) + ': ' + this.scanIntensity).fontSize(14).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_scan')).fontSize(18).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_scan_current') + ': ' + this.scanIntensity).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
     // 三档扫描强度必须显示选中态，否则点了看不出变化。
     Row({ space: 8 }) {
-    FieldwatchChip({ label: $r('app.string.wifi_scan_basic'), active: this.scanIntensity === 'basic',
+    FieldwatchChip({ label: fieldwatchText('app.string.wifi_scan_basic'), active: this.scanIntensity === 'basic',
     onTap: (): void => { this.scanIntensity = 'basic'; fieldwatchApplication.setScanIntensity('basic'); this.tick += 1; } })
-    FieldwatchChip({ label: $r('app.string.wifi_scan_balanced'), active: this.scanIntensity === 'balanced',
+    FieldwatchChip({ label: fieldwatchText('app.string.wifi_scan_balanced'), active: this.scanIntensity === 'balanced',
     onTap: (): void => { this.scanIntensity = 'balanced'; fieldwatchApplication.setScanIntensity('balanced'); this.tick += 1; } })
-    FieldwatchChip({ label: $r('app.string.wifi_scan_saver'), active: this.scanIntensity === 'saver',
+    FieldwatchChip({ label: fieldwatchText('app.string.wifi_scan_saver'), active: this.scanIntensity === 'saver',
     onTap: (): void => { this.scanIntensity = 'saver'; fieldwatchApplication.setScanIntensity('saver'); this.tick += 1; } })
     }.width('100%')
-    Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_status')) + ': ' + this.wifiStatus
-    + (this.wifiResultCount > 0 ? ' · ' + this.wifiResultCount.toString() + ' 个结果' : '')
-    + (this.wifiResultCount > 0 && !this.wifiFresh ? ' · ' + resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.wifi_cached')) : ''))
-    .fontSize(14).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_status') + ': ' + this.wifiStatus
+    + (this.wifiResultCount > 0 ? ' · ' + this.wifiResultCount.toString() + ngfText('app.string.fw_pg_4836') : '')
+    + (this.wifiResultCount > 0 && !this.wifiFresh ? ' · ' + fieldwatchText('app.string.wifi_cached') : ''))
+    .fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
     // §12.1「解释系统扫描频率限制和可能的等待时间」：
     // 用户看到「下次尝试」和倒计时却不知道为什么，需要一句说明。
-    Text($r('app.string.fieldwatch_wifi_throttle_hint')).fontSize(12).fontColor($r('app.color.text_secondary')).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_wifi_throttle_hint')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim).fontColor(FieldwatchPaletteHolder.get().textDim)
     // 星闪扫描状态：只在设备支持时出现，不支持时给出一句明确说明而不是留空。
     Text(this.nearLinkStatusText()).fontSize(14)
     .fontColor(fieldwatchApplication.nearLinkAvailable()
     ? FieldwatchPaletteHolder.get().textDim : FieldwatchPaletteHolder.get().amber)
-    Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_last_success')) + ': ' + this.timeLabel(this.wifiLastSuccessAt)).fontSize(14).fontColor($r('app.color.text_secondary'))
-    Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_next_attempt')) + ': ' + this.timeLabel(this.wifiNextAttemptAt)).fontSize(14).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_last_success') + ': ' + this.timeLabel(this.wifiLastSuccessAt)).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
+    Text(fieldwatchText('app.string.fieldwatch_settings_next_attempt') + ': ' + this.timeLabel(this.wifiNextAttemptAt)).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
     // 「将在 X 秒后重试」这一行已按用户要求删除 —— 与上一行「下一次尝试」重复：
     // 用户看到精确到秒的倒计时并不会改变什么，留着只是在等待时添一份焦躁。
-    Button($r('app.string.fieldwatch_settings_retry')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { fieldwatchApplication.retryWifiScan(); this.refresh(); })
+    Button(fieldwatchText('app.string.fieldwatch_settings_retry')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { fieldwatchApplication.retryWifiScan(); this.refresh(); })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
   @Builder private buildSettingsAppearance() {
     Column({ space: 8 }) {
-    Text($r('app.string.fieldwatch_settings_permissions')).fontSize(18).fontWeight(FontWeight.Medium)
-    Text($r('app.string.fieldwatch_settings_permissions_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_permissions')).fontSize(18).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_permissions_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
     ForEach(this.permissionSpecs, (spec: FieldwatchPermissionSpec): void => {
     this.buildPermissionRow(spec)
     }, (spec: FieldwatchPermissionSpec): string => spec.kind)
@@ -4700,16 +4865,44 @@ struct FieldwatchSettingsPage {
 
   @Builder private buildSettingsPrivacy() {
     Column({ space: 8 }) {
-    Text($r('app.string.fieldwatch_settings_radar_display')).fontSize(18).fontWeight(FontWeight.Medium)
-    Text($r('app.string.fieldwatch_settings_radar_display_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
-    this.buildFieldToggle('name', $r('app.string.fieldwatch_radar_field_name'))
-    this.buildFieldToggle('address', $r('app.string.fieldwatch_radar_field_address'))
-    this.buildFieldToggle('type', $r('app.string.fieldwatch_radar_field_type'))
-    this.buildFieldToggle('rssi', $r('app.string.fieldwatch_radar_field_rssi'))
-    this.buildFieldToggle('freq', $r('app.string.fieldwatch_radar_field_freq'))
-    this.buildSizeStepper($r('app.string.fieldwatch_radar_label_size'), true)
-    this.buildSizeStepper($r('app.string.fieldwatch_radar_icon_size'), false)
+    Text(fieldwatchText('app.string.fieldwatch_settings_radar_display')).fontSize(18).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_radar_display_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+    this.buildFieldToggle('name', fieldwatchText('app.string.fieldwatch_radar_field_name'))
+    this.buildFieldToggle('address', fieldwatchText('app.string.fieldwatch_radar_field_address'))
+    this.buildFieldToggle('type', fieldwatchText('app.string.fieldwatch_radar_field_type'))
+    this.buildFieldToggle('rssi', fieldwatchText('app.string.fieldwatch_radar_field_rssi'))
+    this.buildFieldToggle('freq', fieldwatchText('app.string.fieldwatch_radar_field_freq'))
+    this.buildSizeStepper(fieldwatchText('app.string.fieldwatch_radar_label_size'), true)
+    this.buildSizeStepper(fieldwatchText('app.string.fieldwatch_radar_icon_size'), false)
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
+  }
+
+  /**
+   * 切换界面语言。
+   *
+   * `''` 表示跟随系统，其余写入覆盖值（框架用 `ApplicationContext.setLanguage` 立即应用，
+   * 覆盖值本身走 `PersistentStorage`，冷启动由 `EntryAbility` 重新施加）。
+   * 切换后**必须立刻清掉资源文本缓存**：缓存虽然有 1 秒节流的 locale 检查，
+   * 但主动清空可以让界面当帧就换语言，而不是等下一次节流窗口。
+   */
+  private applyAppLanguage(locale: string): void {
+    if (locale.length === 0) ngfI18nManagerFacade.clearLocaleOverride();
+    else ngfI18nManagerFacade.setLocaleOverride(locale);
+    this.languageOverride = ngfI18nManagerFacade.getLocaleOverride();
+    invalidateFieldwatchText();
+    this.tick += 1;
+    // **重建整棵页面树**，而不是只靠状态刷新。
+    //
+    // 一部分文案是通过 `@Builder` 的字符串参数往下传的（`this.section(title)`、
+    // `this.buildToolTab(label)` 等），这类文本在首次构建时就固化，语言切换后不会被
+    // 状态刷新重新求值 —— 实测表现是「切了英文，一半页面还是中文」。
+    // `loadContent` 会重新创建页面组件，所有 `fieldwatchText()` 重新解析。
+    // 代价是回到实时页、路径栈清空，对「改语言」这种低频操作可以接受。
+    const stage = ngfPlatformWindowManagerFacade.getWindowStage();
+    if (stage === null) return;
+    void stage.loadContent('pages/fieldwatch/FieldwatchPage').catch((error: BusinessError): void => {
+      logger.warn('FieldwatchSettings', '语言切换后重建页面失败: ' + JSON.stringify(error));
+    });
   }
 
   /** 切换实时页默认形态：写设置 → 立即落盘（下一次进入实时页生效）。 */
@@ -4721,76 +4914,93 @@ struct FieldwatchSettingsPage {
 
   @Builder private buildSettingsListDisplay() {
     Column({ space: 8 }) {
-    Text($r('app.string.fieldwatch_settings_display')).fontSize(18).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_display')).fontSize(18).fontWeight(FontWeight.Medium)
     // ── 模式选择：实时页默认进「日常」还是「专业」 ──
-    Text($r('app.string.fieldwatch_settings_mode_title')).fontSize(16).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_mode_title')).fontSize(16).fontWeight(FontWeight.Medium)
     // **每个芯片必须包一层 layoutWeight 容器**：芯片的 `fillWidth` 是 width('100%')，
     // 两个直接并排会各自按整行宽度算，挤出容器（宽度错乱的根因）。
     Row({ space: 8 }) {
     Column() {
-      FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_daily'),
+      FieldwatchSegmentedChip({ label: fieldwatchText('app.string.fieldwatch_live_mode_daily'),
         selected: this.dailyMode, fillWidth: true, onTap: (): void => { this.setDailyMode(true); } })
     }.layoutWeight(1)
     Column() {
-      FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_pro'),
+      FieldwatchSegmentedChip({ label: fieldwatchText('app.string.fieldwatch_live_mode_pro'),
         selected: !this.dailyMode, fillWidth: true, onTap: (): void => { this.setDailyMode(false); } })
     }.layoutWeight(1)
     }.width('100%')
-    Text($r('app.string.fieldwatch_settings_mode_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
-    Text($r('app.string.fieldwatch_settings_theme')).fontSize(16).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_mode_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+    Text(fieldwatchText('app.string.fieldwatch_settings_theme')).fontSize(16).fontWeight(FontWeight.Medium)
     Row({ space: 8 }) {
     // 三个按钮必须显示选中态，否则用户点了看不出任何变化（这正是之前的现象）。
-    Button($r('app.string.fieldwatch_settings_theme_auto')).backgroundColor(Color.Transparent).borderWidth(1)
+    Button(fieldwatchText('app.string.fieldwatch_settings_theme_auto')).backgroundColor(Color.Transparent).borderWidth(1)
     .borderColor(this.themeOverride === 'auto' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
     .fontColor(this.themeOverride === 'auto' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
     .layoutWeight(1).onClick((): void => { this.applyTheme(NGFThemeMode.AUTO); })
-    Button($r('app.string.fieldwatch_settings_theme_light')).backgroundColor(Color.Transparent).borderWidth(1)
+    Button(fieldwatchText('app.string.fieldwatch_settings_theme_light')).backgroundColor(Color.Transparent).borderWidth(1)
     .borderColor(this.themeOverride === 'light' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
     .fontColor(this.themeOverride === 'light' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
     .layoutWeight(1).onClick((): void => { this.applyTheme(NGFThemeMode.LIGHT); })
-    Button($r('app.string.fieldwatch_settings_theme_dark')).backgroundColor(Color.Transparent).borderWidth(1)
+    Button(fieldwatchText('app.string.fieldwatch_settings_theme_dark')).backgroundColor(Color.Transparent).borderWidth(1)
     .borderColor(this.themeOverride === 'dark' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
     .fontColor(this.themeOverride === 'dark' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
     .layoutWeight(1).onClick((): void => { this.applyTheme(NGFThemeMode.DARK); })
     }.width('100%')
-    Button($r('app.string.fieldwatch_settings_replay_onboarding')).height(44).width('100%')
+    // ── 语言：跟随系统 / 中文 / English ──
+    // 「中文」「English」用各自语言书写，不随界面语言翻译（系统语言列表的通行做法）。
+    Text(fieldwatchText('app.string.fieldwatch_settings_language')).fontSize(16).fontWeight(FontWeight.Medium)
+    Row({ space: 8 }) {
+    Button(fieldwatchText('app.string.fieldwatch_settings_language_system')).backgroundColor(Color.Transparent).borderWidth(1)
+    .borderColor(this.languageOverride.length === 0 ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
+    .fontColor(this.languageOverride.length === 0 ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
+    .layoutWeight(1).onClick((): void => { this.applyAppLanguage(''); })
+    Button('中文').backgroundColor(Color.Transparent).borderWidth(1)
+    .borderColor(this.languageOverride === 'zh-Hans' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
+    .fontColor(this.languageOverride === 'zh-Hans' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
+    .layoutWeight(1).onClick((): void => { this.applyAppLanguage('zh-Hans'); })
+    Button('English').backgroundColor(Color.Transparent).borderWidth(1)
+    .borderColor(this.languageOverride === 'en-US' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
+    .fontColor(this.languageOverride === 'en-US' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
+    .layoutWeight(1).onClick((): void => { this.applyAppLanguage('en-US'); })
+    }.width('100%')
+    Button(fieldwatchText('app.string.fieldwatch_settings_replay_onboarding')).height(44).width('100%')
     .backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline)
     .fontColor(FieldwatchPaletteHolder.get().text)
     .onClick((): void => { this.onReplayOnboarding(); })
 
-    Row() { Text($r('app.string.fieldwatch_settings_pause')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.paused }).onChange((value: boolean): void => { this.paused = value; fieldwatchApplication.setDisplayPaused(value); }) }.width('100%')
-    Row() { Text($r('app.string.fieldwatch_settings_keep_screen_on')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.keepScreenOn }).onChange((value: boolean): void => { void fieldwatchApplication.setKeepScreenOn(value).then((): void => { this.keepScreenOn = value; }); }) }.width('100%')
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_pause')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.paused }).onChange((value: boolean): void => { this.paused = value; fieldwatchApplication.setDisplayPaused(value); }) }.width('100%')
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_keep_screen_on')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.keepScreenOn }).onChange((value: boolean): void => { void fieldwatchApplication.setKeepScreenOn(value).then((): void => { this.keepScreenOn = value; }); }) }.width('100%')
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
   @Builder private buildSettingsPermissions() {
     Column({ space: 8 }) {
-    Text($r('app.string.fieldwatch_settings_location')).fontSize(18).fontWeight(FontWeight.Medium)
-    Text($r('app.string.fieldwatch_settings_location_tagging')).fontSize(14).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_location')).fontSize(18).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_location_tagging')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
     Toggle({ type: ToggleType.Switch, isOn: this.locationTagging }).onChange((value: boolean): void => { this.locationTagging = value; fieldwatchApplication.setLocationTagging(value); })
     // ── 列表显示的四个开关（§12.2 显示设置）──
     // 此前一项都没有，列表行里的 RSSI 条 / 频率 / First-Last 全部无条件渲染，
     // 而「显示签名名称」连展示能力本身都缺（列表行里根本没有签名名）。
-    Text($r('app.string.fieldwatch_settings_display_section')).fontSize(14).fontColor($r('app.color.text_secondary'))
-    Row() { Text($r('app.string.fieldwatch_settings_show_rssi_bar')).layoutWeight(1);
+    Text(fieldwatchText('app.string.fieldwatch_settings_display_section')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_show_rssi_bar')).layoutWeight(1);
     Toggle({ type: ToggleType.Switch, isOn: this.showRssiBar })
     .onChange((value: boolean): void => { this.showRssiBar = value; fieldwatchApplication.setShowRssiBar(value); }) }
-    Row() { Text($r('app.string.fieldwatch_settings_show_fleet_name')).layoutWeight(1);
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_show_fleet_name')).layoutWeight(1);
     Toggle({ type: ToggleType.Switch, isOn: this.showFleetName })
     .onChange((value: boolean): void => { this.showFleetName = value; fieldwatchApplication.setShowFleetName(value); }) }
-    Row() { Text($r('app.string.fieldwatch_settings_show_frequency')).layoutWeight(1);
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_show_frequency')).layoutWeight(1);
     Toggle({ type: ToggleType.Switch, isOn: this.showFrequency })
     .onChange((value: boolean): void => { this.showFrequency = value; fieldwatchApplication.setShowFrequency(value); }) }
-    Row() { Text($r('app.string.fieldwatch_settings_show_seen_times')).layoutWeight(1);
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_show_seen_times')).layoutWeight(1);
     Toggle({ type: ToggleType.Switch, isOn: this.showSeenTimes })
     .onChange((value: boolean): void => { this.showSeenTimes = value; fieldwatchApplication.setShowSeenTimes(value); }) }
     // 行密度：强度/时间线/信号轨迹/分类四个视图共用同一套行样式，
     // 这里只切换取哪一档尺寸（紧凑档一屏能多看几台）。
-    Row() { Text($r('app.string.fieldwatch_settings_compact_rows')).layoutWeight(1);
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_compact_rows')).layoutWeight(1);
     Toggle({ type: ToggleType.Switch, isOn: this.compactRows })
     .onChange((value: boolean): void => { this.compactRows = value; fieldwatchApplication.setListCompactRows(value); }) }
-    Text($r('app.string.fieldwatch_settings_compact_rows_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
-    Row() { Text($r('app.string.fieldwatch_settings_privacy_mode')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.privacyMode }).onChange((value: boolean): void => { this.privacyMode = value; fieldwatchApplication.setPrivacyMode(value); }) }.width('100%')
+    Text(fieldwatchText('app.string.fieldwatch_settings_compact_rows_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_privacy_mode')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.privacyMode }).onChange((value: boolean): void => { this.privacyMode = value; fieldwatchApplication.setPrivacyMode(value); }) }.width('100%')
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
@@ -4802,34 +5012,34 @@ struct FieldwatchSettingsPage {
    */
   @Builder private buildSettingsAlerts() {
     Column({ space: 8 }) {
-    Text($r('app.string.fieldwatch_settings_alerts')).fontSize(18).fontWeight(FontWeight.Medium)
-    Row() { Text($r('app.string.fieldwatch_settings_watch_notifications')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.watchNotifications }).onChange((value: boolean): void => { void fieldwatchApplication.setWatchNotifications(value).then((enabled: boolean): void => { this.watchNotifications = enabled; }); }) }.width('100%')
-    Text($r('app.string.fieldwatch_settings_notifications_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_alerts')).fontSize(18).fontWeight(FontWeight.Medium)
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_watch_notifications')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.watchNotifications }).onChange((value: boolean): void => { void fieldwatchApplication.setWatchNotifications(value).then((enabled: boolean): void => { this.watchNotifications = enabled; }); }) }.width('100%')
+    Text(fieldwatchText('app.string.fieldwatch_settings_notifications_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
     // ── 关注列表的可听告警（§12.3）──
     // 受上面的「关注通知」总开关管辖，这两个是子开关；与 Hunt 的 geiger tick 是两套告警。
-    Row() { Text($r('app.string.fieldwatch_settings_watch_beep')).layoutWeight(1);
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_watch_beep')).layoutWeight(1);
     Toggle({ type: ToggleType.Switch, isOn: this.watchBeep })
     .onChange((value: boolean): void => { this.watchBeep = value; fieldwatchApplication.setWatchBeep(value); }) }
-    Text($r('app.string.fieldwatch_settings_watch_beep_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
-    Row() { Text($r('app.string.fieldwatch_settings_watch_voice')).layoutWeight(1);
+    Text(fieldwatchText('app.string.fieldwatch_settings_watch_beep_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_watch_voice')).layoutWeight(1);
     Toggle({ type: ToggleType.Switch, isOn: this.watchVoice })
     .onChange((value: boolean): void => { this.watchVoice = value; fieldwatchApplication.setWatchVoice(value); }) }
-    Text($r('app.string.fieldwatch_settings_watch_voice_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_watch_voice_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
     // 语音内容三选一，对应原版 AlertVoiceWhat。
-    Text($r('app.string.fieldwatch_settings_voice_content')).fontSize(14).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_voice_content')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
     Row({ space: 8 }) {
-    this.voiceChip('class', $r('app.string.fieldwatch_settings_voice_class'))
-    this.voiceChip('signature', $r('app.string.fieldwatch_settings_voice_signature'))
-    this.voiceChip('classSignature', $r('app.string.fieldwatch_settings_voice_both'))
+    this.voiceChip('class', fieldwatchText('app.string.fieldwatch_settings_voice_class'))
+    this.voiceChip('signature', fieldwatchText('app.string.fieldwatch_settings_voice_signature'))
+    this.voiceChip('classSignature', fieldwatchText('app.string.fieldwatch_settings_voice_both'))
     }.width('100%').justifyContent(FlexAlign.Start)
-    Button($r('app.string.fieldwatch_settings_alert_test'))
+    Button(fieldwatchText('app.string.fieldwatch_settings_alert_test'))
     .backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().accent).fontColor(FieldwatchPaletteHolder.get().accent)
     .height(40).width('100%')
     .onClick((): void => { fieldwatchApplication.playAlertTest(); })
-    Row() { Text($r('app.string.fieldwatch_settings_background_scanning')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.backgroundScanning }).onChange((value: boolean): void => { void fieldwatchApplication.setBackgroundScanning(value).then((enabled: boolean): void => { this.backgroundScanning = enabled; }); }) }.width('100%')
-    Text($r('app.string.fieldwatch_settings_background_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
-    Row() { Text($r('app.string.fieldwatch_hunt_direction_setting')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.huntDirectionAssist }).onChange((value: boolean): void => { this.huntDirectionAssist = value; fieldwatchApplication.setHuntDirectionAssist(value); }) }.width('100%')
-    Text($r('app.string.fieldwatch_hunt_direction_setting_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
+    Row() { Text(fieldwatchText('app.string.fieldwatch_settings_background_scanning')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.backgroundScanning }).onChange((value: boolean): void => { void fieldwatchApplication.setBackgroundScanning(value).then((enabled: boolean): void => { this.backgroundScanning = enabled; }); }) }.width('100%')
+    Text(fieldwatchText('app.string.fieldwatch_settings_background_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+    Row() { Text(fieldwatchText('app.string.fieldwatch_hunt_direction_setting')).layoutWeight(1); Toggle({ type: ToggleType.Switch, isOn: this.huntDirectionAssist }).onChange((value: boolean): void => { this.huntDirectionAssist = value; fieldwatchApplication.setHuntDirectionAssist(value); }) }.width('100%')
+    Text(fieldwatchText('app.string.fieldwatch_hunt_direction_setting_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
@@ -4845,37 +5055,37 @@ struct FieldwatchSettingsPage {
    */
   @Builder private buildSettingsLegal() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_settings_legal')).fontSize(18).fontWeight(FontWeight.Medium)
-      Text($r('app.string.fieldwatch_settings_legal_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
+      Text(fieldwatchText('app.string.fieldwatch_settings_legal')).fontSize(18).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_settings_legal_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
       // 反馈中心放在「关于」这一组：它和条款、开源声明是同一类东西
       // —— 都是「关于这个应用」的对外通道。
-      FieldwatchButton({ label: $r('app.string.fieldwatch_settings_feedback'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_settings_feedback'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { this.onOpenFeedback(); } })
-      FieldwatchButton({ label: $r('app.string.fieldwatch_settings_about'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 0; this.sheetOpen = true; } })
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_settings_about'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 0; this.sheetOpen = true; } })
       // 更新日志放在「关于」与「隐私协议」之间：它属于「这个应用本身」的说明，
       // 用户刚看完关于，最顺的下一个问题就是「这个版本改了什么」。
-      FieldwatchButton({ label: $r('app.string.fieldwatch_settings_changelog'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 4; this.sheetOpen = true; } })
-      FieldwatchButton({ label: $r('app.string.fieldwatch_legal_privacy'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 1; this.sheetOpen = true; } })
-      FieldwatchButton({ label: $r('app.string.fieldwatch_legal_terms'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 2; this.sheetOpen = true; } })
-      FieldwatchButton({ label: $r('app.string.fieldwatch_legal_oss'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 3; this.sheetOpen = true; } })
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_settings_changelog'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 4; this.sheetOpen = true; } })
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_legal_privacy'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 1; this.sheetOpen = true; } })
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_legal_terms'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 2; this.sheetOpen = true; } })
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_legal_oss'), tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.sheetDoc = 3; this.sheetOpen = true; } })
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
   }
 
 
   @Builder private buildSettingsGuide() {
     Column({ space: 8 }) {
-    Text($r('app.string.fieldwatch_settings_data')).fontSize(18).fontWeight(FontWeight.Medium)
-    Text(resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_observation_count')) + ': ' + this.observationCount.toString()).fontSize(14).fontColor($r('app.color.text_secondary'))
-    Button($r('app.string.fieldwatch_reports_clear_logs')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).enabled(this.observationCount > 0).onClick((): void => { void fieldwatchApplication.clearObservationLog().then((): void => { this.refresh(); }); })
-    Button($r('app.string.fieldwatch_settings_backup')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { void this.runSaveSettingsBackup(); })
-    Button($r('app.string.fieldwatch_settings_restore')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { void this.runRestoreSettingsBackup(); })
-    Text($r('app.string.fieldwatch_local_file_hint')).fontSize(13).fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_data')).fontSize(18).fontWeight(FontWeight.Medium)
+    Text(fieldwatchText('app.string.fieldwatch_settings_observation_count') + ': ' + this.observationCount.toString()).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
+    Button(fieldwatchText('app.string.fieldwatch_reports_clear_logs')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).enabled(this.observationCount > 0).onClick((): void => { void fieldwatchApplication.clearObservationLog().then((): void => { this.refresh(); }); })
+    Button(fieldwatchText('app.string.fieldwatch_settings_backup')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { void this.runSaveSettingsBackup(); })
+    Button(fieldwatchText('app.string.fieldwatch_settings_restore')).backgroundColor(Color.Transparent).borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline).fontColor(FieldwatchPaletteHolder.get().text).onClick((): void => { void this.runRestoreSettingsBackup(); })
+    Text(fieldwatchText('app.string.fieldwatch_local_file_hint')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
     // ── 日志等级 ──
     //
     // 默认 WARN：DEBUG/INFO 在扫描期间每秒都在打，真机上既拖性能、
     // 又把真正要看的那几条淹没。需要排查时再临时调低。
-    Text($r('app.string.fieldwatch_settings_log_level')).fontSize(14)
-      .fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_log_level')).fontSize(14)
+      .fontColor(FieldwatchPaletteHolder.get().textDim)
     Row({ space: 8 }) {
       ForEach(this.logLevelChoices(), (item: LogLevelChoice): void => {
         FieldwatchChip({ label: $r(item.labelKey), active: this.logLevel === item.value,
@@ -4886,8 +5096,8 @@ struct FieldwatchSettingsPage {
           } })
       }, (item: LogLevelChoice): string => item.value.toString())
     }.width('100%').justifyContent(FlexAlign.Start)
-    Text($r('app.string.fieldwatch_settings_log_level_hint')).fontSize(13)
-      .fontColor($r('app.color.text_secondary'))
+    Text(fieldwatchText('app.string.fieldwatch_settings_log_level_hint')).fontSize(13)
+      .fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
@@ -4920,7 +5130,7 @@ struct FieldwatchSettingsPage {
 
 
   build() { Scroll() { Column({ space: 14 }) {
-    Text($r('app.string.fieldwatch_settings_title')).fontSize(26).fontWeight(FontWeight.Bold)
+    Text(fieldwatchText('app.string.fieldwatch_settings_title')).fontSize(26).fontWeight(FontWeight.Bold)
     // **两列**：横屏且右栏未开。右栏一开可用宽度只剩三分之一，回到单列。
     if (this.twoColumn) {
       // **手写两列**：每列各自纵向堆叠，互不参照对方高度。
@@ -5024,7 +5234,7 @@ struct FieldwatchSettingsPage {
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
         }.width('100%')
       }.layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
-      FieldwatchButton({ label: $r('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { this.sheetOpen = false; } })
     }.width('100%').padding({ left: 20, right: 20, top: 8, bottom: 24 }).alignItems(HorizontalAlign.Start)
   }
@@ -5045,7 +5255,7 @@ struct FieldwatchSettingsPage {
           }, (para: string, index: number): string => index.toString())
         }.width('100%')
       }.layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
-      FieldwatchButton({ label: $r('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { this.sheetOpen = false; } })
     }.width('100%').padding({ left: 20, right: 20, top: 8, bottom: 24 }).alignItems(HorizontalAlign.Start)
   }
@@ -5115,7 +5325,7 @@ struct FieldwatchSettingsPage {
       const failure: BusinessError = error as BusinessError;
       logger.warn(TAG, '打开应用市场失败 code=' + failure.code + ' msg=' + failure.message);
       this.getUIContext().getPromptAction().showToast({
-        message: resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_dev_apps_failed')),
+        message: fieldwatchText('app.string.fieldwatch_dev_apps_failed'),
         duration: 2200
       });
     }
@@ -5145,7 +5355,7 @@ struct FieldwatchSettingsPage {
         Divider().strokeWidth(1).color(FieldwatchPaletteHolder.get().outline)
           .margin({ left: 14, right: 14 })
         Row() {
-          Text($r('app.string.fieldwatch_dev_apps_view')).fontSize(15)
+          Text(fieldwatchText('app.string.fieldwatch_dev_apps_view')).fontSize(15)
             .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
           SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(18)
             .fontColor([FieldwatchPaletteHolder.get().textDim])
@@ -5165,14 +5375,14 @@ struct FieldwatchSettingsPage {
    */
   @Builder private buildChangelogSheet() {
     Column({ space: 12 }) {
-      Text($r('app.string.fieldwatch_settings_changelog')).fontSize(20).fontWeight(FontWeight.Bold)
+      Text(fieldwatchText('app.string.fieldwatch_settings_changelog')).fontSize(20).fontWeight(FontWeight.Bold)
         .fontColor(FieldwatchPaletteHolder.get().text)
-      Text($r('app.string.fieldwatch_changelog_hint')).fontSize(14)
+      Text(fieldwatchText('app.string.fieldwatch_changelog_hint')).fontSize(14)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       Scroll() {
         Column({ space: 10 }) {
           if (CHANGELOG_HEAD.length === 0) {
-            Text($r('app.string.fieldwatch_changelog_empty')).fontSize(14)
+            Text(fieldwatchText('app.string.fieldwatch_changelog_empty')).fontSize(14)
               .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
           }
           ForEach(CHANGELOG_HEAD, (entry: ChangelogEntry): void => {
@@ -5180,7 +5390,7 @@ struct FieldwatchSettingsPage {
           }, (entry: ChangelogEntry): string => entry.versionLabel + '-' + entry.buildNumber.toString())
         }.width('100%')
       }.layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
-      FieldwatchButton({ label: $r('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { this.sheetOpen = false; } })
     }.width('100%').padding({ left: 20, right: 20, top: 8, bottom: 24 }).alignItems(HorizontalAlign.Start)
   }
@@ -5205,24 +5415,24 @@ struct FieldwatchSettingsPage {
 
   @Builder private buildAboutSheet() {
     Column({ space: 12 }) {
-      Text($r('app.string.fieldwatch_about_title')).fontSize(20).fontWeight(FontWeight.Bold)
+      Text(fieldwatchText('app.string.fieldwatch_about_title')).fontSize(20).fontWeight(FontWeight.Bold)
         .fontColor(FieldwatchPaletteHolder.get().text)
-      Text($r('app.string.fieldwatch_app_title')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
+      Text(fieldwatchText('app.string.fieldwatch_app_title')).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim)
       // 一句话介绍：先让人知道这是什么，再往下看原则。
-      Text($r('app.string.fieldwatch_about_intro')).fontSize(14)
+      Text(fieldwatchText('app.string.fieldwatch_about_intro')).fontSize(14)
         .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
-      this.aboutLine($r('app.string.fieldwatch_about_principle'))
-      this.aboutLine($r('app.string.fieldwatch_about_local'))
-      this.aboutLine($r('app.string.fieldwatch_about_permissions'))
-      this.aboutLine($r('app.string.fieldwatch_about_radiodb'))
-      this.aboutLine($r('app.string.fieldwatch_about_license'))
+      this.aboutLine(fieldwatchText('app.string.fieldwatch_about_principle'))
+      this.aboutLine(fieldwatchText('app.string.fieldwatch_about_local'))
+      this.aboutLine(fieldwatchText('app.string.fieldwatch_about_permissions'))
+      this.aboutLine(fieldwatchText('app.string.fieldwatch_about_radiodb'))
+      this.aboutLine(fieldwatchText('app.string.fieldwatch_about_license'))
       // ── 同开发者 App（与漫匣同一个模式：卡片 + 在应用市场查看）──
-      Text($r('app.string.fieldwatch_dev_apps')).fontSize(16).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_dev_apps')).fontSize(16).fontWeight(FontWeight.Medium)
         .fontColor(FieldwatchPaletteHolder.get().text).margin({ top: 8 })
       ForEach(this.developerApps, (item: DeveloperApp): void => {
         this.buildDeveloperAppCard(item)
       }, (item: DeveloperApp): string => item.name)
-      FieldwatchButton({ label: $r('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_about_close'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { this.sheetOpen = false; } })
     }.width('100%').padding({ left: 20, right: 20, top: 8, bottom: 24 }).alignItems(HorizontalAlign.Start)
   }
@@ -5234,7 +5444,7 @@ struct FieldwatchSettingsPage {
       Text(text).fontSize(14).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
     }.width('100%').alignItems(VerticalAlign.Top)
   }
-  private timeLabel(value: number): string { return value <= 0 ? resolveResourceString(this.getUIContext().getHostContext(), $r('app.string.fieldwatch_settings_none')) : new Date(value).toLocaleTimeString(); }
+  private timeLabel(value: number): string { return value <= 0 ? fieldwatchText('app.string.fieldwatch_settings_none') : new Date(value).toLocaleTimeString(); }
 
   private applyTheme(mode: NGFThemeMode): void {
     ngfThemeManagerFacade.setThemeOverride(mode);
@@ -5296,19 +5506,19 @@ class DeveloperApp {
  */
 function buildDeveloperApps(): DeveloperApp[] {
   const list: DeveloperApp[] = [];
-  list.push(new DeveloperApp('漫匣', '一款基于 HarmonyOS 的现代化漫画阅读应用',
+  list.push(new DeveloperApp('漫匣', ngfText('app.string.fw_pg_5497'),
     'https://appgallery.huawei.com/app/detail?id=com.dlzz.manxia&channelId=SHARE&source=appshare',
     $r('app.media.devapp_manxia')));
-  list.push(new DeveloperApp('花漾字影', '帮您轻松创作更亮眼的手持弹幕内容',
+  list.push(new DeveloperApp('花漾字影', ngfText('app.string.fw_pg_5500'),
     'https://appgallery.huawei.com/app/detail?id=com.dlzz.lumabloom&channelId=SHARE&source=appshare',
     $r('app.media.devapp_lumabloom')));
-  list.push(new DeveloperApp('书脉', '支持多种格式的元数据编辑与封面管理',
+  list.push(new DeveloperApp('书脉', ngfText('app.string.fw_pg_5503'),
     'https://appgallery.huawei.com/app/detail?id=com.dlzz.ebookparser&channelId=SHARE&source=appshare',
     $r('app.media.devapp_shumai')));
-  list.push(new DeveloperApp('NGF Coder', '移动端 AI 编程协作工具',
+  list.push(new DeveloperApp('NGF Coder', ngfText('app.string.fw_pg_5506'),
     'https://appgallery.huawei.com/app/detail?id=com.dlzz.coder&channelId=SHARE&source=appshare',
     $r('app.media.devapp_ngfcoder')));
-  list.push(new DeveloperApp('神秘 APP', '敬请期待', '', undefined));
+  list.push(new DeveloperApp('神秘 APP', ngfText('app.string.fw_pg_5509'), '', undefined));
   return list;
 }
 

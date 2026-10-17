@@ -1,8 +1,9 @@
 import { BusinessError } from '@kit.BasicServicesKit';
 import { access, ble } from '@kit.ConnectivityKit';
-import { logger } from 'ngf_framework';
+import { logger, ngfText } from 'ngf_framework';
 import { RadioFacts, RadioKind, RadioSourceSnapshot, ScanObservation, ScanState, ServiceDataRecord } from '../domain/FieldwatchModels';
 import { BleAdvertisementFacts, FieldwatchBleAdvertisementDecoder } from '../domain/FieldwatchParsers';
+import { bytesToHex } from '../domain/FieldwatchHex';
 import { IFieldwatchRadioScanner } from './FieldwatchRadioScanner';
 
 const TAG: string = 'FieldwatchBleScanner';
@@ -27,7 +28,7 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
     this.stateHandler = onStateChange;
     const bluetoothState: access.BluetoothState = access.getState();
     if (bluetoothState !== access.BluetoothState.STATE_ON) {
-      this.fail('蓝牙未开启，请先开启蓝牙后重试');
+      this.fail(ngfText('app.string.fw_bl_31'));
       return;
     }
     try {
@@ -41,6 +42,8 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
       void this.scanner.startScan(null, scanOptions).catch((error: Object): void => { this.fail(this.errorMessage(error)); });
       this.state = ScanState.SCANNING;
       this.publishState();
+      // 新一轮扫描的首条广播要立刻发布（见 publishStateThrottled 的边界说明）。
+      this.lastPublishAt = 0;
       logger.info(TAG, 'BLE 扫描已启动');
     } catch (error) {
       this.fail(this.errorMessage(error));
@@ -71,11 +74,30 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
     report.scanResult.forEach((result: ble.ScanResult): void => {
       const observation: ScanObservation = this.toObservation(result);
       this.lastSuccessAt = observation.seenAt;
-      this.publishState();
+      // **不要再逐条 publishState**：一批最多 500 条广播，逐条发布意味着每秒最多
+      // 500 次快照分配 + 500 次 coordinator 状态汇总 + 500 次应用状态写入，
+      // 而界面上「最近一次成功」只精确到秒。500ms 节流对观感没有任何影响。
+      this.publishStateThrottled();
       // 单条观测不再逐条打日志，见 logCallbackThrottled 的说明。
       if (this.observationHandler !== undefined) this.observationHandler(observation);
     });
   };
+
+  /** 上次向外发布状态快照的时刻；用于把逐条广播的状态发布压到 2 次/秒。 */
+  private lastPublishAt: number = 0;
+
+  /**
+   * 节流后的状态发布：同一批广播里只发有限次。
+   *
+   * 边界情况：首条广播必须立刻发（否则「最近一次成功」要等到下一次才更新），
+   * 所以 `lastPublishAt` 在 `start()` 里会重置为 0。
+   */
+  private publishStateThrottled(): void {
+    const now: number = Date.now();
+    if (now - this.lastPublishAt < 500) return;
+    this.lastPublishAt = now;
+    this.publishState();
+  }
 
   /** 距离上次输出批次日志的毫秒数；用于把回调日志压到每 30 秒一条。 */
   private lastCallbackLogAt: number = 0;
@@ -110,12 +132,12 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
     const manufacturerMap: Map<number, Uint8Array> | undefined = result.manufacturerDataMap;
     if (manufacturerMap !== undefined) {
       manufacturerMap.forEach((value: Uint8Array, key: number): void => {
-        if (manufacturerId === 0) { manufacturerId = key; manufacturerDataHex = this.bytesHex(value); }
+        if (manufacturerId === 0) { manufacturerId = key; manufacturerDataHex = bytesToHex(value); }
       });
     }
     const serviceMap: Map<string, Uint8Array> | undefined = result.serviceDataMap;
     if (serviceMap !== undefined) {
-      serviceMap.forEach((value: Uint8Array, key: string): void => { serviceData.push(new ServiceDataRecord(key, this.bytesHex(value))); });
+      serviceMap.forEach((value: Uint8Array, key: string): void => { serviceData.push(new ServiceDataRecord(key, bytesToHex(value))); });
     }
     // ── 原始广播包：**无条件**解析，不再只当兜底 ──
     //
@@ -125,7 +147,10 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
     // 结果 Appearance、Flags、Tx Power、16/128 位服务 UUID 全部被丢掉。
     //
     // 现在两边都解析，缺的用原始包补齐（平台值优先，避免解析差异）。
-    const decoded: BleAdvertisementFacts = this.advertisementDecoder.decodeBytes(new Uint8Array(result.data));
+    // 整包字节只取一次：解析和 rawAdHex 共用同一份，
+    // 原来这里 `new Uint8Array(result.data)` 建了两次，十六进制也转了两遍。
+    const rawBytes: Uint8Array = new Uint8Array(result.data);
+    const decoded: BleAdvertisementFacts = this.advertisementDecoder.decodeBytes(rawBytes);
     const serviceUuids16: string[] = [];
     const serviceUuids128: string[] = [];
     if (decoded.valid) {
@@ -143,7 +168,7 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
       });
     }
     const facts: RadioFacts = new RadioFacts('', '', 0, serviceUuids, manufacturerDataHex, 0, 0, 0, false, manufacturerId, serviceData, []);
-    facts.rawAdHex = decoded.valid ? this.bytesHex(new Uint8Array(result.data)) : '';
+    facts.rawAdHex = decoded.valid ? bytesToHex(rawBytes) : '';
     facts.appearance = decoded.valid ? decoded.appearance : -1;
     facts.txPower = decoded.valid ? decoded.txPower : -128;
     facts.advertiseFlags = decoded.valid ? decoded.flags : -1;
@@ -167,25 +192,9 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
     return new ScanObservation('ble:' + deviceId, RadioKind.BLE, deviceId, deviceName, result.rssi, Date.now(), facts);
   }
 
-  private bytesHex(data: Uint8Array): string {
-    let result: string = '';
-    for (let index = 0; index < data.length; index += 1) {
-      const value: string = data[index].toString(16).toUpperCase();
-      result += value.length === 1 ? '0' + value : value;
-    }
-    return result;
-  }
-
-  private toHex(data: ArrayBuffer | undefined): string {
-    if (data === undefined) return '';
-    const bytes: Uint8Array = new Uint8Array(data);
-    let result: string = '';
-    for (let index: number = 0; index < bytes.length; index += 1) {
-      const value: string = bytes[index].toString(16).toUpperCase();
-      result += value.length === 1 ? '0' + value : value;
-    }
-    return result;
-  }
+  // 字节转十六进制统一走 `../../domain/FieldwatchHex` 的查表实现：
+  // 原来的逐字节 `toString(16)` + `+=` 是录制里的第一号 CPU 热点（`bytesHex` 699 采样）。
+  // 顺带删掉了从未被调用的 `toHex(ArrayBuffer)` —— 星闪扫码器有自己的同名实现。
 
   private fail(message: string): void {
     this.state = ScanState.ERROR;
@@ -200,6 +209,6 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
 
   private errorMessage(error: Object): string {
     const businessError: BusinessError = error as BusinessError;
-    return 'BLE 扫描失败（' + businessError.code.toString() + '）：' + businessError.message;
+    return ngfText('app.string.fw_bl_212b') + businessError.code.toString() + ngfText('app.string.fw_bl_212c') + businessError.message;
   }
 }

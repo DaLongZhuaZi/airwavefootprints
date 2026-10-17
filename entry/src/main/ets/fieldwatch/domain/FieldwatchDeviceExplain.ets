@@ -1,3 +1,4 @@
+import { ngfText } from 'ngf_framework';
 import { RadioKind, Sighting } from './FieldwatchModels';
 import { FieldwatchRadioDb } from './FieldwatchRadioDb';
 
@@ -68,19 +69,19 @@ export class FieldwatchDeviceExplain {
    */
   flagsExplain(flags: number): string {
     const parts: string[] = [];
-    if ((flags & 0x01) !== 0) parts.push('有限可发现：正在短暂寻找附近的连接。');
-    if ((flags & 0x02) !== 0) parts.push('可发现：其它 BLE 设备能找到它。');
-    if ((flags & 0x04) !== 0) parts.push('仅 BLE：不支持经典蓝牙（耳机／传文件那条射频）。');
-    else parts.push('除 BLE 外，可能也支持经典蓝牙（BR/EDR）。');
-    if ((flags & 0x08) !== 0 || (flags & 0x10) !== 0) parts.push('双模芯片：BLE 与经典蓝牙可同时工作。');
+    if ((flags & 0x01) !== 0) parts.push(ngfText('app.string.fw_dx_71'));
+    if ((flags & 0x02) !== 0) parts.push(ngfText('app.string.fw_dx_72'));
+    if ((flags & 0x04) !== 0) parts.push(ngfText('app.string.fw_dx_73'));
+    else parts.push(ngfText('app.string.fw_dx_74'));
+    if ((flags & 0x08) !== 0 || (flags & 0x10) !== 0) parts.push(ngfText('app.string.fw_dx_75'));
     return parts.join(' ');
   }
 
   /** 物理层说明。原版按标签里的关键字分档。 */
   phyExplain(label: string): string {
-    if (label.indexOf('Coded') >= 0) return label + ' —— 长距离 BLE（更慢、更远）';
-    if (label.indexOf('2M') >= 0) return label + ' —— 更快的 BLE（蓝牙 5）';
-    if (label.indexOf('1M') >= 0) return label + ' —— 标准 BLE 无线电';
+    if (label.indexOf('Coded') >= 0) return label + ngfText('app.string.fw_dx_81');
+    if (label.indexOf('2M') >= 0) return label + ngfText('app.string.fw_dx_82');
+    if (label.indexOf('1M') >= 0) return label + ngfText('app.string.fw_dx_83');
     return label;
   }
 
@@ -94,33 +95,33 @@ export class FieldwatchDeviceExplain {
     const type: string = sighting.facts.addressType;
     const randomized: boolean = this.isRandomized(sighting.address);
     if (sighting.kind === RadioKind.WIFI && randomized) {
-      return '本地管理 BSSID。车载、Mesh 与访客 AP 常长期保留这个地址，不是手机那种轮换 MAC。';
+      return ngfText('app.string.fw_dx_97');
     }
-    if (type === 'public' && !randomized) return '公开的出厂地址（稳定，由 IEEE 分配）。';
-    if (type === 'random' || randomized) return '随机／隐私地址。MAC 会变化，因此不是持久的身份标识。';
-    if (type.length > 0) return type + ' · 通用 IEEE 地址（稳定的 OUI）。';
-    return '通用 IEEE 地址（稳定的 OUI）。';
+    if (type === 'public' && !randomized) return ngfText('app.string.fw_dx_99');
+    if (type === 'random' || randomized) return ngfText('app.string.fw_dx_100');
+    if (type.length > 0) return type + ngfText('app.string.fw_dx_101');
+    return ngfText('app.string.fw_dx_102');
   }
 
   /** 强度分档（原版 `rssiBand`）。 */
   rssiBand(rssi: number): string {
-    if (!this.measured(rssi)) return '不可用';
-    if (rssi >= -45) return '很强';
-    if (rssi >= -60) return '强';
-    if (rssi >= -75) return '中等';
-    if (rssi >= -88) return '弱';
-    return '很弱';
+    if (!this.measured(rssi)) return ngfText('app.string.fw_dx_107');
+    if (rssi >= -45) return ngfText('app.string.fw_dx_108');
+    if (rssi >= -60) return ngfText('app.string.fw_dx_109');
+    if (rssi >= -75) return ngfText('app.string.fw_dx_110');
+    if (rssi >= -88) return ngfText('app.string.fw_dx_111');
+    return ngfText('app.string.fw_dx_112');
   }
 
   /** 强度整句。 */
   rssiExplain(rssi: number): string {
-    if (!this.measured(rssi)) return '不可用';
+    if (!this.measured(rssi)) return ngfText('app.string.fw_dx_107');
     return rssi.toString() + ' dBm · ' + this.rssiBand(rssi);
   }
 
   /** 会话强度范围（原版 `Rssi.sessionRange`）。 */
   sessionRange(min: number, max: number): string {
-    if (!this.measured(min) && !this.measured(max)) return '不可用';
+    if (!this.measured(min) && !this.measured(max)) return ngfText('app.string.fw_dx_107');
     if (min === max) return min.toString() + ' dBm';
     return min.toString() + ' ~ ' + max.toString() + ' dBm';
   }
@@ -146,19 +147,19 @@ export class FieldwatchDeviceExplain {
     const bits: string[] = [];
     const upper: string = raw.toUpperCase();
     const has = (token: string): boolean => upper.indexOf(token) >= 0;
-    if (has('SAE') || has('WPA3')) bits.push('WPA3 密码（SAE 握手）');
-    if (has('OWE')) bits.push('增强开放（加密但无密码）');
-    if (has('PSK') && has('WPA2')) bits.push('WPA2 密码（PSK）');
-    else if (has('PSK') || has('WPA')) bits.push('Wi-Fi 密码（WPA/PSK）');
-    if (has('802.1X') || has('EAP')) bits.push('企业登录（802.1X）');
-    if (has('WEP')) bits.push('WEP（老旧、脆弱）');
-    if (has('ESS') && bits.length === 0) bits.push('开放网络，或加密方式未解析出来');
-    if (has('CCMP') || has('GCMP')) bits.push('AES 加密');
-    if (has('TKIP')) bits.push('TKIP（较老、较弱的密码套件）');
-    if (has('WPS')) bits.push('已启用 WPS 配网');
-    if (has('MESH')) bits.push('Mesh 节点');
-    if (has('IBSS')) bits.push('自组网（ad-hoc）');
-    if (has('ESS')) bits.push('基础设施接入点');
+    if (has('SAE') || has('WPA3')) bits.push(ngfText('app.string.fw_dx_149'));
+    if (has('OWE')) bits.push(ngfText('app.string.fw_dx_150'));
+    if (has('PSK') && has('WPA2')) bits.push(ngfText('app.string.fw_dx_151'));
+    else if (has('PSK') || has('WPA')) bits.push(ngfText('app.string.fw_dx_152'));
+    if (has('802.1X') || has('EAP')) bits.push(ngfText('app.string.fw_dx_153'));
+    if (has('WEP')) bits.push(ngfText('app.string.fw_dx_154'));
+    if (has('ESS') && bits.length === 0) bits.push(ngfText('app.string.fw_dx_155'));
+    if (has('CCMP') || has('GCMP')) bits.push(ngfText('app.string.fw_dx_156'));
+    if (has('TKIP')) bits.push(ngfText('app.string.fw_dx_157'));
+    if (has('WPS')) bits.push(ngfText('app.string.fw_dx_158'));
+    if (has('MESH')) bits.push(ngfText('app.string.fw_dx_159'));
+    if (has('IBSS')) bits.push(ngfText('app.string.fw_dx_160'));
+    if (has('ESS')) bits.push(ngfText('app.string.fw_dx_161'));
     if (bits.length === 0) return raw;
     const unique: string[] = [];
     bits.forEach((item: string): void => { if (unique.indexOf(item) < 0) unique.push(item); });
@@ -170,29 +171,29 @@ export class FieldwatchDeviceExplain {
     const name: string = this.db === undefined ? '' : this.db.serviceUuid(uuid);
     const short: number = this.uuid16(uuid);
     let extra: string = '';
-    if (short === 0x1800) extra = '连接基础服务';
-    else if (short === 0x1801) extra = '属性协议';
-    else if (short === 0x180A) extra = '型号 / 序列号 / 固件';
-    else if (short === 0x180F) extra = '电量';
-    else if (short === 0x1812) extra = '键盘、鼠标或手柄';
-    else if (short === 0x180D) extra = '心率传感器';
-    else if (short === 0x1810) extra = '血压传感器';
-    else if (short === 0x181A) extra = '温湿度一类环境传感器';
-    else if (short === 0x1844 || short === 0x1845 || short === 0x1846) extra = 'LE 骑行功率／速度';
+    if (short === 0x1800) extra = ngfText('app.string.fw_dx_173');
+    else if (short === 0x1801) extra = ngfText('app.string.fw_dx_174');
+    else if (short === 0x180A) extra = ngfText('app.string.fw_dx_175');
+    else if (short === 0x180F) extra = ngfText('app.string.fw_dx_176');
+    else if (short === 0x1812) extra = ngfText('app.string.fw_dx_177');
+    else if (short === 0x180D) extra = ngfText('app.string.fw_dx_178');
+    else if (short === 0x1810) extra = ngfText('app.string.fw_dx_179');
+    else if (short === 0x181A) extra = ngfText('app.string.fw_dx_180');
+    else if (short === 0x1844 || short === 0x1845 || short === 0x1846) extra = ngfText('app.string.fw_dx_181');
     else if (short === 0x1850 || short === 0x184E || short === 0x184F) extra = 'LE Audio';
-    else if (short === 0xFE2C) extra = 'Google Fast Pair（多为耳机／音箱）';
+    else if (short === 0xFE2C) extra = ngfText('app.string.fw_dx_183');
     else if (short === 0xFD5A) extra = 'Samsung SmartTag';
-    else if (short === 0xFD44) extra = 'Apple Find My 相关';
-    else if (short === 0xFEED || short === 0xFEDD) extra = 'Tile 追踪器';
-    else if (short === 0xFD50) extra = '涂鸦 IoT';
+    else if (short === 0xFD44) extra = ngfText('app.string.fw_dx_185');
+    else if (short === 0xFEED || short === 0xFEDD) extra = ngfText('app.string.fw_dx_186');
+    else if (short === 0xFD50) extra = ngfText('app.string.fw_dx_187');
     else if (short === 0xFEBE || short === 0xFE21) extra = 'Bose';
-    else if (short === 0xFE78) extra = 'HP 打印机';
-    else if (short === 0xFE07) extra = 'Sonos 音箱';
+    else if (short === 0xFE78) extra = ngfText('app.string.fw_dx_189');
+    else if (short === 0xFE07) extra = ngfText('app.string.fw_dx_190');
     else if (short === 0xFEAF || short === 0xFEB0) extra = 'Nest Weave';
-    else if (short === 0xFCBF) extra = 'ASSA ABLOY 门禁';
-    else if (short === 0xFE24) extra = 'August Home 门锁';
+    else if (short === 0xFCBF) extra = ngfText('app.string.fw_dx_192');
+    else if (short === 0xFE24) extra = ngfText('app.string.fw_dx_193');
     else if (short === 0xFCF4) extra = 'Allegion / Schlage';
-    else if (short === 0xFCB2) extra = 'Apple（不是 ASSA ABLOY）';
+    else if (short === 0xFCB2) extra = ngfText('app.string.fw_dx_195');
     if (name.length > 0 && extra.length > 0) return name + ' —— ' + extra;
     if (name.length > 0) return name;
     return extra;
@@ -230,9 +231,9 @@ export class FieldwatchDeviceExplain {
     if (sighting.kind === RadioKind.WIFI) this.wifiHints(sighting).forEach((item: ExplainHint): void => { hints.push(item); });
 
     if (hints.length === 0) {
-      const kindLabel: string = sighting.kind === RadioKind.WIFI ? 'Wi-Fi 接入点' : '蓝牙 LE 广播源';
+      const kindLabel: string = sighting.kind === RadioKind.WIFI ? ngfText('app.string.fw_dx_233') : ngfText('app.string.fw_dx_234');
       return new ExplainGuess(kindLabel, kindLabel,
-        '它确实在广播，但没有声明任何产品类别（没有 Appearance、Class of Device，也没有知名的服务）。',
+        ngfText('app.string.fw_dx_235'),
         ExplainConfidence.LOW, true);
     }
     // 按 bucket 分组，每组只留权重最高的一条 —— 同一类线索互相竞争，不叠加。
@@ -246,7 +247,7 @@ export class FieldwatchDeviceExplain {
       if (top === undefined || hint.weight > top.weight) top = hint;
     });
     if (top === undefined) {
-      return new ExplainGuess('未知广播源', '未知广播源', '线索不足。', ExplainConfidence.LOW, true);
+      return new ExplainGuess(ngfText('app.string.fw_dx_249'), ngfText('app.string.fw_dx_249'), ngfText('app.string.fw_dx_250'), ExplainConfidence.LOW, true);
     }
     const winner: ExplainHint = top;
     const reasons: string[] = [];
@@ -257,10 +258,10 @@ export class FieldwatchDeviceExplain {
     });
     const confidence: ExplainConfidence = winner.weight >= 6 ? ExplainConfidence.HIGH
       : (winner.weight >= 3 ? ExplainConfidence.MEDIUM : ExplainConfidence.LOW);
-    const hedge: string = confidence === ExplainConfidence.HIGH ? '很可能是'
-      : (confidence === ExplainConfidence.MEDIUM ? '可能是' : '也许是');
+    const hedge: string = confidence === ExplainConfidence.HIGH ? ngfText('app.string.fw_dx_260')
+      : (confidence === ExplainConfidence.MEDIUM ? ngfText('app.string.fw_dx_261') : ngfText('app.string.fw_dx_262'));
     return new ExplainGuess(hedge + winner.label, winner.label,
-      reasons.join('') + '这是设备自己广播的内容，不是视觉识别结果。', confidence, false);
+      reasons.join('') + ngfText('app.string.fw_dx_263'), confidence, false);
   }
 
   /** GAP Appearance → 提示。权重按「这个类别有多具体」给。 */
@@ -272,27 +273,27 @@ export class FieldwatchDeviceExplain {
     let label: string = name;
     let weight: number = 3;
     if (has('ear') || has('headphone') || has('headset') || has('hearable') || has('hearing')) {
-      bucket = 'audio-personal'; label = '耳机或头戴耳机'; weight = 7;
+      bucket = 'audio-personal'; label = ngfText('app.string.fw_dx_275'); weight = 7;
     } else if (has('speaker') || has('hifi')) {
-      bucket = 'audio-speaker'; label = '音箱'; weight = 7;
-    } else if (has('mouse')) { bucket = 'mouse'; label = '鼠标'; weight = 8;
-    } else if (has('keyboard')) { bucket = 'keyboard'; label = '键盘'; weight = 8;
-    } else if (has('gamepad') || has('joystick')) { bucket = 'gamepad'; label = '游戏手柄'; weight = 7;
-    } else if (has('watch')) { bucket = 'watch'; label = '手表或腕戴设备'; weight = 7;
-    } else if (has('phone')) { bucket = 'phone'; label = '手机'; weight = 6;
+      bucket = 'audio-speaker'; label = ngfText('app.string.fw_dx_277'); weight = 7;
+    } else if (has('mouse')) { bucket = 'mouse'; label = ngfText('app.string.fw_dx_278'); weight = 8;
+    } else if (has('keyboard')) { bucket = 'keyboard'; label = ngfText('app.string.fw_dx_279'); weight = 8;
+    } else if (has('gamepad') || has('joystick')) { bucket = 'gamepad'; label = ngfText('app.string.fw_dx_280'); weight = 7;
+    } else if (has('watch')) { bucket = 'watch'; label = ngfText('app.string.fw_dx_281'); weight = 7;
+    } else if (has('phone')) { bucket = 'phone'; label = ngfText('app.string.fw_dx_282'); weight = 6;
     } else if (has('laptop') || has('computer') || has('desktop') || has('tablet')) {
-      bucket = 'computer'; label = '电脑或平板'; weight = 6;
-    } else if (has('tag') || has('keyring')) { bucket = 'tag'; label = '查找标签 / 追踪器'; weight = 6;
-    } else if (has('remote')) { bucket = 'remote'; label = '遥控器'; weight = 6;
-    } else if (has('hid')) { bucket = 'hid'; label = '输入设备（键盘、鼠标之类）'; weight = 4;
-    } else if (has('heart')) { bucket = 'health'; label = '心率监测器'; weight = 7;
+      bucket = 'computer'; label = ngfText('app.string.fw_dx_284'); weight = 6;
+    } else if (has('tag') || has('keyring')) { bucket = 'tag'; label = ngfText('app.string.fw_dx_285'); weight = 6;
+    } else if (has('remote')) { bucket = 'remote'; label = ngfText('app.string.fw_dx_286'); weight = 6;
+    } else if (has('hid')) { bucket = 'hid'; label = ngfText('app.string.fw_dx_287'); weight = 4;
+    } else if (has('heart')) { bucket = 'health'; label = ngfText('app.string.fw_dx_288'); weight = 7;
     } else if (has('glucose') || has('oximeter') || has('blood pressure') || has('thermometer')) {
-      bucket = 'health'; label = '健康传感器'; weight = 6;
-    } else if (has('display') || has('monitor')) { bucket = 'display'; label = '显示器或电视棒'; weight = 4;
-    } else if (has('clock')) { bucket = 'clock'; label = '时钟'; weight = 5;
-    } else if (has('glasses')) { bucket = 'glasses'; label = '智能眼镜'; weight = 6;
+      bucket = 'health'; label = ngfText('app.string.fw_dx_290'); weight = 6;
+    } else if (has('display') || has('monitor')) { bucket = 'display'; label = ngfText('app.string.fw_dx_291'); weight = 4;
+    } else if (has('clock')) { bucket = 'clock'; label = ngfText('app.string.fw_dx_292'); weight = 5;
+    } else if (has('glasses')) { bucket = 'glasses'; label = ngfText('app.string.fw_dx_293'); weight = 6;
     }
-    return new ExplainHint(bucket, label, '它声明的外观（Appearance）是 ' + name + '。', weight);
+    return new ExplainHint(bucket, label, ngfText('app.string.fw_dx_295') + name + '。', weight);
   }
 
   /** 经典蓝牙 Class of Device → 提示。鸿蒙不解析 CoD，我们自己解主/次类别。 */
@@ -305,32 +306,32 @@ export class FieldwatchDeviceExplain {
     let weight: number = 0;
     // 主类别 4 = 音频/视频；次类别区分耳机、音箱、车载…
     if (major === 4) {
-      if (minor === 1 || minor === 2 || minor === 6) { bucket = 'audio-personal'; label = '耳机或头戴耳机'; weight = 6; }
-      else if (minor === 3 || minor === 4 || minor === 5 || minor === 7) { bucket = 'audio-speaker'; label = '音箱'; weight = 6; }
-      else { bucket = 'audio-personal'; label = '音频设备'; weight = 3; }
+      if (minor === 1 || minor === 2 || minor === 6) { bucket = 'audio-personal'; label = ngfText('app.string.fw_dx_275'); weight = 6; }
+      else if (minor === 3 || minor === 4 || minor === 5 || minor === 7) { bucket = 'audio-speaker'; label = ngfText('app.string.fw_dx_277'); weight = 6; }
+      else { bucket = 'audio-personal'; label = ngfText('app.string.fw_dx_310'); weight = 3; }
     } else if (major === 5) {
       // 外设：次类别 1=键盘 2=指点设备 3=组合
-      if (minor === 2) { bucket = 'mouse'; label = '鼠标'; weight = 7; }
-      else if (minor === 1) { bucket = 'keyboard'; label = '键盘'; weight = 7; }
-      else if (minor === 3) { bucket = 'hid'; label = '输入设备'; weight = 5; }
-      else if (minor === 4 || minor === 5) { bucket = 'gamepad'; label = '游戏手柄'; weight = 6; }
-      else { bucket = 'hid'; label = '输入配件'; weight = 3; }
+      if (minor === 2) { bucket = 'mouse'; label = ngfText('app.string.fw_dx_278'); weight = 7; }
+      else if (minor === 1) { bucket = 'keyboard'; label = ngfText('app.string.fw_dx_279'); weight = 7; }
+      else if (minor === 3) { bucket = 'hid'; label = ngfText('app.string.fw_dx_315'); weight = 5; }
+      else if (minor === 4 || minor === 5) { bucket = 'gamepad'; label = ngfText('app.string.fw_dx_280'); weight = 6; }
+      else { bucket = 'hid'; label = ngfText('app.string.fw_dx_317'); weight = 3; }
     } else if (major === 2) {
       // 电话：次类别区分手机与无绳电话
-      if (minor === 3 || minor === 4 || minor === 5) { bucket = 'phone'; label = '手机'; weight = 5; }
+      if (minor === 3 || minor === 4 || minor === 5) { bucket = 'phone'; label = ngfText('app.string.fw_dx_282'); weight = 5; }
       else return undefined;
     } else if (major === 1) {
-      if (minor === 3 || minor === 4) { bucket = 'computer'; label = '电脑'; weight = 5; }
-      else if (minor === 7) { bucket = 'watch'; label = '手表'; weight = 6; }
+      if (minor === 3 || minor === 4) { bucket = 'computer'; label = ngfText('app.string.fw_dx_323'); weight = 5; }
+      else if (minor === 7) { bucket = 'watch'; label = ngfText('app.string.fw_dx_324'); weight = 6; }
       else return undefined;
     } else if (major === 6) {
-      if (minor === 2 || minor === 3 || minor === 4 || minor === 5) { bucket = 'health'; label = '健康传感器'; weight = 6; }
+      if (minor === 2 || minor === 3 || minor === 4 || minor === 5) { bucket = 'health'; label = ngfText('app.string.fw_dx_290'); weight = 6; }
       else return undefined;
     } else {
       // 未分类（0）与杂项（31）不构成线索 —— 原版同样直接返回 null。
       return undefined;
     }
-    return new ExplainHint(bucket, label, 'Class of Device 显示它是' + label + '。', weight);
+    return new ExplainHint(bucket, label, ngfText('app.string.fw_dx_333') + label + '。', weight);
   }
 
   /** 知名服务 UUID → 提示。 */
@@ -346,16 +347,16 @@ export class FieldwatchDeviceExplain {
       const id: number = this.uuid16(uuid);
       if (id < 0 || seen.indexOf(id) >= 0) return;
       seen.push(id);
-      if (id === 0x1812) out.push(new ExplainHint('hid', '键盘、鼠标或手柄', '它提供 HID（人机接口）服务。', 5));
+      if (id === 0x1812) out.push(new ExplainHint('hid', ngfText('app.string.fw_dx_177'), ngfText('app.string.fw_dx_350'), 5));
       else if (id === 0x184E || id === 0x184F || id === 0x1850 || id === 0x1851) {
-        out.push(new ExplainHint('audio-personal', 'LE Audio 耳机或音箱', '它提供蓝牙 LE Audio 服务。', 6));
-      } else if (id === 0x180D) out.push(new ExplainHint('health', '心率监测器', '它提供心率服务。', 6));
-      else if (id === 0x1810) out.push(new ExplainHint('health', '血压计', '它提供血压服务。', 6));
-      else if (id === 0x181A) out.push(new ExplainHint('sensor', '环境传感器', '它提供环境感知服务。', 4));
-      else if (id === 0xFE2C) out.push(new ExplainHint('audio-personal', '耳机或音箱', '带 Google Fast Pair（多见于耳机与音箱）。', 5));
-      else if (id === 0xFD5A) out.push(new ExplainHint('tag', 'Samsung SmartTag', 'SmartTag 服务 UUID。', 7));
-      else if (id === 0xFD44) out.push(new ExplainHint('tag', 'Apple Find My 配件', 'Find My 相关 UUID。', 6));
-      else if (id === 0xFEED || id === 0xFEDD) out.push(new ExplainHint('tag', 'Tile 追踪器', 'Tile 服务 UUID。', 7));
+        out.push(new ExplainHint('audio-personal', ngfText('app.string.fw_dx_351'), ngfText('app.string.fw_dx_352'), 6));
+      } else if (id === 0x180D) out.push(new ExplainHint('health', ngfText('app.string.fw_dx_288'), ngfText('app.string.fw_dx_353'), 6));
+      else if (id === 0x1810) out.push(new ExplainHint('health', ngfText('app.string.fw_dx_353'), ngfText('app.string.fw_dx_354'), 6));
+      else if (id === 0x181A) out.push(new ExplainHint('sensor', ngfText('app.string.fw_dx_354'), ngfText('app.string.fw_dx_355'), 4));
+      else if (id === 0xFE2C) out.push(new ExplainHint('audio-personal', ngfText('app.string.fw_dx_355'), ngfText('app.string.fw_dx_356'), 5));
+      else if (id === 0xFD5A) out.push(new ExplainHint('tag', 'Samsung SmartTag', ngfText('app.string.fw_dx_356'), 7));
+      else if (id === 0xFD44) out.push(new ExplainHint('tag', ngfText('app.string.fw_dx_357'), ngfText('app.string.fw_dx_358'), 6));
+      else if (id === 0xFEED || id === 0xFEDD) out.push(new ExplainHint('tag', ngfText('app.string.fw_dx_186'), 'Tile 服务 UUID。', 7));
     });
     return out;
   }
@@ -375,7 +376,7 @@ export class FieldwatchDeviceExplain {
       if (lower.indexOf('unknown') >= 0 || lower.indexOf('generic') >= 0) return;
       const weight: number = names.length >= 2 ? 7 : 6;
       out.push(new ExplainHint('signature:' + name, name,
-        '匹配到特征 ' + name + '。', weight));
+        ngfText('app.string.fw_dx_378') + name + '。', weight));
     });
     return out;
   }
@@ -384,7 +385,7 @@ export class FieldwatchDeviceExplain {
   private wifiHints(sighting: Sighting): ExplainHint[] {
     const out: ExplainHint[] = [];
     if (sighting.facts.hiddenSsid) {
-      out.push(new ExplainHint('wifi-hidden', '隐藏 SSID 的接入点', '它在广播但刻意不公布网络名。', 4));
+      out.push(new ExplainHint('wifi-hidden', ngfText('app.string.fw_dx_387'), ngfText('app.string.fw_dx_388'), 4));
     }
     return out;
   }

@@ -1,9 +1,10 @@
 import { BusinessError } from '@kit.BasicServicesKit';
 import { Permissions } from '@kit.AbilityKit';
 import { wifiManager } from '@kit.ConnectivityKit';
-import { logger, ngfLocationManagerFacade, ngfPermissionManagerFacade } from 'ngf_framework';
+import { logger, ngfLocationManagerFacade, ngfPermissionManagerFacade, ngfText } from 'ngf_framework';
 import { RadioFacts, RadioKind, RadioSourceSnapshot, ScanObservation, ScanState, ServiceDataRecord, WifiScanPhase } from '../domain/FieldwatchModels';
 import { IFieldwatchRadioScanner } from './FieldwatchRadioScanner';
+import { bytesToHex } from '../domain/FieldwatchHex';
 
 const TAG: string = 'FieldwatchWifiScanner';
 const SYSTEM_REJECTED: number = 2501000;
@@ -142,7 +143,7 @@ export class FieldwatchWifiScanner implements IFieldwatchRadioScanner {
       this.platform.onScanStateChange(this.onScanStateChange);
       this.eventSubscribed = true;
     } catch (error) {
-      this.handleFailureCode(this.codeOf(error), '注册 Wi-Fi 扫描状态监听失败');
+      this.handleFailureCode(this.codeOf(error), ngfText('app.string.fw_wf_146'));
     }
   }
 
@@ -157,16 +158,16 @@ export class FieldwatchWifiScanner implements IFieldwatchRadioScanner {
       return;
     }
     if (!this.permissionChecker.check('ohos.permission.GET_WIFI_INFO') || !this.permissionChecker.check('ohos.permission.SET_WIFI_INFO')) {
-      this.handleFailureCode(PERMISSION_DENIED, 'Wi-Fi 信息权限未授予，请重新授权');
+      this.handleFailureCode(PERMISSION_DENIED, ngfText('app.string.fw_wf_161'));
       return;
     }
     if (!this.platform.isWifiActive()) {
-      this.handleFailureCode(WIFI_DISABLED, 'Wi-Fi 未开启，请先打开 Wi-Fi');
+      this.handleFailureCode(WIFI_DISABLED, ngfText('app.string.fw_wf_165'));
       return;
     }
     if (!this.platform.isLocationEnabled()) {
       this.lastErrorCode = 0;
-      this.lastErrorMessage = '系统位置信息未开启，Wi-Fi 扫描需要位置服务';
+      this.lastErrorMessage = ngfText('app.string.fw_wf_170');
       this.nextAttemptAt = 0;
       this.phase = WifiScanPhase.LOCATION_DISABLED;
       this.state = ScanState.ERROR;
@@ -196,7 +197,7 @@ export class FieldwatchWifiScanner implements IFieldwatchRadioScanner {
       this.handleSuccess();
     } else {
       this.awaitingScan = false;
-      this.handleFailureCode(SYSTEM_REJECTED, '系统暂时拒绝或节流 Wi-Fi 扫描');
+      this.handleFailureCode(SYSTEM_REJECTED, ngfText('app.string.fw_wf_200'));
     }
   };
 
@@ -339,11 +340,9 @@ export class FieldwatchWifiScanner implements IFieldwatchRadioScanner {
     return result;
   }
 
+  /** 字节 → 十六进制；走 `FieldwatchHex` 的查表实现（逐字节拼串是录制里的热点）。 */
   private bytesHex(data: Uint8Array): string {
-    const bytes: Uint8Array = data;
-    let result: string = '';
-    for (let index: number = 0; index < bytes.length; index += 1) { const value: string = bytes[index].toString(16).toUpperCase(); result += value.length === 1 ? '0' + value : value; }
-    return result;
+    return bytesToHex(data);
   }
 
   private scheduleRetry(delay: number): void {
@@ -355,7 +354,7 @@ export class FieldwatchWifiScanner implements IFieldwatchRadioScanner {
   private clearRetryTimer(): void { if (this.retryTimer >= 0) { clearTimeout(this.retryTimer); this.retryTimer = -1; } }
   private publishState(): void { this.lastSnapshot = new RadioSourceSnapshot(this.kind, this.phase, this.lastSuccessAt, this.nextAttemptAt, this.phase === WifiScanPhase.READY && this.lastSnapshot.fresh, this.lastErrorCode, this.lastErrorMessage, this.lastResults.length); if (this.stateHandler !== undefined) this.stateHandler(this.lastSnapshot); }
   private codeOf(error: Object): number { const businessError: BusinessError = error as BusinessError; return businessError.code === undefined ? 0 : businessError.code; }
-  private errorMessage(error: Object): string { const businessError: BusinessError = error as BusinessError; return businessError.message === undefined ? 'Wi-Fi 扫描失败' : businessError.message; }
+  private errorMessage(error: Object): string { const businessError: BusinessError = error as BusinessError; return businessError.message === undefined ? ngfText('app.string.fw_wf_357') : businessError.message; }
 }
 
 class DefaultWifiPermissionChecker implements IFieldwatchWifiPermissionChecker {

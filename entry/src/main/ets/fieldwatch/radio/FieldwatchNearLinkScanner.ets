@@ -1,6 +1,6 @@
 import { BusinessError } from '@kit.BasicServicesKit';
 import { manager as nearlinkManager, scan as nearlinkScan } from '@kit.ConnectivityKit';
-import { logger } from 'ngf_framework';
+import { logger, ngfText } from 'ngf_framework';
 import { RadioFacts, RadioKind, RadioSourceSnapshot, ScanObservation, ScanState } from '../domain/FieldwatchModels';
 import { IFieldwatchRadioScanner } from './FieldwatchRadioScanner';
 
@@ -45,11 +45,11 @@ export class FieldwatchNearLinkScanner implements IFieldwatchRadioScanner {
     try {
       supported = nearlinkManager.isNearLinkSupported();
     } catch (error) {
-      this.fail('星闪能力探测失败：' + this.errorMessage(error));
+      this.fail(ngfText('app.string.fw_nl_48') + this.errorMessage(error));
       return;
     }
     if (!supported) {
-      this.fail('本机不支持星闪');
+      this.fail(ngfText('app.string.fw_nl_52'));
       return;
     }
 
@@ -57,11 +57,11 @@ export class FieldwatchNearLinkScanner implements IFieldwatchRadioScanner {
     try {
       const state: nearlinkManager.NearlinkState = nearlinkManager.getState();
       if (state !== nearlinkManager.NearlinkState.STATE_ON) {
-        this.fail('星闪未开启，请先开启星闪后重试');
+        this.fail(ngfText('app.string.fw_nl_60'));
         return;
       }
     } catch (error) {
-      this.fail('读取星闪状态失败：' + this.errorMessage(error));
+      this.fail(ngfText('app.string.fw_nl_64') + this.errorMessage(error));
       return;
     }
 
@@ -151,10 +151,10 @@ export class FieldwatchNearLinkScanner implements IFieldwatchRadioScanner {
   /** 把星闪错误码翻译成用户可读的说明，而不是把错误码直接抛给用户。 */
   private describeScanError(error: BusinessError): string {
     const code: number = error.code;
-    if (code === 201) return '星闪扫描权限未授予';
-    if (code === 801) return '本机不支持星闪';
-    if (code === 36100003) return '星闪未开启，请先开启星闪后重试';
-    return '星闪扫描失败（' + code.toString() + '）：' + error.message;
+    if (code === 201) return ngfText('app.string.fw_nl_154');
+    if (code === 801) return ngfText('app.string.fw_nl_52');
+    if (code === 36100003) return ngfText('app.string.fw_nl_60');
+    return ngfText('app.string.fw_nl_157') + code.toString() + '）：' + error.message;
   }
 
   private errorMessage(error: Object): string {

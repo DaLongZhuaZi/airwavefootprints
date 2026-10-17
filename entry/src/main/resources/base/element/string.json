@@ -974,55 +974,55 @@
     },
     {
       "name": "auto_str_1092",
-      "value": "just_now', ['たった今"
+      "value": "刚刚"
     },
     {
       "name": "auto_str_1093",
-      "value": "minute_ago', ['{}分前"
+      "value": "{}分钟前"
     },
     {
       "name": "auto_str_1094",
-      "value": "hour_ago', ['{}時間前"
+      "value": "{}小时前"
     },
     {
       "name": "auto_str_1095",
-      "value": "day_ago', ['{}日前"
+      "value": "{}天前"
     },
     {
       "name": "auto_str_1096",
-      "value": "week_ago', ['{}週間前"
+      "value": "{}周前"
     },
     {
       "name": "auto_str_1097",
-      "value": "month_ago', ['{}ヶ月前"
+      "value": "{}个月前"
     },
     {
       "name": "auto_str_1098",
-      "value": "second_later', ['{}秒後"
+      "value": "{}秒后"
     },
     {
       "name": "auto_str_1099",
-      "value": "minute_later', ['{}分後"
+      "value": "{}分钟后"
     },
     {
       "name": "auto_str_1100",
-      "value": "hour_later', ['{}時間後"
+      "value": "{}小时后"
     },
     {
       "name": "auto_str_1101",
-      "value": "day_later', ['{}日後"
+      "value": "{}天后"
     },
     {
       "name": "auto_str_1102",
-      "value": "week_later', ['{}週間後"
+      "value": "{}周后"
     },
     {
       "name": "auto_str_1103",
-      "value": "month_later', ['{}ヶ月後"
+      "value": "{}个月后"
     },
     {
       "name": "auto_str_1104",
-      "value": "year_later', ['{}年後"
+      "value": "{}年后"
     },
     {
       "name": "auto_str_1105",
@@ -9691,6 +9691,966 @@
     {
       "name": "fieldwatch_settings_mode_hint",
       "value": "决定打开应用时实时页默认显示「日常」还是「专业」。"
+    },
+    {
+      "name": "fieldwatch_settings_language",
+      "value": "语言"
+    },
+    {
+      "name": "fieldwatch_settings_language_system",
+      "value": "跟随系统"
+    },
+    {
+      "name": "fw_dx_71",
+      "value": "有限可发现：正在短暂寻找附近的连接。"
+    },
+    {
+      "name": "fw_dx_72",
+      "value": "可发现：其它 BLE 设备能找到它。"
+    },
+    {
+      "name": "fw_dx_73",
+      "value": "仅 BLE：不支持经典蓝牙（耳机／传文件那条射频）。"
+    },
+    {
+      "name": "fw_dx_74",
+      "value": "除 BLE 外，可能也支持经典蓝牙（BR/EDR）。"
+    },
+    {
+      "name": "fw_dx_75",
+      "value": "双模芯片：BLE 与经典蓝牙可同时工作。"
+    },
+    {
+      "name": "fw_dx_81",
+      "value": " —— 长距离 BLE（更慢、更远）"
+    },
+    {
+      "name": "fw_dx_82",
+      "value": " —— 更快的 BLE（蓝牙 5）"
+    },
+    {
+      "name": "fw_dx_83",
+      "value": " —— 标准 BLE 无线电"
+    },
+    {
+      "name": "fw_dx_97",
+      "value": "本地管理 BSSID。车载、Mesh 与访客 AP 常长期保留这个地址，不是手机那种轮换 MAC。"
+    },
+    {
+      "name": "fw_dx_99",
+      "value": "公开的出厂地址（稳定，由 IEEE 分配）。"
+    },
+    {
+      "name": "fw_dx_100",
+      "value": "随机／隐私地址。MAC 会变化，因此不是持久的身份标识。"
+    },
+    {
+      "name": "fw_dx_101",
+      "value": " · 通用 IEEE 地址（稳定的 OUI）。"
+    },
+    {
+      "name": "fw_dx_102",
+      "value": "通用 IEEE 地址（稳定的 OUI）。"
+    },
+    {
+      "name": "fw_dx_107",
+      "value": "不可用"
+    },
+    {
+      "name": "fw_dx_108",
+      "value": "很强"
+    },
+    {
+      "name": "fw_dx_109",
+      "value": "强"
+    },
+    {
+      "name": "fw_dx_110",
+      "value": "中等"
+    },
+    {
+      "name": "fw_dx_111",
+      "value": "弱"
+    },
+    {
+      "name": "fw_dx_112",
+      "value": "很弱"
+    },
+    {
+      "name": "fw_dx_149",
+      "value": "WPA3 密码（SAE 握手）"
+    },
+    {
+      "name": "fw_dx_150",
+      "value": "增强开放（加密但无密码）"
+    },
+    {
+      "name": "fw_dx_151",
+      "value": "WPA2 密码（PSK）"
+    },
+    {
+      "name": "fw_dx_152",
+      "value": "Wi-Fi 密码（WPA/PSK）"
+    },
+    {
+      "name": "fw_dx_153",
+      "value": "企业登录（802.1X）"
+    },
+    {
+      "name": "fw_dx_154",
+      "value": "WEP（老旧、脆弱）"
+    },
+    {
+      "name": "fw_dx_155",
+      "value": "开放网络，或加密方式未解析出来"
+    },
+    {
+      "name": "fw_dx_156",
+      "value": "AES 加密"
+    },
+    {
+      "name": "fw_dx_157",
+      "value": "TKIP（较老、较弱的密码套件）"
+    },
+    {
+      "name": "fw_dx_158",
+      "value": "已启用 WPS 配网"
+    },
+    {
+      "name": "fw_dx_159",
+      "value": "Mesh 节点"
+    },
+    {
+      "name": "fw_dx_160",
+      "value": "自组网（ad-hoc）"
+    },
+    {
+      "name": "fw_dx_161",
+      "value": "基础设施接入点"
+    },
+    {
+      "name": "fw_dx_173",
+      "value": "连接基础服务"
+    },
+    {
+      "name": "fw_dx_174",
+      "value": "属性协议"
+    },
+    {
+      "name": "fw_dx_175",
+      "value": "型号 / 序列号 / 固件"
+    },
+    {
+      "name": "fw_dx_176",
+      "value": "电量"
+    },
+    {
+      "name": "fw_dx_177",
+      "value": "键盘、鼠标或手柄"
+    },
+    {
+      "name": "fw_dx_178",
+      "value": "心率传感器"
+    },
+    {
+      "name": "fw_dx_179",
+      "value": "血压传感器"
+    },
+    {
+      "name": "fw_dx_180",
+      "value": "温湿度一类环境传感器"
+    },
+    {
+      "name": "fw_dx_181",
+      "value": "LE 骑行功率／速度"
+    },
+    {
+      "name": "fw_dx_183",
+      "value": "Google Fast Pair（多为耳机／音箱）"
+    },
+    {
+      "name": "fw_dx_185",
+      "value": "Apple Find My 相关"
+    },
+    {
+      "name": "fw_dx_186",
+      "value": "Tile 追踪器"
+    },
+    {
+      "name": "fw_dx_187",
+      "value": "涂鸦 IoT"
+    },
+    {
+      "name": "fw_dx_189",
+      "value": "HP 打印机"
+    },
+    {
+      "name": "fw_dx_190",
+      "value": "Sonos 音箱"
+    },
+    {
+      "name": "fw_dx_192",
+      "value": "ASSA ABLOY 门禁"
+    },
+    {
+      "name": "fw_dx_193",
+      "value": "August Home 门锁"
+    },
+    {
+      "name": "fw_dx_195",
+      "value": "Apple（不是 ASSA ABLOY）"
+    },
+    {
+      "name": "fw_dx_233",
+      "value": "Wi-Fi 接入点"
+    },
+    {
+      "name": "fw_dx_235",
+      "value": "它确实在广播，但没有声明任何产品类别（没有 Appearance、Class of Device，也没有知名的服务）。"
+    },
+    {
+      "name": "fw_dx_249",
+      "value": "未知广播源"
+    },
+    {
+      "name": "fw_dx_260",
+      "value": "很可能是"
+    },
+    {
+      "name": "fw_dx_261",
+      "value": "可能是"
+    },
+    {
+      "name": "fw_dx_263",
+      "value": "这是设备自己广播的内容，不是视觉识别结果。"
+    },
+    {
+      "name": "fw_dx_275",
+      "value": "耳机或头戴耳机"
+    },
+    {
+      "name": "fw_dx_277",
+      "value": "音箱"
+    },
+    {
+      "name": "fw_dx_278",
+      "value": "鼠标"
+    },
+    {
+      "name": "fw_dx_279",
+      "value": "键盘"
+    },
+    {
+      "name": "fw_dx_280",
+      "value": "游戏手柄"
+    },
+    {
+      "name": "fw_dx_281",
+      "value": "手表或腕戴设备"
+    },
+    {
+      "name": "fw_dx_282",
+      "value": "手机"
+    },
+    {
+      "name": "fw_dx_284",
+      "value": "电脑或平板"
+    },
+    {
+      "name": "fw_dx_285",
+      "value": "查找标签 / 追踪器"
+    },
+    {
+      "name": "fw_dx_286",
+      "value": "遥控器"
+    },
+    {
+      "name": "fw_dx_287",
+      "value": "输入设备（键盘、鼠标之类）"
+    },
+    {
+      "name": "fw_dx_288",
+      "value": "心率监测器"
+    },
+    {
+      "name": "fw_dx_290",
+      "value": "健康传感器"
+    },
+    {
+      "name": "fw_dx_291",
+      "value": "显示器或电视棒"
+    },
+    {
+      "name": "fw_dx_292",
+      "value": "时钟"
+    },
+    {
+      "name": "fw_dx_293",
+      "value": "智能眼镜"
+    },
+    {
+      "name": "fw_dx_295",
+      "value": "它声明的外观（Appearance）是 "
+    },
+    {
+      "name": "fw_dx_310",
+      "value": "音频设备"
+    },
+    {
+      "name": "fw_dx_315",
+      "value": "输入设备"
+    },
+    {
+      "name": "fw_dx_317",
+      "value": "输入配件"
+    },
+    {
+      "name": "fw_dx_323",
+      "value": "电脑"
+    },
+    {
+      "name": "fw_dx_324",
+      "value": "手表"
+    },
+    {
+      "name": "fw_dx_333",
+      "value": "Class of Device 显示它是"
+    },
+    {
+      "name": "fw_dx_351",
+      "value": "LE Audio 耳机或音箱"
+    },
+    {
+      "name": "fw_dx_353",
+      "value": "血压计"
+    },
+    {
+      "name": "fw_dx_354",
+      "value": "环境传感器"
+    },
+    {
+      "name": "fw_dx_355",
+      "value": "耳机或音箱"
+    },
+    {
+      "name": "fw_dx_356",
+      "value": "SmartTag 服务 UUID。"
+    },
+    {
+      "name": "fw_dx_357",
+      "value": "Apple Find My 配件"
+    },
+    {
+      "name": "fw_dx_378",
+      "value": "匹配到特征 "
+    },
+    {
+      "name": "fw_dx_387",
+      "value": "隐藏 SSID 的接入点"
+    },
+    {
+      "name": "fw_dt_40",
+      "value": "手机"
+    },
+    {
+      "name": "fw_dt_41",
+      "value": "计算机"
+    },
+    {
+      "name": "fw_dt_42",
+      "value": "笔记本"
+    },
+    {
+      "name": "fw_dt_43",
+      "value": "平板"
+    },
+    {
+      "name": "fw_dt_44",
+      "value": "一体机"
+    },
+    {
+      "name": "fw_dt_45",
+      "value": "迷你主机"
+    },
+    {
+      "name": "fw_dt_46",
+      "value": "手表"
+    },
+    {
+      "name": "fw_dt_47",
+      "value": "人机接口设备"
+    },
+    {
+      "name": "fw_dt_48",
+      "value": "键盘"
+    },
+    {
+      "name": "fw_dt_49",
+      "value": "鼠标"
+    },
+    {
+      "name": "fw_dt_50",
+      "value": "手柄"
+    },
+    {
+      "name": "fw_dt_51",
+      "value": "手写笔"
+    },
+    {
+      "name": "fw_dt_52",
+      "value": "触控板"
+    },
+    {
+      "name": "fw_dt_53",
+      "value": "音频播放设备"
+    },
+    {
+      "name": "fw_dt_54",
+      "value": "智能音箱"
+    },
+    {
+      "name": "fw_dt_55",
+      "value": "回音壁"
+    },
+    {
+      "name": "fw_dt_56",
+      "value": "音频采集设备"
+    },
+    {
+      "name": "fw_dt_57",
+      "value": "K 歌麦克风"
+    },
+    {
+      "name": "fw_dt_58",
+      "value": "领夹麦克风"
+    },
+    {
+      "name": "fw_dt_59",
+      "value": "可穿戴音频"
+    },
+    {
+      "name": "fw_dt_60",
+      "value": "入耳式耳机"
+    },
+    {
+      "name": "fw_dt_61",
+      "value": "头戴耳机"
+    },
+    {
+      "name": "fw_dt_62",
+      "value": "包耳式耳机"
+    },
+    {
+      "name": "fw_dt_63",
+      "value": "颈挂式耳机"
+    },
+    {
+      "name": "fw_dt_64",
+      "value": "个人护理设备"
+    },
+    {
+      "name": "fw_dt_65",
+      "value": "电动牙刷"
+    },
+    {
+      "name": "fw_dt_66",
+      "value": "智能水杯"
+    },
+    {
+      "name": "fw_dt_67",
+      "value": "电动剃须刀"
+    },
+    {
+      "name": "fw_dt_68",
+      "value": "暖通设备"
+    },
+    {
+      "name": "fw_dt_69",
+      "value": "空气净化器"
+    },
+    {
+      "name": "fw_dt_70",
+      "value": "加湿器"
+    },
+    {
+      "name": "fw_dt_71",
+      "value": "循环扇"
+    },
+    {
+      "name": "fw_dt_72",
+      "value": "电动出行设备"
+    },
+    {
+      "name": "fw_dt_73",
+      "value": "电动滑板车"
+    },
+    {
+      "name": "fw_dt_74",
+      "value": "电动自行车"
+    },
+    {
+      "name": "fw_dt_75",
+      "value": "灯具"
+    },
+    {
+      "name": "fw_dt_76",
+      "value": "智能台灯"
+    },
+    {
+      "name": "fw_dt_77",
+      "value": "遥控器"
+    },
+    {
+      "name": "fw_dt_78",
+      "value": "电视遥控器"
+    },
+    {
+      "name": "fw_dt_79",
+      "value": "影像设备"
+    },
+    {
+      "name": "fw_dt_80",
+      "value": "智慧屏"
+    },
+    {
+      "name": "fw_dt_81",
+      "value": "网络摄像头"
+    },
+    {
+      "name": "fw_dt_82",
+      "value": "投屏器"
+    },
+    {
+      "name": "fw_dt_83",
+      "value": "网络设备"
+    },
+    {
+      "name": "fw_dt_84",
+      "value": "IoT 网关"
+    },
+    {
+      "name": "fw_dt_85",
+      "value": "门禁设备"
+    },
+    {
+      "name": "fw_dt_86",
+      "value": "智能门锁"
+    },
+    {
+      "name": "fw_dt_87",
+      "value": "智能钥匙"
+    },
+    {
+      "name": "fw_dt_88",
+      "value": "车钥匙"
+    },
+    {
+      "name": "fw_dt_89",
+      "value": "车锁"
+    },
+    {
+      "name": "fw_dt_90",
+      "value": "未分类设备"
+    },
+    {
+      "name": "fw_cand_156",
+      "value": "已标记"
+    },
+    {
+      "name": "fw_cand_157",
+      "value": "匹配到特征 "
+    },
+    {
+      "name": "fw_cand_158",
+      "value": "。第二条特征仍可能同时标记这台无线电（服务 UUID、产品 OUI）。"
+    },
+    {
+      "name": "fw_cand_162",
+      "value": "仅此一台"
+    },
+    {
+      "name": "fw_cand_163",
+      "value": "没有可聚类的空中唯一 ID。随机地址、家用型名称与通用芯片会被跳过。"
+    },
+    {
+      "name": "fw_cand_184",
+      "value": "在场设备里没有别的 MAC 共享这个空中唯一 ID。从这里建的签名基本只标到这一个地址。"
+    },
+    {
+      "name": "fw_cand_192",
+      "value": "强特征族"
+    },
+    {
+      "name": "fw_cand_193",
+      "value": "在场有 "
+    },
+    {
+      "name": "fw_cand_194",
+      "value": "这是目录级模式，不是单个 MAC。"
+    },
+    {
+      "name": "fw_cand_200",
+      "value": "名称模式"
+    },
+    {
+      "name": "fw_cand_201",
+      "value": "厂商 IE"
+    },
+    {
+      "name": "fw_cand_202",
+      "value": "服务 UUID"
+    },
+    {
+      "name": "fw_cand_203",
+      "value": "厂商数据前缀"
+    },
+    {
+      "name": "fw_cand_205",
+      "value": "空中唯一 ID"
+    },
+    {
+      "name": "fw_cand_339",
+      "value": "个 AP"
+    },
+    {
+      "name": "fw_cand_340",
+      "value": " 在日志中命中 "
+    },
+    {
+      "name": "fw_cand_348",
+      "value": "同一名称通配在 "
+    },
+    {
+      "name": "fw_cand_349",
+      "value": "同一 vendor IE 出现在 "
+    },
+    {
+      "name": "fw_cand_350",
+      "value": "同一服务 UUID 出现在 "
+    },
+    {
+      "name": "fw_cand_351",
+      "value": "同一制造商数据前缀出现在 "
+    },
+    {
+      "name": "fw_cand_352",
+      "value": "同一 IEEE OUI 出现在 "
+    },
+    {
+      "name": "fw_cand_353",
+      "value": "台信号源上 —— 不是家用 SSID。"
+    },
+    {
+      "name": "fw_cand_354",
+      "value": "个 BLE 广播源上。"
+    },
+    {
+      "name": "fw_pg_1422",
+      "value": " 台 · "
+    },
+    {
+      "name": "fw_pg_1443",
+      "value": "…共 "
+    },
+    {
+      "name": "fw_pg_2222",
+      "value": "Wi-Fi 4 及更早"
+    },
+    {
+      "name": "fw_pg_2261",
+      "value": "开放（无密码）"
+    },
+    {
+      "name": "fw_pg_2262",
+      "value": "WEP（已过时）"
+    },
+    {
+      "name": "fw_pg_2711",
+      "value": "首 "
+    },
+    {
+      "name": "fw_pg_3981",
+      "value": " 台信号源 · 未匹配 "
+    },
+    {
+      "name": "fw_pg_3982",
+      "value": " · 跳过随机 "
+    },
+    {
+      "name": "fw_pg_4268",
+      "value": " 台"
+    },
+    {
+      "name": "fw_pg_4582",
+      "value": " 个"
+    },
+    {
+      "name": "fw_pg_4836",
+      "value": " 个结果"
+    },
+    {
+      "name": "fw_pg_5497",
+      "value": "一款基于 HarmonyOS 的现代化漫画阅读应用"
+    },
+    {
+      "name": "fw_pg_5500",
+      "value": "帮您轻松创作更亮眼的手持弹幕内容"
+    },
+    {
+      "name": "fw_pg_5503",
+      "value": "支持多种格式的元数据编辑与封面管理"
+    },
+    {
+      "name": "fw_pg_5506",
+      "value": "移动端 AI 编程协作工具"
+    },
+    {
+      "name": "fw_pg_5509",
+      "value": "敬请期待"
+    },
+    {
+      "name": "fw_tb_1041",
+      "value": " 分钟"
+    },
+    {
+      "name": "fw_tb_1043",
+      "value": " 分"
+    },
+    {
+      "name": "fw_fb_557",
+      "value": "# 电波足迹 · 记录导出"
+    },
+    {
+      "name": "fw_fb_558",
+      "value": "# 导出时间: "
+    },
+    {
+      "name": "fw_fb_559",
+      "value": "# 应用版本: "
+    },
+    {
+      "name": "fw_ed_744",
+      "value": "星闪"
+    },
+    {
+      "name": "fw_dd_527",
+      "value": " dBm —— 它自称的发射强度，不代表距离"
+    },
+    {
+      "name": "fw_nl_48",
+      "value": "星闪能力探测失败："
+    },
+    {
+      "name": "fw_nl_52",
+      "value": "本机不支持星闪"
+    },
+    {
+      "name": "fw_nl_60",
+      "value": "星闪未开启，请先开启星闪后重试"
+    },
+    {
+      "name": "fw_nl_64",
+      "value": "读取星闪状态失败："
+    },
+    {
+      "name": "fw_nl_154",
+      "value": "星闪扫描权限未授予"
+    },
+    {
+      "name": "fw_nl_157",
+      "value": "星闪扫描失败（"
+    },
+    {
+      "name": "fw_sr_225",
+      "value": "预设 1"
+    },
+    {
+      "name": "fw_ws_76",
+      "value": " 秒前"
+    },
+    {
+      "name": "fw_ws_77",
+      "value": " 分钟前"
+    },
+    {
+      "name": "fw_ws_78",
+      "value": " 小时前"
+    },
+    {
+      "name": "fw_ws_104",
+      "value": "app 未运行"
+    },
+    {
+      "name": "fw_ws_105",
+      "value": "开启后台运行并切到后台后，这里会显示扫描情况"
+    },
+    {
+      "name": "fw_ws_109",
+      "value": " · 星闪 "
+    },
+    {
+      "name": "fw_ws_110",
+      "value": " · 已暂停"
+    },
+    {
+      "name": "fw_ws_114",
+      "value": "关注 · "
+    },
+    {
+      "name": "fw_ws_117",
+      "value": "特征族 · "
+    },
+    {
+      "name": "fw_ws_119",
+      "value": "尚未命中关注目标或特征族"
+    },
+    {
+      "name": "fw_fs_173",
+      "value": "上传已取消"
+    },
+    {
+      "name": "fw_fs_310",
+      "value": "读取附件失败: expected="
+    },
+    {
+      "name": "fw_fs_340",
+      "value": "本地文件大小在上传前发生变化"
+    },
+    {
+      "name": "fw_fs_343",
+      "value": "上传会话偏移无效"
+    },
+    {
+      "name": "fw_fs_357",
+      "value": "分块上传失败"
+    },
+    {
+      "name": "fw_fs_358",
+      "value": "服务器未推进上传偏移"
+    },
+    {
+      "name": "fw_cl_49",
+      "value": "首个公开发布版本：实时雷达、强度 / 时间线 / 信号轨迹 / 分类四种视图与工具箱（信道分析、信号追踪、反追踪）"
+    },
+    {
+      "name": "fw_cl_50",
+      "value": "611 条内置特征签名、候选特征发现与「添加到目录」；支持目录导出 / 导入 / 更新与恢复默认"
+    },
+    {
+      "name": "fw_cl_51",
+      "value": "观测会话（开始 / 结束 / 对比）、CSV / JSONL / GPX / KML / WiGLE 导出与复盘 PDF"
+    },
+    {
+      "name": "fw_cl_52",
+      "value": "隐私模式（地址脱敏）与严格离线：除主动更新特征目录外不产生任何联网"
+    },
+    {
+      "name": "fw_bl_31",
+      "value": "蓝牙未开启，请先开启蓝牙后重试"
+    },
+    {
+      "name": "fw_wf_146",
+      "value": "注册 Wi-Fi 扫描状态监听失败"
+    },
+    {
+      "name": "fw_wf_161",
+      "value": "Wi-Fi 信息权限未授予，请重新授权"
+    },
+    {
+      "name": "fw_wf_165",
+      "value": "Wi-Fi 未开启，请先打开 Wi-Fi"
+    },
+    {
+      "name": "fw_wf_170",
+      "value": "系统位置信息未开启，Wi-Fi 扫描需要位置服务"
+    },
+    {
+      "name": "fw_wf_200",
+      "value": "系统暂时拒绝或节流 Wi-Fi 扫描"
+    },
+    {
+      "name": "fw_wf_357",
+      "value": "Wi-Fi 扫描失败"
+    },
+    {
+      "name": "fw_cand_193b",
+      "value": "可能的特征族"
+    },
+    {
+      "name": "fw_cand_194d",
+      "value": "。"
+    },
+    {
+      "name": "fw_cand_195",
+      "value": "样本偏薄 —— 可能是目录级模式。"
+    },
+    {
+      "name": "fw_cand_341",
+      "value": "。共享的空中 ID，不是单台 MAC。"
+    },
+    {
+      "name": "fw_cand_349b",
+      "value": " 台信号源上 —— 不是家用 SSID。"
+    },
+    {
+      "name": "fw_cand_350b",
+      "value": " 个 BSSID 上。不是 WPS / P2P。"
+    },
+    {
+      "name": "fw_cand_351b",
+      "value": " 个 BLE 广播源上。"
+    },
+    {
+      "name": "fw_cand_352b",
+      "value": " 个稳定 BSSID 上。不是芯片模组前缀。"
+    },
+    {
+      "name": "fw_dx_234",
+      "value": "蓝牙 LE 广播源"
+    },
+    {
+      "name": "fw_dx_250",
+      "value": "线索不足。"
+    },
+    {
+      "name": "fw_dx_262",
+      "value": "也许是"
+    },
+    {
+      "name": "fw_dx_350",
+      "value": "它提供 HID（人机接口）服务。"
+    },
+    {
+      "name": "fw_dx_352",
+      "value": "它提供蓝牙 LE Audio 服务。"
+    },
+    {
+      "name": "fw_dx_358",
+      "value": "Find My 相关 UUID。"
+    },
+    {
+      "name": "fw_dx_388",
+      "value": "它在广播但刻意不公布网络名。"
+    },
+    {
+      "name": "fw_pg_2711b",
+      "value": "末 now"
+    },
+    {
+      "name": "fw_pg_2711c",
+      "value": "末 "
+    },
+    {
+      "name": "fw_pg_3982b",
+      "value": " · 跳过家用 "
+    },
+    {
+      "name": "fw_bl_212b",
+      "value": "BLE 扫描失败（"
+    },
+    {
+      "name": "fw_bl_212c",
+      "value": "）："
     }
   ]
 }

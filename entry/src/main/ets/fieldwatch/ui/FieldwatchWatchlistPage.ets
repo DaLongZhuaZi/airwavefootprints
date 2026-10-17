@@ -7,6 +7,7 @@ import { signatureClassLabel } from './FieldwatchClassLabels';
 import { FieldwatchPaletteHolder } from './FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from './FieldwatchButton';
 import { FieldwatchChip } from './FieldwatchChip';
+import { fieldwatchText } from './FieldwatchResText';
 
 /** 添加模式下的一个类别分组。 */
 class WatchlistAddGroup {
@@ -130,7 +131,7 @@ export struct FieldwatchWatchlistPage {
 
   private refresh(): void { this.tick += 1; }
 
-  private shellTitle(): ResourceStr { return $r('app.string.fieldwatch_watchlist_title'); }
+  private shellTitle(): ResourceStr { return fieldwatchText('app.string.fieldwatch_watchlist_title'); }
 
   private shellSubtitle(): ResourceStr {
     const template: string = this.text('app.string.fieldwatch_watchlist_subtitle');
@@ -203,9 +204,9 @@ export struct FieldwatchWatchlistPage {
     Scroll() {
       Column({ space: 10 }) {
         Row({ space: 8 }) {
-          FieldwatchChip({ label: $r('app.string.fieldwatch_watchlist_tab_watched'), active: !this.adding,
+          FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_watchlist_tab_watched'), active: !this.adding,
             onTap: (): void => { this.adding = false; } })
-          FieldwatchChip({ label: $r('app.string.fieldwatch_watchlist_tab_add'), active: this.adding,
+          FieldwatchChip({ label: fieldwatchText('app.string.fieldwatch_watchlist_tab_add'), active: this.adding,
             onTap: (): void => { this.adding = true; } })
         }.width('100%')
         if (this.adding) this.buildAddList()
@@ -218,7 +219,7 @@ export struct FieldwatchWatchlistPage {
   private buildWatchList() {
     Column({ space: 8 }) {
       if (this.watched().length === 0) {
-        Text($r('app.string.fieldwatch_watchlist_empty')).fontSize(14)
+        Text(fieldwatchText('app.string.fieldwatch_watchlist_empty')).fontSize(14)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       }
       ForEach(this.watched(), (target: WatchTarget, index: number): void => {
@@ -232,7 +233,7 @@ export struct FieldwatchWatchlistPage {
               Text(target.note).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(2)
             }
           }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-          Button($r('app.string.fieldwatch_watchlist_remove'))
+          Button(fieldwatchText('app.string.fieldwatch_watchlist_remove'))
             .height(32).fontSize(13).backgroundColor(Color.Transparent)
             .borderWidth(1).borderColor(FieldwatchPaletteHolder.get().outline)
             .fontColor(FieldwatchPaletteHolder.get().text)
@@ -256,12 +257,12 @@ export struct FieldwatchWatchlistPage {
   private buildAddList() {
     Column({ space: 10 }) {
       // 搜索框：244 条不给人搜索，等于逼用户一条条翻。
-      TextInput({ text: this.addQuery, placeholder: $r('app.string.fieldwatch_watchlist_search') })
+      TextInput({ text: this.addQuery, placeholder: fieldwatchText('app.string.fieldwatch_watchlist_search') })
         .height(40).width('100%').fontSize(14)
         .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(10)
         .onChange((value: string): void => { this.addQuery = value; })
       if (this.addGroups().length === 0) {
-        Text($r('app.string.fieldwatch_watchlist_add_empty')).fontSize(14)
+        Text(fieldwatchText('app.string.fieldwatch_watchlist_add_empty')).fontSize(14)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       }
       ForEach(this.addGroups(), (group: WatchlistAddGroup): void => {

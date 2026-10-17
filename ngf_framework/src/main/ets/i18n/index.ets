@@ -14,3 +14,4 @@ export { ngfTranslationResourceFacade } from './facades/TranslationResourceFacad
 export { RelativeTimeFormatterFacade, ngfRelativeTimeFormatterFacade } from './facades/RelativeTimeFormatterFacade';
 export { NGFI18nIntegrationFacade, ngfI18nIntegrationFacade } from './facades/NGFI18nIntegrationFacade';
 export { resolveResourceString } from './utils/ResourceStringResolver';
+export { ngfText, invalidateNGFTextCache, ngfTextCacheSize } from './utils/ResourceTextCache';

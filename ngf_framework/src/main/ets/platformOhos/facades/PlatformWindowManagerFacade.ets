@@ -94,6 +94,17 @@ export class PlatformWindowManagerFacade implements IPlatformWindowManager {
     this.refreshSnapshot('bind_window_stage');
   }
 
+  /**
+   * 取当前绑定的窗口阶段（可能为 null）。
+   *
+   * 用于「需要用 `loadContent` 重建整棵页面树」的场景 —— 目前只有语言切换：
+   * 部分文本是通过 `@Builder` 的字符串参数传下去并在首次构建时固化的，
+   * 切换语言后只靠状态刷新不一定能覆盖到，重建页面树才能保证整棵树都换成新语言。
+   */
+  getWindowStage(): window.WindowStage | null {
+    return this.windowStage;
+  }
+
   clearWindowStage(): void {
     this.unregisterWindowStageListeners();
     this.unregisterWindowListeners();

@@ -15,6 +15,7 @@ import {
 import { IFieldwatchHuntFeedback, FieldwatchHuntCombinedFeedback } from '../../fieldwatch/platform/FieldwatchHuntFeedback';
 import { FieldwatchButton, FieldwatchButtonTone } from './FieldwatchButton';
 import { FieldwatchPaletteHolder } from './FieldwatchPalette';
+import { fieldwatchText } from './FieldwatchResText';
 
 const TAG: string = 'FieldwatchFindWizard';
 
@@ -473,26 +474,26 @@ export struct FieldwatchFindWizard {
   private buildHeader() {
     Row({ space: 10 }) {
       Column({ space: 2 }) {
-        Text(this.device.displayName.length > 0 ? this.device.displayName : $r('app.string.fieldwatch_find_unnamed'))
+        Text(this.device.displayName.length > 0 ? this.device.displayName : fieldwatchText('app.string.fieldwatch_find_unnamed'))
           .fontSize(20).fontWeight(FontWeight.Bold)
           .fontColor(FieldwatchPaletteHolder.get().text).maxLines(1)
         if (this.connected) {
-          Text($r('app.string.fieldwatch_find_sub_connected')).fontSize(12)
+          Text(fieldwatchText('app.string.fieldwatch_find_sub_connected')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().accent)
         }
         if (this.excluded) {
-          Text($r('app.string.fieldwatch_find_excluded')).fontSize(12)
+          Text(fieldwatchText('app.string.fieldwatch_find_excluded')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().warn)
         }
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       // 只有「靠名字猜中的」才给纠错入口：地址直配成功时不存在猜错的可能。
       if (this.matchedByName) {
-        Text($r('app.string.fieldwatch_find_not_it')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_find_not_it')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().warn)
           .padding(8)
           .onClick((): void => { this.excludeCurrent(); })
       }
-      Text($r('app.string.fieldwatch_find_close')).fontSize(13)
+      Text(fieldwatchText('app.string.fieldwatch_find_close')).fontSize(13)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
         .padding(8)
         .onClick((): void => { this.finish(false); })
@@ -563,7 +564,7 @@ export struct FieldwatchFindWizard {
   @Builder
   private buildHelpCard() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_find_help_title')).fontSize(14).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_find_help_title')).fontSize(14).fontWeight(FontWeight.Medium)
         .fontColor(FieldwatchPaletteHolder.get().text)
       ForEach(this.helpItems(), (item: ResourceStr): void => {
         Row({ space: 8 }) {
@@ -585,16 +586,16 @@ export struct FieldwatchFindWizard {
   private helpItems(): ResourceStr[] {
     const items: ResourceStr[] = [];
     if (this.device.kind === RadioKind.BLE) {
-      items.push($r('app.string.fieldwatch_find_help_wake'));
+      items.push(fieldwatchText('app.string.fieldwatch_find_help_wake'));
     } else {
-      items.push($r('app.string.fieldwatch_find_help_wake_any'));
+      items.push(fieldwatchText('app.string.fieldwatch_find_help_wake_any'));
     }
-    items.push($r('app.string.fieldwatch_find_help_power'));
-    if (this.lastSeenAt > 0) items.push($r('app.string.fieldwatch_find_help_return'));
+    items.push(fieldwatchText('app.string.fieldwatch_find_help_power'));
+    if (this.lastSeenAt > 0) items.push(fieldwatchText('app.string.fieldwatch_find_help_return'));
     // 纯 BLE 设备只有「在附近 / 上次见到」两态；经典配对设备可能根本不出现在扫描里，
     // 这时最有用的一句是「看它有没有连着这台手机」，而不是继续让他举着手机走。
     if (this.device.kind === RadioKind.BLE && !this.connected) {
-      items.push($r('app.string.fieldwatch_find_help_connected'));
+      items.push(fieldwatchText('app.string.fieldwatch_find_help_connected'));
     }
     return items.slice(0, 3);
   }
@@ -612,7 +613,7 @@ export struct FieldwatchFindWizard {
    */
   @Builder
   private buildStaticSuspectHint() {
-    Text($r('app.string.fieldwatch_find_static_suspect'))
+    Text(fieldwatchText('app.string.fieldwatch_find_static_suspect'))
       .fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
       .width('100%').padding(12).borderRadius(12)
       .backgroundColor(FieldwatchPaletteHolder.get().panel)
@@ -621,7 +622,7 @@ export struct FieldwatchFindWizard {
   /** 地址和配对时不一样、改用名字找它了 —— 如实说明，不假装什么都没发生。 */
   @Builder
   private buildAddrChangedHint() {
-    Text($r('app.string.fieldwatch_find_help_addr_changed'))
+    Text(fieldwatchText('app.string.fieldwatch_find_help_addr_changed'))
       .fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent)
       .width('100%').padding(12).borderRadius(12)
       .backgroundColor(FieldwatchPaletteHolder.get().panel)
@@ -637,7 +638,7 @@ export struct FieldwatchFindWizard {
   @Builder
   private buildShakeCard() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_find_shake_title')).fontSize(14).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_find_shake_title')).fontSize(14).fontWeight(FontWeight.Medium)
         .fontColor(FieldwatchPaletteHolder.get().text)
       Text($r('app.string.fieldwatch_find_shake_hint', this.shakeRows.length))
         .fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -667,7 +668,7 @@ export struct FieldwatchFindWizard {
       if (row.key === this.shakeResolvedKey) {
         // 勾是**无字**的，配一句话说清楚结果 —— 这条文案本来就是为了这个状态写的，
         // 但一直没接上（静态审计发现它是「没人引用的死资源」）。
-        Text($r('app.string.fieldwatch_find_shake_confirmed')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_find_shake_confirmed')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().accent)
         SymbolGlyph($r('sys.symbol.checkmark_circle_fill')).fontSize(16)
           .fontColor([FieldwatchPaletteHolder.get().accent])
@@ -688,7 +689,7 @@ export struct FieldwatchFindWizard {
   @Builder
   private buildLastSeenCard() {
     Column({ space: 4 }) {
-      Text($r('app.string.fieldwatch_find_last_seen_title')).fontSize(14).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_find_last_seen_title')).fontSize(14).fontWeight(FontWeight.Medium)
         .fontColor(FieldwatchPaletteHolder.get().text)
       Text(this.agoText(this.lastSeenAt)).fontSize(13)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -702,8 +703,8 @@ export struct FieldwatchFindWizard {
   @Builder
   private buildToggles() {
     Row({ space: 10 }) {
-      this.buildToggle($r('app.string.fieldwatch_find_sound'), this.beep, (): void => { this.toggleBeep(); })
-      this.buildToggle($r('app.string.fieldwatch_find_vibrate'), this.vibrate, (): void => { this.toggleVibrate(); })
+      this.buildToggle(fieldwatchText('app.string.fieldwatch_find_sound'), this.beep, (): void => { this.toggleBeep(); })
+      this.buildToggle(fieldwatchText('app.string.fieldwatch_find_vibrate'), this.vibrate, (): void => { this.toggleVibrate(); })
     }.width('100%')
   }
 
@@ -724,7 +725,7 @@ export struct FieldwatchFindWizard {
   private buildActions() {
     Row({ space: 12 }) {
       FieldwatchButton({
-        label: $r('app.string.fieldwatch_find_found'),
+        label: fieldwatchText('app.string.fieldwatch_find_found'),
         tone: FieldwatchButtonTone.PRIMARY,
         onTap: (): void => { this.finish(true); }
       })

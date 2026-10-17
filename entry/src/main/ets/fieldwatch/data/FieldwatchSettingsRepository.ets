@@ -1,4 +1,4 @@
-import { ngfSettingsStoreFacade, logger } from 'ngf_framework';
+import { ngfSettingsStoreFacade, logger, ngfText } from 'ngf_framework';
 import { AppSettings, FilterDefinition, FilterLogic, FilterPreset, RadioKind, SignatureClass, WatchTarget, foldedSignatureClass } from '../domain/FieldwatchModels';
 import { signatureClassOf } from '../domain/signatures/FieldwatchSignatureModels';
 
@@ -222,7 +222,7 @@ export class FieldwatchSettingsRepository {
     }
     const legacy: FilterDefinition | undefined = this.readLegacyPreset();
     if (legacy === undefined) return [];
-    const migrated: FilterPreset[] = [new FilterPreset('预设 1', legacy)];
+    const migrated: FilterPreset[] = [new FilterPreset(ngfText('app.string.fw_sr_225'), legacy)];
     this.writePresets(migrated);
     logger.info(TAG, '旧版单预设已迁移为具名预设');
     return migrated;

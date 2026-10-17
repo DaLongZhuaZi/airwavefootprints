@@ -566,14 +566,35 @@ export class FieldwatchApplication {
     logger.info(TAG, '特征库就绪: ' + this.state.signatures.length.toString() + ' 条签名, version=' + this.state.catalogVersion.toString());
   }
   // ── 权限：逐条检查 / 逐条请求 / 能力快照（应用商店合规：无权限也要可用） ──
+  /**
+   * 权限探测缓存时刻与结果（见 `permissionSnapshot`）。
+   *
+   * 每次 `checkPermission` 都是一次 accessToken 系统调用。Live 页、设置页、根页
+   * 各自的 1 秒刷新都会来问一遍，同一秒最多 3 个调用方 × 3 条权限 = 9 次系统调用。
+   * 权限变化本身以「秒」为粒度（用户去系统设置改完再切回来），缓存 500ms 完全无感。
+   */
+  private capabilityCheckedAt: number = 0;
+  private capabilityBluetooth: boolean = false;
+  private capabilityLocation: boolean = false;
+  private capabilityNearLink: boolean = false;
+
   /** 当前权限快照，决定 Live 页是正常扫描还是显示受限说明。 */
   permissionSnapshot(): FieldwatchCapabilitySnapshot {
+    const now: number = Date.now();
+    if (now - this.capabilityCheckedAt > 500) {
+      this.capabilityBluetooth = ngfPermissionManagerFacade.checkPermission('ohos.permission.ACCESS_BLUETOOTH');
+      this.capabilityLocation = ngfPermissionManagerFacade.checkPermission('ohos.permission.APPROXIMATELY_LOCATION');
+      // 星闪：设备不支持时直接视为 false，不参与申请流程。
+      this.capabilityNearLink = this.nearLinkSupported
+        && ngfPermissionManagerFacade.checkPermission('ohos.permission.ACCESS_NEARLINK');
+      this.capabilityCheckedAt = now;
+    }
+    // **每次返回新对象**：调用方会把它挂到自己的 @State 上，
+    // 共用同一个实例会让「值没变」的判断失效（引用相同 → 界面不刷新）。
     const snapshot: FieldwatchCapabilitySnapshot = new FieldwatchCapabilitySnapshot();
-    snapshot.bluetooth = ngfPermissionManagerFacade.checkPermission('ohos.permission.ACCESS_BLUETOOTH');
-    snapshot.location = ngfPermissionManagerFacade.checkPermission('ohos.permission.APPROXIMATELY_LOCATION');
-    // 星闪：设备不支持时直接视为 false，不参与申请流程。
-    snapshot.nearlink = this.nearLinkSupported
-      && ngfPermissionManagerFacade.checkPermission('ohos.permission.ACCESS_NEARLINK');
+    snapshot.bluetooth = this.capabilityBluetooth;
+    snapshot.location = this.capabilityLocation;
+    snapshot.nearlink = this.capabilityNearLink;
     return snapshot;
   }
   /**
@@ -594,6 +615,8 @@ export class FieldwatchApplication {
       logger.info(TAG, '权限申请结果 ' + missing[index] + ' = ' + granted.toString());
       if (!granted) allGranted = false;
     }
+    // 权限刚变过：下一帧就要看到新状态，不能等 500ms 缓存过期。
+    this.capabilityCheckedAt = 0;
     return allGranted;
   }
   permissionSpec(kind: FieldwatchPermissionKind): FieldwatchPermissionSpec | undefined {

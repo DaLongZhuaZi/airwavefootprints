@@ -1,3 +1,4 @@
+import { ngfText } from 'ngf_framework';
 import { RadioKind, Sighting, SignatureClass } from './FieldwatchModels';
 import { SignatureFleet, SignatureRule, SignatureRuleKind } from './signatures/FieldwatchSignatureModels';
 
@@ -153,14 +154,14 @@ export class SignatureCandidateEngine {
    */
   assessFamily(device: Sighting, live: Sighting[], matchedNames: string[]): SignatureFamilyHint {
     if (matchedNames.length > 0) {
-      return new SignatureFamilyHint(FamilyVerdict.TAGGED, '已标记',
-        '匹配到特征 ' + matchedNames.join('、')
-          + '。第二条特征仍可能同时标记这台无线电（服务 UUID、产品 OUI）。', 0, '');
+      return new SignatureFamilyHint(FamilyVerdict.TAGGED, ngfText('app.string.fw_cand_156'),
+        ngfText('app.string.fw_cand_157') + matchedNames.join('、')
+          + ngfText('app.string.fw_cand_158'), 0, '');
     }
     const prints: CandidateFingerprint[] = this.fingerprintsOf(device);
     if (prints.length === 0) {
-      return new SignatureFamilyHint(FamilyVerdict.SINGLE, '仅此一台',
-        '没有可聚类的空中唯一 ID。随机地址、家用型名称与通用芯片会被跳过。', 0, '');
+      return new SignatureFamilyHint(FamilyVerdict.SINGLE, ngfText('app.string.fw_cand_162'),
+        ngfText('app.string.fw_cand_163'), 0, '');
     }
     const others: Sighting[] = live.filter((item: Sighting): boolean => item.key !== device.key);
     // 预先算好每台在场设备的指纹键集合，避免在嵌套闭包里反复提取。
@@ -180,8 +181,8 @@ export class SignatureCandidateEngine {
     }
     if (bestIndex < 0 || bestCount < 2) {
       const shown: string = bestIndex < 0 ? '' : prints[bestIndex].text;
-      return new SignatureFamilyHint(FamilyVerdict.SINGLE, '仅此一台',
-        '在场设备里没有别的 MAC 共享这个空中唯一 ID。从这里建的签名基本只标到这一个地址。',
+      return new SignatureFamilyHint(FamilyVerdict.SINGLE, ngfText('app.string.fw_cand_162'),
+        ngfText('app.string.fw_cand_184'),
         bestCount, shown);
     }
     const best: CandidateFingerprint = prints[bestIndex];
@@ -189,20 +190,20 @@ export class SignatureCandidateEngine {
     const kindLabel: string = this.familyKindLabel(best.kind);
     return new SignatureFamilyHint(
       strong ? FamilyVerdict.STRONG : FamilyVerdict.POSSIBLE,
-      strong ? '强特征族' : '可能的特征族',
-      '在场有 ' + bestCount.toString() + ' 台共享同一个' + kindLabel + '。'
-        + (strong ? '这是目录级模式，不是单个 MAC。' : '样本偏薄 —— 可能是目录级模式。'),
+      strong ? ngfText('app.string.fw_cand_192') : ngfText('app.string.fw_cand_193b'),
+      ngfText('app.string.fw_cand_193') + bestCount.toString() + ngfText('app.string.fw_cand_194') + kindLabel + ngfText('app.string.fw_cand_194d')
+        + (strong ? ngfText('app.string.fw_cand_194') : ngfText('app.string.fw_cand_195')),
       bestCount, best.text);
   }
 
   /** 指纹类型的中文名（原版 `idKindLabel`）。 */
   private familyKindLabel(kind: CandidateRuleKind): string {
-    if (kind === CandidateRuleKind.NAME_GLOB) return '名称模式';
-    if (kind === CandidateRuleKind.VENDOR_IE) return '厂商 IE';
-    if (kind === CandidateRuleKind.SERVICE_UUID) return '服务 UUID';
-    if (kind === CandidateRuleKind.MANUFACTURER_DATA) return '厂商数据前缀';
+    if (kind === CandidateRuleKind.NAME_GLOB) return ngfText('app.string.fw_cand_200');
+    if (kind === CandidateRuleKind.VENDOR_IE) return ngfText('app.string.fw_cand_201');
+    if (kind === CandidateRuleKind.SERVICE_UUID) return ngfText('app.string.fw_cand_202');
+    if (kind === CandidateRuleKind.MANUFACTURER_DATA) return ngfText('app.string.fw_cand_203');
     if (kind === CandidateRuleKind.OUI) return 'IEEE OUI';
-    return '空中唯一 ID';
+    return ngfText('app.string.fw_cand_205');
   }
 
   // ── 指纹提取（原版 fingerprintsOf） ──
@@ -336,8 +337,8 @@ export class SignatureCandidateEngine {
     });
     candidate.examples = labels.slice(0, 2);
     candidate.extraCount = Math.max(0, labels.length - 2);
-    const word: string = cluster.radioKind === RadioKind.WIFI ? '个 AP' : '个广播源';
-    candidate.notes = candidate.distinctRadios.toString() + ' ' + word + ' 在日志中命中 ' + this.ruleLabel(cluster.primary) + '。共享的空中 ID，不是单台 MAC。';
+    const word: string = cluster.radioKind === RadioKind.WIFI ? ngfText('app.string.fw_cand_339') : ngfText('app.string.fw_cand_340');
+    candidate.notes = candidate.distinctRadios.toString() + ' ' + word + ngfText('app.string.fw_cand_340') + this.ruleLabel(cluster.primary) + ngfText('app.string.fw_cand_341');
     return candidate;
   }
 
@@ -345,11 +346,11 @@ export class SignatureCandidateEngine {
   private whyText(cluster: CandidateCluster): string {
     const count: number = cluster.members.size;
     const kind: CandidateRuleKind = cluster.primary.kind;
-    if (kind === CandidateRuleKind.NAME_GLOB) return '同一名称通配在 ' + count.toString() + ' 台信号源上 —— 不是家用 SSID。';
-    if (kind === CandidateRuleKind.VENDOR_IE) return '同一 vendor IE 出现在 ' + count.toString() + ' 个 BSSID 上。不是 WPS / P2P。';
-    if (kind === CandidateRuleKind.SERVICE_UUID) return '同一服务 UUID 出现在 ' + count.toString() + ' 个 BLE 广播源上。';
-    if (kind === CandidateRuleKind.MANUFACTURER_DATA) return '同一制造商数据前缀出现在 ' + count.toString() + ' 个 BLE 广播源上。';
-    return '同一 IEEE OUI 出现在 ' + count.toString() + ' 个稳定 BSSID 上。不是芯片模组前缀。';
+    if (kind === CandidateRuleKind.NAME_GLOB) return ngfText('app.string.fw_cand_348') + count.toString() + ngfText('app.string.fw_cand_349b');
+    if (kind === CandidateRuleKind.VENDOR_IE) return ngfText('app.string.fw_cand_349') + count.toString() + ngfText('app.string.fw_cand_350b');
+    if (kind === CandidateRuleKind.SERVICE_UUID) return ngfText('app.string.fw_cand_350') + count.toString() + ngfText('app.string.fw_cand_351b');
+    if (kind === CandidateRuleKind.MANUFACTURER_DATA) return ngfText('app.string.fw_cand_351') + count.toString() + ngfText('app.string.fw_cand_351b');
+    return ngfText('app.string.fw_cand_352') + count.toString() + ngfText('app.string.fw_cand_352b');
   }
   private ruleLabel(fp: CandidateFingerprint): string {
     if (fp.kind === CandidateRuleKind.NAME_GLOB) return fp.text;

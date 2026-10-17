@@ -6,6 +6,7 @@ import { SignatureDecodeField, SignatureFleet, SignatureFleetDecode, SignatureRu
 import { signatureClassLabel } from './FieldwatchClassLabels';
 import { FieldwatchPaletteHolder } from './FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from './FieldwatchButton';
+import { fieldwatchText } from './FieldwatchResText';
 
 const DECODE_TYPE_LABELS: string[] = ['u8', 'i8', 'u16', 'i16', 'u24', 'u32', 'i32', 'f32', 'bits', 'utf8', 'hex', 'mac', 'bool'];
 
@@ -85,14 +86,14 @@ export struct FieldwatchSignatureDetail {
    */
   private shellTitle(): ResourceStr {
     const fleet: SignatureFleet | undefined = this.fleet();
-    if (fleet === undefined || fleet.name.length === 0) return $r('app.string.fieldwatch_signatures_detail_subtitle');
+    if (fleet === undefined || fleet.name.length === 0) return fieldwatchText('app.string.fieldwatch_signatures_detail_subtitle');
     return fleet.name;
   }
 
   /** 顶栏副标题：**当前类别**，与列表行、详情正文用同一个折叠口径。 */
   private shellSubtitle(): ResourceStr {
     const fleet: SignatureFleet | undefined = this.fleet();
-    if (fleet === undefined) return $r('app.string.fieldwatch_signatures_title');
+    if (fleet === undefined) return fieldwatchText('app.string.fieldwatch_signatures_title');
     return signatureClassLabel(foldedSignatureClass(fleet.category));
   }
 
@@ -187,7 +188,7 @@ export struct FieldwatchSignatureDetail {
           this.buildContent(this.fleet() as SignatureFleet)
         } else {
           // 行被删掉（或目录被重置）时不能留白屏：明确说一句。
-          Text($r('app.string.fieldwatch_signatures_detail_gone')).fontSize(14)
+          Text(fieldwatchText('app.string.fieldwatch_signatures_detail_gone')).fontSize(14)
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
         }
       }.width('100%').padding({ left: 20, right: 20, top: this.withShell ? this.contentTop() : 20, bottom: 20 })
@@ -204,13 +205,13 @@ export struct FieldwatchSignatureDetail {
     if (fleet.attentionNote.length > 0) Text(fleet.attentionNote).fontSize(13).fontColor(FieldwatchPaletteHolder.get().warn)
     if (fleet.notes.length > 0) Text(fleet.notes).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
     Text(this.text('app.string.fieldwatch_signatures_rules') + ' (' + fleet.rules.length.toString() + ')').fontSize(16).fontWeight(FontWeight.Medium)
-    if (fleet.rules.length === 0) Text($r('app.string.fieldwatch_signatures_no_rules')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
+    if (fleet.rules.length === 0) Text(fieldwatchText('app.string.fieldwatch_signatures_no_rules')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
     ForEach(fleet.rules, (rule: SignatureRule): void => {
       Row({ space: 8 }) {
         Text(rule.kind).fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent).width(150)
         Text(this.ruleText(rule)).fontSize(12).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(2)
         // 规则自己的开关状态要看得见：关掉的规则仍然在，只是不参与匹配。
-        if (!rule.enabled) Text($r('app.string.fieldwatch_signatures_rule_off')).fontSize(11)
+        if (!rule.enabled) Text(fieldwatchText('app.string.fieldwatch_signatures_rule_off')).fontSize(11)
           .fontColor(FieldwatchPaletteHolder.get().warn)
       }.width('100%')
     }, (rule: SignatureRule): string => rule.kind + rule.text + rule.dataPrefixHex + rule.companyId.toString() + rule.enabled.toString())
@@ -219,7 +220,7 @@ export struct FieldwatchSignatureDetail {
     Row({ space: 8 }) {
       FieldwatchButton({
         label: this.watched
-          ? $r('app.string.fieldwatch_signatures_unwatch') : $r('app.string.fieldwatch_signatures_watch'),
+          ? fieldwatchText('app.string.fieldwatch_signatures_unwatch') : fieldwatchText('app.string.fieldwatch_signatures_watch'),
         tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => {
           fieldwatchApplication.toggleSignatureWatch(fleet);
@@ -229,10 +230,10 @@ export struct FieldwatchSignatureDetail {
           this.onFollowChanged();
         }
       }).layoutWeight(1)
-      FieldwatchButton({ label: $r('app.string.fieldwatch_signatures_edit_fleet'), tone: FieldwatchButtonTone.PRIMARY,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_signatures_edit_fleet'), tone: FieldwatchButtonTone.PRIMARY,
         onTap: (): void => { this.onEdit(fleet.id); } }).layoutWeight(1)
     }.width('100%')
-    FieldwatchButton({ label: $r('app.string.fieldwatch_signatures_delete'), tone: FieldwatchButtonTone.OUTLINE,
+    FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_signatures_delete'), tone: FieldwatchButtonTone.OUTLINE,
       onTap: (): void => { this.confirmDelete(fleet); } })
   }
 

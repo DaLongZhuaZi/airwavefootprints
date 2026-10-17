@@ -1,6 +1,6 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 import window from '@ohos.window';
-import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, resolveResourceString } from 'ngf_framework';
+import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, resolveResourceString, ngfText } from 'ngf_framework';
 import { FieldwatchApplication, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { PresenceSpan, RadioKind, Sighting } from '../../fieldwatch/domain/FieldwatchModels';
 import { ExplainGuess, FieldwatchDeviceExplain } from '../../fieldwatch/domain/FieldwatchDeviceExplain';
@@ -9,6 +9,7 @@ import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
 import { FieldwatchRouteName, FieldwatchSignatureEditorParam } from '../../fieldwatch/ui/FieldwatchRoutes';
 import { presenceTrackCommands, TrendGeometry, trendGeometry, TrendTickLabel } from '../../fieldwatch/ui/FieldwatchUiState';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 /** 顶部沉浸底板高度。 */
 const DETAIL_UNDERLAY_HEIGHT: number = 168;
@@ -200,7 +201,7 @@ export struct FieldwatchDeviceDetailPage {
       .width('100%').height('100%')
     }
     .titleBar(NGFHdsTitleBarOptionsFactory.build(this.titleText(), this.subtitleText(),
-      $r('app.color.background_primary'), hdsMaterial.MaterialLevel.EXQUISITE, true, false))
+      FieldwatchPaletteHolder.get().night, hdsMaterial.MaterialLevel.EXQUISITE, true, false))
     /**
      * 返回按钮与系统返回手势。
      *
@@ -225,7 +226,7 @@ export struct FieldwatchDeviceDetailPage {
      */
     .translate({ x: this.enterShift })
     .opacity(this.enterAlpha)
-    .width('100%').height('100%').backgroundColor($r('app.color.background_primary'))
+    .width('100%').height('100%').backgroundColor(FieldwatchPaletteHolder.get().night)
   }
 
   /** 两种形态共用的正文。 */
@@ -523,7 +524,7 @@ export struct FieldwatchDeviceDetailPage {
         this.explain.sessionRange(item.rssiMin, item.rssiMax), FieldwatchPaletteHolder.get().text)
       if (item.facts.txPower > -128) {
         this.row('app.string.fieldwatch_detail_tx_power',
-          item.facts.txPower.toString() + ' dBm —— 它自称的发射强度，不代表距离', FieldwatchPaletteHolder.get().text)
+          item.facts.txPower.toString() + ngfText('app.string.fw_dd_527'), FieldwatchPaletteHolder.get().text)
       }
       if (this.channelFreqText(item).length > 0) {
         this.row('app.string.fieldwatch_detail_channel_freq', this.channelFreqText(item), FieldwatchPaletteHolder.get().text)
@@ -812,21 +813,21 @@ export struct FieldwatchDeviceDetailPage {
 
   @Builder private buildActions(item: Sighting) {
     Column({ space: 10 }) {
-      FieldwatchButton({ label: $r('app.string.fieldwatch_hunt_start'), tone: FieldwatchButtonTone.PRIMARY,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_hunt_start'), tone: FieldwatchButtonTone.PRIMARY,
         onTap: (): void => {
           fieldwatchApplication.startHunt(item);
           this.pathStack.pushPathByName(FieldwatchRouteName.HUNT, null);
         } })
-      FieldwatchButton({ label: $r('app.string.fieldwatch_signatures_create_from_device'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_signatures_create_from_device'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => {
           // 建出草稿 -> 进编辑器；fleetId 传空串表示「从这台设备新建」。
           fieldwatchApplication.createFleetFromSighting(item);
           this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_EDITOR,
             new FieldwatchSignatureEditorParam('', item.key));
         } })
-      FieldwatchButton({ label: $r('app.string.fieldwatch_detail_share_text'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_detail_share_text'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { fieldwatchApplication.shareDetailText(item, this.signatureNames); } })
-      FieldwatchButton({ label: $r('app.string.fieldwatch_detail_ai_export'), tone: FieldwatchButtonTone.OUTLINE,
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_detail_ai_export'), tone: FieldwatchButtonTone.OUTLINE,
         onTap: (): void => { fieldwatchApplication.shareDetailPrompt(item, this.signatureNames); } })
     }.width('100%')
   }

@@ -1,5 +1,6 @@
 import { window } from '@kit.ArkUI';
-import { resolveResourceString } from 'ngf_framework';
+import { resolveResourceString, ngfText } from 'ngf_framework';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { RadioKind, Sighting } from '../../fieldwatch/domain/FieldwatchModels';
 import {
@@ -94,6 +95,14 @@ const LABEL_FONT: string = '24px sans-serif';
 export struct FieldwatchToolboxPage {
   topInset: number = 0;
   twoColumn: boolean = false;
+  /**
+   * 本页当前是否可见；不可见时定时刷新直接返回。
+   *
+   * `Tabs` 会让所有 TabContent 常驻，2 秒一次的 `tick += 1` 会强制整页重建、
+   * 还会连带 `drawChart()` 重画画布 —— 用户根本没看着这一页时全是白烧的 CPU。
+   * 默认 true：单独作为压栈页使用时不需要显式传。
+   */
+  @Prop @Watch('onPageVisibleChanged') pageVisible: boolean = true;
   /** 对一个设备启动 Hunt（应用层会同时压栈到 Hunt 页）。 */
   onStartHunt: (deviceKey: string) => void = (deviceKey: string): void => {};
   /** 继续当前 Hunt（不重启会话，保留已有样本）。 */
@@ -116,10 +125,15 @@ export struct FieldwatchToolboxPage {
   private readonly chartSettings: RenderingContextSettings = new RenderingContextSettings(true);
   private readonly chartCtx: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.chartSettings);
 
+  /** 切到本页时立刻刷一次，不等 2 秒定时器（`@Watch` 回调不能是 private）。 */
+  onPageVisibleChanged(): void {
+    if (this.pageVisible) this.refresh();
+  }
+
   aboutToAppear(): void {
     this.readChartHeight();
     this.refreshTimer = setInterval((): void => {
-      if (!fieldwatchApplication.isAppForeground()) return;
+      if (!this.pageVisible || !fieldwatchApplication.isAppForeground()) return;
       this.refresh();
     }, 2000);
   }
@@ -159,7 +173,7 @@ export struct FieldwatchToolboxPage {
   }
 
   private text(key: string): string {
-    return resolveResourceString(this.getUIContext().getHostContext(), $r(key));
+    return fieldwatchText(key);
   }
 
   build() {
@@ -234,7 +248,7 @@ export struct FieldwatchToolboxPage {
   @Builder
   private buildTitle() {
     Column() {
-      Text($r('app.string.fieldwatch_toolbox_title')).fontSize(26).fontWeight(FontWeight.Bold)
+      Text(fieldwatchText('app.string.fieldwatch_toolbox_title')).fontSize(26).fontWeight(FontWeight.Bold)
     }.width('100%').alignItems(HorizontalAlign.Center)
     .padding({ left: 16, right: 16, top: this.topInset + 16, bottom: 10 })
   }
@@ -243,9 +257,9 @@ export struct FieldwatchToolboxPage {
   @Builder
   private buildToolTabs() {
     Row() {
-      this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_channel'), 0)
-      this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_antitrack'), 1)
-      this.buildToolTab($r('app.string.fieldwatch_toolbox_tab_find'), 2)
+      this.buildToolTab(fieldwatchText('app.string.fieldwatch_toolbox_tab_channel'), 0)
+      this.buildToolTab(fieldwatchText('app.string.fieldwatch_toolbox_tab_antitrack'), 1)
+      this.buildToolTab(fieldwatchText('app.string.fieldwatch_toolbox_tab_find'), 2)
     }.width('100%').padding({ left: 8, right: 8 })
   }
 
@@ -272,9 +286,9 @@ export struct FieldwatchToolboxPage {
     Scroll() {
       Column({ space: 12 }) {
         Row({ space: 8 }) {
-          this.buildBandChip($r('app.string.fieldwatch_toolbox_band_24'), WifiBand.BAND_24)
-          this.buildBandChip($r('app.string.fieldwatch_toolbox_band_5'), WifiBand.BAND_5)
-          this.buildBandChip($r('app.string.fieldwatch_toolbox_band_6'), WifiBand.BAND_6)
+          this.buildBandChip(fieldwatchText('app.string.fieldwatch_toolbox_band_24'), WifiBand.BAND_24)
+          this.buildBandChip(fieldwatchText('app.string.fieldwatch_toolbox_band_5'), WifiBand.BAND_5)
+          this.buildBandChip(fieldwatchText('app.string.fieldwatch_toolbox_band_6'), WifiBand.BAND_6)
         }.width('100%')
         // 图表：高度按「半屏」与「泳道需求」取大者；宽度 = 视口 × 缩放，
         // 放不下就横向滚动。双指捏合直接调缩放。
@@ -305,14 +319,14 @@ export struct FieldwatchToolboxPage {
         .align(Alignment.TopStart)
         Row({ space: 8 }) {
           Text(this.zoomText()).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim).layoutWeight(1)
-          Text($r('app.string.fieldwatch_toolbox_zoom_reset')).fontSize(11)
+          Text(fieldwatchText('app.string.fieldwatch_toolbox_zoom_reset')).fontSize(11)
             .fontColor(FieldwatchPaletteHolder.get().accent)
             .onClick((): void => {
               this.zoomX = 1;
               setTimeout((): void => { this.drawChart(); }, 0);
             })
         }.width('100%')
-        Text($r('app.string.fieldwatch_toolbox_chart_legend')).fontSize(11)
+        Text(fieldwatchText('app.string.fieldwatch_toolbox_chart_legend')).fontSize(11)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
         this.buildChannelSummary()
         this.buildChannelRanking()
@@ -512,7 +526,7 @@ export struct FieldwatchToolboxPage {
           .fontColor(loadLevel(this.survey().recommendedScore) === 0
             ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().warn)
       } else {
-        Text($r('app.string.fieldwatch_toolbox_channel_empty')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_toolbox_channel_empty')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }
     }.width('100%').padding(12)
@@ -523,7 +537,7 @@ export struct FieldwatchToolboxPage {
   @Builder
   private buildChannelRanking() {
     Column({ space: 6 }) {
-      Text($r('app.string.fieldwatch_toolbox_channel_ranking')).fontSize(14)
+      Text(fieldwatchText('app.string.fieldwatch_toolbox_channel_ranking')).fontSize(14)
         .fontColor(FieldwatchPaletteHolder.get().text)
       ForEach(this.ranking(), (load: ChannelLoad): void => {
         Row({ space: 8 }) {
@@ -922,10 +936,10 @@ export struct FieldwatchToolboxPage {
   private buildAntiTrackOverview() {
     Column({ space: 8 }) {
       Row({ space: 10 }) {
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_at_evaluated'), this.antiStats().evaluated.toString())
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_at_suspect'), this.antiStats().suspect.toString())
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_at_watch'), this.antiStats().watch.toString())
-        this.buildMetricCell($r('app.string.fieldwatch_toolbox_at_top'), this.antiStats().topScore.toString())
+        this.buildMetricCell(fieldwatchText('app.string.fieldwatch_toolbox_at_evaluated'), this.antiStats().evaluated.toString())
+        this.buildMetricCell(fieldwatchText('app.string.fieldwatch_toolbox_at_suspect'), this.antiStats().suspect.toString())
+        this.buildMetricCell(fieldwatchText('app.string.fieldwatch_toolbox_at_watch'), this.antiStats().watch.toString())
+        this.buildMetricCell(fieldwatchText('app.string.fieldwatch_toolbox_at_top'), this.antiStats().topScore.toString())
       }.width('100%')
       // 判定线：告诉用户「多少分才会报」，否则数字没有参照。
       Text(this.thresholdText()).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -938,16 +952,16 @@ export struct FieldwatchToolboxPage {
   @Builder
   private buildTravelPanel() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_toolbox_at_travel')).fontSize(14)
+      Text(fieldwatchText('app.string.fieldwatch_toolbox_at_travel')).fontSize(14)
         .fontColor(FieldwatchPaletteHolder.get().text)
       if (!fieldwatchApplication.antiTrackingHasGeo()) {
-        Text($r('app.string.fieldwatch_toolbox_antitrack_nogeo')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_toolbox_antitrack_nogeo')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().warn)
       } else {
         Row({ space: 10 }) {
-          this.buildMetricCell($r('app.string.fieldwatch_toolbox_at_path'), formatMeters(this.travel().pathMeters))
-          this.buildMetricCell($r('app.string.fieldwatch_toolbox_at_displacement'), formatMeters(this.travel().displacementMeters))
-          this.buildMetricCell($r('app.string.fieldwatch_toolbox_at_ratio'), (Math.round(this.travel().pathRatio * 10) / 10).toString())
+          this.buildMetricCell(fieldwatchText('app.string.fieldwatch_toolbox_at_path'), formatMeters(this.travel().pathMeters))
+          this.buildMetricCell(fieldwatchText('app.string.fieldwatch_toolbox_at_displacement'), formatMeters(this.travel().displacementMeters))
+          this.buildMetricCell(fieldwatchText('app.string.fieldwatch_toolbox_at_ratio'), (Math.round(this.travel().pathRatio * 10) / 10).toString())
         }.width('100%')
         Text(this.travelNote()).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
       }
@@ -960,10 +974,10 @@ export struct FieldwatchToolboxPage {
   @Builder
   private buildSuspectPanel() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_toolbox_at_suspects')).fontSize(14)
+      Text(fieldwatchText('app.string.fieldwatch_toolbox_at_suspects')).fontSize(14)
         .fontColor(FieldwatchPaletteHolder.get().text)
       if (this.suspects().length === 0) {
-        Text($r('app.string.fieldwatch_toolbox_antitrack_none')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_toolbox_antitrack_none')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }
       ForEach(this.suspects(), (suspect: TrackSuspect): void => {
@@ -1015,18 +1029,18 @@ export struct FieldwatchToolboxPage {
   @Builder
   private buildEvaluatedPanel() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_toolbox_at_evaluated_list')).fontSize(14)
+      Text(fieldwatchText('app.string.fieldwatch_toolbox_at_evaluated_list')).fontSize(14)
         .fontColor(FieldwatchPaletteHolder.get().text)
-      Text($r('app.string.fieldwatch_toolbox_at_evaluated_note')).fontSize(11)
+      Text(fieldwatchText('app.string.fieldwatch_toolbox_at_evaluated_note')).fontSize(11)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
       ForEach(this.evaluatedTop(), (suspect: TrackSuspect): void => {
         Row({ space: 8 }) {
           Text(suspect.label).fontSize(13).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(1)
           // 跨度用「分钟」，分数用「分」—— 两个单位必须区分开，
           // 否则一行里出现两个「0 分」，读起来像是重复了。
-          Text(formatMinutes(suspect.evidence.spanMs) + ' 分钟').fontSize(11)
+          Text(formatMinutes(suspect.evidence.spanMs) + ngfText('app.string.fw_tb_1041')).fontSize(11)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
-          Text(suspect.evidence.score.toString() + ' 分').fontSize(13)
+          Text(suspect.evidence.score.toString() + ngfText('app.string.fw_tb_1043')).fontSize(13)
             .fontColor(suspect.risk === FollowRisk.NONE ? FieldwatchPaletteHolder.get().textDim
               : FieldwatchPaletteHolder.get().accent).width(46).textAlign(TextAlign.End)
         }.width('100%').padding(10)
@@ -1039,10 +1053,10 @@ export struct FieldwatchToolboxPage {
   @Builder
   private buildAntiTrackLogPanel() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_toolbox_at_log')).fontSize(14)
+      Text(fieldwatchText('app.string.fieldwatch_toolbox_at_log')).fontSize(14)
         .fontColor(FieldwatchPaletteHolder.get().text)
       if (this.antiEvents().length === 0) {
-        Text($r('app.string.fieldwatch_toolbox_at_no_log')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_toolbox_at_no_log')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }
       ForEach(this.antiEvents(), (event: AntiTrackEvent): void => {
@@ -1050,7 +1064,7 @@ export struct FieldwatchToolboxPage {
           SymbolGlyph($r('sys.symbol.exclamationmark_triangle')).fontSize(13)
             .fontColor([FieldwatchPaletteHolder.get().warn])
           Text(event.label).fontSize(13).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(1)
-          Text(event.score.toString() + ' 分').fontSize(12)
+          Text(event.score.toString() + ngfText('app.string.fw_tb_1043')).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().warn)
           Text(this.clockOf(event.at)).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
         }.width('100%').padding(10)

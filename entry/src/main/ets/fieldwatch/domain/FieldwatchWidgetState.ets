@@ -1,3 +1,4 @@
+import { ngfText } from 'ngf_framework';
 /**
  * 卡片要显示的状态快照。
  *
@@ -73,9 +74,9 @@ export class FieldwatchWidgetKeys {
 /** 秒数 -> 「N 秒前 / N 分钟前 / N 小时前」。 */
 function ageText(seconds: number): string {
   if (seconds < 0) return '—';
-  if (seconds < 60) return seconds.toString() + ' 秒前';
-  if (seconds < 3600) return Math.round(seconds / 60).toString() + ' 分钟前';
-  return Math.round(seconds / 3600).toString() + ' 小时前';
+  if (seconds < 60) return seconds.toString() + ngfText('app.string.fw_ws_76');
+  if (seconds < 3600) return Math.round(seconds / 60).toString() + ngfText('app.string.fw_ws_77');
+  return Math.round(seconds / 3600).toString() + ngfText('app.string.fw_ws_78');
 }
 
 /** epoch 毫秒 -> 「HH:MM」。 */
@@ -101,22 +102,22 @@ export function buildWidgetCardData(state: FieldwatchWidgetState, dimension: str
   data[FieldwatchWidgetKeys.RUNNING] = fresh ? 'true' : 'false';
   data[FieldwatchWidgetKeys.UPDATED] = clockText(nowMs);
   if (!fresh) {
-    data[FieldwatchWidgetKeys.STATUS] = 'app 未运行';
-    data[FieldwatchWidgetKeys.DETAIL] = '开启后台运行并切到后台后，这里会显示扫描情况';
+    data[FieldwatchWidgetKeys.STATUS] = ngfText('app.string.fw_ws_104');
+    data[FieldwatchWidgetKeys.DETAIL] = ngfText('app.string.fw_ws_105');
     return data;
   }
   let status: string = 'BLE ' + state.ble.toString() + ' · Wi-Fi ' + state.wifi.toString()
-    + ' · 星闪 ' + state.nearLink.toString();
-  if (state.paused) status += ' · 已暂停';
+    + ngfText('app.string.fw_ws_109') + state.nearLink.toString();
+  if (state.paused) status += ngfText('app.string.fw_ws_110');
   data[FieldwatchWidgetKeys.STATUS] = status;
   const parts: string[] = [];
   if (state.watchLabel.length > 0) {
-    parts.push('关注 · ' + state.watchLabel + ' ' + state.watchRssi.toString() + ' dBm · ' + ageText(state.watchAgeSec));
+    parts.push(ngfText('app.string.fw_ws_114') + state.watchLabel + ' ' + state.watchRssi.toString() + ' dBm · ' + ageText(state.watchAgeSec));
   }
   if (state.familyLabel.length > 0) {
-    parts.push('特征族 · ' + state.familyLabel + ' · ' + ageText(state.familyAgeSec));
+    parts.push(ngfText('app.string.fw_ws_117') + state.familyLabel + ' · ' + ageText(state.familyAgeSec));
   }
-  data[FieldwatchWidgetKeys.DETAIL] = parts.length > 0 ? parts.join('\n') : '尚未命中关注目标或特征族';
+  data[FieldwatchWidgetKeys.DETAIL] = parts.length > 0 ? parts.join('\n') : ngfText('app.string.fw_ws_119');
   return data;
 }
 /** 扩展登记的卡片条目：formId 与它的尺寸。 */

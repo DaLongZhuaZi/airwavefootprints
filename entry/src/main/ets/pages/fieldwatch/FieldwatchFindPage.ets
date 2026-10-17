@@ -18,6 +18,7 @@ import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/Fiel
 import { deviceClassSymbol, nearLinkClassSymbol } from '../../fieldwatch/ui/FieldwatchDeviceTypeIcon';
 import { RadioKind } from '../../fieldwatch/domain/FieldwatchModels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 const TAG: string = 'FieldwatchFindPage';
 
@@ -324,7 +325,7 @@ export struct FieldwatchFindPage {
     Scroll() {
       Column({ space: 14 }) {
         this.buildTitle()
-        if (this.noticeSaveFailed) this.buildNotice($r('app.string.fieldwatch_find_save_failed'))
+        if (this.noticeSaveFailed) this.buildNotice(fieldwatchText('app.string.fieldwatch_find_save_failed'))
         else if (this.noticeRemovedName.length > 0) this.buildNotice($r('app.string.fieldwatch_find_removed', this.noticeRemovedName))
         if (!this.loaded) {
           this.buildLoading()
@@ -346,10 +347,10 @@ export struct FieldwatchFindPage {
   @Builder
   private buildTitle() {
     Column({ space: 4 }) {
-      Text($r('app.string.fieldwatch_find_title')).fontSize(24).fontWeight(FontWeight.Bold)
+      Text(fieldwatchText('app.string.fieldwatch_find_title')).fontSize(24).fontWeight(FontWeight.Bold)
         .fontColor(FieldwatchPaletteHolder.get().text)
       // 一句人话说清这页干什么，不出现任何术语（文档 §7.5 术语 grep 验收）。
-      Text($r('app.string.fieldwatch_find_intro')).fontSize(13)
+      Text(fieldwatchText('app.string.fieldwatch_find_intro')).fontSize(13)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').alignItems(HorizontalAlign.Start)
   }
@@ -362,7 +363,7 @@ export struct FieldwatchFindPage {
 
   @Builder
   private buildLoading() {
-    Text($r('app.string.fieldwatch_find_loading')).fontSize(14)
+    Text(fieldwatchText('app.string.fieldwatch_find_loading')).fontSize(14)
       .fontColor(FieldwatchPaletteHolder.get().textDim)
       .padding({ top: 24 })
   }
@@ -380,14 +381,14 @@ export struct FieldwatchFindPage {
           .layoutWeight(1)
       }.width('100%').alignItems(VerticalAlign.Center)
       // 如实说明：名字相同的网络分不出来（bssid 被系统随机化，V6-b 已核实）。
-      Text($r('app.string.fieldwatch_find_wifi_hint')).fontSize(12)
+      Text(fieldwatchText('app.string.fieldwatch_find_wifi_hint')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       if (candidate.alreadyClaimed) {
-        Text($r('app.string.fieldwatch_find_claimed')).fontSize(13)
+        Text(fieldwatchText('app.string.fieldwatch_find_claimed')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       } else {
         FieldwatchButton({
-          label: $r('app.string.fieldwatch_find_claim_router'),
+          label: fieldwatchText('app.string.fieldwatch_find_claim_router'),
           tone: FieldwatchButtonTone.PRIMARY,
           onTap: (): void => { void this.claim(candidate); }
         })
@@ -402,13 +403,13 @@ export struct FieldwatchFindPage {
   @Builder
   private buildPairedSection() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_find_paired_section')).fontSize(15).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_find_paired_section')).fontSize(15).fontWeight(FontWeight.Medium)
         .fontColor(FieldwatchPaletteHolder.get().text)
       if (!this.bluetoothOn) {
         // 蓝牙关着时给一句可执行的下一步，而不是空白列表。
-        this.buildEmptyCard($r('app.string.fieldwatch_find_bluetooth_off'))
+        this.buildEmptyCard(fieldwatchText('app.string.fieldwatch_find_bluetooth_off'))
       } else if (this.paired.length === 0) {
-        this.buildEmptyCard($r('app.string.fieldwatch_find_none_paired'))
+        this.buildEmptyCard(fieldwatchText('app.string.fieldwatch_find_none_paired'))
       } else {
         Column({ space: 8 }) {
           // key **必须带上会变的字段**：只用「来源:地址」的话，地址没变 → ArkUI 复用旧行、
@@ -438,7 +439,7 @@ export struct FieldwatchFindPage {
       Row({ space: 6 }) {
         SymbolGlyph($r(this.scanOpen ? 'sys.symbol.chevron_down' : 'sys.symbol.chevron_right'))
           .fontSize(14).fontColor([FieldwatchPaletteHolder.get().textDim])
-        Text($r('app.string.fieldwatch_find_scan_open')).fontSize(14)
+        Text(fieldwatchText('app.string.fieldwatch_find_scan_open')).fontSize(14)
           .fontColor(FieldwatchPaletteHolder.get().accent)
       }
       .width('100%').height(40).alignItems(VerticalAlign.Center)
@@ -450,10 +451,10 @@ export struct FieldwatchFindPage {
       })
 
       if (this.scanOpen) {
-        Text($r('app.string.fieldwatch_find_scan_hint')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_find_scan_hint')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
         if (this.scanning.length === 0) {
-          this.buildEmptyCard($r('app.string.fieldwatch_find_scan_empty'))
+          this.buildEmptyCard(fieldwatchText('app.string.fieldwatch_find_scan_empty'))
         } else {
           Column({ space: 8 }) {
             ForEach(this.scanning, (candidate: FindClaimCandidate): void => {
@@ -487,10 +488,10 @@ export struct FieldwatchFindPage {
           .fontColor(candidate.connected ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       if (candidate.alreadyClaimed) {
-        Text($r('app.string.fieldwatch_find_claimed')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_find_claimed')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       } else {
-        Text($r('app.string.fieldwatch_find_claim')).fontSize(13).fontWeight(FontWeight.Medium)
+        Text(fieldwatchText('app.string.fieldwatch_find_claim')).fontSize(13).fontWeight(FontWeight.Medium)
           .fontColor(FieldwatchPaletteHolder.get().accent)
       }
     }
@@ -502,10 +503,10 @@ export struct FieldwatchFindPage {
   @Builder
   private buildOwnedSection() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_find_owned_section')).fontSize(15).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_find_owned_section')).fontSize(15).fontWeight(FontWeight.Medium)
         .fontColor(FieldwatchPaletteHolder.get().text)
       if (this.owned.length === 0) {
-        this.buildEmptyCard($r('app.string.fieldwatch_find_none_owned'))
+        this.buildEmptyCard(fieldwatchText('app.string.fieldwatch_find_none_owned'))
       } else {
         Column({ space: 8 }) {
           // 同上：把「上次见到」与稳定性一并编进 key，否则时间文本会停旧。
@@ -530,13 +531,13 @@ export struct FieldwatchFindPage {
           .fontColor(FieldwatchPaletteHolder.get().textDim)
         // 地址稳定性未经真机证实（V1/V5/V6-b）时如实说明，不让用户以为永远认得出来。
         if (!device.addressStable) {
-          Text($r('app.string.fieldwatch_find_unstable_hint')).fontSize(11)
+          Text(fieldwatchText('app.string.fieldwatch_find_unstable_hint')).fontSize(11)
             .fontColor(FieldwatchPaletteHolder.get().warn)
         }
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       // 纠错入口做成**可见按钮**而不是长按：文档 §7.3 建议长按，
       // 但日常用户不会去长按一张卡片 —— 纠错入口藏起来等于没有。
-      Text($r('app.string.fieldwatch_find_not_mine')).fontSize(12)
+      Text(fieldwatchText('app.string.fieldwatch_find_not_mine')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
         .padding({ left: 8, right: 4, top: 6, bottom: 6 })
         .onClick((): void => { void this.remove(device); })
@@ -582,22 +583,22 @@ export struct FieldwatchFindPage {
   }
 
   private titleOf(name: string): ResourceStr {
-    return name.length > 0 ? name : $r('app.string.fieldwatch_find_unnamed');
+    return name.length > 0 ? name : fieldwatchText('app.string.fieldwatch_find_unnamed');
   }
 
   private subtitleOf(candidate: FindClaimCandidate): ResourceStr {
-    if (candidate.connected) return $r('app.string.fieldwatch_find_sub_connected');
-    if (candidate.source === FindClaimSource.CURRENT_AP) return $r('app.string.fieldwatch_find_sub_router');
+    if (candidate.connected) return fieldwatchText('app.string.fieldwatch_find_sub_connected');
+    if (candidate.source === FindClaimSource.CURRENT_AP) return fieldwatchText('app.string.fieldwatch_find_sub_router');
     // **扫描来的不能说「系统里配过对」**（真机上就出现过这句错文案）：
     // 它根本没配对，用户看到这句会以为系统里有记录。
-    if (candidate.source === FindClaimSource.SCAN) return $r('app.string.fieldwatch_find_sub_nearby');
-    return $r('app.string.fieldwatch_find_sub_paired');
+    if (candidate.source === FindClaimSource.SCAN) return fieldwatchText('app.string.fieldwatch_find_sub_nearby');
+    return fieldwatchText('app.string.fieldwatch_find_sub_paired');
   }
 
   private lastSeenText(device: OwnDevice): ResourceStr {
-    if (device.lastSeenAt <= 0) return $r('app.string.fieldwatch_find_never_seen');
+    if (device.lastSeenAt <= 0) return fieldwatchText('app.string.fieldwatch_find_never_seen');
     const seconds: number = Math.max(0, Math.round((Date.now() - device.lastSeenAt) / 1000));
-    if (seconds < 60) return $r('app.string.fieldwatch_find_seen_just_now');
+    if (seconds < 60) return fieldwatchText('app.string.fieldwatch_find_seen_just_now');
     if (seconds < 3600) return $r('app.string.fieldwatch_find_seen_minutes', Math.round(seconds / 60));
     if (seconds < 86400) return $r('app.string.fieldwatch_find_seen_hours', Math.round(seconds / 3600));
     return $r('app.string.fieldwatch_find_seen_days', Math.round(seconds / 86400));

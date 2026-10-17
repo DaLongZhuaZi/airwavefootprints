@@ -9,6 +9,7 @@ import { FieldwatchDirectionSensor, FieldwatchDirectionSensorListener } from '..
 import { ShakeSample, staticStrongSuspect } from '../../fieldwatch/domain/FieldwatchShakeConfirm';
 import { FieldwatchHuntCombinedFeedback, IFieldwatchHuntFeedback } from '../../fieldwatch/platform/FieldwatchHuntFeedback';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 @Component
 export struct FieldwatchHuntPage {
@@ -118,7 +119,7 @@ export struct FieldwatchHuntPage {
   @Builder
   private buildDirectionMap() {
     Column({ space: 8 }) {
-      Text($r('app.string.fieldwatch_hunt_direction_title')).fontSize(16).fontWeight(FontWeight.Medium)
+      Text(fieldwatchText('app.string.fieldwatch_hunt_direction_title')).fontSize(16).fontWeight(FontWeight.Medium)
         .fontColor(FieldwatchPaletteHolder.get().text)
       Text(this.directionAssist ? this.text('app.string.fieldwatch_hunt_direction_hint') : this.text('app.string.fieldwatch_hunt_direction_off'))
         .fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -128,7 +129,7 @@ export struct FieldwatchHuntPage {
           .onReady((): void => { this.drawDirectionMap(); })
         Text(this.directionText()).fontSize(17).fontWeight(FontWeight.Medium)
           .fontColor(this.directionReady ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().text)
-        Text($r('app.string.fieldwatch_hunt_direction_map_hint')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_hunt_direction_map_hint')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
         // 原来是光秃秃一个「5/16」，看不出在说什么。
         Text(this.text('app.string.fieldwatch_hunt_direction_coverage')
@@ -283,19 +284,19 @@ export struct FieldwatchHuntPage {
   @Builder
   private buildTrend() {
     Column({ space: 6 }) {
-      Text($r('app.string.fieldwatch_hunt_trend')).fontSize(13)
-        .fontColor($r('app.color.text_secondary'))
+      Text(fieldwatchText('app.string.fieldwatch_hunt_trend')).fontSize(13)
+        .fontColor(FieldwatchPaletteHolder.get().textDim)
       Canvas(this.trendCtx)
         .width('100%').height(120)
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
         .borderRadius(12)
         .onReady((): void => { this.drawTrend(); })
       // 折线本身没有说怎么读 —— 补一句大白话（用户要求：术语旁加必要说明）。
-      Text($r('app.string.fieldwatch_hunt_trend_hint')).fontSize(12)
+      Text(fieldwatchText('app.string.fieldwatch_hunt_trend_hint')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       // 「一直很强但完全不变」可能是别的同款设备：只提示，不断言。
       if (this.staticSuspect) {
-        Text($r('app.string.fieldwatch_find_static_suspect')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_find_static_suspect')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       }
     }.width('100%').alignItems(HorizontalAlign.Start)
@@ -363,8 +364,8 @@ export struct FieldwatchHuntPage {
         })
         Scroll() {
         Column({ space: 14 }) {
-        Text($r('app.string.fieldwatch_hunt_title')).fontSize(26).fontWeight(FontWeight.Bold)
-        Text(this.targetLabel.length > 0 ? this.targetLabel : this.text('app.string.fieldwatch_hunt_none')).fontSize(15).fontColor($r('app.color.text_secondary'))
+        Text(fieldwatchText('app.string.fieldwatch_hunt_title')).fontSize(26).fontWeight(FontWeight.Bold)
+        Text(this.targetLabel.length > 0 ? this.targetLabel : this.text('app.string.fieldwatch_hunt_none')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().textDim)
         Stack() {
           Circle().width(220).height(220).fillOpacity(0.12).fill(this.cueColor()).scale({ x: this.pulseScale, y: this.pulseScale })
           Circle().width(160).height(160).fillOpacity(0.22).fill(this.cueColor())
@@ -373,17 +374,17 @@ export struct FieldwatchHuntPage {
             Text(this.rssiText(this.currentRssi)).fontSize(18).fontColor(this.cueColor())
           }
         }.width('100%').height(240)
-        Text(this.text('app.string.fieldwatch_hunt_hint_' + huntCueKey(this.cue))).fontSize(14).fontColor($r('app.color.text_primary'))
-        this.buildMetric($r('app.string.fieldwatch_hunt_peak'), this.rssiText(this.peakRssi))
-        this.buildMetric($r('app.string.fieldwatch_hunt_range'), this.rangeText.length > 0 ? this.rangeText + ' dBm' : this.text('app.string.fieldwatch_hunt_na'))
-        this.buildMetric($r('app.string.fieldwatch_hunt_average'), this.sampleCount > 0 ? Math.round(this.averageRssi).toString() + ' dBm' : this.text('app.string.fieldwatch_hunt_na'))
-        this.buildMetric($r('app.string.fieldwatch_hunt_samples'), this.sampleCount.toString())
-      Text($r('app.string.fieldwatch_hunt_metric_hint')).fontSize(12)
+        Text(this.text('app.string.fieldwatch_hunt_hint_' + huntCueKey(this.cue))).fontSize(14).fontColor(FieldwatchPaletteHolder.get().text)
+        this.buildMetric(fieldwatchText('app.string.fieldwatch_hunt_peak'), this.rssiText(this.peakRssi))
+        this.buildMetric(fieldwatchText('app.string.fieldwatch_hunt_range'), this.rangeText.length > 0 ? this.rangeText + ' dBm' : this.text('app.string.fieldwatch_hunt_na'))
+        this.buildMetric(fieldwatchText('app.string.fieldwatch_hunt_average'), this.sampleCount > 0 ? Math.round(this.averageRssi).toString() + ' dBm' : this.text('app.string.fieldwatch_hunt_na'))
+        this.buildMetric(fieldwatchText('app.string.fieldwatch_hunt_samples'), this.sampleCount.toString())
+      Text(fieldwatchText('app.string.fieldwatch_hunt_metric_hint')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
         this.buildTrend()
         this.buildDirectionMap()
         Row() {
-          Text($r('app.string.fieldwatch_hunt_tick_beep')).layoutWeight(1)
+          Text(fieldwatchText('app.string.fieldwatch_hunt_tick_beep')).layoutWeight(1)
           Toggle({ type: ToggleType.Switch, isOn: this.huntBeep })
             .enabled(this.soundSupported)
             .onChange((value: boolean): void => {
@@ -393,7 +394,7 @@ export struct FieldwatchHuntPage {
             })
         }
         Row() {
-          Text($r('app.string.fieldwatch_hunt_tick_vibrate')).layoutWeight(1)
+          Text(fieldwatchText('app.string.fieldwatch_hunt_tick_vibrate')).layoutWeight(1)
           Toggle({ type: ToggleType.Switch, isOn: this.huntVibrate })
             .enabled(this.tickSupported)
             .onChange((value: boolean): void => {
@@ -401,16 +402,16 @@ export struct FieldwatchHuntPage {
               fieldwatchApplication.setHuntVibrate(value);
             })
         }.width('100%')
-        if (!this.tickSupported && !this.soundSupported) Text($r('app.string.fieldwatch_hunt_tick_unavailable')).fontSize(12).fontColor($r('app.color.text_secondary'))
-        Text($r('app.string.fieldwatch_hunt_disclaimer')).fontSize(12).fontColor($r('app.color.text_secondary'))
-        Button($r('app.string.fieldwatch_hunt_stop')).height(44).width('100%').onClick((): void => { this.stop(); })
+        if (!this.tickSupported && !this.soundSupported) Text(fieldwatchText('app.string.fieldwatch_hunt_tick_unavailable')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+        Text(fieldwatchText('app.string.fieldwatch_hunt_disclaimer')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+        Button(fieldwatchText('app.string.fieldwatch_hunt_stop')).height(44).width('100%').onClick((): void => { this.stop(); })
         }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: 48 })
       }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
       }
     }
     .titleBar(NGFHdsTitleBarOptionsFactory.build(
-      $r('app.string.fieldwatch_hunt_title'),
-      $r('app.string.fieldwatch_hunt_disclaimer'),
+      fieldwatchText('app.string.fieldwatch_hunt_title'),
+      fieldwatchText('app.string.fieldwatch_hunt_disclaimer'),
       FieldwatchPaletteHolder.get().night,
       hdsMaterial.MaterialLevel.GENTLE,
       true,
@@ -431,8 +432,8 @@ export struct FieldwatchHuntPage {
   @Builder
   private buildMetric(label: ResourceStr, value: string) {
     Row() {
-      Text(label).fontSize(14).fontColor($r('app.color.text_secondary')).width(120)
-      Text(value).fontSize(14).fontColor($r('app.color.text_primary')).layoutWeight(1)
+      Text(label).fontSize(14).fontColor(FieldwatchPaletteHolder.get().textDim).width(120)
+      Text(value).fontSize(14).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
     }.width('100%')
   }
 }

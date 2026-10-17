@@ -16,6 +16,7 @@ import { FieldwatchButton, FieldwatchButtonTone, FieldwatchSegmentedChip } from 
 import { FieldwatchChip } from '../../fieldwatch/ui/FieldwatchChip';
 import { FieldwatchIntensitySlider } from '../../fieldwatch/ui/FieldwatchIntensitySlider';
 import { onboardingTapAccepted } from '../../fieldwatch/domain/FieldwatchOnboardingGuard';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 const TAG: string = 'FieldwatchOnboarding';
 
@@ -281,9 +282,9 @@ export struct FieldwatchOnboardingPage {
 
   // ── ① 这是什么 ──
   @Builder private buildWelcome() {
-    this.buildPrinciple('sys.symbol.dot_radiowaves', $r('app.string.fieldwatch_onb_p1_title'), $r('app.string.fieldwatch_onb_p1_body'))
-    this.buildPrinciple('sys.symbol.wifi_slash', $r('app.string.fieldwatch_onb_p2_title'), $r('app.string.fieldwatch_onb_p2_body'))
-    this.buildPrinciple('sys.symbol.checkmark_shield', $r('app.string.fieldwatch_onb_p3_title'), $r('app.string.fieldwatch_onb_p3_body'))
+    this.buildPrinciple('sys.symbol.dot_radiowaves', fieldwatchText('app.string.fieldwatch_onb_p1_title'), fieldwatchText('app.string.fieldwatch_onb_p1_body'))
+    this.buildPrinciple('sys.symbol.wifi_slash', fieldwatchText('app.string.fieldwatch_onb_p2_title'), fieldwatchText('app.string.fieldwatch_onb_p2_body'))
+    this.buildPrinciple('sys.symbol.checkmark_shield', fieldwatchText('app.string.fieldwatch_onb_p3_title'), fieldwatchText('app.string.fieldwatch_onb_p3_body'))
   }
   @Builder private buildPrinciple(symbol: string, title: ResourceStr, body: ResourceStr) {
     Row({ space: 12 }) {
@@ -313,7 +314,7 @@ export struct FieldwatchOnboardingPage {
     }
     .width('100%').padding(16).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
     .opacity(this.contentOpacity).translate({ y: this.contentShift })
-    Text($r('app.string.fieldwatch_onb_baseline_hint'))
+    Text(fieldwatchText('app.string.fieldwatch_onb_baseline_hint'))
       .fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       .opacity(this.contentOpacity).translate({ y: this.contentShift })
   }
@@ -336,19 +337,19 @@ export struct FieldwatchOnboardingPage {
           SymbolGlyph($r('sys.symbol.dot_radiowaves_left_and_right'))
             .fontSize(18).fontColor([FieldwatchPaletteHolder.get().accent])
         }.width(36).height(36).borderRadius(18).backgroundColor(FieldwatchPaletteHolder.get().badgeBg)
-        Text($r('app.string.fieldwatch_perm_notif_title')).fontSize(16).fontWeight(FontWeight.Medium)
+        Text(fieldwatchText('app.string.fieldwatch_perm_notif_title')).fontSize(16).fontWeight(FontWeight.Medium)
           .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
         if (this.notificationEnabled) {
           Row({ space: 4 }) {
             SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(14).fontColor([FieldwatchPaletteHolder.get().accent])
-            Text($r('app.string.fieldwatch_onb_allowed')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent)
+            Text(fieldwatchText('app.string.fieldwatch_onb_allowed')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent)
           }
         } else {
-          FieldwatchButton({ label: $r('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
+          FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
             compact: true, fillWidth: false, onTap: (): void => { void this.requestNotification(); } })
         }
       }.width('100%')
-      Text($r('app.string.fieldwatch_notification_permission_reason'))
+      Text(fieldwatchText('app.string.fieldwatch_notification_permission_reason'))
         .fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
     }.width('100%').padding(12).alignItems(HorizontalAlign.Start)
       .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
@@ -369,10 +370,10 @@ export struct FieldwatchOnboardingPage {
         if (this.granted(spec.kind)) {
           Row({ space: 4 }) {
             SymbolGlyph($r('sys.symbol.checkmark_circle')).fontSize(14).fontColor([FieldwatchPaletteHolder.get().accent])
-            Text($r('app.string.fieldwatch_onb_allowed')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent)
+            Text(fieldwatchText('app.string.fieldwatch_onb_allowed')).fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent)
           }
         } else {
-          FieldwatchButton({ label: $r('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
+          FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_onb_allow'), tone: FieldwatchButtonTone.PRIMARY,
             compact: true, fillWidth: false, onTap: (): void => { void this.allow(spec.kind); } })
         }
       }.width('100%')
@@ -427,26 +428,26 @@ export struct FieldwatchOnboardingPage {
     Column({ space: 14 }) {
       // ⓪ 模式选择：实时页默认进「日常」还是「专业」
       Column({ space: 6 }) {
-        Text($r('app.string.fieldwatch_settings_mode_title')).fontSize(16).fontWeight(FontWeight.Medium)
+        Text(fieldwatchText('app.string.fieldwatch_settings_mode_title')).fontSize(16).fontWeight(FontWeight.Medium)
           .fontColor(FieldwatchPaletteHolder.get().headerText)
         // 与实时页同一写法：每个芯片包一层 layoutWeight 容器，各占一半。
         Row({ space: 8 }) {
           Column() {
-            FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_daily'),
+            FieldwatchSegmentedChip({ label: fieldwatchText('app.string.fieldwatch_live_mode_daily'),
               selected: this.dailyMode, fillWidth: true, onTap: (): void => { this.pickDailyMode(true); } })
           }.layoutWeight(1)
           Column() {
-            FieldwatchSegmentedChip({ label: $r('app.string.fieldwatch_live_mode_pro'),
+            FieldwatchSegmentedChip({ label: fieldwatchText('app.string.fieldwatch_live_mode_pro'),
               selected: !this.dailyMode, fillWidth: true, onTap: (): void => { this.pickDailyMode(false); } })
           }.layoutWeight(1)
         }.width('100%')
-        Text($r('app.string.fieldwatch_settings_mode_hint')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_settings_mode_hint')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }.width('100%').alignItems(HorizontalAlign.Start)
 
       // ① 扫描强度：固定三节点的进度条（拖动 / 点轨道 / 点标签三种改法都支持）
       Column({ space: 6 }) {
-        Text($r('app.string.fieldwatch_settings_scan')).fontSize(16).fontWeight(FontWeight.Medium)
+        Text(fieldwatchText('app.string.fieldwatch_settings_scan')).fontSize(16).fontWeight(FontWeight.Medium)
           .fontColor(FieldwatchPaletteHolder.get().headerText)
         FieldwatchIntensitySlider({ intensity: this.scanIntensity, onPick: (next: string): void => {
           if (next === this.scanIntensity) return;
@@ -459,7 +460,7 @@ export struct FieldwatchOnboardingPage {
       // ② 后台运行（开关状态以应用层返回值为准：申请失败时不能显示成「已开启」）
       Column({ space: 4 }) {
         Row() {
-          Text($r('app.string.fieldwatch_settings_background_scanning')).fontSize(14)
+          Text(fieldwatchText('app.string.fieldwatch_settings_background_scanning')).fontSize(14)
             .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
           Toggle({ type: ToggleType.Switch, isOn: this.backgroundScanning })
             .onChange((value: boolean): void => {
@@ -468,13 +469,13 @@ export struct FieldwatchOnboardingPage {
               });
             })
         }.width('100%')
-        Text($r('app.string.fieldwatch_settings_background_hint')).fontSize(12)
+        Text(fieldwatchText('app.string.fieldwatch_settings_background_hint')).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }.width('100%').alignItems(HorizontalAlign.Start)
 
       // ③ 屏幕常亮
       Row() {
-        Text($r('app.string.fieldwatch_settings_keep_screen_on')).fontSize(14)
+        Text(fieldwatchText('app.string.fieldwatch_settings_keep_screen_on')).fontSize(14)
           .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
         Toggle({ type: ToggleType.Switch, isOn: this.keepScreenOn })
           .onChange((value: boolean): void => {
@@ -492,7 +493,7 @@ export struct FieldwatchOnboardingPage {
           Button({ type: ButtonType.Normal }) {
             Row({ space: 6 }) {
               SymbolGlyph($r('sys.symbol.arrow_left')).fontSize(15).fontColor([FieldwatchPaletteHolder.get().text])
-              Text($r('app.string.fieldwatch_onb_back')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
+              Text(fieldwatchText('app.string.fieldwatch_onb_back')).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
             }
           }
           .height(46).layoutWeight(1).borderRadius(23)
@@ -507,14 +508,14 @@ export struct FieldwatchOnboardingPage {
         }
         Button({ type: ButtonType.Normal }) {
           Row({ space: 6 }) {
-            Text(this.step < this.heads.length - 1 ? $r('app.string.fieldwatch_onb_next') : $r('app.string.fieldwatch_onb_enter'))
+            Text(this.step < this.heads.length - 1 ? fieldwatchText('app.string.fieldwatch_onb_next') : fieldwatchText('app.string.fieldwatch_onb_enter'))
               .fontSize(15).fontColor(FieldwatchPaletteHolder.get().onAccent)
             SymbolGlyph($r('sys.symbol.arrow_right')).fontSize(15).fontColor([FieldwatchPaletteHolder.get().onAccent])
           }
         }
         .height(46).layoutWeight(1).borderRadius(23)
-        .fontColor($r('app.color.fw_on_accent'))
-        .backgroundColor($r('app.color.button_primary'))
+        .fontColor(FieldwatchPaletteHolder.get().onAccent)
+        .backgroundColor(FieldwatchPaletteHolder.get().accent)
         .onTouch((event: TouchEvent): void => {
           if (event.type === TouchType.Down) this.pressedStep = this.step;
         })
@@ -529,7 +530,7 @@ export struct FieldwatchOnboardingPage {
       // 权限页底部不再放「先用基础功能」按钮（用户要求）：改成一行说明，
       // 让「拒绝也能继续」这件事可读，但不额外提供一个会跳过的操作入口。
       if (this.step === 2) {
-        Text($r('app.string.fieldwatch_onb_permission_skip_hint'))
+        Text(fieldwatchText('app.string.fieldwatch_onb_permission_skip_hint'))
           .fontSize(12).textAlign(TextAlign.Center).width('100%')
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }

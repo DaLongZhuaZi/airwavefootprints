@@ -1,4 +1,5 @@
 import { FieldwatchPaletteHolder } from './FieldwatchPalette';
+import { fieldwatchText } from './FieldwatchResText';
 
 /**
  * 扫描强度：固定三节点的进度条控件。
@@ -61,13 +62,13 @@ export struct FieldwatchIntensitySlider {
           this.onPick(this.intensityAt(Math.round(value)));
         })
       Row() {
-        Text($r('app.string.wifi_scan_basic')).fontSize(12).layoutWeight(1).textAlign(TextAlign.Start)
+        Text(fieldwatchText('app.string.wifi_scan_basic')).fontSize(12).layoutWeight(1).textAlign(TextAlign.Start)
           .fontColor(this.intensity === 'basic' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
           .onClick((): void => { this.onPick('basic'); })
-        Text($r('app.string.wifi_scan_balanced')).fontSize(12).layoutWeight(1).textAlign(TextAlign.Center)
+        Text(fieldwatchText('app.string.wifi_scan_balanced')).fontSize(12).layoutWeight(1).textAlign(TextAlign.Center)
           .fontColor(this.intensity === 'balanced' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
           .onClick((): void => { this.onPick('balanced'); })
-        Text($r('app.string.wifi_scan_saver')).fontSize(12).layoutWeight(1).textAlign(TextAlign.End)
+        Text(fieldwatchText('app.string.wifi_scan_saver')).fontSize(12).layoutWeight(1).textAlign(TextAlign.End)
           .fontColor(this.intensity === 'saver' ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
           .onClick((): void => { this.onPick('saver'); })
       }.width('100%')
