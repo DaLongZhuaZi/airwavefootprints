@@ -10671,6 +10671,14 @@
     {
       "name": "fw_cl_110_5",
       "value": "Fixed: the privacy statement and changelog still showed Chinese in English mode"
+    },
+    {
+      "name": "fw_cl_fix_1",
+      "value": "Consistent bottom spacing: the last card is no longer hidden behind the tab bar"
+    },
+    {
+      "name": "fw_cl_fix_2",
+      "value": "Fixed: the Find things page could not be scrolled"
     }
   ]
 }
