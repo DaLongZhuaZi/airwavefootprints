@@ -342,8 +342,16 @@ export struct FieldwatchFindPage {
       .padding({ left: 16, right: 16, top: this.topInset + 12, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       .alignItems(HorizontalAlign.Start)
     }
-    .width('100%').height('100%')
+    // **与工具箱另外两页保持同一套滚动容器写法**（信道 / 反追踪）：
+    // `.layoutWeight(1)` 在父 Column 里拿到确定高度，`.edgeEffect(Spring)` 让内容
+    // 没占满时也能拖动回弹 —— 之前这里写的是 `.height('100%')` 且没有 edgeEffect，
+    // 结果内容不满一屏时页面完全拖不动（实测反馈）。
+    // 同时给 `height('100%')`：`layoutWeight` 由父 Column 分配剩余高度，
+    // 万一被放到非 flex 容器里也有确定高度，不会塌成 0。
+    .width('100%').height('100%').layoutWeight(1)
     .scrollBar(BarState.Off)
+    .edgeEffect(EdgeEffect.Spring)
+    .align(Alignment.TopStart)
     .backgroundColor(FieldwatchPaletteHolder.get().night)
   }
 
