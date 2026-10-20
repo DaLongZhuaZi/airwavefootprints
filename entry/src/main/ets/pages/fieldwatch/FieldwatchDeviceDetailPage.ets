@@ -10,6 +10,7 @@ import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/Fiel
 import { FieldwatchRouteName, FieldwatchSignatureEditorParam } from '../../fieldwatch/ui/FieldwatchRoutes';
 import { presenceTrackCommands, TrendGeometry, trendGeometry, TrendTickLabel } from '../../fieldwatch/ui/FieldwatchUiState';
 import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
+import { FIELDWATCH_SAFE_BOTTOM_GAP } from '../../fieldwatch/ui/FieldwatchLayout';
 
 /** 顶部沉浸底板高度。 */
 const DETAIL_UNDERLAY_HEIGHT: number = 168;
@@ -61,6 +62,8 @@ export struct FieldwatchDeviceDetailPage {
   @State private sighting: Sighting | undefined = undefined;
   /** 顶部系统安全区高度（vp）。测量前的兜底值取本机实测的 28，避免首帧跳一下。 */
   @State private topInsetVp: number = 28;
+  /** 系统底部导航条高度；页面底部内容要与它拉开距离。 */
+  @State private bottomInsetVp: number = 0;
   @State private guess: ExplainGuess | undefined = undefined;
   @State private family: SignatureFamilyHint | undefined = undefined;
   /** 趋势图几何量：随设备与画框变化，在 `refresh()` 里算一次。 */
@@ -107,6 +110,7 @@ export struct FieldwatchDeviceDetailPage {
       window.getLastWindow(hostContext).then((lastWindow: window.Window): void => {
         const statusArea: window.AvoidArea = lastWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
         this.topInsetVp = uiContext.px2vp(statusArea.topRect.height);
+      this.bottomInsetVp = uiContext.px2vp(lastWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_NAVIGATION_INDICATOR).bottomRect.height);
       }).catch((): void => { this.topInsetVp = 28; });
     }
     this.refresh();
@@ -248,7 +252,7 @@ export struct FieldwatchDeviceDetailPage {
         this.buildFamilySection(this.sighting)
         this.buildFooter()
       }
-    }.width('100%').padding({ left: 16, right: 16, top: detailContentTop(this.topInsetVp), bottom: 40 })
+    }.width('100%').padding({ left: 16, right: 16, top: detailContentTop(this.topInsetVp), bottom: this.bottomInsetVp + FIELDWATCH_SAFE_BOTTOM_GAP })
   }
 
   /**

@@ -1,4 +1,5 @@
 import { window } from '@kit.ArkUI';
+import { FIELDWATCH_TAB_BAR_RESERVE } from '../../fieldwatch/ui/FieldwatchLayout';
 import { resolveResourceString, ngfText } from 'ngf_framework';
 import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
@@ -94,6 +95,8 @@ const LABEL_FONT: string = '24px sans-serif';
 @Component
 export struct FieldwatchToolboxPage {
   topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   twoColumn: boolean = false;
   /**
    * 本页当前是否可见；不可见时定时刷新直接返回。
@@ -201,7 +204,7 @@ export struct FieldwatchToolboxPage {
       } else {
         Column() {
           // 找东西页自含认领与向导（向导渲染在它内部），不向父层要回调。
-          FieldwatchFindPage({ topInset: this.topInset })
+          FieldwatchFindPage({ topInset: this.topInset, bottomInset: this.bottomInset })
         }
         .id('fieldwatch-tool-find')
         .width('100%').height('100%')
@@ -330,7 +333,7 @@ export struct FieldwatchToolboxPage {
           .fontColor(FieldwatchPaletteHolder.get().textDim)
         this.buildChannelSummary()
         this.buildChannelRanking()
-      }.width('100%').padding({ left: 16, right: 16, top: 12, bottom: 48 })
+      }.width('100%').padding({ left: 16, right: 16, top: 12, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
     }.width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
   }
 
@@ -926,7 +929,7 @@ export struct FieldwatchToolboxPage {
         this.buildEvaluatedPanel()
         this.buildAntiTrackLogPanel()
       }.width('100%').alignItems(HorizontalAlign.Start)
-      .padding({ left: 16, right: 16, top: 12, bottom: 48 })
+      .padding({ left: 16, right: 16, top: 12, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
     }.width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
     .align(Alignment.TopStart)
   }

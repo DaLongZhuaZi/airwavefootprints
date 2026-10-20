@@ -1,4 +1,5 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
+import { FIELDWATCH_SAFE_BOTTOM_GAP } from '../../fieldwatch/ui/FieldwatchLayout';
 // `NavigationSystemTransitionType` 是 ArkUI 全局枚举，与 `NavigationMode`、
 // `BarPosition` 一样**不需要 import** —— 从 kit 导入会报「no exported member」。
 import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfVisualEffectsFacade, resolveResourceString, ngfText } from 'ngf_framework';
@@ -88,6 +89,8 @@ export struct FieldwatchSignatureEditorPage {
   fromDeviceKey: string = '';
   /** 顶部系统安全区高度（vp），由根页面测量后传入。 */
   topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /**
    * 内容层顶部避让。
    *
@@ -342,7 +345,7 @@ export struct FieldwatchSignatureEditorPage {
           // 原来写死 16，内容直接压在标题栏底下（实测反馈）；
           // 改成 92 之后仍然落在底板的覆盖带里（底板 168 + 状态栏 28 = 196vp，
           // 且它合成在内容之上）—— 详见 `ngfImmersiveContentTop`。
-          }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: 48 })
+          }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_SAFE_BOTTOM_GAP })
         }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
       }
       .width('100%').height('100%')

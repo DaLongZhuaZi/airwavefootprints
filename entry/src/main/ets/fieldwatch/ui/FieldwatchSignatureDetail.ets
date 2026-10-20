@@ -1,4 +1,5 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
+import { FIELDWATCH_SAFE_BOTTOM_GAP } from './FieldwatchLayout';
 import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, resolveResourceString } from 'ngf_framework';
 import { fieldwatchApplication } from '../application/FieldwatchApplication';
 import { SignatureClass, foldedSignatureClass } from '../domain/FieldwatchModels';
@@ -29,6 +30,8 @@ export struct FieldwatchSignatureDetail {
   onClose: () => void = (): void => {};
   /** 顶部系统安全区高度（vp），由根页面测量后传入。 */
   topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /** 关注状态变化时通知外层（横屏分栏时列表同屏可见，必须重建）。 */
   onFollowChanged: () => void = (): void => {};
   @State private tick: number = 0;
@@ -191,7 +194,7 @@ export struct FieldwatchSignatureDetail {
           Text(fieldwatchText('app.string.fieldwatch_signatures_detail_gone')).fontSize(14)
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
         }
-      }.width('100%').padding({ left: 20, right: 20, top: this.withShell ? this.contentTop() : 20, bottom: 20 })
+      }.width('100%').padding({ left: 20, right: 20, top: this.withShell ? this.contentTop() : 20, bottom: this.bottomInset + FIELDWATCH_SAFE_BOTTOM_GAP })
     }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
   }
 

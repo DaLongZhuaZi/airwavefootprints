@@ -19,6 +19,7 @@ import { deviceClassSymbol, nearLinkClassSymbol } from '../../fieldwatch/ui/Fiel
 import { RadioKind } from '../../fieldwatch/domain/FieldwatchModels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
+import { FIELDWATCH_TAB_BAR_RESERVE } from '../../fieldwatch/ui/FieldwatchLayout';
 
 const TAG: string = 'FieldwatchFindPage';
 
@@ -57,6 +58,8 @@ const SCAN_REFRESH_MS: number = 5000;
 export struct FieldwatchFindPage {
   /** 顶部安全区（沉浸式）。 */
   topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /**
    * 认领完成后立刻进入寻找向导。
    *
@@ -336,7 +339,7 @@ export struct FieldwatchFindPage {
         }
       }
       .width('100%')
-      .padding({ left: 16, right: 16, top: this.topInset + 12, bottom: 24 })
+      .padding({ left: 16, right: 16, top: this.topInset + 12, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       .alignItems(HorizontalAlign.Start)
     }
     .width('100%').height('100%')

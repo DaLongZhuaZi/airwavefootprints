@@ -1,4 +1,5 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
+import { FIELDWATCH_SAFE_BOTTOM_GAP } from '../../fieldwatch/ui/FieldwatchLayout';
 import {
   ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory,
   NGFImmersiveTopChromeUnderlay, resolveResourceString
@@ -54,6 +55,8 @@ export struct FieldwatchHuntPage {
   private refreshTimer: number = -1;
   /** 顶部安全区高度（由宿主传入；与设备详情页同一来源）。 */
   topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /** 顶部玻璃底板高度；与设备详情页同值，见 `ngfImmersiveContentTop`。 */
   private readonly underlayHeight: number = 168;
 
@@ -405,7 +408,7 @@ export struct FieldwatchHuntPage {
         if (!this.tickSupported && !this.soundSupported) Text(fieldwatchText('app.string.fieldwatch_hunt_tick_unavailable')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
         Text(fieldwatchText('app.string.fieldwatch_hunt_disclaimer')).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
         Button(fieldwatchText('app.string.fieldwatch_hunt_stop')).height(44).width('100%').onClick((): void => { this.stop(); })
-        }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: 48 })
+        }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_SAFE_BOTTOM_GAP })
       }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
       }
     }

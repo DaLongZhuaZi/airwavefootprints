@@ -1,4 +1,5 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
+import { FIELDWATCH_TAB_BAR_RESERVE } from '../../fieldwatch/ui/FieldwatchLayout';
 import { logger, ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFMaterialSheetOptions, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, ngfVisualEffectsFacade, resolveResourceString } from 'ngf_framework';
 import { FieldwatchCatalogImportActionResult, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { SignatureClass, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
@@ -78,6 +79,8 @@ export struct FieldwatchSignaturesPage {
    * （实测反馈：特征库标题贴到边框，与其它标签页不一致）。
    */
   @Prop topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /**
    * 本页当前是否可见；不可见时不做任何刷新（`Tabs` 会让页面常驻）。
    *
@@ -227,6 +230,7 @@ export struct FieldwatchSignaturesPage {
         .layoutWeight(1)
         .width('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
         .lanes(this.twoColumn ? 2 : 1, 8)
+    .padding({ bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       }
       .width('100%').height('100%')
   }

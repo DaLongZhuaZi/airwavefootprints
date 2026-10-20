@@ -10,6 +10,7 @@ import { FieldwatchLiveMode, FieldwatchNavigationTab, FieldwatchRadarPoint, Fiel
 import { logger, ngfPlatformWindowManagerFacade, ngfSystemNotificationManager } from 'ngf_framework';
 import { FieldwatchPalette, FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { fieldwatchText, invalidateFieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
+import { FIELDWATCH_SAFE_BOTTOM_GAP, FIELDWATCH_TAB_BAR_RESERVE } from '../../fieldwatch/ui/FieldwatchLayout';
 import { buildRadarNodes, FieldwatchRadarNode } from '../../fieldwatch/ui/FieldwatchRadarCluster';
 import { nearLinkClassLabel } from '../../fieldwatch/ui/FieldwatchDeviceTypeIcon';
 import { FieldwatchChip, FieldwatchPresetChip, FieldwatchSwitchRow } from '../../fieldwatch/ui/FieldwatchChip';
@@ -579,15 +580,15 @@ struct FieldwatchRootPage {
     else if (name === FieldwatchRouteName.SIT_DETAIL) FieldwatchReportsPage();
     else if (name === FieldwatchRouteName.EXPORT) FieldwatchReportsPage();
     else if (name === FieldwatchRouteName.SIGNATURE_CATALOG) {
-      FieldwatchSignaturesPage({ topInset: this.topInsetVp, landscape: this.isLandscape, onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }, onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, followTick: this.followTick, onOpenWatchlist: (): void => { this.openWatchlist(); } });
+      FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, landscape: this.isLandscape, onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }, onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, followTick: this.followTick, onOpenWatchlist: (): void => { this.openWatchlist(); } });
     } else if (name === FieldwatchRouteName.HUNT) {
-      FieldwatchHuntPage({ topInset: this.topInsetVp, onClose: (): void => { this.pathStack.pop(); } });
+      FieldwatchHuntPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, onClose: (): void => { this.pathStack.pop(); } });
     } else if (name === FieldwatchRouteName.SIGNATURE_DETAIL) {
       // 横屏右栏的特征详情：与竖屏 sheet 共用同一个内容组件。
       FieldwatchSignatureDetail({
         fleetId: String(param),
         withShell: true,
-        topInset: this.topInsetVp,
+        topInset: this.topInsetVp, bottomInset: this.bottomInsetVp,
         onEdit: (fleetId: string): void => { this.openSignatureEditor(fleetId, ''); },
         onClose: (): void => { this.pathStack.pop(); },
         // 横屏分栏时列表与详情是**两个组件实例**，关注变化必须经外层转发，
@@ -598,35 +599,35 @@ struct FieldwatchRootPage {
       // 横屏右栏的关注列表：与竖屏整页共用同一个内容组件。
       FieldwatchWatchlistPage({
         withShell: true,
-        topInset: this.topInsetVp,
+        topInset: this.topInsetVp, bottomInset: this.bottomInsetVp,
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.FEEDBACK) {
       FieldwatchFeedbackPage({
         withShell: true,
-        topInset: this.topInsetVp,
+        topInset: this.topInsetVp, bottomInset: this.bottomInsetVp,
         openIssueNumber: this.feedbackIssueNumber,
         openCreate: this.feedbackCreateMode,
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.SIGNATURE_EDITOR) {
-      FieldwatchSignatureEditorPage({ fleetId: (param as FieldwatchSignatureEditorParam).fleetId, fromDeviceKey: (param as FieldwatchSignatureEditorParam).fromDeviceKey, topInset: this.topInsetVp, onClose: (): void => { this.pathStack.pop(); } });
+      FieldwatchSignatureEditorPage({ fleetId: (param as FieldwatchSignatureEditorParam).fleetId, fromDeviceKey: (param as FieldwatchSignatureEditorParam).fromDeviceKey, topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, onClose: (): void => { this.pathStack.pop(); } });
     }
   }
 
   @Builder
   private buildPhoneLayout() {
     HdsTabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
-      TabContent() { FieldwatchLivePage({ visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
-      TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
+      TabContent() { FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
+      TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
             // `onEditFleet` 必须传：它的默认值是空函数，漏传就变成「点了没反应」。
-      TabContent() { FieldwatchSignaturesPage({ topInset: this.topInsetVp, embedded: true, landscape: this.isLandscape,
+      TabContent() { FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, landscape: this.isLandscape,
         onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); },
         onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, onOpenWatchlist: (): void => { this.openWatchlist(); }, pageVisible: this.selectedTab === 2 })
       }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2))
-      TabContent() { FieldwatchReportsPage({ topInset: this.topInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3))
-      TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
-      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
+      TabContent() { FieldwatchReportsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3))
+      TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
+      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
     }
     .width('100%').height('100%').backgroundColor(FieldwatchPaletteHolder.get().night).barMode(BarMode.Fixed).barOverlap(true).barFloatingStyle({ adaptToHandedness: true, systemMaterialEffect: { materialType: hdsMaterial.MaterialType.IMMERSIVE, materialLevel: hdsMaterial.MaterialLevel.EXQUISITE }, thermoCtrl: true, barOpacity: 0.94, barBottomMargin: this.bottomInsetVp })
     .onChange((index: number): void => { this.selectedTab = index; })
@@ -789,19 +790,19 @@ struct FieldwatchRootPage {
       // 点记录看到的是设置（实测反馈）。**入口与内容必须同时改。**
       // `visible` 必须显式传：它的默认值是 true，漏传时雷达的 16 ms 扫描定时器
       // 会在组件存活期间持续整幅重绘（竖屏 TabContent 路径一直传了，这里此前漏了）。
-      if (this.selectedTab === 0) FieldwatchLivePage({ visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }).width('100%').height('100%')
-      else if (this.selectedTab === 1) FieldwatchFiltersPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
+      if (this.selectedTab === 0) FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }).width('100%').height('100%')
+      else if (this.selectedTab === 1) FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
       // 同上：`onEditFleet` 漏传会让「新建」「编辑」两个按钮都变成空操作。
-      else if (this.selectedTab === 2) FieldwatchSignaturesPage({ topInset: this.topInsetVp, embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
+      else if (this.selectedTab === 2) FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
         onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); },
         onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); },
         onOpenWatchlist: (): void => { this.openWatchlist(); },
         // 与竖屏路径保持一致：硬编码 true 会让该页在组件存活期间一直刷新。
         pageVisible: this.selectedTab === 2
       }).width('100%').height('100%')
-      else if (this.selectedTab === 3) FieldwatchReportsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
-      else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }).width('100%').height('100%')
-      else FieldwatchSettingsPage({ topInset: this.topInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }).width('100%').height('100%')
+      else if (this.selectedTab === 3) FieldwatchReportsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
+      else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }).width('100%').height('100%')
+      else FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }).width('100%').height('100%')
     }.width('100%').height('100%')
     /**
      * **切换过渡（方向感知）。**
@@ -983,6 +984,8 @@ struct FieldwatchLivePage {
   private geometryToken: string = '';
   /** 本页当前是否可见；不可见时停掉全部定时器。 */
   @Prop @Watch('onVisibilityChanged') visible: boolean = true;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /**
    * 上次退出时使用的实时模式。
    *
@@ -3523,7 +3526,7 @@ struct FieldwatchLivePage {
         FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_open_radar'),
           tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.openProfessionalRadar(); } })
       }
-      .width('100%').padding({ left: 16, right: 16, top: 14, bottom: 112 })
+      .width('100%').padding({ left: 16, right: 16, top: 14, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       .alignItems(HorizontalAlign.Start)
     }
     .width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
@@ -3601,6 +3604,8 @@ struct FieldwatchLivePage {
 struct FieldwatchFiltersPage {
   /** 状态栏高度（vp）：内容避让，但页面底板仍延伸到状态栏区域。 */
   @Prop topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /**
    * 横屏且右栏未开时用两列。
    *
@@ -3927,7 +3932,7 @@ struct FieldwatchFiltersPage {
         this.buildSelectedSignatures()
         this.buildFineFilter()
     }
-      }.width('100%').padding({ left: 12, right: 12, top: this.topInset + 8, bottom: 48 })
+      }.width('100%').padding({ left: 12, right: 12, top: this.topInset + 8, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
     }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
   }
 }
@@ -3943,6 +3948,8 @@ const EXPORT_FORMATS: string[] = [
 struct FieldwatchReportsPage {
   /** 与原版 LogExportKind 一致的 5 种格式。 */
   @Prop topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /**
    * 横屏且右栏未开时用两列。
    *
@@ -4358,12 +4365,14 @@ struct FieldwatchReportsPage {
       this.buildCatalog()
       this.buildLog()
     }
-  }.width('100%').padding({ left: 12, right: 12, top: this.topInset + 8, bottom: 48 }) }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring) }
+  }.width('100%').padding({ left: 12, right: 12, top: this.topInset + 8, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE }) }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring) }
 }
 
 @Component
 struct FieldwatchSettingsPage {
   @Prop topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   /**
    * 横屏且右栏未开时用两列。竖屏与「右栏已开」保持单列。
    */
@@ -5164,7 +5173,7 @@ struct FieldwatchSettingsPage {
       this.buildSettingsGuide()
       this.buildSettingsLegal()
     }
-  }.width('100%').padding({ left: 16, right: 16, top: this.topInset + 16, bottom: 48 }) }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+  }.width('100%').padding({ left: 16, right: 16, top: this.topInset + 16, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE }) }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
     /**
      * **一个组件只能绑一个 `bindSheet`。**
      *

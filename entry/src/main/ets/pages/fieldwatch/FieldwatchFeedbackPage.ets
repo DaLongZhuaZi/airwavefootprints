@@ -1,4 +1,5 @@
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
+import { FIELDWATCH_SAFE_BOTTOM_GAP } from '../../fieldwatch/ui/FieldwatchLayout';
 import { deviceInfo } from '@kit.BasicServicesKit';
 import { util } from '@kit.ArkTS';
 import { webview } from '@kit.ArkWeb';
@@ -74,6 +75,8 @@ const TOKEN_TIMEOUT_MS: number = 230000;
 export struct FieldwatchFeedbackPage {
   withShell: boolean = false;
   topInset: number = 0;
+  /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
+  @Prop bottomInset: number = 0;
   onClose: () => void = (): void => {};
   openIssueNumber: number = 0;
   /** 深链 `feedback/new`：进入即打开新建表单。 */
@@ -889,7 +892,7 @@ export struct FieldwatchFeedbackPage {
         else if (this.creating) this.buildCreateForm()
         else this.buildList()
       }.width('100%').alignItems(HorizontalAlign.Start)
-      .padding({ left: 16, right: 16, top: this.withShell ? ngfImmersiveContentTop(this.underlayHeight, this.topInset) : 20, bottom: 48 })
+      .padding({ left: 16, right: 16, top: this.withShell ? ngfImmersiveContentTop(this.underlayHeight, this.topInset) : 20, bottom: this.bottomInset + FIELDWATCH_SAFE_BOTTOM_GAP })
     }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
     .align(Alignment.TopStart)
     // 内容切换动画：透明度 + 纵向位移，与漫匣同一套参数。
