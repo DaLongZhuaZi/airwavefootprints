@@ -118,6 +118,55 @@ export class FieldwatchDultParser implements BleAdvertisementParser {
 
 
 
+/**
+ * 从广播里解电量。
+ *
+ * 覆盖三种**有明确规范依据**的形态（文档要求「第一期只接广播中明确可解的字段」）：
+ *   ① AD type 0x2A（Tx Power 的兄弟类型，规范里 0x2A 是 *Bluetooth SIG Battery* 之外的
+ *      自定义常见用法，不采用 —— 见下）；
+ *   ② **Service Data 0x180F**（Battery Service）：载荷第 1 字节就是电量百分比；
+ *   ③ **厂商数据里的 Beacon 电量**：具体厂商编码无法通用，不做。
+ *
+ * 结论：**只解 0x180F 服务数据**。它是唯一有跨厂商规范保证的形态，
+ * 其它形态要么厂商私有（各写各的）、要么与电量无关（0x2A 不是标准电量类型）。
+ * 覆盖率因此注定有限 —— 解不到就不显示，这是文档明确接受的口径。
+ */
+export class FieldwatchBatteryDecoder {
+  /** Battery Service 的 16 位 UUID（以服务数据形式广播时使用）。 */
+  static readonly BATTERY_SERVICE_UUID: string = '0000180F-0000-1000-8000-00805F9B34FB';
+
+  /**
+   * 从服务数据里取电量。
+   *
+   * @param records 广播携带的全部 Service Data（AD type 0x16）
+   * @returns [百分比, 来源 AD 类型]；没有可解字段时返回 [-1, 0]
+   */
+  static fromServiceData(records: ServiceDataRecord[]): number[] {
+    for (let index: number = 0; index < records.length; index += 1) {
+      const record: ServiceDataRecord = records[index];
+      if (!FieldwatchBatteryDecoder.isBatteryUuid(record.uuid)) continue;
+      const data: string = record.dataHex.replace(/:/g, '');
+      if (data.length < 2) continue;
+      const percent: number = parseInt(data.substring(0, 2), 16);
+      if (isNaN(percent) || percent < 0 || percent > 100) continue;
+      return [percent, 0x16];
+    }
+    return [-1, 0];
+  }
+
+  /**
+   * UUID 是否属于 Battery Service。
+   *
+   * 同时接受 128 位全串与 16 位短串（平台两种都可能给），
+   * 也接受大小写与连字符的差异 —— 这几种写法实测都出现过。
+   */
+  private static isBatteryUuid(uuid: string): boolean {
+    const key: string = uuid.trim().toUpperCase().replace(/[-:]/g, '');
+    if (key === '180F') return true;
+    return key === '0000180F00001000800000805F9B34FB';
+  }
+}
+
 /** 结构化 BLE 广播事实：直接服务签名规则的 MANUFACTURER_DATA / SERVICE_DATA / SERVICE_UUID / NAME 匹配。 */
 export class BleAdvertisementFacts {
   public valid: boolean = false;
@@ -148,6 +197,16 @@ export class BleAdvertisementFacts {
    * 原版按记录逐条展示（「广播中的厂商数据」段可以有多块）。
    */
   public mfgRecords: ServiceDataRecord[] = [];
+  /**
+   * 广播里声明的电量百分比（0–100）；-1 表示**没有可用的电量字段**。
+   *
+   * 只接「广播里明确可解」的那几种（见 `FieldwatchBatteryDecoder`）。
+   * **绝不从 RSSI 推断**：信号强弱与电量没有因果关系，
+   * 拿它冒充电量会让用户在看板上看到一个会随距离乱跳的「电量」。
+   */
+  public batteryPercent: number = -1;
+  /** 电量字段的来源 AD 类型；0 表示没有。用于详情页说明「这个数是从哪来的」。 */
+  public batterySourceType: number = 0;
 }
 
 function hexOfBytes(bytes: Uint8Array): string {
@@ -200,6 +259,11 @@ export class FieldwatchBleAdvertisementDecoder {
       cursor += length;
     }
     facts.valid = true;
+    // 电量在**整包解完之后**再取：Service Data 可能出现在任意位置，
+    // 边解边取会漏掉排在后面的那条。
+    const battery: number[] = FieldwatchBatteryDecoder.fromServiceData(facts.serviceData);
+    facts.batteryPercent = battery[0];
+    facts.batterySourceType = battery[1];
     return facts;
   }
 

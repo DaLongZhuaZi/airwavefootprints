@@ -31,6 +31,10 @@ import fieldwatchWifiDoctorTest from './FieldwatchWifiDoctor.test';
 import fieldwatchWidgetUpgradeTest from './FieldwatchWidgetUpgrade.test';
 import fieldwatchScenePacksTest from './FieldwatchScenePacks.test';
 import fieldwatchRatingPromptTest from './FieldwatchRatingPrompt.test';
+import fieldwatchDexTest from './FieldwatchDex.test';
+import fieldwatchDeviceBoardTest from './FieldwatchDeviceBoard.test';
+import fieldwatchBatteryTest from './FieldwatchBattery.test';
+import fieldwatchNewFacesTest from './FieldwatchNewFaces.test';
 
 export default function testsuite() {
   localUnitTest();
@@ -62,4 +66,8 @@ export default function testsuite() {
   fieldwatchWidgetUpgradeTest();
   fieldwatchScenePacksTest();
   fieldwatchRatingPromptTest();
+  fieldwatchDexTest();
+  fieldwatchDeviceBoardTest();
+  fieldwatchBatteryTest();
+  fieldwatchNewFacesTest();
 }

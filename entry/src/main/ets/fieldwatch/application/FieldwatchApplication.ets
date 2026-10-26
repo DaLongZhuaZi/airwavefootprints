@@ -41,6 +41,9 @@ import {
 } from '../domain/FieldwatchWifiDoctor';
 import { FieldwatchRoomCheckRepository } from '../data/FieldwatchRoomCheckRepository';
 import { builtinScenePacks, ScenePack } from '../domain/FieldwatchScenePacks';
+import { buildDex, DexEntry, DexSummary, summarizeDex, sortDex } from '../domain/FieldwatchDex';
+import { boardCardOf, DeviceBoardCard, sortBoardCards } from '../domain/FieldwatchDeviceBoard';
+import { baselineUsable, NewFaceEntry, newFacesOf } from '../domain/FieldwatchNewFaces';
 import {
   decodeRatingState, encodeRatingState, markRatingDeclined, markRatingRated, markRatingShown,
   RatingPromptState, shouldPromptRating, storeDetailUri
@@ -52,7 +55,7 @@ import {
   AntiTrackDecision, AntiTrackPushRecord, decideAntiTrackPush, pushLabelOf, recordPushes, shouldEvaluate
 } from '../domain/FieldwatchAntiTrackAlerts';
 import { FieldwatchShareCard, ShareCardContent, fieldwatchShareCard } from '../platform/FieldwatchShareCard';
-import { OwnDeviceCandidate, OwnDeviceProfile } from '../domain/FieldwatchOwnDevice';
+import { OwnDeviceCandidate, OwnDeviceKind, OwnDeviceProfile } from '../domain/FieldwatchOwnDevice';
 import { FindCandidate } from '../domain/FieldwatchFindModel';
 import { fileIo } from '@kit.CoreFileKit';
 
@@ -367,6 +370,162 @@ export class FieldwatchApplication {
     const uri: string = this.shareCard.fileUriOf(path);
     ngfSystemShareFacade.shareFile(uri, this.shareCard.pngUtd(), content.title, 'IMAGE');
     return true;
+  }
+
+  // ── 新面孔清单（P2-14）──
+  //
+  // 基线与「这是我家的」都存设置（条目很少，不值得单开表）。
+  // 与反跟随共用同一套「同一台设备只处理一次」的思路：都按 deviceKey 去重。
+
+  /** 新面孔清单的手动基线开关。 */
+  baselineCompareEnabled(): boolean { return this.settingsRepository.loadBaselineCompare(); }
+  setBaselineCompare(enabled: boolean): void { this.settingsRepository.saveBaselineCompare(enabled); }
+
+  /**
+   * 基线：本机历史里出现过的全部 deviceKey。
+   *
+   * 直接读观测仓储（与图鉴同一份数据源），不另存一份「已见集合」——
+   * 两份数据一旦不同步，「基线统计与历史一致」这条验收就废了。
+   */
+  async newFaceBaseline(): Promise<string[]> {
+    const history: FieldwatchStoredObservation[] = await this.observationRepository.loadRecent(2000);
+    const keys: string[] = [];
+    history.forEach((item: FieldwatchStoredObservation): void => {
+      if (keys.indexOf(item.key) < 0) keys.push(item.key);
+    });
+    return keys;
+  }
+
+  /** 当前的新面孔清单。基线不可用时返回空数组（页面据此提示「先积累」）。 */
+  async newFaces(): Promise<NewFaceEntry[]> {
+    const baseline: string[] = await this.newFaceBaseline();
+    if (!baselineUsable(baseline)) return [];
+    const excluded: string[] = this.settingsRepository.loadNewFaceExcluded();
+    const names: Map<string, string> = new Map<string, string>();
+    return newFacesOf(this.state.sightings, baseline, excluded,
+      (item: Sighting): string => {
+        const cached: string | undefined = names.get(item.key);
+        if (cached !== undefined) return cached;
+        const label: string = matchedSignatureNames(item.signatureIds, this.state.signatures).join(' / ');
+        names.set(item.key, label);
+        return label;
+      });
+  }
+
+  /** 「这是我家的」：把这条移出清单（记进排除名单，不再出现）。 */
+  excludeNewFace(deviceKey: string): void {
+    const excluded: string[] = this.settingsRepository.loadNewFaceExcluded();
+    if (excluded.indexOf(deviceKey) >= 0) return;
+    excluded.push(deviceKey);
+    this.settingsRepository.saveNewFaceExcluded(excluded);
+    logger.info(TAG, '新面孔已标记为自家设备: ' + deviceKey);
+  }
+
+  // ── 我的设备看板（P2-12）与找车（P2-13）──
+  //
+  // 与 Watchlist 数据一致：卡片的「关注/名称」直接读已认领档案 + 实时列表，
+  // 不缓存第二份，避免「看板说在附近、实时页说找不到」。
+
+  /**
+   * 看板卡片。
+   *
+   * 电量取自**实时广播解码**（`facts.batteryPercent`），解不到就是 -1，
+   * 卡片上那一行直接不渲染。
+   */
+  deviceBoardCards(): DeviceBoardCard[] {
+    const now: number = Date.now();
+    const cards: DeviceBoardCard[] = [];
+    this.ownDeviceCenter.all().forEach((profile: OwnDeviceProfile): void => {
+      const live: Sighting | undefined = this.ownDeviceCenter.liveSightingOf(profile, this.state.sightings);
+      const liveKey: string = live === undefined ? '' : live.key;
+      const battery: number = live === undefined ? -1 : live.facts.batteryPercent;
+      const lastSeen: number = live === undefined ? profile.lastSeenAt : live.lastSeen;
+      const card: DeviceBoardCard = boardCardOf(profile, liveKey, lastSeen, battery, now);
+      // 位置回写：实时有定位就用实时的，否则沿用档案里记的。
+      if (live !== undefined && live.location !== undefined) {
+        card.lastLatitude = live.location.latitude;
+        card.lastLongitude = live.location.longitude;
+      }
+      cards.push(card);
+    });
+    return sortBoardCards(cards);
+  }
+
+  /** 把一台自有设备标记/取消「我的车」（P2-13）。 */
+  setOwnDeviceCar(profileId: string, isCar: boolean): boolean {
+    const profile: OwnDeviceProfile | undefined = this.ownDeviceCenter.all().find(
+      (item: OwnDeviceProfile): boolean => item.id === profileId);
+    if (profile === undefined) return false;
+    profile.kind = isCar ? OwnDeviceKind.CAR : OwnDeviceKind.OTHER;
+    this.ownDeviceCenter.persistProfile(profile);
+    logger.info(TAG, '车辆标记: ' + profileId + ' -> ' + isCar.toString());
+    return true;
+  }
+
+  /** 看板用的「在附近」条目数（日常首屏摘要条也用）。 */
+  nearbyOwnCount(): number {
+    let count: number = 0;
+    this.deviceBoardCards().forEach((card: DeviceBoardCard): void => {
+      if (card.nearby) count += 1;
+    });
+    return count;
+  }
+
+  // ── 设备图鉴（P2-11）──
+  //
+  // **先只读查询**（文档原文：量大再物化）。图鉴每次打开算一次，
+  // 数据源是本进程的实时列表 + 观测仓储；不额外落一份图鉴表 ——
+  // 两份数据一旦不同步，「图鉴统计与历史数据对账一致」这条验收就废了。
+
+  /**
+   * 组装图鉴条目。
+   *
+   * @param history 历史观测（来自 `loadObservationHistory`），用来统计「见过几次」与最近时间
+   */
+  dexEntries(history: FieldwatchStoredObservation[]): DexEntry[] {
+    const stats: Map<string, number[]> = new Map<string, number[]>();
+    history.forEach((item: FieldwatchStoredObservation): void => {
+      // **直接用落库的 signature_ids**：历史键早已不在实时列表里，
+      // 用 `signatureIdsOfKey` 查实时列表会永远返回空，图鉴就一个都点不亮（真机踩到过）。
+      const signatureIds: string[] = item.signatureIds;
+      signatureIds.forEach((id: string): void => {
+        const current: number[] | undefined = stats.get(id);
+        if (current === undefined) {
+          stats.set(id, [1, item.seenAt]);
+        } else {
+          current[0] = current[0] + 1;
+          if (item.seenAt > current[1]) current[1] = item.seenAt;
+        }
+      });
+    });
+    return sortDex(buildDex(this.state.signatures, stats, this.dexSeenToday()));
+  }
+
+  /** 图鉴汇总（配合 `dexEntries` 一起用，避免页面算两遍）。 */
+  dexSummary(entries: DexEntry[]): DexSummary {
+    return summarizeDex(entries, this.dexSeenToday());
+  }
+
+  /**
+   * 今天首次见到的 fleetId 集合。
+   *
+   * 用实时列表里的 `firstSeen` 判定（与卡片「今天新认识了 N 种设备」同一口径）。
+   */
+  dexSeenToday(): string[] {
+    const dayStart: number = todayStartMs(Date.now());
+    const ids: string[] = [];
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.firstSeen < dayStart) return;
+      item.signatureIds.forEach((id: string): void => {
+        if (ids.indexOf(id) < 0) ids.push(id);
+      });
+    });
+    return ids;
+  }
+
+  /** 读历史观测（图鉴与看板共用）。 */
+  async loadObservationHistory(limit: number = 2000): Promise<FieldwatchStoredObservation[]> {
+    return await this.observationRepository.loadRecent(limit);
   }
 
   // ── 评分引导（P1-10）──
@@ -2811,6 +2970,9 @@ export class FieldwatchApplication {
     else { existing.ingest(observation); existing.signatureIds = matched; existing.decodedFields = decoded; }
     this.sequence += 1;
     this.appendLogEntry(new LogEntry('log-' + this.sequence.toString(), observation, matched));
+    // 把这次命中的特征 id 一起落库：图鉴（P2-11）要统计「历史见过哪些特征」，
+    // 而实时列表只保留当前在场的设备 —— 只查实时列表会让图鉴永远点不亮。
+    this.observationRepository.setSignatureIdsHint(matched);
     void this.observationRepository.append(observation);
     // 淘汰节流：观测每秒几十条，逐条扫全表代价过高；5 秒一次足够跟上。
     const nowMs: number = Date.now();

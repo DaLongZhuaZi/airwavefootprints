@@ -43,6 +43,9 @@ import { FieldwatchDailyPage } from './FieldwatchDailyPage';
 import { FieldwatchFindPage } from './FieldwatchFindPage';
 import { FieldwatchSecurityScanPage } from './FieldwatchSecurityScanPage';
 import { FieldwatchWifiDoctorPage } from './FieldwatchWifiDoctorPage';
+import { FieldwatchDexPage } from './FieldwatchDexPage';
+import { FieldwatchDeviceBoardPage } from './FieldwatchDeviceBoardPage';
+import { FieldwatchNewFacesPage } from './FieldwatchNewFacesPage';
 import { ScenePack } from '../../fieldwatch/domain/FieldwatchScenePacks';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 
@@ -523,6 +526,24 @@ struct FieldwatchRootPage {
     this.pathStack.pushPathByName(FieldwatchRouteName.WIFI_DOCTOR, null);
   }
 
+  /** 打开设备图鉴（P2-11）。 */
+  private openDex(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.DEX, null);
+  }
+
+  /** 打开我的设备看板（P2-12 / P2-13）。 */
+  private openBoard(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.BOARD, null);
+  }
+
+  /** 打开新面孔清单（P2-14）。 */
+  private openNewFaces(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.NEW_FACES, null);
+  }
+
   /**
    * 切换界面模式。
    *
@@ -586,6 +607,9 @@ struct FieldwatchRootPage {
             onOpenFind: (): void => { this.openFind(); },
             onOpenSecurity: (): void => { this.openSecurity(); },
             onOpenWifiDoctor: (): void => { this.openWifiDoctor(); },
+            onOpenDex: (): void => { this.openDex(); },
+            onOpenBoard: (): void => { this.openBoard(); },
+            onOpenNewFaces: (): void => { this.openNewFaces(); },
             onSwitchPro: (): void => { this.applyUiMode(FieldwatchUiMode.PRO); }
           })
         } else if (this.isLandscape) {
@@ -647,6 +671,9 @@ struct FieldwatchRootPage {
         onOpenFind: (): void => { this.openFind(); },
         onOpenSecurity: (): void => { this.openSecurity(); },
         onOpenWifiDoctor: (): void => { this.openWifiDoctor(); },
+        onOpenDex: (): void => { this.openDex(); },
+        onOpenBoard: (): void => { this.openBoard(); },
+        onOpenNewFaces: (): void => { this.openNewFaces(); },
         onSwitchPro: (): void => { this.applyUiMode(FieldwatchUiMode.PRO); this.pathStack.pop(); },
         onClose: (): void => { this.pathStack.pop(); }
       });
@@ -664,6 +691,24 @@ struct FieldwatchRootPage {
       });
     } else if (name === FieldwatchRouteName.WIFI_DOCTOR) {
       FieldwatchWifiDoctorPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.DEX) {
+      FieldwatchDexPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.BOARD) {
+      FieldwatchDeviceBoardPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.NEW_FACES) {
+      FieldwatchNewFacesPage({
         withShell: true,
         topInset: this.topInsetVp,
         onClose: (): void => { this.pathStack.pop(); }

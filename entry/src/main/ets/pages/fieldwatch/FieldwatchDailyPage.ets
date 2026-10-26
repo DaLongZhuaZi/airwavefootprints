@@ -41,6 +41,12 @@ export struct FieldwatchDailyPage {
   onOpenSecurity: () => void = (): void => {};
   /** 打开 Wi-Fi 体检（P1-7）。 */
   onOpenWifiDoctor: () => void = (): void => {};
+  /** 打开设备图鉴（P2-11）。 */
+  onOpenDex: () => void = (): void => {};
+  /** 打开我的设备看板（P2-12）。 */
+  onOpenBoard: () => void = (): void => {};
+  /** 打开新面孔清单（P2-14）。 */
+  onOpenNewFaces: () => void = (): void => {};
   /** 关闭当前路由（作目标页时用）。 */
   onClose: () => void = (): void => {};
   /** 手动重渲染计数器：应用状态不经过 @State，需要它驱动刷新。 */
@@ -67,6 +73,11 @@ export struct FieldwatchDailyPage {
   private nearbyCount(): number {
     const bump: number = this.tick;
     return bump >= 0 ? fieldwatchApplication.getState().sightings.length : 0;
+  }
+
+  private ownCount(): number {
+    const bump: number = this.tick;
+    return bump >= 0 ? fieldwatchApplication.ownDevices().length : 0;
   }
 
   private ownSummary(): string {
@@ -130,6 +141,8 @@ export struct FieldwatchDailyPage {
           $r('app.string.fieldwatch_daily_card_wifi_desc'), true,
           (): void => { this.onOpenWifiDoctor(); })
         this.buildOwnBar()
+        this.buildDexEntry()
+        this.buildNewFacesEntry()
         this.buildFooter()
       }
       .width('100%')
@@ -224,7 +237,55 @@ export struct FieldwatchDailyPage {
     .width('100%').padding(14)
     .borderRadius(14)
     .backgroundColor(FieldwatchPaletteHolder.get().panel2)
-    .onClick((): void => { this.onOpenFind(); })
+    // 「我的设备」摘要条现在直达看板（P2-12）；没有认领过时仍去找东西认领。
+    .onClick((): void => { if (this.ownCount() > 0) this.onOpenBoard(); else this.onOpenFind(); })
+  }
+
+  /**
+   * 设备图鉴的二级入口（P2-11）。
+   *
+   * 刻意做成一行而不是第四张大卡：图鉴是「翻着看」的长尾内容，
+   * 不是每天要办的事。列在「我的设备」下面，与它的语义最近。
+   */
+  @Builder
+  private buildDexEntry() {
+    Row({ space: 10 }) {
+      SymbolGlyph($r('sys.symbol.dot_radiowaves_left_and_right')).fontSize(18)
+        .fontColor([FieldwatchPaletteHolder.get().accent])
+      Column({ space: 2 }) {
+        Text($r('app.string.fieldwatch_dex_title')).fontSize(15)
+          .fontColor(FieldwatchPaletteHolder.get().text)
+        Text($r('app.string.fieldwatch_daily_dex_hint')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+      SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(15)
+        .fontColor([FieldwatchPaletteHolder.get().textDim])
+    }
+    .width('100%').padding(14).borderRadius(14)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+    .onClick((): void => { this.onOpenDex(); })
+  }
+
+  /** 新面孔清单的二级入口（P2-14）。 */
+  @Builder
+  private buildNewFacesEntry() {
+    Row({ space: 10 }) {
+      SymbolGlyph($r('sys.symbol.exclamationmark_circle')).fontSize(18)
+        .fontColor([FieldwatchPaletteHolder.get().warn])
+      Column({ space: 2 }) {
+        Text($r('app.string.fieldwatch_newfaces_title')).fontSize(15)
+          .fontColor(FieldwatchPaletteHolder.get().text)
+        Text($r('app.string.fieldwatch_daily_newfaces_hint')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(1)
+          .textOverflow({ overflow: TextOverflow.Ellipsis })
+      }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+      SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(15)
+        .fontColor([FieldwatchPaletteHolder.get().textDim])
+    }
+    .width('100%').padding(14).borderRadius(14)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+    .onClick((): void => { this.onOpenNewFaces(); })
   }
 
   /**

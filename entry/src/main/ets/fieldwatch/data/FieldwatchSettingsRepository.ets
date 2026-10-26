@@ -271,6 +271,22 @@ export class FieldwatchSettingsRepository {
   loadAlertsAsked(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.alertsAsked', false); }
   saveAlertsAsked(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.alertsAsked', value); }
 
+  /**
+   * 新面孔清单的手动基线开关（P2-14）。
+   *
+   * 文档明确「不做地理围栏自动判定」，所以这个开关完全由用户控制；
+   * 默认关 —— 开着就会一直被问「这台是不是新来的」。
+   */
+  loadBaselineCompare(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.baselineCompare', false); }
+  saveBaselineCompare(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.baselineCompare', value); }
+  /** 被「这是我家的」移出清单的设备键（换行分隔）。 */
+  loadNewFaceExcluded(): string[] {
+    const raw: string = ngfSettingsStoreFacade.getString('fieldwatch.newFaceExcluded', '');
+    if (raw.length === 0) return [];
+    return raw.split('\n').filter((item: string): boolean => item.trim().length > 0);
+  }
+  saveNewFaceExcluded(keys: string[]): void { ngfSettingsStoreFacade.setString('fieldwatch.newFaceExcluded', keys.join('\n')); }
+
   /** 评分引导状态（P1-10）：`上次展示时刻|已拒绝|已评分`。 */
   loadRatingStateRaw(): string { return ngfSettingsStoreFacade.getString('fieldwatch.ratingPrompt', ''); }
   saveRatingStateRaw(value: string): void { ngfSettingsStoreFacade.setString('fieldwatch.ratingPrompt', value); }

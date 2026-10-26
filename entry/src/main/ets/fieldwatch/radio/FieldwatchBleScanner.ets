@@ -147,6 +147,9 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
     facts.appearance = decoded.valid ? decoded.appearance : -1;
     facts.txPower = decoded.valid ? decoded.txPower : -128;
     facts.advertiseFlags = decoded.valid ? decoded.flags : -1;
+    // 电量：平台 map 里没有这个概念，只能从原始广播包里解（Battery Service 服务数据）。
+    // 解不到就是 -1 —— **不拿 RSSI 顶替**，看板据此决定「不显示」。
+    facts.batteryPercent = decoded.valid ? decoded.batteryPercent : -1;
     facts.serviceUuids16 = serviceUuids16;
     facts.serviceUuids128 = serviceUuids128;
     facts.connectable = result.connectable === undefined ? false : result.connectable;

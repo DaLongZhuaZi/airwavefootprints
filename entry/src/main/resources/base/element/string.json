@@ -9727,6 +9727,142 @@
     {
       "name": "fieldwatch_rating_open_failed",
       "value": "没能打开应用市场，可以在里面搜「电波足迹」"
+    },
+    {
+      "name": "fieldwatch_dex_title",
+      "value": "设备图鉴"
+    },
+    {
+      "name": "fieldwatch_dex_subtitle",
+      "value": "已点亮 %1 / %2"
+    },
+    {
+      "name": "fieldwatch_dex_new_today",
+      "value": "今天新认识了 %1 种设备"
+    },
+    {
+      "name": "fieldwatch_dex_loading",
+      "value": "正在统计…"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_common",
+      "value": "常见"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_uncommon",
+      "value": "少见"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_rare",
+      "value": "稀有"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_epic",
+      "value": "极稀有"
+    },
+    {
+      "name": "fieldwatch_dex_seen_times",
+      "value": "见过 %1 次"
+    },
+    {
+      "name": "fieldwatch_dex_last_seen",
+      "value": "最近见到：%1"
+    },
+    {
+      "name": "fieldwatch_dex_not_seen",
+      "value": "还没见过。多留意身边，遇到就会点亮。"
+    },
+    {
+      "name": "fieldwatch_dex_footnote",
+      "value": "图鉴只统计本机历史数据。卸载重装后会清零，与我们「数据只在本机」的做法一致。"
+    },
+    {
+      "name": "fieldwatch_daily_dex_hint",
+      "value": "点点看遇见过哪些设备"
+    },
+    {
+      "name": "fieldwatch_board_title",
+      "value": "我的设备"
+    },
+    {
+      "name": "fieldwatch_board_subtitle",
+      "value": "每台自有设备一张卡"
+    },
+    {
+      "name": "fieldwatch_board_empty",
+      "value": "还没有认领设备"
+    },
+    {
+      "name": "fieldwatch_board_empty_hint",
+      "value": "到「找东西」里认领一台，之后这里就有卡片了"
+    },
+    {
+      "name": "fieldwatch_board_nearby",
+      "value": "在附近"
+    },
+    {
+      "name": "fieldwatch_board_last_seen",
+      "value": "上次见到：%1"
+    },
+    {
+      "name": "fieldwatch_board_never_seen",
+      "value": "还没有见到过"
+    },
+    {
+      "name": "fieldwatch_board_mark_car",
+      "value": "标记为我的车"
+    },
+    {
+      "name": "fieldwatch_board_unmark_car",
+      "value": "取消车辆标记"
+    },
+    {
+      "name": "fieldwatch_board_open_map",
+      "value": "打开地图"
+    },
+    {
+      "name": "fieldwatch_board_map_failed",
+      "value": "没能打开地图"
+    },
+    {
+      "name": "fieldwatch_board_car_line",
+      "value": "最后听到它：%1 %2"
+    },
+    {
+      "name": "fieldwatch_board_car_hint",
+      "value": "熄火前的最后位置约等于停车位置。地下车库只能给到大致的点，不保证楼层与精确车位。"
+    },
+    {
+      "name": "fieldwatch_newfaces_title",
+      "value": "新面孔"
+    },
+    {
+      "name": "fieldwatch_newfaces_subtitle",
+      "value": "最近才出现、一直在旁边的设备"
+    },
+    {
+      "name": "fieldwatch_newfaces_loading",
+      "value": "正在对比本机历史…"
+    },
+    {
+      "name": "fieldwatch_newfaces_empty",
+      "value": "暂时没有新面孔。历史积累得越多，这个清单越准。"
+    },
+    {
+      "name": "fieldwatch_newfaces_compare",
+      "value": "对比本机历史基线"
+    },
+    {
+      "name": "fieldwatch_newfaces_compare_hint",
+      "value": "由你手动开关，不按位置自动判断。"
+    },
+    {
+      "name": "fieldwatch_newfaces_mine",
+      "value": "这是我家的"
+    },
+    {
+      "name": "fieldwatch_daily_newfaces_hint",
+      "value": "最近才出现、一直在旁边的设备"
     }
   ]
 }

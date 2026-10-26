@@ -283,6 +283,11 @@ export class FieldwatchOwnDeviceCenter {
     return best;
   }
 
+  /** 落库一份已修改的档案（看板改车辆标记等场景用）。 */
+  persistProfile(profile: OwnDeviceProfile): void {
+    void this.repository.save(profile);
+  }
+
   /** 档案里是否已有这台设备。 */
   profileOfKey(deviceKey: string): OwnDeviceProfile | undefined {
     return this.profiles.find((item: OwnDeviceProfile): boolean => item.deviceKey === deviceKey);

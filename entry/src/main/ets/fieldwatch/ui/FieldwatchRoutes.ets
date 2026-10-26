@@ -36,4 +36,10 @@ export class FieldwatchRouteName {
   static readonly SECURITY: string = 'fieldwatch.security';
   /** Wi-Fi 体检（信道结论 + 房间版）。 */
   static readonly WIFI_DOCTOR: string = 'fieldwatch.wifi_doctor';
+  /** 设备图鉴（按 fleet 聚合历史）。 */
+  static readonly DEX: string = 'fieldwatch.dex';
+  /** 我的设备看板（含找车）。 */
+  static readonly BOARD: string = 'fieldwatch.board';
+  /** 新面孔清单。 */
+  static readonly NEW_FACES: string = 'fieldwatch.new_faces';
 }

@@ -194,6 +194,13 @@ export class RadioFacts {
   public txPower: number;
   /** 广播 Flags 原始字节（AD type 0x01）；-1 表示未携带。 */
   public advertiseFlags: number;
+  /**
+   * 广播里声明的电量百分比（0–100）；-1 表示解不出来。
+   *
+   * **解不到就不显示，绝不用 RSSI 顶替**（文档 P2-12 红线）。
+   * 覆盖率注定有限：只有以 Battery Service 服务数据形式广播的设备才有。
+   */
+  public batteryPercent: number;
   /** AD type 0x02/0x03 的 16 位服务 UUID（补足 0000xxxx-0000-1000-8000-00805F9B34FB 形式）。 */
   public serviceUuids16: string[];
   /** AD type 0x06/0x07 的 128 位服务 UUID。 */
@@ -245,6 +252,7 @@ export class RadioFacts {
     this.appearance = -1;
     this.txPower = -128;
     this.advertiseFlags = -1;
+    this.batteryPercent = -1;
     this.serviceUuids16 = [];
     this.serviceUuids128 = [];
     this.rawAdHex = '';
