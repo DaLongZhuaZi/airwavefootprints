@@ -2,6 +2,21 @@ import { describe, it, expect } from '@ohos/hypium';
 import { builtinScenePacks, isBuiltinScenePack, ScenePack } from '../main/ets/fieldwatch/domain/FieldwatchScenePacks';
 import { SignatureClass } from '../main/ets/fieldwatch/domain/FieldwatchModels';
 
+/**
+ * 按 id 找包。
+ *
+ * **不能用「先声明 let、再在 forEach 里赋值」**：ArkTS 会在闭包赋值后
+ * 把变量收窄成 `never`，下一行 `hotel.filter` 直接编译失败（实测）。
+ * 返回值的写法让类型收窄发生在调用点，稳妥。
+ */
+function packOf(id: string): ScenePack | undefined {
+  const packs: ScenePack[] = builtinScenePacks();
+  for (let index: number = 0; index < packs.length; index += 1) {
+    if (packs[index].id === id) return packs[index];
+  }
+  return undefined;
+}
+
 export default function fieldwatchScenePacksTest() {
   describe('FieldwatchScenePacks', () => {
     // 文档第五节拍板点 3 的四个包（按推荐方案执行）：宿舍 / 酒店 / 夜跑 / 办公室。
@@ -30,8 +45,7 @@ export default function fieldwatchScenePacksTest() {
     // 酒店的意图单一：房间里不该出现的摄像头/录音类。
     // 若混进手机、耳机，这个包就退化成「什么都能看到」，等于没筛。
     it('keeps the hotel pack focused on cameras and audio', 0, () => {
-      let hotel: ScenePack | undefined = undefined;
-      builtinScenePacks().forEach((pack: ScenePack): void => { if (pack.id === 'hotel') hotel = pack; });
+      const hotel: ScenePack | undefined = packOf('hotel');
       expect(hotel !== undefined).assertTrue();
       if (hotel !== undefined) {
         const classes: SignatureClass[] = hotel.filter.classes;
@@ -43,12 +57,8 @@ export default function fieldwatchScenePacksTest() {
 
     // 夜跑要把远处路人挡掉，门槛必须比室内那三个更严（-75 > -90）。
     it('raises the signal floor for the night-run pack', 0, () => {
-      let night: ScenePack | undefined = undefined;
-      let dorm: ScenePack | undefined = undefined;
-      builtinScenePacks().forEach((pack: ScenePack): void => {
-        if (pack.id === 'nightrun') night = pack;
-        if (pack.id === 'dorm') dorm = pack;
-      });
+      const night: ScenePack | undefined = packOf('nightrun');
+      const dorm: ScenePack | undefined = packOf('dorm');
       expect(night !== undefined && dorm !== undefined).assertTrue();
       if (night !== undefined && dorm !== undefined) {
         const nightFloor: number = night.filter.rssiMin;

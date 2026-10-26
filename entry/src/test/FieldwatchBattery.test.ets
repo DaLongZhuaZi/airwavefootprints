@@ -1,6 +1,6 @@
 import { describe, it, expect } from '@ohos/hypium';
 import { ServiceDataRecord } from '../main/ets/fieldwatch/domain/FieldwatchModels';
-import { FieldwatchBatteryDecoder, FieldwatchBleAdvertisementDecoder } from '../main/ets/fieldwatch/domain/FieldwatchParsers';
+import { BleAdvertisementFacts, FieldwatchBatteryDecoder, FieldwatchBleAdvertisementDecoder } from '../main/ets/fieldwatch/domain/FieldwatchParsers';
 
 /** 拼一段 AD：length + type + payload。 */
 function ad(type: number, payload: number[]): string {
@@ -10,7 +10,7 @@ function ad(type: number, payload: number[]): string {
   return hex;
 }
 
-export default function fieldwatchBattery.test() {
+export default function fieldwatchBatteryTest() {
   describe('FieldwatchBattery', () => {
     // P2-12 红线：解不到就不显示，绝不拿 RSSI 冒充电量。
     // 这里钉住「没有 Battery Service 就是 -1」这条底线。
@@ -40,11 +40,11 @@ export default function fieldwatchBattery.test() {
     // 整包解码：电量必须在 Service Data 之后取，且解不出时为 -1。
     it('decodes battery through the full advertisement path', 0, () => {
       const batteryAd: string = ad(0x16, [0x0F, 0x18, 0x37]);
-      const facts = new FieldwatchBleAdvertisementDecoder().decode(batteryAd);
+      const facts: BleAdvertisementFacts = new FieldwatchBleAdvertisementDecoder().decode(batteryAd);
       expect(facts.valid).assertTrue();
       expect(facts.batteryPercent).assertEqual(55);
       const plain: string = ad(0x09, [0x41, 0x42]);
-      const noBattery = new FieldwatchBleAdvertisementDecoder().decode(plain);
+      const noBattery: BleAdvertisementFacts = new FieldwatchBleAdvertisementDecoder().decode(plain);
       expect(noBattery.batteryPercent).assertEqual(-1);
     });
   });
