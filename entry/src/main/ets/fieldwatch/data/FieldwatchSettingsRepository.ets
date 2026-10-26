@@ -1,11 +1,24 @@
 import { ngfSettingsStoreFacade, logger } from 'ngf_framework';
-import { AppSettings, FilterDefinition, FilterLogic, FilterPreset, RadioKind, SignatureClass, WatchTarget, foldedSignatureClass } from '../domain/FieldwatchModels';
+import { AppSettings, FieldwatchUiMode, FilterDefinition, FilterLogic, FilterPreset, RadioKind, SignatureClass, WatchTarget, foldedSignatureClass } from '../domain/FieldwatchModels';
 import { signatureClassOf } from '../domain/signatures/FieldwatchSignatureModels';
+import { OwnDeviceFingerprint } from '../domain/FieldwatchOwnDevice';
 
 const TAG: string = 'FieldwatchSettingsRepository';
 const PRESETS_KEY: string = 'fieldwatch.filterPresets';
 const FILTER_KEY: string = 'fieldwatch.filter';
 const WATCHLIST_KEY: string = 'fieldwatch.watchlist';
+/** 界面模式（daily / pro）。与 `privacyMode` 同一个存储门面，走同一套读写。 */
+const UI_MODE_KEY: string = 'fieldwatch.uiMode';
+/** 老用户判定用的既有本机痕迹：这条键在升级前就已经写进磁盘。 */
+const ONBOARDING_SEEN_KEY: string = 'fieldwatch.onboardingSeen';
+/**
+ * 「这不是我的设备」留下的拉黑名单。
+ *
+ * 为什么不跟着档案一起存 RDB：档案会因纠错被整条删掉，删掉后它自己身上的
+ * denyFingerprints 就没了，下次扫描又会把同一台认回来 —— 黑名单必须比档案活得久。
+ * 条目数量极少（用户手动点错才会有），放设置里比单开一张表更简单。
+ */
+const OWN_DENY_KEY: string = 'fieldwatch.ownDeviceDenyList';
 
 export class FieldwatchSettingsRepository {
   load(): AppSettings {
@@ -33,6 +46,7 @@ export class FieldwatchSettingsRepository {
     settings.radarLabelFields = ngfSettingsStoreFacade.getString('fieldwatch.radarLabelFields', settings.radarLabelFields);
     settings.radarLabelFontSize = ngfSettingsStoreFacade.getNumber('fieldwatch.radarLabelFontSize', settings.radarLabelFontSize);
     settings.radarIconSize = ngfSettingsStoreFacade.getNumber('fieldwatch.radarIconSize', settings.radarIconSize);
+    settings.uiMode = this.loadUiMode();
     logger.debug(TAG, 'Fieldwatch 设置已加载');
     return settings;
   }
@@ -61,6 +75,13 @@ export class FieldwatchSettingsRepository {
     ngfSettingsStoreFacade.setString('fieldwatch.radarLabelFields', settings.radarLabelFields);
     ngfSettingsStoreFacade.setNumber('fieldwatch.radarLabelFontSize', settings.radarLabelFontSize);
     ngfSettingsStoreFacade.setNumber('fieldwatch.radarIconSize', settings.radarIconSize);
+    // **存储未就绪时不写模式键**：此时 `settings.uiMode` 还是构造期兜底的 pro，
+    // 任何一次 `save()`（改个日志等级、拨个开关）都会把它当成用户选择写进磁盘，
+    // 老用户就永远回不到 daily 判定，新用户也会被钉在 pro 上。
+    // 就绪后 `load()` 会给出真正判定过的值，随后的 `save()` 才写得对。
+    if (ngfSettingsStoreFacade.isReady()) {
+      ngfSettingsStoreFacade.setString(UI_MODE_KEY, FieldwatchUiMode.normalize(settings.uiMode));
+    }
     logger.debug(TAG, 'Fieldwatch 设置已保存');
   }
 
@@ -100,6 +121,7 @@ export class FieldwatchSettingsRepository {
     text += 'radarLabelFields=' + settings.radarLabelFields + '\n';
     text += 'radarLabelFontSize=' + settings.radarLabelFontSize.toString() + '\n';
     text += 'radarIconSize=' + settings.radarIconSize.toString() + '\n';
+    text += 'uiMode=' + FieldwatchUiMode.normalize(settings.uiMode) + '\n';
     const filter: string = ngfSettingsStoreFacade.getString(FILTER_KEY, '');
     if (filter.length > 0) text += 'filter=' + filter + '\n';
     const presets: string = ngfSettingsStoreFacade.getString(PRESETS_KEY, '');
@@ -146,6 +168,7 @@ export class FieldwatchSettingsRepository {
       else if (key === 'radarLabelFields') settings.radarLabelFields = value;
       else if (key === 'radarLabelFontSize') settings.radarLabelFontSize = Number.parseFloat(value);
       else if (key === 'radarIconSize') settings.radarIconSize = Number.parseFloat(value);
+      else if (key === 'uiMode') settings.uiMode = FieldwatchUiMode.normalize(value);
       // 三类结构化内容：**先校验再落盘**，坏数据不应该污染本地设置。
       // 旧版备份里没有这三行，缺失时保持本地原值不动。
       else if (key === 'filter') { if (this.isJsonObject(value)) ngfSettingsStoreFacade.setString(FILTER_KEY, value); }
@@ -166,6 +189,43 @@ export class FieldwatchSettingsRepository {
   private isJsonArray(text: string): boolean {
     try { const parsed: Object = JSON.parse(text) as Object; return Array.isArray(parsed); }
     catch (error) { logger.warn(TAG, '备份中的数组字段无法解析，已跳过'); return false; }
+  }
+
+  /**
+   * 读界面模式；**首次读取时给老用户补写 pro，给新用户写 daily**。
+   *
+   * 为什么不能只写 `getString(key, 默认值)`：
+   *   ① 老用户升级到这个版本时磁盘上没有这条键，直接取默认值会把人踢进日常模式 ——
+   *     他们熟悉的是雷达/筛选/特征库，首屏一变就等于「我的功能不见了」。
+   *   ② 新用户反过来：装完就是三张大卡，才不会被雷达吓退。
+   * 两者的区别用**升级前就存在的本机痕迹**判断：引导已看过 = 用过这个应用。
+   * 这里只在键缺失时写一次，之后完全以用户的选择为准（改模式走 `saveUiMode`）。
+   */
+  loadUiMode(): string {
+    const stored: string = ngfSettingsStoreFacade.getString(UI_MODE_KEY, '');
+    if (stored.length > 0) return FieldwatchUiMode.normalize(stored);
+    // **存储未就绪时一律返回 pro，且不落盘。**
+    //
+    // `FieldwatchApplication` 的构造函数在模块导入时就跑，早于 `ngfStarterKernel.bootstrap()`；
+    // 那一刻 SettingsManager 的内存缓存是空的，任何读都是「默认值」——
+    // 于是 `onboardingSeen` 会读成 false，把**老用户**判成新用户写进 daily，
+    // 而且写进去之后就再也纠不回来了（下次读到的是 daily 本身）。
+    // 这就是「设置每次启动都被重置」那个坑的同一副面孔。
+    // 结果只推迟、不写错：等 `reloadSettings()` 在存储就绪后重新 `load()`，那时才判定并落盘。
+    if (!ngfSettingsStoreFacade.isReady()) {
+      logger.info(TAG, '设置存储未就绪，界面模式暂按 pro 处理，稍后再判定');
+      return FieldwatchUiMode.PRO;
+    }
+    const seenOnboarding: boolean = ngfSettingsStoreFacade.getBoolean(ONBOARDING_SEEN_KEY, false);
+    const resolved: string = seenOnboarding ? FieldwatchUiMode.PRO : FieldwatchUiMode.DAILY;
+    ngfSettingsStoreFacade.setString(UI_MODE_KEY, resolved);
+    logger.info(TAG, '首次解析界面模式: ' + resolved + '（引导已看过=' + seenOnboarding.toString() + '）');
+    return resolved;
+  }
+
+  /** 切换界面模式并落盘。**只换首屏，不动任何其它设置与数据。** */
+  saveUiMode(mode: string): void {
+    ngfSettingsStoreFacade.setString(UI_MODE_KEY, FieldwatchUiMode.normalize(mode));
   }
 
   /** 当前生效的筛选（重启后恢复）。 */
@@ -198,6 +258,14 @@ export class FieldwatchSettingsRepository {
   /** 用户主动选择「先用基础功能」后不再自动弹权限说明。 */
   loadPermissionPromptDismissed(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.permissionPromptDismissed', false); }
   savePermissionPromptDismissed(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.permissionPromptDismissed', value); }
+  /**
+   * 提醒引导是否已问过（P0-3 验收：「拒绝后应用内不再重复骚扰询问」）。
+   *
+   * 与 `onboardingSeen` 分开存：重看引导（设置页有入口）不该再问一次提醒，
+   * 而「引导全部看过」与「这一问答过了」是两件事。
+   */
+  loadAlertsAsked(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.alertsAsked', false); }
+  saveAlertsAsked(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.alertsAsked', value); }
   listFilterPresets(): FilterPreset[] {
     const content: string = ngfSettingsStoreFacade.getString(PRESETS_KEY, '');
     if (content.length > 0) {
@@ -357,6 +425,37 @@ export class FieldwatchSettingsRepository {
       return result;
     } catch (error) {
       logger.warn(TAG, '读取关注列表失败: ' + String(error));
+      return [];
+    }
+  }
+
+  /** 保存「这不是我的设备」的拉黑名单。只存指纹快照，不存地址（地址会变）。 */
+  saveOwnDenyList(list: OwnDeviceFingerprint[]): void {
+    ngfSettingsStoreFacade.setString(OWN_DENY_KEY, JSON.stringify(list));
+  }
+
+  /** 读取拉黑名单。坏数据整条丢弃，不让它拖垮认领功能。 */
+  loadOwnDenyList(): OwnDeviceFingerprint[] {
+    const content: string = ngfSettingsStoreFacade.getString(OWN_DENY_KEY, '');
+    if (content.length === 0) return [];
+    try {
+      const values: OwnDeviceFingerprint[] = JSON.parse(content) as OwnDeviceFingerprint[];
+      const result: OwnDeviceFingerprint[] = [];
+      for (let index: number = 0; index < values.length; index += 1) {
+        const value: OwnDeviceFingerprint = values[index];
+        if (value === undefined || value === null) continue;
+        // 构造新对象而不是直接塞回去：JSON.parse 出来的对象没有类方法，
+        // 后面 ownFingerprintScore 只读字段，但保留类实例能让「快照不可变」的约定更稳。
+        result.push(new OwnDeviceFingerprint(
+          value.name === undefined ? '' : value.name,
+          value.manufacturerIds === undefined ? [] : value.manufacturerIds,
+          value.serviceUuids === undefined ? [] : value.serviceUuids,
+          value.signatureIds === undefined ? [] : value.signatureIds
+        ));
+      }
+      return result;
+    } catch (error) {
+      logger.warn(TAG, '读取自有设备黑名单失败: ' + String(error));
       return [];
     }
   }

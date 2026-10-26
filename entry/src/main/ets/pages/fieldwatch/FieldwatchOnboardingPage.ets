@@ -16,6 +16,8 @@ import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/Fiel
 import { FieldwatchChip } from '../../fieldwatch/ui/FieldwatchChip';
 
 const TAG: string = 'FieldwatchOnboarding';
+/** 提醒询问在步骤数组里的下标（0 起）；过滤时按它去掉。 */
+const ALERTS_STEP_INDEX: number = 4;
 
 /** 每一步的主视觉 symbol 与文案键。 */
 class OnboardingStepHead {
@@ -28,12 +30,34 @@ class OnboardingStepHead {
     this.bodyKey = bodyKey;
   }
 }
+/**
+ * 按「提醒引导是否已问过」裁剪步骤。
+ *
+ * 第 ⑤ 步是提醒询问（P0-3）。已问过就整步去掉：
+ * 用户重看引导时不该被同一个问题再问一遍（文档验收原文：「拒绝后应用内不再重复骚扰询问」）。
+ */
+function buildVisibleHeads(): OnboardingStepHead[] {
+  const all: OnboardingStepHead[] = buildStepHeads();
+  if (all.length <= ALERTS_STEP_INDEX) return all;
+  if (!fieldwatchApplication.alertsAsked()) return all;
+  const trimmed: OnboardingStepHead[] = [];
+  for (let index: number = 0; index < all.length; index += 1) {
+    if (index === ALERTS_STEP_INDEX) continue;
+    trimmed.push(all[index]);
+  }
+  return trimmed;
+}
+
 function buildStepHeads(): OnboardingStepHead[] {
   const heads: OnboardingStepHead[] = [];
   heads.push(new OnboardingStepHead('sys.symbol.dot_radiowaves', 'app.string.fieldwatch_onb_welcome_title', 'app.string.fieldwatch_onb_welcome_body'));
   heads.push(new OnboardingStepHead('sys.symbol.list_checkmark', 'app.string.fieldwatch_onb_baseline_title', 'app.string.fieldwatch_onb_baseline_body'));
   heads.push(new OnboardingStepHead('sys.symbol.checkmark_shield', 'app.string.fieldwatch_onb_perm_title', 'app.string.fieldwatch_onb_perm_body'));
   heads.push(new OnboardingStepHead('sys.symbol.gearshape', 'app.string.fieldwatch_onb_settings_title', 'app.string.fieldwatch_onb_settings_body'));
+  // 第 ⑤ 步：主动问一次「要不要提醒」（P0-3）。
+  // **放在最后**：此时权限已说明完、通知权限在 ③ 已申请过，
+  // 用户知道「通知」这件事指的是什么，回答才是有效回答。
+  heads.push(new OnboardingStepHead('sys.symbol.bell', 'app.string.fieldwatch_onb_alerts_title', 'app.string.fieldwatch_onb_alerts_body'));
   return heads;
 }
 
@@ -71,7 +95,25 @@ export struct FieldwatchOnboardingPage {
   @State private scanIntensity: string = 'balanced';
   @State private backgroundScanning: boolean = false;
   @State private keepScreenOn: boolean = false;
-  private readonly heads: OnboardingStepHead[] = buildStepHeads();
+  // ── 第 ⑤ 步：提醒引导 ──
+  //
+  // 设计口径（落地文档 P0-3 + 第五节拍板点 1，按推荐方案执行）：
+  //   · **不静默改任何默认值**，只在这里主动问一次；
+  //   · 点「开启提醒」→ watchNotifications=true（会走系统通知授权）；
+  //   · 点「先不用」→ 保持 false，并记住「问过了」，应用内不再重复骚扰；
+  //   · 设置页随时可改（那个开关本来就在）。
+  @State private alertsEnabled: boolean = false;
+  /** 用户是否已就这一步做过选择（开或跳过都算）。 */
+  @State private alertsDecided: boolean = false;
+  @State private alertsBusy: boolean = false;
+  /**
+   * 本次要走的步骤。
+   *
+   * **已问过提醒就不再问**（P0-3 验收：拒绝后不再重复骚扰）。
+   * 注意是「过滤掉第 ⑤ 步」而不是「跳过它的内容」—— 步数与进度条都读这个数组，
+   * 只在内容里判断会让进度条显示 6 步却永远走不到最后一步。
+   */
+  private readonly heads: OnboardingStepHead[] = buildVisibleHeads();
 
   aboutToAppear(): void {
     this.readTopInset();
@@ -173,6 +215,11 @@ export struct FieldwatchOnboardingPage {
       this.step = next;
     // 进入第 ④ 步时把三项的当前值同步进来（它们不在本页缓存）。
     if (next === 3) this.syncFeatureSettings();
+    // 进入提醒询问那一步时把当前真实开关读进来：设置页可能已经开过了。
+    if (next === ALERTS_STEP_INDEX && this.heads.length > ALERTS_STEP_INDEX) {
+      this.alertsEnabled = fieldwatchApplication.getState().settings.watchNotifications;
+      this.alertsDecided = fieldwatchApplication.alertsAsked();
+    }
       this.contentShift = forward ? 18 : -18;
       ui.animateTo({ duration: 260, curve: Curve.Friction }, (): void => {
         this.contentOpacity = 1;
@@ -191,6 +238,10 @@ export struct FieldwatchOnboardingPage {
           if (this.step === 0) this.buildWelcome()
           else if (this.step === 1) this.buildBaseline()
           else if (this.step === 2) this.buildPermissions()
+          else if (this.step === 3) this.buildFeatureSettings()
+          // 只有「这一趟真的带上了第 ⑤ 步」时才渲染提醒询问；
+          // 否则最后一步仍然应该是功能设置（已问过提醒的老用户重看引导）。
+          else if (this.heads.length > ALERTS_STEP_INDEX) this.buildAlertsAsk()
           else this.buildFeatureSettings()
         }.width('100%').padding({ left: 20, right: 20, top: 4, bottom: 24 })
       }.layoutWeight(1).width('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
@@ -225,10 +276,20 @@ export struct FieldwatchOnboardingPage {
     .translate({ y: this.contentShift })
   }
 
-  /** 四步进度：当前步是拉长的胶囊，其余是圆点。 */
+  /** 进度圆点的下标数组：长度与 `heads` 一致，避免步数与圆点对不上。 */
+  private stepDots(): number[] {
+    const dots: number[] = [];
+    for (let index: number = 0; index < this.heads.length; index += 1) dots.push(index);
+    return dots;
+  }
+
+  /** 每步进度：当前步是拉长的胶囊，其余是圆点。 */
   @Builder private buildProgress() {
     Row({ space: 8 }) {
-      ForEach([0, 1, 2, 3], (index: number): void => {
+      // **圆点数量必须跟着 heads 走**：写死 [0,1,2,3] 时，
+      // 第 ⑤ 步（提醒询问）没有任何圆点，界面看起来仍停在第 ④ 步，
+      // 而文字是 5/5 —— 用户会以为点「继续」没反应（实测踩到过）。
+      ForEach(this.stepDots(), (index: number): void => {
         Row()
           .width(index === this.step ? 26 : 8)
           .height(8)
@@ -421,6 +482,72 @@ export struct FieldwatchOnboardingPage {
           })
       }.width('100%')
     }.width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
+  }
+
+  /**
+   * 第 ⑤ 步：提醒引导（P0-3）。
+   *
+   * **这是一个主动询问，不是一次设置展示。** 两个按钮各自是一次明确表态：
+   * 「开启提醒」写 true 并申请系统通知；「先不用」保持 false。
+   * 不提供「默认帮你开」的路径 —— 那正是文档明确否决的「静默改默认值」。
+   */
+  @Builder private buildAlertsAsk() {
+    Column({ space: 12 }) {
+      Text($r('app.string.fieldwatch_onb_alerts_ask')).fontSize(16).fontWeight(FontWeight.Medium)
+        .fontColor(FieldwatchPaletteHolder.get().headerText)
+        .width('100%').textAlign(TextAlign.Start)
+      Text($r('app.string.fieldwatch_onb_alerts_hint')).fontSize(12)
+        .fontColor(FieldwatchPaletteHolder.get().textDim)
+        .width('100%').textAlign(TextAlign.Start)
+      if (this.alertsDecided) {
+        Row({ space: 6 }) {
+          SymbolGlyph($r(this.alertsEnabled ? 'sys.symbol.checkmark_circle' : 'sys.symbol.info_circle')).fontSize(14)
+            .fontColor([this.alertsEnabled ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim])
+          Text(this.alertsEnabled ? $r('app.string.fieldwatch_onb_alerts_enabled') : $r('app.string.fieldwatch_onb_alerts_declined'))
+            .fontSize(14).fontColor(this.alertsEnabled ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
+            .layoutWeight(1)
+        }.width('100%')
+      } else {
+        FieldwatchButton({ label: $r('app.string.fieldwatch_onb_alerts_on'), tone: FieldwatchButtonTone.PRIMARY,
+          disabled: this.alertsBusy, onTap: (): void => { void this.enableAlerts(); } })
+        FieldwatchButton({ label: $r('app.string.fieldwatch_onb_alerts_skip'), tone: FieldwatchButtonTone.OUTLINE,
+          disabled: this.alertsBusy, onTap: (): void => { this.skipAlerts(); } })
+      }
+    }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(14)
+      .opacity(this.contentOpacity).translate({ y: this.contentShift })
+  }
+
+  /**
+   * 开启关注提醒。
+   *
+   * 走 `setWatchNotifications(true)`：它内部会先申请系统通知权限，
+   * 拿不到就返回 false —— 此时**不能显示成已开启**（用户会以为能收到提醒）。
+   */
+  private async enableAlerts(): Promise<void> {
+    if (this.alertsBusy) return;
+    this.alertsBusy = true;
+    const enabled: boolean = await fieldwatchApplication.setWatchNotifications(true);
+    this.alertsBusy = false;
+    this.alertsEnabled = enabled;
+    this.alertsDecided = true;
+    if (enabled) fieldwatchApplication.markAlertsAsked();
+    if (!enabled) {
+      // 系统不再弹窗（此前拒绝过）：明确告诉用户去哪开，而不是静默失败。
+      this.getUIContext().showAlertDialog({
+        title: this.label('app.string.fieldwatch_onb_alerts_title'),
+        message: this.label('app.string.fieldwatch_onb_alerts_need_system'),
+        primaryButton: { value: this.label('app.string.fieldwatch_manual_cancel'), action: (): void => {} },
+        secondaryButton: { value: this.label('app.string.fieldwatch_manual_open'), action: (): void => { this.openAppSettings(); } }
+      });
+    }
+  }
+
+  /** 跳过：保持默认关闭，并记住「问过了」，之后不再重复询问。 */
+  private skipAlerts(): void {
+    this.alertsEnabled = false;
+    this.alertsDecided = true;
+    fieldwatchApplication.markAlertsAsked();
   }
 
   // ── 底部动作 ──

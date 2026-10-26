@@ -480,6 +480,21 @@ export class FieldwatchLogFootprint {
   /** 以 KB 显示，向上取整。 */
   kilobytes(): number { return Math.ceil(this.bytes / 1024); }
 }
+/**
+ * 界面模式。
+ *
+ * 日常模式不是「阉割版」：它只是把专业模式的入口收进二级页面，
+ * 专业模式的全部能力在 `pro` 下原样保留（见落地文档「明确不做」一节）。
+ * 因此这里只存「首屏长什么样」，不参与任何采集或判定逻辑。
+ */
+export class FieldwatchUiMode {
+  static readonly DAILY: string = 'daily';
+  static readonly PRO: string = 'pro';
+  /** 只认两个合法值，其余一律回落到 pro（宁可多给能力，不要少给）。 */
+  static normalize(value: string): string {
+    return value === FieldwatchUiMode.DAILY ? FieldwatchUiMode.DAILY : FieldwatchUiMode.PRO;
+  }
+}
 export class AppSettings { public displayPaused: boolean = false; public darkMode: boolean = true; public keepScreenOn: boolean = false; public locationTagging: boolean = false; public privacyMode: boolean = false; public watchNotifications: boolean = false;
   // ── 关注列表的可听告警（§12.3 关注与声音设置）──
   //
@@ -547,7 +562,16 @@ export class AppSettings { public displayPaused: boolean = false; public darkMod
   public radarLabelFontSize: number = 12;
   /** 雷达设备图标尺寸（vp）。 */
   public radarIconSize: number = 26;
-  public backgroundScanning: boolean = false; public scanIntensity: string = 'balanced'; public liveMode: string = 'radar'; }
+  public backgroundScanning: boolean = false; public scanIntensity: string = 'balanced'; public liveMode: string = 'radar';
+  /**
+   * 界面模式：日常（daily）/ 专业（pro）。见 `FieldwatchUiMode`。
+   *
+   * **默认写 pro 而不是 daily**：这是「读不到存储时的兜底值」。
+   * 真正的默认值在 `FieldwatchSettingsRepository.loadUiMode()` 里按用户是否已有使用痕迹判定 ——
+   * 老用户升级上来必须留在专业模式，不能因为一次读不到存储就被踢到日常模式。
+   */
+  public uiMode: string = FieldwatchUiMode.PRO;
+}
 export class LogEntry { public id: string; public observation: ScanObservation; public signatureIds: string[]; constructor(id: string, observation: ScanObservation, signatureIds: string[] = []) { this.id = id; this.observation = observation; this.signatureIds = signatureIds; } }
 export class SitSummary { public id: string; public name: string; public startedAt: number; public endedAt: number; public radioCount: number; public deviceKeys: string[]; constructor(id: string, name: string, startedAt: number, endedAt: number = 0, radioCount: number = 0, deviceKeys: string[] = []) { this.id = id; this.name = name; this.startedAt = startedAt; this.endedAt = endedAt; this.radioCount = radioCount; this.deviceKeys = deviceKeys; } }
 export class SitFile { public summary: SitSummary; public radios: Sighting[]; public path: GpsSample[]; constructor(summary: SitSummary, radios: Sighting[] = [], path: GpsSample[] = []) { this.summary = summary; this.radios = radios; this.path = path; } }

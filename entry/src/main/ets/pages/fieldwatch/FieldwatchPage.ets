@@ -21,7 +21,7 @@ import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/Fiel
  * 而 ArkTS 的 struct 方法不能跨结构体调用。
  */
 import { CandidateReport, SignatureCandidate } from '../../fieldwatch/domain/FieldwatchCandidateEngine';
-import { countSightingsByKind, DecodedFieldValue, FieldwatchLogFootprint, FilterDefinition, FilterLogic, FilterPreset, GpsSample, isRadioPhaseActive, mergeScanError, RadioKind, RadioSourceSnapshot, ServiceDataRecord, SignatureClass, Sighting, SitSummary, WatchTarget, WifiScanPhase, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
+import { countSightingsByKind, DecodedFieldValue, FieldwatchLogFootprint, FieldwatchUiMode, FilterDefinition, FilterLogic, FilterPreset, GpsSample, isRadioPhaseActive, mergeScanError, RadioKind, RadioSourceSnapshot, ServiceDataRecord, SignatureClass, Sighting, SitSummary, WatchTarget, WifiScanPhase, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
 import { SignatureFleet } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
 import { SignatureMatchExplanation } from '../../fieldwatch/domain/signatures/FieldwatchSignatureEngine';
 import { FieldwatchHuntParam, FieldwatchRouteName, FieldwatchSignatureEditorParam } from '../../fieldwatch/ui/FieldwatchRoutes';
@@ -39,6 +39,8 @@ import {
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { FieldwatchSignatureDetail } from '../../fieldwatch/ui/FieldwatchSignatureDetail';
 import { FieldwatchOnboardingPage } from './FieldwatchOnboardingPage';
+import { FieldwatchDailyPage } from './FieldwatchDailyPage';
+import { FieldwatchFindPage } from './FieldwatchFindPage';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 
 /**
@@ -92,6 +94,15 @@ struct FieldwatchRootPage {
   @State private followTick: number = 0;
   /** 首次启动引导：未完成时先走引导，再进主界面。 */
   @State private showOnboarding: boolean = false;
+  /**
+   * 界面模式（daily / pro）。
+   *
+   * 只决定**首屏分发**，不影响任何采集、匹配、导出逻辑 ——
+   * 文档「明确不做」里写着不许为日常模式阉割专业模式，所以功能面完全一致。
+   * 初值读应用层（那里已经按「老用户 pro / 新用户 daily」解析过），
+   * 页面不重复做这套判定，避免两处规则漂移。
+   */
+  @State private uiMode: string = FieldwatchUiMode.PRO;
   @StorageProp('ngf_is_dark_mode') @Watch('onDarkModeChanged') private isDarkMode: boolean = true;
   @State private isLandscape: boolean = false;
   /**
@@ -271,6 +282,11 @@ struct FieldwatchRootPage {
     this.readBottomInset();
     // 首次启动先走引导（含权限说明）；引导完成前不申请任何权限。
     this.showOnboarding = !fieldwatchApplication.onboardingSeen();
+    // 界面模式从应用层取（那里已经按「老用户 pro / 新用户 daily」解析并落盘）。
+    // **必须在这里再同步一次**：`settings` 在构造期可能读成默认值，
+    // 而 `reloadSettings()` 是异步的，页面出现时才是可靠时点。
+    this.uiMode = fieldwatchApplication.uiMode();
+    void fieldwatchApplication.ensureOwnDevicesLoaded();
     // 星闪能力探测必须**先于** startScan：探测结果决定协调器是否包含星闪扫描器，
     // 而协调器一旦开始扫描就不会重建。顺序反了会导致星闪永远不被接入。
     fieldwatchApplication.probeNearLinkCapability();
@@ -403,6 +419,10 @@ struct FieldwatchRootPage {
   }
 
   private refreshView(): void {
+    // 界面模式可能被设置页或深链改掉（应用层是唯一真值，本页只是它的镜像）。
+    // 每秒对一次，避免「在设置里切了模式，回到首屏还是老样子」。
+    const currentMode: string = fieldwatchApplication.uiMode();
+    if (currentMode !== this.uiMode) this.uiMode = currentMode;
     // 快捷方式 / 卡片点击带进来的目标标签页。
     //
     // 放在 1 秒刷新里消费，而不是只在 `aboutToAppear`：
@@ -480,6 +500,26 @@ struct FieldwatchRootPage {
     this.pathStack.pushPathByName(FieldwatchRouteName.HUNT, null);
   }
 
+  /** 打开「找东西」日常版。 */
+  private openFind(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.FIND, null);
+  }
+
+  /**
+   * 切换界面模式。
+   *
+   * **只写一个设置键**：不动筛选、不动关注列表、不动雷达参数。
+   * 落地文档的验收是「模式切换不丢数据」—— 最容易丢的路子是切换时重建扫描器或清筛选，
+   * 所以这里刻意什么都不做，只改首屏与落盘。
+   */
+  private applyUiMode(mode: string): void {
+    const next: string = FieldwatchUiMode.normalize(mode);
+    if (next === this.uiMode) return;
+    this.uiMode = next;
+    fieldwatchApplication.setUiMode(next);
+  }
+
   private openWatchlist(): void {
     this.subPageOpen = true;
     this.pathStack.pushPathByName(FieldwatchRouteName.WATCHLIST, '');
@@ -518,7 +558,18 @@ struct FieldwatchRootPage {
     HdsNavigation(this.pathStack) {
       Stack({ alignContent: Alignment.TopStart }) {
         NGFImmersiveTopChromeUnderlay({ spec: NGFImmersiveTopChromePresetFactory.build(FieldwatchPaletteHolder.get().night, FieldwatchPaletteHolder.get().panel, FieldwatchPaletteHolder.get().panel2, FieldwatchPaletteHolder.get().accentActive, FieldwatchPaletteHolder.get().accent, PAGE_UNDERLAY_HEIGHT) })
-        if (this.isLandscape) {
+        if (this.uiMode === FieldwatchUiMode.DAILY) {
+          // 日常模式首屏：只放三张大卡 + 我的设备摘要。
+          // **不套 Tabs**：底栏一出现，三张大卡的「这是全部」就不再成立，
+          // 用户会立刻发现「还有六个页面」，首屏减负就白做了。
+          // 专业模式的入口在这一屏的页脚（切到专业模式），点击即回到底栏布局。
+          FieldwatchDailyPage({
+            withShell: false,
+            topInset: this.topInsetVp,
+            onOpenFind: (): void => { this.openFind(); },
+            onSwitchPro: (): void => { this.applyUiMode(FieldwatchUiMode.PRO); }
+          })
+        } else if (this.isLandscape) {
           this.buildLandscapeLayout()
         } else {
           this.buildPhoneLayout()
@@ -570,6 +621,20 @@ struct FieldwatchRootPage {
       FieldwatchSignaturesPage({ landscape: this.isLandscape, onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }, onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, followTick: this.followTick, onOpenWatchlist: (): void => { this.openWatchlist(); } });
     } else if (name === FieldwatchRouteName.HUNT) {
       FieldwatchHuntPage({ onClose: (): void => { this.pathStack.pop(); } });
+    } else if (name === FieldwatchRouteName.DAILY) {
+      FieldwatchDailyPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onOpenFind: (): void => { this.openFind(); },
+        onSwitchPro: (): void => { this.applyUiMode(FieldwatchUiMode.PRO); this.pathStack.pop(); },
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.FIND) {
+      FieldwatchFindPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
     } else if (name === FieldwatchRouteName.SIGNATURE_DETAIL) {
       // 横屏右栏的特征详情：与竖屏 sheet 共用同一个内容组件。
       FieldwatchSignatureDetail({
@@ -2591,7 +2656,8 @@ struct FieldwatchLivePage {
             }.layoutWeight(1).alignItems(HorizontalAlign.Start)
             Column({ space: 4 }) {
               Row({ space: 4 }) {
-                SymbolGlyph($r(this.trailTrend(item) > 0 ? 'sys.symbol.arrow_up' : (this.trailTrend(item) < 0 ? 'sys.symbol.arrow_down' : 'sys.symbol.equal')))
+                // 持平态用 `equals`：`sys.symbol.equal` 并不存在（编译期 10903329，HEAD 里就有）。
+                SymbolGlyph($r(this.trailTrend(item) > 0 ? 'sys.symbol.arrow_up' : (this.trailTrend(item) < 0 ? 'sys.symbol.arrow_down' : 'sys.symbol.equals')))
                   .fontSize(11).fontColor([this.tintFor(item)])
                 Text(item.rssi.toString()).fontSize(this.rowM().valueSize).fontColor(FieldwatchPaletteHolder.get().rssiBar)
               }
@@ -4007,6 +4073,33 @@ struct FieldwatchSettingsPage {
     }.width('100%').padding(14).alignItems(HorizontalAlign.Start).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
   }
 
+  /**
+   * 界面模式：日常 / 专业。
+   *
+   * 与首屏页脚的「切到专业模式」是**同一个设置键**的两处入口，
+   * 两处都必须有：首屏页脚解决「我不小心进了日常，怎么回去」，
+   * 设置页解决「我想长期用另一个模式」。
+   */
+  @Builder private buildSettingsMode() {
+    Column({ space: 8 }) {
+      Text($r('app.string.fieldwatch_settings_mode')).fontSize(18).fontWeight(FontWeight.Medium)
+        .fontColor(FieldwatchPaletteHolder.get().headerText)
+      Text($r('app.string.fieldwatch_settings_mode_hint')).fontSize(13)
+        .fontColor($r('app.color.text_secondary'))
+      Row({ space: 8 }) {
+        Button($r('app.string.fieldwatch_settings_mode_daily')).backgroundColor(Color.Transparent).borderWidth(1)
+          .borderColor(fieldwatchApplication.uiMode() === FieldwatchUiMode.DAILY ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
+          .fontColor(fieldwatchApplication.uiMode() === FieldwatchUiMode.DAILY ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
+          .layoutWeight(1).onClick((): void => { fieldwatchApplication.setUiMode(FieldwatchUiMode.DAILY); this.refresh(); })
+        Button($r('app.string.fieldwatch_settings_mode_pro')).backgroundColor(Color.Transparent).borderWidth(1)
+          .borderColor(fieldwatchApplication.uiMode() === FieldwatchUiMode.PRO ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline)
+          .fontColor(fieldwatchApplication.uiMode() === FieldwatchUiMode.PRO ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
+          .layoutWeight(1).onClick((): void => { fieldwatchApplication.setUiMode(FieldwatchUiMode.PRO); this.refresh(); })
+      }.width('100%')
+    }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
+  }
+
   @Builder private buildSettingsListDisplay() {
     Column({ space: 8 }) {
     Text($r('app.string.fieldwatch_settings_display')).fontSize(18).fontWeight(FontWeight.Medium)
@@ -4174,6 +4267,7 @@ struct FieldwatchSettingsPage {
       Row({ space: 12 }) {
         Column({ space: 12 }) {
           this.buildSettingsScan()
+          this.buildSettingsMode()
           this.buildSettingsPrivacy()
           this.buildSettingsPermissions()
           this.buildSettingsAlerts()
@@ -4187,6 +4281,7 @@ struct FieldwatchSettingsPage {
       }.width('100%').alignItems(VerticalAlign.Top)
     } else {
       this.buildSettingsScan()
+      this.buildSettingsMode()
       this.buildSettingsAppearance()
       this.buildSettingsPrivacy()
       this.buildSettingsListDisplay()

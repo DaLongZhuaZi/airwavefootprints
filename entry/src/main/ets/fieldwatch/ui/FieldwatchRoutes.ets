@@ -28,4 +28,8 @@ export class FieldwatchRouteName {
   /** 反馈中心：设置页入口 + 深度链接直达。 */
   static readonly FEEDBACK: string = 'fieldwatch.feedback';
   static readonly HUNT: string = 'fieldwatch.hunt';
+  /** 日常模式首屏（深链 / 横屏右栏 / 卡片直达共用同一路由）。 */
+  static readonly DAILY: string = 'fieldwatch.daily';
+  /** 找东西日常版（认领 + 向导）。 */
+  static readonly FIND: string = 'fieldwatch.find';
 }

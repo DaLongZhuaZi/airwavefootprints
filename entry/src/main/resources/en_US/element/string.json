@@ -9139,6 +9139,310 @@
     {
       "name": "fieldwatch_legal_oss_repo",
       "value": "https://github.com/DaLongZhuaZi/airwavefootprints"
+    },
+    {
+      "name": "fieldwatch_daily_greeting",
+      "value": "What would you like to do?"
+    },
+    {
+      "name": "fieldwatch_daily_card_find_title",
+      "value": "Find My Things"
+    },
+    {
+      "name": "fieldwatch_daily_card_find_desc",
+      "value": "Earbuds, watch, car keys — follow the sound to them"
+    },
+    {
+      "name": "fieldwatch_daily_card_security_title",
+      "value": "Security Scan"
+    },
+    {
+      "name": "fieldwatch_daily_card_security_desc",
+      "value": "See which devices are around, and whether any follow you"
+    },
+    {
+      "name": "fieldwatch_daily_card_wifi_title",
+      "value": "Wi-Fi Checkup"
+    },
+    {
+      "name": "fieldwatch_daily_card_wifi_desc",
+      "value": "See how busy your home network is, and whether to switch"
+    },
+    {
+      "name": "fieldwatch_daily_own_title",
+      "value": "My Devices"
+    },
+    {
+      "name": "fieldwatch_daily_own_empty",
+      "value": "No devices claimed yet. Claim one and finding it takes two taps"
+    },
+    {
+      "name": "fieldwatch_daily_own_more",
+      "value": "See all"
+    },
+    {
+      "name": "fieldwatch_daily_own_count",
+      "value": "%1 claimed"
+    },
+    {
+      "name": "fieldwatch_daily_nearby",
+      "value": "%1 devices nearby"
+    },
+    {
+      "name": "fieldwatch_daily_switch_pro",
+      "value": "Switch to Pro"
+    },
+    {
+      "name": "fieldwatch_daily_switch_hint",
+      "value": "Pro keeps radar, filters and the device library — switch back any time"
+    },
+    {
+      "name": "fieldwatch_find_title",
+      "value": "Find My Things"
+    },
+    {
+      "name": "fieldwatch_find_subtitle",
+      "value": "Pick the device you are looking for"
+    },
+    {
+      "name": "fieldwatch_find_paired",
+      "value": "Paired with this phone"
+    },
+    {
+      "name": "fieldwatch_find_own",
+      "value": "My Devices"
+    },
+    {
+      "name": "fieldwatch_find_scan_list",
+      "value": "Recently heard"
+    },
+    {
+      "name": "fieldwatch_find_claim_action",
+      "value": "This is mine"
+    },
+    {
+      "name": "fieldwatch_find_claimed",
+      "value": "Claimed"
+    },
+    {
+      "name": "fieldwatch_find_start",
+      "value": "Start"
+    },
+    {
+      "name": "fieldwatch_find_found",
+      "value": "Found it"
+    },
+    {
+      "name": "fieldwatch_find_stop",
+      "value": "Stop"
+    },
+    {
+      "name": "fieldwatch_find_empty",
+      "value": "Nothing to look for yet — claim a device first"
+    },
+    {
+      "name": "fieldwatch_find_heat",
+      "value": "Closeness"
+    },
+    {
+      "name": "fieldwatch_find_sound",
+      "value": "Sound"
+    },
+    {
+      "name": "fieldwatch_find_vibrate",
+      "value": "Vibration"
+    },
+    {
+      "name": "fieldwatch_find_cue_very_close",
+      "value": "It is on you or in your bag — feel around"
+    },
+    {
+      "name": "fieldwatch_find_cue_closer",
+      "value": "Getting closer — keep going this way"
+    },
+    {
+      "name": "fieldwatch_find_cue_further",
+      "value": "Moving away — step back a little"
+    },
+    {
+      "name": "fieldwatch_find_cue_same",
+      "value": "Slowly turn around"
+    },
+    {
+      "name": "fieldwatch_find_cue_waiting",
+      "value": "Listening — give it a moment"
+    },
+    {
+      "name": "fieldwatch_find_cue_quiet",
+      "value": "Cannot hear it right now — maybe blocked. Try another direction"
+    },
+    {
+      "name": "fieldwatch_find_cue_gone",
+      "value": "It is not nearby. Check when and where you last saw it"
+    },
+    {
+      "name": "fieldwatch_find_trouble_title",
+      "value": "Nothing yet? Try this"
+    },
+    {
+      "name": "fieldwatch_find_trouble_1",
+      "value": "Make sure the device's Bluetooth is on"
+    },
+    {
+      "name": "fieldwatch_find_trouble_2",
+      "value": "Move near where it usually lives: bag, drawer, coat pocket"
+    },
+    {
+      "name": "fieldwatch_find_trouble_3",
+      "value": "Some devices go quiet once back in the charging case"
+    },
+    {
+      "name": "fieldwatch_find_last_seen",
+      "value": "Last seen: %1"
+    },
+    {
+      "name": "fieldwatch_find_wiggle",
+      "value": "Several share this name? Pick yours up and give it a shake"
+    },
+    {
+      "name": "fieldwatch_find_not_mine",
+      "value": "Not mine"
+    },
+    {
+      "name": "fieldwatch_find_heat_low",
+      "value": "Far"
+    },
+    {
+      "name": "fieldwatch_find_heat_mid",
+      "value": "Closer"
+    },
+    {
+      "name": "fieldwatch_find_heat_high",
+      "value": "Very close"
+    },
+    {
+      "name": "fieldwatch_find_heat_very_high",
+      "value": "Right here"
+    },
+    {
+      "name": "fieldwatch_settings_mode",
+      "value": "Interface mode"
+    },
+    {
+      "name": "fieldwatch_settings_mode_hint",
+      "value": "Daily keeps only the common entries. Pro keeps radar, filters and the library — switch back any time"
+    },
+    {
+      "name": "fieldwatch_settings_mode_daily",
+      "value": "Daily"
+    },
+    {
+      "name": "fieldwatch_settings_mode_pro",
+      "value": "Pro"
+    },
+    {
+      "name": "fieldwatch_daily_coming_soon",
+      "value": "Coming in the next version"
+    },
+    {
+      "name": "fieldwatch_daily_subtitle",
+      "value": "Just the essentials"
+    },
+    {
+      "name": "fieldwatch_find_trouble_4",
+      "value": "Take it off whatever it is stuck to and try again"
+    },
+    {
+      "name": "fieldwatch_find_claim_failed",
+      "value": "Could not claim it — try again"
+    },
+    {
+      "name": "fieldwatch_find_not_heard",
+      "value": "Cannot hear it yet — move a little closer"
+    },
+    {
+      "name": "fieldwatch_find_found_toast",
+      "value": "Glad you found it"
+    },
+    {
+      "name": "fieldwatch_find_denied_toast",
+      "value": "Noted — we will not treat it as yours again"
+    },
+    {
+      "name": "fieldwatch_find_wiggle_confirmed",
+      "value": "That is the one"
+    },
+    {
+      "name": "fieldwatch_find_unnamed",
+      "value": "Unnamed device"
+    },
+    {
+      "name": "fieldwatch_find_source_own",
+      "value": "My device"
+    },
+    {
+      "name": "fieldwatch_find_source_paired",
+      "value": "Paired with this phone"
+    },
+    {
+      "name": "fieldwatch_find_source_paired_in_use",
+      "value": "Paired · in use right now"
+    },
+    {
+      "name": "fieldwatch_find_source_scan",
+      "value": "Recently heard"
+    },
+    {
+      "name": "fieldwatch_find_empty_hint",
+      "value": "Claim a device first, or turn Bluetooth on and come back"
+    },
+    {
+      "name": "fieldwatch_find_just_now",
+      "value": "just now"
+    },
+    {
+      "name": "fieldwatch_find_minutes_ago",
+      "value": "%1 min ago"
+    },
+    {
+      "name": "fieldwatch_find_hours_ago",
+      "value": "%1 h ago"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_title",
+      "value": "Want to be notified?"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_body",
+      "value": "We can notify you when an unfamiliar device — or one you follow — shows up. You can change this any time in Settings."
+    },
+    {
+      "name": "fieldwatch_onb_alerts_ask",
+      "value": "Turn on device alerts? (Notify you when an unfamiliar or followed device appears)"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_hint",
+      "value": "Off by default. Once on, it only notifies on appearance — it will not keep buzzing."
+    },
+    {
+      "name": "fieldwatch_onb_alerts_on",
+      "value": "Turn on alerts"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_skip",
+      "value": "Not now"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_enabled",
+      "value": "Alerts on"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_declined",
+      "value": "Skipped — you can enable it in Settings"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_need_system",
+      "value": "The system did not show the notification prompt (it may have been denied before). Please allow notifications for this app in Settings → Notifications."
     }
   ]
 }

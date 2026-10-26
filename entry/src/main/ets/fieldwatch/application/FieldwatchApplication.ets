@@ -1,5 +1,5 @@
 import { FileUtils, logger, NGFNotificationRequest, NGFNotificationType, ngfBackgroundTaskManager, ngfLocationManagerFacade, ngfPermissionManagerFacade, ngfScreenKeepAwakeFacade, ngfSystemNotificationManager, ngfSystemShareFacade, resolveResourceString, uiContextManager, LogLevel } from 'ngf_framework';
-import { AppSettings, DecodedFieldValue, FieldwatchLogFootprint, FilterDefinition, FilterLogic, FilterPreset, GpsSample, LogEntry, RadioFacts, RadioKind, RadioSourceSnapshot, ScanObservation, ScanState, SignatureClass, Sighting, SitSummary, WatchTarget, foldedSignatureClass } from '../domain/FieldwatchModels';
+import { AppSettings, DecodedFieldValue, FieldwatchLogFootprint, FieldwatchUiMode, FilterDefinition, FilterLogic, FilterPreset, GpsSample, LogEntry, RadioFacts, RadioKind, RadioSourceSnapshot, ScanObservation, ScanState, SignatureClass, Sighting, SitSummary, WatchTarget, foldedSignatureClass } from '../domain/FieldwatchModels';
 import { FieldwatchCompareResult, FieldwatchCompareService, FieldwatchFilterEngine, FieldwatchPrivacyService, FieldwatchSignatureEngine } from '../domain/FieldwatchDomainService';
 import { SignatureFleet } from '../domain/signatures/FieldwatchSignatureModels';
 import { FieldwatchWatchAlert, parseVoiceWhat } from '../platform/FieldwatchWatchAlert';
@@ -34,6 +34,9 @@ import { manager as nearlinkManager } from '@kit.ConnectivityKit';
 import { FieldwatchRadioDb } from '../domain/FieldwatchRadioDb';
 import { ngfSettingsStoreFacade, ngfWidgetManagerFacade } from 'ngf_framework';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../domain/FieldwatchPermissions';
+import { FieldwatchOwnDeviceCenter } from './FieldwatchOwnDeviceCenter';
+import { OwnDeviceCandidate, OwnDeviceProfile } from '../domain/FieldwatchOwnDevice';
+import { FindCandidate } from '../domain/FieldwatchFindModel';
 import { fileIo } from '@kit.CoreFileKit';
 
 const TAG: string = 'FieldwatchApplication';
@@ -110,6 +113,8 @@ export class FieldwatchApplication {
   private readonly settingsRepository: FieldwatchSettingsRepository = new FieldwatchSettingsRepository();
   private readonly catalogRepository: FieldwatchCatalogRepository = new FieldwatchCatalogRepository();
   private readonly observationRepository: FieldwatchObservationRepository = new FieldwatchObservationRepository();
+  /** 自有设备的认领 / 纠错 / 回写编排（纯逻辑在 domain，落库在 data，读名单在 platform）。 */
+  private readonly ownDeviceCenter: FieldwatchOwnDeviceCenter = new FieldwatchOwnDeviceCenter();
   private radioScanner: FieldwatchObservationCoordinator;
   private sequence: number = 0;
   private restoreStarted: boolean = false;
@@ -123,6 +128,8 @@ export class FieldwatchApplication {
   private readonly watchedNotificationIds: Map<string, number> = new Map<string, number>();
   /** `reloadSettings` 的重试计数（存储未就绪时用）。 */
   private settingsReloadAttempts: number = 0;
+  /** 自有设备档案是否已在设置就绪后载入过一次（避免每次 reload 都重载）。 */
+  private ownDevicesLoaded: boolean = false;
   /** 本次进程是否已做过启动期通知清理。 */
   private notificationsCleared: boolean = false;
   private clearingNotifications: Promise<void> | undefined = undefined;
@@ -227,11 +234,127 @@ export class FieldwatchApplication {
     }
     this.settingsReloadAttempts = 0;
     this.state.settings = this.settingsRepository.load();
+    // 界面模式在存储就绪前只能按 pro 兜底（见 `loadUiMode`），
+    // 就绪后这里读到的是真正判定过的值 —— 首屏会跟着切换。
+    logger.info(TAG, '界面模式: ' + this.state.settings.uiMode);
+    if (!this.ownDevicesLoaded) {
+      this.ownDevicesLoaded = true;
+      void this.ensureOwnDevicesLoaded();
+    }
     this.state.watchlist = this.settingsRepository.loadWatchlist();
     // 日志等级同样要重新应用：构造期读到的是默认 WARN。
     this.applyLogLevel(this.state.settings.logLevel);
     logger.info(TAG, '设置已重新载入: 后台运行=' + this.state.settings.backgroundScanning.toString()
       + ' 扫描强度=' + this.state.settings.scanIntensity + ' 屏幕常亮=' + this.state.settings.keepScreenOn.toString());
+  }
+
+  // ── 自有设备（找东西 P0-2）──
+  //
+  // 页面只调这几个方法，不直接碰 center / repository ——
+  // 与关注列表、筛选那套「页面只调应用层 API」的分工保持一致。
+
+  /** 提醒引导是否已问过（P0-3）。重看引导时据此跳过第 ⑤ 步。 */
+  alertsAsked(): boolean { return this.settingsRepository.loadAlertsAsked(); }
+
+  /** 记住「提醒引导已问过」。开启与跳过都调。 */
+  markAlertsAsked(): void { this.settingsRepository.saveAlertsAsked(true); }
+
+  /** 当前界面模式（daily / pro）。 */
+  uiMode(): string {
+    return this.state.settings.uiMode;
+  }
+
+  /** 切换界面模式并落盘。只写一个键，不碰任何其它设置。 */
+  setUiMode(mode: string): void {
+    const next: string = FieldwatchUiMode.normalize(mode);
+    this.state.settings.uiMode = next;
+    this.settingsRepository.saveUiMode(next);
+    logger.info(TAG, '界面模式已切换: ' + next);
+  }
+
+  /** 载入自有设备档案（幂等）。页面出现时调一次。 */
+  async ensureOwnDevicesLoaded(): Promise<void> {
+    await this.ownDeviceCenter.ensureLoaded();
+    this.ownDeviceCenter.setDenyList(this.settingsRepository.loadOwnDenyList());
+  }
+
+  /** 已认领的自有设备档案。 */
+  ownDevices(): OwnDeviceProfile[] { return this.ownDeviceCenter.all(); }
+
+  /** 「找东西」页的三批候选（已认领 → 系统配对 → 最近听到）。 */
+  findCandidates(): FindCandidate[] {
+    return this.ownDeviceCenter.candidates(this.state.sightings, Date.now());
+  }
+
+  /**
+   * 认领一台设备。
+   *
+   * 从配对名单进来的（已有 address、无广播事实）与从扫描列表进来的走同一条路：
+   * 指纹能取多少取多少，取不到就只靠地址直配 —— 不假装有更多证据。
+   */
+  claimOwnDevice(deviceKey: string, address: string, name: string): boolean {
+    const sighting: Sighting | undefined = this.sightingByKey(deviceKey);
+    const fingerprint = sighting === undefined
+      ? FieldwatchOwnDeviceCenter.fingerprintOfFacts(name, new RadioFacts(), [])
+      : FieldwatchOwnDeviceCenter.candidateOfSighting(sighting).fingerprint;
+    const profile: OwnDeviceProfile | undefined = this.ownDeviceCenter.claim(deviceKey, address, name, fingerprint);
+    return profile !== undefined;
+  }
+
+  /** 「这不是我的设备」：把它从我的设备里移出，并拉黑这次的广播长相。 */
+  denyOwnDevice(deviceKey: string): void {
+    const profile: OwnDeviceProfile | undefined = this.ownDeviceCenter.profileOfKey(deviceKey);
+    const sighting: Sighting | undefined = this.sightingByKey(deviceKey);
+    const fingerprint = sighting === undefined
+      ? FieldwatchOwnDeviceCenter.fingerprintOfFacts('', new RadioFacts(), [])
+      : FieldwatchOwnDeviceCenter.candidateOfSighting(sighting).fingerprint;
+    if (profile === undefined) return;
+    this.ownDeviceCenter.deny(profile, fingerprint);
+    this.settingsRepository.saveOwnDenyList(this.ownDeviceCenter.getDenyList());
+  }
+
+  /** 按扫描键直接开始一次搜寻（找东西页点设备时用）。 */
+  startHuntByKey(deviceKey: string): boolean {
+    const sighting: Sighting | undefined = this.sightingByKey(deviceKey);
+    if (sighting === undefined) return false;
+    this.startHunt(sighting);
+    return true;
+  }
+
+  /** 同名多台？给「晃一晃确认」提示用。 */
+  findTargetIsAmbiguous(): boolean {
+    const session = this.huntSession;
+    if (session === undefined) return false;
+    const name: string = session.label.trim();
+    if (name.length === 0) return false;
+    let same: number = 0;
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.name.trim() === name) same += 1;
+    });
+    return same > 1;
+  }
+
+  /** 目标的种类键（找东西页按它挑排查卡第三条）。 */
+  findTargetKind(deviceKey: string): string {
+    return this.ownDeviceCenter.kindOfKey(deviceKey, this.state.sightings);
+  }
+
+  /** 目标的「上次见到」文案；没有记录时返回空串（页面据此不渲染这一行）。 */
+  findLastSeenText(deviceKey: string): string {
+    const at: number = this.ownDeviceCenter.lastSeenOf(deviceKey, this.state.sightings);
+    if (at <= 0) return '';
+    const context = uiContextManager.getFullAbilityContext();
+    const template: string = context === null ? '%1' : resolveResourceString(context, $r('app.string.fieldwatch_find_last_seen'));
+    const minutes: number = Math.max(0, Math.round((Date.now() - at) / 60000));
+    // 相对时间**必须走资源**：这是用户能看到的文案，写死中文会让英文版漏译，
+    // 也会绕过「日常页禁术语」那条 grep 验收。
+    let when: string = String(minutes);
+    if (context !== null) {
+      if (minutes < 1) when = resolveResourceString(context, $r('app.string.fieldwatch_find_just_now'));
+      else if (minutes < 60) when = resolveResourceString(context, $r('app.string.fieldwatch_find_minutes_ago')).replace('%1', minutes.toString());
+      else when = resolveResourceString(context, $r('app.string.fieldwatch_find_hours_ago')).replace('%1', Math.round(minutes / 60).toString());
+    }
+    return template.replace('%1', when);
   }
 
   /** 设置日志等级并落盘。`LogLevel` 的数值直接存，便于以后加档不用改存储格式。 */
@@ -2272,6 +2395,9 @@ export class FieldwatchApplication {
     if (nowMs - this.lastEvictAt >= 5000) {
       this.lastEvictAt = nowMs;
       this.evictSightings(nowMs);
+      // 自有设备的「上次见到」跟随同一个 5 秒节拍回写：
+      // 它要和实时列表同源，否则看板上会出现「在附近但上次见到是昨天」。
+      this.ownDeviceCenter.refreshSeen(this.state.sightings, nowMs);
     }
   }
 
