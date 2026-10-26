@@ -9459,6 +9459,274 @@
     {
       "name": "fieldwatch_onb_alerts_need_system",
       "value": "系统没有弹出通知授权窗口（可能此前拒绝过）。请到「设置 → 通知」里允许本应用通知。"
+    },
+    {
+      "name": "fieldwatch_security_title",
+      "value": "安防扫描"
+    },
+    {
+      "name": "fieldwatch_security_subtitle",
+      "value": "看看身边有哪些设备正在广播"
+    },
+    {
+      "name": "fieldwatch_security_start",
+      "value": "开始扫描（60 秒）"
+    },
+    {
+      "name": "fieldwatch_security_scanning",
+      "value": "正在扫描…"
+    },
+    {
+      "name": "fieldwatch_security_remaining",
+      "value": "还剩 %1 秒"
+    },
+    {
+      "name": "fieldwatch_security_summary_title",
+      "value": "扫描完成"
+    },
+    {
+      "name": "fieldwatch_security_total_label",
+      "value": "台设备正在广播"
+    },
+    {
+      "name": "fieldwatch_security_classes_title",
+      "value": "分类 Top"
+    },
+    {
+      "name": "fieldwatch_security_newfaces",
+      "value": "这次新出现的：%1 台"
+    },
+    {
+      "name": "fieldwatch_security_follow",
+      "value": "跟随评分：%1"
+    },
+    {
+      "name": "fieldwatch_security_follow_hint",
+      "value": "有设备可能跟着你"
+    },
+    {
+      "name": "fieldwatch_security_headline_suspicious",
+      "value": "有设备可能跟着你"
+    },
+    {
+      "name": "fieldwatch_security_headline_crowded",
+      "value": "身边设备挺多的"
+    },
+    {
+      "name": "fieldwatch_security_headline_quiet",
+      "value": "身边比较安静"
+    },
+    {
+      "name": "fieldwatch_security_footnote",
+      "value": "只统计正在广播的设备；不广播的设备发现不了。"
+    },
+    {
+      "name": "fieldwatch_security_share",
+      "value": "生成分享卡"
+    },
+    {
+      "name": "fieldwatch_security_share_failed",
+      "value": "分享卡生成失败，请稍后再试"
+    },
+    {
+      "name": "fieldwatch_security_again",
+      "value": "再扫一次"
+    },
+    {
+      "name": "fieldwatch_security_empty",
+      "value": "这次什么都没听到。可以靠近一点再试。"
+    },
+    {
+      "name": "fieldwatch_security_ble",
+      "value": "蓝牙"
+    },
+    {
+      "name": "fieldwatch_security_wifi",
+      "value": "Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_security_nearlink",
+      "value": "星闪"
+    },
+    {
+      "name": "fieldwatch_security_kinds",
+      "value": "蓝牙 %1 · Wi-Fi %2 · 星闪 %3"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_title",
+      "value": "有设备可能跟着你"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_body",
+      "value": "%1 已经跟着你一段时间了，点开看看"
+    },
+    {
+      "name": "fieldwatch_onb_antitrack_ask",
+      "value": "要不要在「有设备可能跟着你」时提醒你？"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack",
+      "value": "跟随提醒"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack_hint",
+      "value": "应用在前台时每 15 分钟评估一次；只有评分很高的目标才会提醒，同一台一天最多一次"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_title",
+      "value": "Wi-Fi 体检"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_subtitle",
+      "value": "看看你家网络挤不挤、哪个房间最弱"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_channel_summary",
+      "value": "2.4G 上听到 %1 个，最挤的信道是 %2"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_recommend",
+      "value": "建议换到信道 %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_title",
+      "value": "逐房间测一测"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_hint",
+      "value": "拿着手机走进房间，放桌上别动，等 20 秒"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_add",
+      "value": "测这个房间"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_name",
+      "value": "房间名（如 客厅）"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_scanning",
+      "value": "正在测…还剩 %1 秒"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_done",
+      "value": "测好了：%1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_worst",
+      "value": "最弱的房间：%1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade",
+      "value": "信号档位：%1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_crowded",
+      "value": "信道 %1 比较挤"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_dualband",
+      "value": "听得到 5G 但房间里的设备没在用，可以试试"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_strong",
+      "value": "很好"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_ok",
+      "value": "够用"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_weak",
+      "value": "偏弱"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_bad",
+      "value": "很差"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_unknown",
+      "value": "还没测"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_export",
+      "value": "导出报告"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_exported",
+      "value": "报告已保存到导出目录"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_empty",
+      "value": "至少测两个房间才能比出最弱的那个"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_no_aps",
+      "value": "这台设备上没扫到 Wi-Fi 接入点"
+    },
+    {
+      "name": "fieldwatch_scene_title",
+      "value": "场景"
+    },
+    {
+      "name": "fieldwatch_scene_hint",
+      "value": "一键套用一套筛选条件，随时可换回"
+    },
+    {
+      "name": "fieldwatch_scene_dorm",
+      "value": "宿舍"
+    },
+    {
+      "name": "fieldwatch_scene_dorm_hint",
+      "value": "室友的耳机手表、手机，以及可能的防丢标签"
+    },
+    {
+      "name": "fieldwatch_scene_hotel",
+      "value": "酒店"
+    },
+    {
+      "name": "fieldwatch_scene_hotel_hint",
+      "value": "房间里不该出现的摄像头、录音类设备"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun",
+      "value": "夜跑"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun_hint",
+      "value": "只留下足够近、可能跟着你一起移动的东西"
+    },
+    {
+      "name": "fieldwatch_scene_office",
+      "value": "办公室"
+    },
+    {
+      "name": "fieldwatch_scene_office_hint",
+      "value": "同事的手机电脑、公司网络"
+    },
+    {
+      "name": "fieldwatch_scene_applied",
+      "value": "已套用：%1"
+    },
+    {
+      "name": "fieldwatch_rating_title",
+      "value": "觉得好用吗？"
+    },
+    {
+      "name": "fieldwatch_rating_body",
+      "value": "去商店打个分，能帮到我们很多。"
+    },
+    {
+      "name": "fieldwatch_rating_go",
+      "value": "去评分"
+    },
+    {
+      "name": "fieldwatch_rating_later",
+      "value": "以后再说"
+    },
+    {
+      "name": "fieldwatch_rating_open_failed",
+      "value": "没能打开应用市场，可以在里面搜「电波足迹」"
     }
   ]
 }

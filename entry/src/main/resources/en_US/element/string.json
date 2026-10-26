@@ -9443,6 +9443,274 @@
     {
       "name": "fieldwatch_onb_alerts_need_system",
       "value": "The system did not show the notification prompt (it may have been denied before). Please allow notifications for this app in Settings → Notifications."
+    },
+    {
+      "name": "fieldwatch_security_title",
+      "value": "Security Scan"
+    },
+    {
+      "name": "fieldwatch_security_subtitle",
+      "value": "See which devices are broadcasting around you"
+    },
+    {
+      "name": "fieldwatch_security_start",
+      "value": "Start scan (60s)"
+    },
+    {
+      "name": "fieldwatch_security_scanning",
+      "value": "Scanning…"
+    },
+    {
+      "name": "fieldwatch_security_remaining",
+      "value": "%1 s left"
+    },
+    {
+      "name": "fieldwatch_security_summary_title",
+      "value": "Scan complete"
+    },
+    {
+      "name": "fieldwatch_security_total_label",
+      "value": "devices broadcasting"
+    },
+    {
+      "name": "fieldwatch_security_classes_title",
+      "value": "Top categories"
+    },
+    {
+      "name": "fieldwatch_security_newfaces",
+      "value": "New this time: %1"
+    },
+    {
+      "name": "fieldwatch_security_follow",
+      "value": "Follow score: %1"
+    },
+    {
+      "name": "fieldwatch_security_follow_hint",
+      "value": "A device may be following you"
+    },
+    {
+      "name": "fieldwatch_security_headline_suspicious",
+      "value": "A device may be following you"
+    },
+    {
+      "name": "fieldwatch_security_headline_crowded",
+      "value": "Quite a few devices around"
+    },
+    {
+      "name": "fieldwatch_security_headline_quiet",
+      "value": "Pretty quiet around you"
+    },
+    {
+      "name": "fieldwatch_security_footnote",
+      "value": "Only devices that broadcast are counted; devices that stay silent cannot be found."
+    },
+    {
+      "name": "fieldwatch_security_share",
+      "value": "Make a share card"
+    },
+    {
+      "name": "fieldwatch_security_share_failed",
+      "value": "Could not make the share card — try again"
+    },
+    {
+      "name": "fieldwatch_security_again",
+      "value": "Scan again"
+    },
+    {
+      "name": "fieldwatch_security_empty",
+      "value": "Nothing heard this time. Try again a little closer."
+    },
+    {
+      "name": "fieldwatch_security_ble",
+      "value": "Bluetooth"
+    },
+    {
+      "name": "fieldwatch_security_wifi",
+      "value": "Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_security_nearlink",
+      "value": "NearLink"
+    },
+    {
+      "name": "fieldwatch_security_kinds",
+      "value": "Bluetooth %1 · Wi-Fi %2 · NearLink %3"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_title",
+      "value": "A device may be following you"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_body",
+      "value": "%1 has been with you for a while — tap to see"
+    },
+    {
+      "name": "fieldwatch_onb_antitrack_ask",
+      "value": "Get notified when a device may be following you?"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack",
+      "value": "Follow alerts"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack_hint",
+      "value": "Evaluated every 15 minutes while the app is open. Only high-scoring devices trigger it, once per device per day"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_title",
+      "value": "Wi-Fi Checkup"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_subtitle",
+      "value": "See how crowded your network is and which room is weakest"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_channel_summary",
+      "value": "Heard %1 on 2.4G; busiest channel is %2"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_recommend",
+      "value": "Suggest switching to channel %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_title",
+      "value": "Check room by room"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_hint",
+      "value": "Walk into the room, put the phone down and wait 20 seconds"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_add",
+      "value": "Check this room"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_name",
+      "value": "Room name (e.g. Living room)"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_scanning",
+      "value": "Measuring… %1 s left"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_done",
+      "value": "Done: %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_worst",
+      "value": "Weakest room: %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade",
+      "value": "Signal grade: %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_crowded",
+      "value": "Channel %1 is crowded"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_dualband",
+      "value": "5G is available but not in use — worth trying"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_strong",
+      "value": "Great"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_ok",
+      "value": "Good enough"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_weak",
+      "value": "Weak"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_bad",
+      "value": "Poor"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_unknown",
+      "value": "Not measured"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_export",
+      "value": "Export report"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_exported",
+      "value": "Report saved to the export folder"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_empty",
+      "value": "Check at least two rooms to compare"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_no_aps",
+      "value": "No Wi-Fi access points found on this device"
+    },
+    {
+      "name": "fieldwatch_scene_title",
+      "value": "Scenes"
+    },
+    {
+      "name": "fieldwatch_scene_hint",
+      "value": "Apply a filter set in one tap - switch back any time"
+    },
+    {
+      "name": "fieldwatch_scene_dorm",
+      "value": "Dorm"
+    },
+    {
+      "name": "fieldwatch_scene_dorm_hint",
+      "value": "Roommates earbuds, watches, phones and the odd tracker"
+    },
+    {
+      "name": "fieldwatch_scene_hotel",
+      "value": "Hotel"
+    },
+    {
+      "name": "fieldwatch_scene_hotel_hint",
+      "value": "Cameras and audio devices that should not be in your room"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun",
+      "value": "Night run"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun_hint",
+      "value": "Only nearby things that may be moving with you"
+    },
+    {
+      "name": "fieldwatch_scene_office",
+      "value": "Office"
+    },
+    {
+      "name": "fieldwatch_scene_office_hint",
+      "value": "Coworkers phones and laptops, office network"
+    },
+    {
+      "name": "fieldwatch_scene_applied",
+      "value": "Applied: %1"
+    },
+    {
+      "name": "fieldwatch_rating_title",
+      "value": "Enjoying it?"
+    },
+    {
+      "name": "fieldwatch_rating_body",
+      "value": "A quick rating in the store helps us a lot."
+    },
+    {
+      "name": "fieldwatch_rating_go",
+      "value": "Rate it"
+    },
+    {
+      "name": "fieldwatch_rating_later",
+      "value": "Not now"
+    },
+    {
+      "name": "fieldwatch_rating_open_failed",
+      "value": "Could not open the store — search for Airwave Footprints there"
     }
   ]
 }

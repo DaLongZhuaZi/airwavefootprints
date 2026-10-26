@@ -106,6 +106,8 @@ export struct FieldwatchOnboardingPage {
   /** 用户是否已就这一步做过选择（开或跳过都算）。 */
   @State private alertsDecided: boolean = false;
   @State private alertsBusy: boolean = false;
+  /** P1-6 的跟随提醒；与关注提醒一起在第 ⑤ 步征求，默认关。 */
+  @State private antiTrackAlerts: boolean = false;
   /**
    * 本次要走的步骤。
    *
@@ -219,6 +221,7 @@ export struct FieldwatchOnboardingPage {
     if (next === ALERTS_STEP_INDEX && this.heads.length > ALERTS_STEP_INDEX) {
       this.alertsEnabled = fieldwatchApplication.getState().settings.watchNotifications;
       this.alertsDecided = fieldwatchApplication.alertsAsked();
+      this.antiTrackAlerts = fieldwatchApplication.getState().settings.antiTrackAlerts;
     }
       this.contentShift = forward ? 18 : -18;
       ui.animateTo({ duration: 260, curve: Curve.Friction }, (): void => {
@@ -499,6 +502,20 @@ export struct FieldwatchOnboardingPage {
       Text($r('app.string.fieldwatch_onb_alerts_hint')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
         .width('100%').textAlign(TextAlign.Start)
+      // 跟随提醒与关注提醒**一起问**（落地文档 P1-6 要求）。
+      // 它不依赖系统通知权限是否已给：开关本身可以开，
+      // 真正发通知时若权限缺失会被系统静默丢掉，这一点在设置页有说明。
+      Row({ space: 8 }) {
+        Column({ space: 2 }) {
+          Text($r('app.string.fieldwatch_onb_antitrack_ask')).fontSize(14)
+            .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+        Toggle({ type: ToggleType.Switch, isOn: this.antiTrackAlerts })
+          .onChange((value: boolean): void => {
+            this.antiTrackAlerts = value;
+            fieldwatchApplication.setAntiTrackAlerts(value);
+          })
+      }.width('100%')
       if (this.alertsDecided) {
         Row({ space: 6 }) {
           SymbolGlyph($r(this.alertsEnabled ? 'sys.symbol.checkmark_circle' : 'sys.symbol.info_circle')).fontSize(14)

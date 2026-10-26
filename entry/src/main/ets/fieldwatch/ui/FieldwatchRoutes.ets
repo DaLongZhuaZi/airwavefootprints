@@ -32,4 +32,8 @@ export class FieldwatchRouteName {
   static readonly DAILY: string = 'fieldwatch.daily';
   /** 找东西日常版（认领 + 向导）。 */
   static readonly FIND: string = 'fieldwatch.find';
+  /** 一键安防扫描（60 秒 → 汇总 → 分享卡）。 */
+  static readonly SECURITY: string = 'fieldwatch.security';
+  /** Wi-Fi 体检（信道结论 + 房间版）。 */
+  static readonly WIFI_DOCTOR: string = 'fieldwatch.wifi_doctor';
 }

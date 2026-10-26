@@ -37,6 +37,10 @@ export struct FieldwatchDailyPage {
   onOpenFind: () => void = (): void => {};
   /** 切到专业模式。 */
   onSwitchPro: () => void = (): void => {};
+  /** 打开一键安防扫描（P1-5）。 */
+  onOpenSecurity: () => void = (): void => {};
+  /** 打开 Wi-Fi 体检（P1-7）。 */
+  onOpenWifiDoctor: () => void = (): void => {};
   /** 关闭当前路由（作目标页时用）。 */
   onClose: () => void = (): void => {};
   /** 手动重渲染计数器：应用状态不经过 @State，需要它驱动刷新。 */
@@ -119,12 +123,12 @@ export struct FieldwatchDailyPage {
           (): void => { this.onOpenFind(); })
         this.buildBigCard('sys.symbol.checkmark_shield',
           $r('app.string.fieldwatch_daily_card_security_title'),
-          $r('app.string.fieldwatch_daily_card_security_desc'), false,
-          (): void => { this.showSoon('app.string.fieldwatch_daily_card_security_title'); })
+          $r('app.string.fieldwatch_daily_card_security_desc'), true,
+          (): void => { this.onOpenSecurity(); })
         this.buildBigCard('sys.symbol.wifi',
           $r('app.string.fieldwatch_daily_card_wifi_title'),
-          $r('app.string.fieldwatch_daily_card_wifi_desc'), false,
-          (): void => { this.showSoon('app.string.fieldwatch_daily_card_wifi_title'); })
+          $r('app.string.fieldwatch_daily_card_wifi_desc'), true,
+          (): void => { this.onOpenWifiDoctor(); })
         this.buildOwnBar()
         this.buildFooter()
       }

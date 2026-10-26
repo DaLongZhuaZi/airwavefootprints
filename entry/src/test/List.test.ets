@@ -25,6 +25,12 @@ import fieldwatchToolboxTest from './FieldwatchToolbox.test';
 import fieldwatchOwnDeviceTest from './FieldwatchOwnDevice.test';
 import fieldwatchFindModelTest from './FieldwatchFindModel.test';
 import fieldwatchUiModeTest from './FieldwatchUiMode.test';
+import fieldwatchSecurityScanTest from './FieldwatchSecurityScan.test';
+import fieldwatchAntiTrackAlertsTest from './FieldwatchAntiTrackAlerts.test';
+import fieldwatchWifiDoctorTest from './FieldwatchWifiDoctor.test';
+import fieldwatchWidgetUpgradeTest from './FieldwatchWidgetUpgrade.test';
+import fieldwatchScenePacksTest from './FieldwatchScenePacks.test';
+import fieldwatchRatingPromptTest from './FieldwatchRatingPrompt.test';
 
 export default function testsuite() {
   localUnitTest();
@@ -50,4 +56,10 @@ export default function testsuite() {
   fieldwatchOwnDeviceTest();
   fieldwatchFindModelTest();
   fieldwatchUiModeTest();
+  fieldwatchSecurityScanTest();
+  fieldwatchAntiTrackAlertsTest();
+  fieldwatchWifiDoctorTest();
+  fieldwatchWidgetUpgradeTest();
+  fieldwatchScenePacksTest();
+  fieldwatchRatingPromptTest();
 }

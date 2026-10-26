@@ -1,3 +1,4 @@
+import { common } from '@kit.AbilityKit';
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, resolveResourceString } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
@@ -206,6 +207,52 @@ export struct FieldwatchFindPage {
     this.getUIContext().getPromptAction().showToast({
       message: this.text('app.string.fieldwatch_find_found_toast'),
       duration: 1800
+    });
+    // 成功时刻之一（P1-10）。**放在收尾之后**：先让用户回到列表，
+    // 再决定要不要问评分 —— 弹层永远不阻塞主流程。
+    this.maybeAskRating();
+  }
+
+  /**
+   * 成功后问一次评分（30 天最多一次，拒绝后不再出现）。
+   *
+   * 用 `showAlertDialog` 而不是自定义弹层：它是系统模态，
+   * 用户点「以后再说」就立刻关闭，不会遮住页面上的任何操作。
+   */
+  private maybeAskRating(): void {
+    if (!fieldwatchApplication.shouldPromptRating()) return;
+    fieldwatchApplication.noteRatingShown();
+    this.getUIContext().showAlertDialog({
+      title: this.text('app.string.fieldwatch_rating_title'),
+      message: this.text('app.string.fieldwatch_rating_body'),
+      primaryButton: {
+        value: this.text('app.string.fieldwatch_rating_go'),
+        action: (): void => {
+          fieldwatchApplication.noteRatingRated();
+          this.openStore();
+        }
+      },
+      secondaryButton: {
+        value: this.text('app.string.fieldwatch_rating_later'),
+        action: (): void => { fieldwatchApplication.noteRatingDeclined(); }
+      }
+    });
+  }
+
+  /** 打开应用市场详情页；打不开就提示用户自己搜（不静默失败）。 */
+  private openStore(): void {
+    const hostContext = this.getUIContext().getHostContext();
+    if (hostContext === undefined || hostContext === null) return;
+    // Context 基类没有 startAbility；与本仓库其它页面一致，收窄成 UIAbilityContext。
+    const context: common.UIAbilityContext = hostContext as common.UIAbilityContext;
+    context.startAbility({
+      action: 'ohos.want.action.viewData',
+      uri: fieldwatchApplication.storeUri()
+    }).catch((): void => {
+      this.getUIContext().getPromptAction().showToast({
+        message: this.text('app.string.fieldwatch_rating_open_failed'),
+        duration: 2600
+      });
     });
   }
 

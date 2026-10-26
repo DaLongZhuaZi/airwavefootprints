@@ -23,6 +23,15 @@ export class FieldwatchWidgetState {
   /** 大卡片：最近一次命中的特征族。 */
   public familyLabel: string = '';
   public familyAgeSec: number = -1;
+  /**
+   * P1-8：今日新出现的设备数。
+   *
+   * 卡片上「今天新认识了 N 种设备」用的就是它。0 表示今天没有新设备，
+   * **不显示这一行**（显示「0 台」等于在提醒用户「你的环境一成不变」）。
+   */
+  public newToday: number = 0;
+  /** P1-8：窗口内最高跟随评分；0 表示没有可疑目标。 */
+  public followScore: number = 0;
 }
 
 /** 心跳超过这个秒数就认为应用已不在运行。15 秒一次心跳，给足 6 倍余量。 */
@@ -50,6 +59,8 @@ export function parseWidgetState(json: string): FieldwatchWidgetState {
     state.watchAgeSec = typeof raw.watchAgeSec === 'number' ? raw.watchAgeSec as number : -1;
     state.familyLabel = typeof raw.familyLabel === 'string' ? raw.familyLabel as string : '';
     state.familyAgeSec = typeof raw.familyAgeSec === 'number' ? raw.familyAgeSec as number : -1;
+    state.newToday = typeof raw.newToday === 'number' ? raw.newToday as number : 0;
+    state.followScore = typeof raw.followScore === 'number' ? raw.followScore as number : 0;
   } catch (error) {
     return new FieldwatchWidgetState();
   }
@@ -115,6 +126,16 @@ export function buildWidgetCardData(state: FieldwatchWidgetState, dimension: str
   }
   if (state.familyLabel.length > 0) {
     parts.push('特征族 · ' + state.familyLabel + ' · ' + ageText(state.familyAgeSec));
+  }
+  // P1-8：两项新内容。**都只在「有」的时候出现** ——
+  // 卡片是常驻的，「0 台新设备」「评分 0」每天摆在那儿只会变成噪声。
+  if (state.newToday > 0) {
+    parts.push('今天新认识了 ' + state.newToday.toString() + ' 种设备');
+  }
+  // ≥70 才说「可能有设备跟着你」：45–70 只是「关注」，措辞必须区分，
+  // 否则用户会因为一次普通的「在附近久一点」被吓到。
+  if (state.followScore >= 70) {
+    parts.push('有设备可能跟着你（评分 ' + state.followScore.toString() + '）');
   }
   data[FieldwatchWidgetKeys.DETAIL] = parts.length > 0 ? parts.join('\n') : '尚未命中关注目标或特征族';
   return data;

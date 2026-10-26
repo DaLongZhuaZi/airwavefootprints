@@ -47,6 +47,7 @@ export class FieldwatchSettingsRepository {
     settings.radarLabelFontSize = ngfSettingsStoreFacade.getNumber('fieldwatch.radarLabelFontSize', settings.radarLabelFontSize);
     settings.radarIconSize = ngfSettingsStoreFacade.getNumber('fieldwatch.radarIconSize', settings.radarIconSize);
     settings.uiMode = this.loadUiMode();
+    settings.antiTrackAlerts = ngfSettingsStoreFacade.getBoolean('fieldwatch.antiTrackAlerts', settings.antiTrackAlerts);
     logger.debug(TAG, 'Fieldwatch 设置已加载');
     return settings;
   }
@@ -75,6 +76,7 @@ export class FieldwatchSettingsRepository {
     ngfSettingsStoreFacade.setString('fieldwatch.radarLabelFields', settings.radarLabelFields);
     ngfSettingsStoreFacade.setNumber('fieldwatch.radarLabelFontSize', settings.radarLabelFontSize);
     ngfSettingsStoreFacade.setNumber('fieldwatch.radarIconSize', settings.radarIconSize);
+    ngfSettingsStoreFacade.setBoolean('fieldwatch.antiTrackAlerts', settings.antiTrackAlerts);
     // **存储未就绪时不写模式键**：此时 `settings.uiMode` 还是构造期兜底的 pro，
     // 任何一次 `save()`（改个日志等级、拨个开关）都会把它当成用户选择写进磁盘，
     // 老用户就永远回不到 daily 判定，新用户也会被钉在 pro 上。
@@ -122,6 +124,7 @@ export class FieldwatchSettingsRepository {
     text += 'radarLabelFontSize=' + settings.radarLabelFontSize.toString() + '\n';
     text += 'radarIconSize=' + settings.radarIconSize.toString() + '\n';
     text += 'uiMode=' + FieldwatchUiMode.normalize(settings.uiMode) + '\n';
+    text += 'antiTrackAlerts=' + settings.antiTrackAlerts.toString() + '\n';
     const filter: string = ngfSettingsStoreFacade.getString(FILTER_KEY, '');
     if (filter.length > 0) text += 'filter=' + filter + '\n';
     const presets: string = ngfSettingsStoreFacade.getString(PRESETS_KEY, '');
@@ -169,6 +172,7 @@ export class FieldwatchSettingsRepository {
       else if (key === 'radarLabelFontSize') settings.radarLabelFontSize = Number.parseFloat(value);
       else if (key === 'radarIconSize') settings.radarIconSize = Number.parseFloat(value);
       else if (key === 'uiMode') settings.uiMode = FieldwatchUiMode.normalize(value);
+      else if (key === 'antiTrackAlerts') settings.antiTrackAlerts = value === 'true';
       // 三类结构化内容：**先校验再落盘**，坏数据不应该污染本地设置。
       // 旧版备份里没有这三行，缺失时保持本地原值不动。
       else if (key === 'filter') { if (this.isJsonObject(value)) ngfSettingsStoreFacade.setString(FILTER_KEY, value); }
@@ -266,6 +270,10 @@ export class FieldwatchSettingsRepository {
    */
   loadAlertsAsked(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.alertsAsked', false); }
   saveAlertsAsked(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.alertsAsked', value); }
+
+  /** 评分引导状态（P1-10）：`上次展示时刻|已拒绝|已评分`。 */
+  loadRatingStateRaw(): string { return ngfSettingsStoreFacade.getString('fieldwatch.ratingPrompt', ''); }
+  saveRatingStateRaw(value: string): void { ngfSettingsStoreFacade.setString('fieldwatch.ratingPrompt', value); }
   listFilterPresets(): FilterPreset[] {
     const content: string = ngfSettingsStoreFacade.getString(PRESETS_KEY, '');
     if (content.length > 0) {

@@ -35,9 +35,52 @@ import { FieldwatchRadioDb } from '../domain/FieldwatchRadioDb';
 import { ngfSettingsStoreFacade, ngfWidgetManagerFacade } from 'ngf_framework';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../domain/FieldwatchPermissions';
 import { FieldwatchOwnDeviceCenter } from './FieldwatchOwnDeviceCenter';
+import { buildSecuritySummary, SecuritySummary } from '../domain/FieldwatchSecurityScan';
+import {
+  buildWifiDoctor, doctorLines, DoctorLine, RoomCheck, ROOM_SCAN_DURATION_MS, WifiDoctorReport
+} from '../domain/FieldwatchWifiDoctor';
+import { FieldwatchRoomCheckRepository } from '../data/FieldwatchRoomCheckRepository';
+import { builtinScenePacks, ScenePack } from '../domain/FieldwatchScenePacks';
+import {
+  decodeRatingState, encodeRatingState, markRatingDeclined, markRatingRated, markRatingShown,
+  RatingPromptState, shouldPromptRating, storeDetailUri
+} from '../domain/FieldwatchRatingPrompt';
+import { BandSurvey, ChannelArc, surveyBand, WifiBand, wifiBandOf, wifiChannelOf } from '../domain/FieldwatchChannelAnalysis';
+import { medianOf } from '../domain/FieldwatchWifiDoctor';
+
+import {
+  AntiTrackDecision, AntiTrackPushRecord, decideAntiTrackPush, pushLabelOf, recordPushes, shouldEvaluate
+} from '../domain/FieldwatchAntiTrackAlerts';
+import { FieldwatchShareCard, ShareCardContent, fieldwatchShareCard } from '../platform/FieldwatchShareCard';
 import { OwnDeviceCandidate, OwnDeviceProfile } from '../domain/FieldwatchOwnDevice';
 import { FindCandidate } from '../domain/FieldwatchFindModel';
 import { fileIo } from '@kit.CoreFileKit';
+
+/**
+ * 频率 → 信道号；0 表示不在栅格上（不编造）。
+ *
+ * 单独包一层是为了让应用层不必导入 `FieldwatchChannelAnalysis` 的细节，
+ * 也便于将来换算法时只改一处。
+ */
+function wifiChannelOfFrequency(frequencyMhz: number): number {
+  return wifiChannelOf(frequencyMhz);
+}
+
+/** 样本中位数（无样本返回 0）。 */
+function medianOfSamples(values: number[]): number {
+  return medianOf(values);
+}
+
+/**
+ * 今天零点的时间戳（本机时区）。
+ *
+ * 不用 `now - (now % 86400000)`：那是 UTC 日界，在东八区会把「今天」
+ * 错算成从早上 8 点开始，卡片上的「今天新认识」就会漏掉凌晨那几个小时。
+ */
+function todayStartMs(now: number): number {
+  const date: Date = new Date(now);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+}
 
 const TAG: string = 'FieldwatchApplication';
 /** 本机轨迹最多保留的定位样本数（约几分钟的步行/驾车）。 */
@@ -130,6 +173,24 @@ export class FieldwatchApplication {
   private settingsReloadAttempts: number = 0;
   /** 自有设备档案是否已在设置就绪后载入过一次（避免每次 reload 都重载）。 */
   private ownDevicesLoaded: boolean = false;
+  /** 安防扫描的基线：开始时刻与当时已存在的设备键（判「新面孔」用）。 */
+  private securityScanStartedAt: number = 0;
+  private securityScanKeys: string[] = [];
+  /** 最近一次安防扫描汇总。 */
+  private lastSecuritySummary: SecuritySummary | undefined = undefined;
+  /** 反跟随自动提醒：上次评估时刻与已推送记录（P1-6）。 */
+  private antiTrackEvaluatedAt: number = 0;
+  private antiTrackHistory: AntiTrackPushRecord[] = [];
+  /** 房间体检仓储（P1-7）。 */
+  private readonly roomCheckRepository: FieldwatchRoomCheckRepository = new FieldwatchRoomCheckRepository();
+  /** 本次房间采样的样本（RSSI 序列）。 */
+  private roomSamples: number[] = [];
+  private roomBestRssi: number = -127;
+  private roomBestBssid: string = '';
+  private roomBestChannel: number = 0;
+  private roomStartedAt: number = 0;
+  /** 分享卡绘制器（Canvas 绘制 + 落盘）。 */
+  private readonly shareCard: FieldwatchShareCard = fieldwatchShareCard;
   /** 本次进程是否已做过启动期通知清理。 */
   private notificationsCleared: boolean = false;
   private clearingNotifications: Promise<void> | undefined = undefined;
@@ -242,6 +303,8 @@ export class FieldwatchApplication {
       void this.ensureOwnDevicesLoaded();
     }
     this.state.watchlist = this.settingsRepository.loadWatchlist();
+    // 内置场景包随设置就绪后补装一次（已有同名预设不会覆盖）。
+    this.ensureScenePacksInstalled();
     // 日志等级同样要重新应用：构造期读到的是默认 WARN。
     this.applyLogLevel(this.state.settings.logLevel);
     logger.info(TAG, '设置已重新载入: 后台运行=' + this.state.settings.backgroundScanning.toString()
@@ -252,6 +315,333 @@ export class FieldwatchApplication {
   //
   // 页面只调这几个方法，不直接碰 center / repository ——
   // 与关注列表、筛选那套「页面只调应用层 API」的分工保持一致。
+
+  // ── 一键安防扫描（P1-5）──
+  //
+  // 扫描本身不新建引擎：60 秒窗口内继续用现有扫描器收数据，
+  // 结束时把当场结果交给 `buildSecuritySummary` 汇总（纯逻辑，已单测）。
+
+  /** 记录一次安防扫描的基线：开始时刻 + 当时已存在的设备键。 */
+  beginSecurityScan(): number {
+    const keys: string[] = [];
+    this.state.sightings.forEach((item: Sighting): void => { keys.push(item.key); });
+    this.securityScanKeys = keys;
+    this.securityScanStartedAt = Date.now();
+    logger.info(TAG, '安防扫描开始，基线设备数=' + keys.length.toString());
+    return this.securityScanStartedAt;
+  }
+
+  /**
+   * 结束安防扫描并产出汇总。
+   *
+   * 跟随评分取 `antiTrackingReport()` 的最高分：与反跟随面板同一个来源，
+   * 不会出现「扫描卡说 80 分、工具箱说 0 分」这种自相矛盾。
+   */
+  finishSecurityScan(): SecuritySummary {
+    const endedAt: number = Date.now();
+    const startedAt: number = this.securityScanStartedAt > 0 ? this.securityScanStartedAt : endedAt;
+    let best: number = 0;
+    // 评分挂在 evidence 上（`TrackSuspect` 本身只有 key/label/risk）。
+    this.antiTrackingReport().forEach((suspect: TrackSuspect): void => {
+      const score: number = Math.round(suspect.evidence.score);
+      if (score > best) best = score;
+    });
+    const summary: SecuritySummary = buildSecuritySummary(this.state.sightings, this.state.signatures,
+      this.securityScanKeys, best, startedAt, endedAt);
+    this.lastSecuritySummary = summary;
+    logger.info(TAG, '安防扫描结束: 设备=' + summary.total.toString() + ' 新面孔=' + summary.newFaces.toString()
+      + ' 跟随=' + summary.followScore.toString());
+    return summary;
+  }
+
+  /** 最近一次安防扫描汇总（页面重进时用来恢复结果）。 */
+  recentSecuritySummary(): SecuritySummary | undefined { return this.lastSecuritySummary; }
+
+  /** 把汇总画成分享卡并调起系统分享面板；返回是否成功拉起。 */
+  async shareSecurityCard(content: ShareCardContent): Promise<boolean> {
+    const path: string = await this.shareCard.render(content);
+    if (path.length === 0) {
+      logger.warn(TAG, '分享卡生成失败，放弃分享');
+      return false;
+    }
+    const uri: string = this.shareCard.fileUriOf(path);
+    ngfSystemShareFacade.shareFile(uri, this.shareCard.pngUtd(), content.title, 'IMAGE');
+    return true;
+  }
+
+  // ── 评分引导（P1-10）──
+  //
+  // 频次与状态判定全在 `FieldwatchRatingPrompt`（已单测）；这里只负责
+  // 「现在要不要弹」与「用户做了选择之后怎么记」。
+
+  /** 读评分状态。 */
+  ratingState(): RatingPromptState {
+    return decodeRatingState(this.settingsRepository.loadRatingStateRaw());
+  }
+
+  /**
+   * 现在是否该弹评分引导。
+   *
+   * 页面在两个成功时刻（找到了 / 出分享卡之后）各调一次；
+   * 返回 false 就什么都不做，**不阻塞主流程**。
+   */
+  shouldPromptRating(): boolean {
+    return shouldPromptRating(this.ratingState(), Date.now());
+  }
+
+  /** 记录「已展示」。 */
+  noteRatingShown(): void {
+    const next: RatingPromptState = markRatingShown(this.ratingState(), Date.now());
+    this.settingsRepository.saveRatingStateRaw(encodeRatingState(next));
+  }
+
+  /** 记录「拒绝」：此后永久不再出现。 */
+  noteRatingDeclined(): void {
+    const next: RatingPromptState = markRatingDeclined(this.ratingState(), Date.now());
+    this.settingsRepository.saveRatingStateRaw(encodeRatingState(next));
+  }
+
+  /** 记录「去评分」。 */
+  noteRatingRated(): void {
+    const next: RatingPromptState = markRatingRated(this.ratingState(), Date.now());
+    this.settingsRepository.saveRatingStateRaw(encodeRatingState(next));
+  }
+
+  /** 商店详情页 URI（无官方评分接口，按文档兜底）。 */
+  storeUri(): string {
+    const context = uiContextManager.getFullAbilityContext();
+    const bundleName: string = context === null ? 'com.dlzz.airwavefootprints' : context.abilityInfo.bundleName;
+    return storeDetailUri(bundleName);
+  }
+
+  // ── 场景预设包（P1-9）──
+  //
+  // 复用现有 FilterPreset 机制：每个包 = 一份具名 FilterDefinition，
+  // 套用时走与用户自存预设**完全相同**的 `applyFilterPresetByName` 路径。
+
+  /** 四个内置场景包。每次返回新实例，调用方改它不会污染内置定义。 */
+  scenePacks(): ScenePack[] { return builtinScenePacks(); }
+
+  /**
+   * 确保内置场景包已经写进预设存储。
+   *
+   * 只在**名字不存在**时补写：用户可能改过同名预设，
+   * 每次启动都覆盖会让他的改动凭空消失。
+   * 返回本次新写入的数量（用于日志）。
+   */
+  ensureScenePacksInstalled(): number {
+    let added: number = 0;
+    this.scenePacks().forEach((pack: ScenePack): void => {
+      const name: string = this.scenePackName(pack);
+      if (this.settingsRepository.hasFilterPreset(name)) return;
+      this.settingsRepository.saveFilterPreset(name, pack.filter);
+      added += 1;
+    });
+    if (added > 0) logger.info(TAG, '已安装内置场景包: ' + added.toString());
+    return added;
+  }
+
+  /**
+   * 场景包在预设列表里的名字。
+   *
+   * 用**资源文案**而不是 id：预设芯片显示的就是这个名字，
+   * 而 `FilterPreset` 只能存字符串。用户看到什么就存什么，避免出现
+   * 「列表里显示『宿舍』、存的却叫 dorm」这种对不上的情况。
+   */
+  scenePackName(pack: ScenePack): string {
+    const context = uiContextManager.getFullAbilityContext();
+    if (context === null) return pack.id;
+    return resolveResourceString(context, $r(pack.titleKey));
+  }
+
+  /** 套用一个场景包；成功返回它的显示名，失败返回空串。 */
+  applyScenePack(pack: ScenePack): string {
+    const name: string = this.scenePackName(pack);
+    if (!this.settingsRepository.hasFilterPreset(name)) {
+      this.settingsRepository.saveFilterPreset(name, pack.filter);
+    }
+    // `applyFilterPresetByName` 返回的是「是否套用成功」的 boolean，不是 FilterDefinition。
+    const applied: boolean = this.applyFilterPresetByName(name);
+    if (!applied) return '';
+    logger.info(TAG, '已套用场景包: ' + name);
+    return name;
+  }
+
+  // ── Wi-Fi 体检（P1-7）──
+  //
+  // 首页卡与管理页**复用 Toolbox 的 `surveyBand`**：两个页面必须给出同一个
+  // 「最挤信道」，各写一套计数必然漂移（P2 图鉴那类问题同理）。
+
+  /** 当前 2.4G 的信道调查结果（首页卡与体检页共用）。 */
+  wifiSurvey24(): BandSurvey {
+    const arcs: ChannelArc[] = [];
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.kind !== RadioKind.WIFI) return;
+      const frequency: number = item.facts.frequencyMhz;
+      if (wifiBandOf(frequency) !== WifiBand.BAND_24) return;
+      const width: number = item.facts.channelWidth > 0 ? item.facts.channelWidth : 20;
+      const label: string = item.name.length > 0 ? item.name : item.facts.ssid;
+      arcs.push(new ChannelArc(item.key, label, frequency, width, item.rssi));
+    });
+    return surveyBand(WifiBand.BAND_24, arcs);
+  }
+
+  /** 5G 上听到的 AP 数（判双频缺口用）。 */
+  wifiApCount5g(): number {
+    let count: number = 0;
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.kind !== RadioKind.WIFI) return;
+      if (wifiBandOf(item.facts.frequencyMhz) === WifiBand.BAND_5) count += 1;
+    });
+    return count;
+  }
+
+  /** 开始一个房间的静置采样。 */
+  beginRoomCheck(): void {
+    this.roomSamples = [];
+    this.roomBestRssi = -127;
+    this.roomBestBssid = '';
+    this.roomBestChannel = 0;
+    this.roomStartedAt = Date.now();
+    logger.info(TAG, '房间体检开始');
+  }
+
+  /**
+   * 采样一帧：把当前最强的那台 AP 的 RSSI 记进样本。
+   *
+   * 只记**最强的一台**（而不是全部 AP 平均）：房间体检问的是
+   * 「这个房间里你的网络信号怎么样」，家里通常只接了一个主路由；
+   * 把邻居的 AP 一起平均，结果会随着邻居家关灯而变。
+   */
+  sampleRoomCheck(): void {
+    if (this.roomStartedAt <= 0) return;
+    let best: Sighting | undefined = undefined;
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.kind !== RadioKind.WIFI) return;
+      if (best === undefined || item.rssi > best.rssi) best = item;
+    });
+    if (best === undefined) return;
+    const picked: Sighting = best;
+    this.roomSamples.push(picked.rssi);
+    if (picked.rssi > this.roomBestRssi) {
+      this.roomBestRssi = picked.rssi;
+      this.roomBestBssid = picked.address;
+      this.roomBestChannel = wifiChannelOfFrequency(picked.facts.frequencyMhz);
+    }
+  }
+
+  /** 结束一个房间的采样并落库；返回该房间结果（样本不足时 measured() 为 false）。 */
+  async finishRoomCheck(label: string): Promise<RoomCheck | undefined> {
+    const room: RoomCheck = new RoomCheck(label.trim());
+    room.medianRssi = medianOfSamples(this.roomSamples);
+    room.sampleCount = this.roomSamples.length;
+    room.bestBssid = this.roomBestBssid;
+    room.bestChannel = this.roomBestChannel;
+    room.startedAt = this.roomStartedAt;
+    room.endedAt = Date.now();
+    this.roomStartedAt = 0;
+    this.roomSamples = [];
+    if (!room.measured()) {
+      logger.warn(TAG, '房间体检样本不足: ' + room.sampleCount.toString());
+      return undefined;
+    }
+    const checkId: string = 'room-' + room.endedAt.toString();
+    await this.roomCheckRepository.save(room, checkId, this.state.activeSit === undefined ? '' : this.state.activeSit.id);
+    logger.info(TAG, '房间体检完成: ' + label + ' 中位=' + room.medianRssi.toString());
+    return room;
+  }
+
+  /** 已保存的房间结果（新→旧）。 */
+  async loadRoomChecks(): Promise<RoomCheck[]> {
+    return await this.roomCheckRepository.loadRecent(20);
+  }
+
+  /** 组装体检报告。 */
+  wifiDoctorReport(rooms: RoomCheck[]): WifiDoctorReport {
+    const survey: BandSurvey = this.wifiSurvey24();
+    return buildWifiDoctor(rooms, survey.totalAps, this.wifiApCount5g(), survey);
+  }
+
+  /** 报告里的行（键 + 参数），页面按资源键渲染。 */
+  wifiDoctorLines(report: WifiDoctorReport): DoctorLine[] {
+    return doctorLines(report);
+  }
+
+  /**
+   * 把房间体检报告导出成文本并落盘（复用 Debrief 的导出目录）。
+   *
+   * PDF 那条链（`FieldwatchDebriefPdf`）需要页面提供 Canvas 上下文，
+   * 而本方法在应用层没有 UI 上下文可用；因此这里产出**结构化文本**，
+   * 由页面在需要 PDF 时交给现有 Debrief 链渲染（见页面实现）。
+   */
+  exportWifiDoctor(rooms: RoomCheck[]): boolean {
+    const report: WifiDoctorReport = this.wifiDoctorReport(rooms);
+    let text: string = 'Wi-Fi Doctor\n' + new Date().toISOString() + '\n\n';
+    text += '2.4G APs: ' + report.aps24.toString() + '\n';
+    text += '5G APs: ' + report.aps5.toString() + '\n';
+    text += 'Busiest channel: ' + report.crowdedChannel.toString() + ' (' + report.crowdedCount.toString() + ' APs)\n';
+    text += 'Dual-band gap: ' + report.dualBandGap.toString() + '\n\n';
+    report.rooms.forEach((room: RoomCheck): void => {
+      text += room.label + ': median ' + room.medianRssi.toString() + ' dBm, grade ' + String(room.grade())
+        + ', samples ' + room.sampleCount.toString() + '\n';
+    });
+    return this.saveExport('wifi-doctor.txt', text);
+  }
+
+  // ── 反跟随自动提醒（P1-6）──
+  //
+  // **不新建引擎**：评分仍由 `assessTrack` 产出，这里只做「到点评估 + 门槛 + 去重」。
+  // 只在**应用前台**评估（文档明确「后台不承诺」）：鸿蒙后台扫描受限，
+  // 在后台跑既不可靠、也容易把「没扫到」误读成「没人跟着」。
+
+  /**
+   * 前台定期评估一次反跟随。
+   *
+   * 由页面每秒的刷新顺带调用（它反正已经在跑），内部按 15 分钟节流，
+   * 所以调用频率高不会造成额外开销。返回本次是否真的评估了。
+   */
+  tickAntiTrackAlerts(): boolean {
+    if (!this.state.settings.antiTrackAlerts) return false;
+    if (!this.appForeground) return false;
+    const now: number = Date.now();
+    if (!shouldEvaluate(this.antiTrackEvaluatedAt, now)) return false;
+    this.antiTrackEvaluatedAt = now;
+    const decision: AntiTrackDecision = decideAntiTrackPush(this.antiTrackingAll(), this.antiTrackHistory, now);
+    if (!decision.shouldNotify()) {
+      logger.debug(TAG, '反跟随评估: 无需推送（去重 ' + decision.dedupedCount.toString() + ' 台）');
+      return true;
+    }
+    this.antiTrackHistory = recordPushes(this.antiTrackHistory, decision.pushKeys, now);
+    this.notifyAntiTrack(decision.pushKeys, now);
+    logger.info(TAG, '反跟随提醒已推送: ' + decision.pushKeys.length.toString() + ' 台');
+    return true;
+  }
+
+  /** 发一条「有设备可能跟着你」的通知；文案走资源，避免硬编码中文。 */
+  private notifyAntiTrack(keys: string[], now: number): void {
+    const context = uiContextManager.getFullAbilityContext();
+    if (context === null) return;
+    const title: string = resolveResourceString(context, $r('app.string.fieldwatch_antitrack_notif_title'));
+    const bodyTemplate: string = resolveResourceString(context, $r('app.string.fieldwatch_antitrack_notif_body'));
+    let label: string = '';
+    const suspects: TrackSuspect[] = this.antiTrackingAll();
+    suspects.forEach((suspect: TrackSuspect): void => {
+      if (label.length > 0) return;
+      if (keys.indexOf(suspect.key) < 0) return;
+      label = pushLabelOf(suspect);
+    });
+    const body: string = bodyTemplate.replace('%1', label.length > 0 ? label : keys.length.toString());
+    const notificationId: number = this.nextNotificationId;
+    this.nextNotificationId += 1;
+    const request: NGFNotificationRequest = new NGFNotificationRequest(notificationId, title, body, NGFNotificationType.BASIC);
+    void ngfSystemNotificationManager.publish(request);
+  }
+
+  /** 反跟随自动提醒开关。文档要求随 P0 引导一并征求，默认关。 */
+  setAntiTrackAlerts(enabled: boolean): void {
+    this.state.settings.antiTrackAlerts = enabled;
+    this.settingsRepository.save(this.state.settings);
+  }
 
   /** 提醒引导是否已问过（P0-3）。重看引导时据此跳过第 ⑤ 步。 */
   alertsAsked(): boolean { return this.settingsRepository.loadAlertsAsked(); }
@@ -428,9 +818,41 @@ export class FieldwatchApplication {
       snapshot.familyLabel = familyNames.length > 0 ? familyNames[0] : '';
       snapshot.familyAgeSec = Math.max(0, Math.round((now - sightings[familyIndex].lastSeen) / 1000));
     }
+    // P1-8：补两项「今天/当下」的内容。
+    //
+    // 两者都从**本进程已有的实时状态**推导，不另存一份今日计数：
+    // 卡片内容与应用内数据必须天然一致（验收原文），各算一份迟早对不上。
+    snapshot.newToday = this.countNewToday(now);
+    snapshot.followScore = this.highestFollowScore();
     this.settingsRepository.saveWidgetState(JSON.stringify(snapshot));
     // 状态变了就顺手推一次卡片。
     this.pushWidgetData(snapshot);
+  }
+
+  /**
+   * 今天**首次出现**的设备数（P1-8 卡片用）。
+   *
+   * 判据是「本设备第一次被听到的时刻在今天之内」。
+   * 用 `firstSeen` 而不是「今日新增条数」：后者要维护一份跨重启的日切计数器，
+   * 而 `firstSeen` 本来就跟着观测一起落库，语义也更直白。
+   */
+  private countNewToday(now: number): number {
+    const dayStart: number = todayStartMs(now);
+    let count: number = 0;
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.firstSeen >= dayStart) count += 1;
+    });
+    return count;
+  }
+
+  /** 当前窗口内最高的跟随评分；没有可疑目标时为 0。 */
+  private highestFollowScore(): number {
+    let best: number = 0;
+    this.antiTrackingAll().forEach((suspect: TrackSuspect): void => {
+      const score: number = Math.round(suspect.evidence.score);
+      if (score > best) best = score;
+    });
+    return best;
   }
 
   /**

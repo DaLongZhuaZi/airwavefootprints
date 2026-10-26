@@ -571,6 +571,14 @@ export class AppSettings { public displayPaused: boolean = false; public darkMod
    * 老用户升级上来必须留在专业模式，不能因为一次读不到存储就被踢到日常模式。
    */
   public uiMode: string = FieldwatchUiMode.PRO;
+  /**
+   * 反跟随自动提醒（P1-6）。
+   *
+   * **默认关**：它与 `watchNotifications` 是两件事 ——
+   * 后者是「关注列表里的设备出现时提醒」，这里是「有设备可能在跟着你时提醒」。
+   * 后者的措辞更重，不能替用户默认打开；讨论见落地文档第五节拍板点 1 的推荐方案。
+   */
+  public antiTrackAlerts: boolean = false;
 }
 export class LogEntry { public id: string; public observation: ScanObservation; public signatureIds: string[]; constructor(id: string, observation: ScanObservation, signatureIds: string[] = []) { this.id = id; this.observation = observation; this.signatureIds = signatureIds; } }
 export class SitSummary { public id: string; public name: string; public startedAt: number; public endedAt: number; public radioCount: number; public deviceKeys: string[]; constructor(id: string, name: string, startedAt: number, endedAt: number = 0, radioCount: number = 0, deviceKeys: string[] = []) { this.id = id; this.name = name; this.startedAt = startedAt; this.endedAt = endedAt; this.radioCount = radioCount; this.deviceKeys = deviceKeys; } }

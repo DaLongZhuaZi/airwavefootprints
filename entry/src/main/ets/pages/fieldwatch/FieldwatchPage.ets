@@ -41,6 +41,9 @@ import { FieldwatchSignatureDetail } from '../../fieldwatch/ui/FieldwatchSignatu
 import { FieldwatchOnboardingPage } from './FieldwatchOnboardingPage';
 import { FieldwatchDailyPage } from './FieldwatchDailyPage';
 import { FieldwatchFindPage } from './FieldwatchFindPage';
+import { FieldwatchSecurityScanPage } from './FieldwatchSecurityScanPage';
+import { FieldwatchWifiDoctorPage } from './FieldwatchWifiDoctorPage';
+import { ScenePack } from '../../fieldwatch/domain/FieldwatchScenePacks';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 
 /**
@@ -419,6 +422,8 @@ struct FieldwatchRootPage {
   }
 
   private refreshView(): void {
+    // 反跟随自动提醒（P1-6）：内部按 15 分钟节流，所以挂在这个每秒刷新上是安全的。
+    fieldwatchApplication.tickAntiTrackAlerts();
     // 界面模式可能被设置页或深链改掉（应用层是唯一真值，本页只是它的镜像）。
     // 每秒对一次，避免「在设置里切了模式，回到首屏还是老样子」。
     const currentMode: string = fieldwatchApplication.uiMode();
@@ -506,6 +511,18 @@ struct FieldwatchRootPage {
     this.pathStack.pushPathByName(FieldwatchRouteName.FIND, null);
   }
 
+  /** 打开一键安防扫描（P1-5）。 */
+  private openSecurity(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.SECURITY, null);
+  }
+
+  /** 打开 Wi-Fi 体检（P1-7）。 */
+  private openWifiDoctor(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.WIFI_DOCTOR, null);
+  }
+
   /**
    * 切换界面模式。
    *
@@ -567,6 +584,8 @@ struct FieldwatchRootPage {
             withShell: false,
             topInset: this.topInsetVp,
             onOpenFind: (): void => { this.openFind(); },
+            onOpenSecurity: (): void => { this.openSecurity(); },
+            onOpenWifiDoctor: (): void => { this.openWifiDoctor(); },
             onSwitchPro: (): void => { this.applyUiMode(FieldwatchUiMode.PRO); }
           })
         } else if (this.isLandscape) {
@@ -626,11 +645,25 @@ struct FieldwatchRootPage {
         withShell: true,
         topInset: this.topInsetVp,
         onOpenFind: (): void => { this.openFind(); },
+        onOpenSecurity: (): void => { this.openSecurity(); },
+        onOpenWifiDoctor: (): void => { this.openWifiDoctor(); },
         onSwitchPro: (): void => { this.applyUiMode(FieldwatchUiMode.PRO); this.pathStack.pop(); },
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.FIND) {
       FieldwatchFindPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.SECURITY) {
+      FieldwatchSecurityScanPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.WIFI_DOCTOR) {
+      FieldwatchWifiDoctorPage({
         withShell: true,
         topInset: this.topInsetVp,
         onClose: (): void => { this.pathStack.pop(); }
@@ -2925,6 +2958,39 @@ struct FieldwatchFiltersPage {
     });
   }
   // ── 1 预设 ──
+  /**
+   * 「场景」区（P1-9）：四个内置包一键套用。
+   *
+   * **放在预设区之前**：场景是「我现在的处境」，预设是「我上次存的条件」，
+   * 前者是入口、后者是回访，顺序反了会让新用户以为必须先自己存一个。
+   */
+  @Builder private buildScenes() {
+    Column({ space: 10 }) {
+      this.section($r('app.string.fieldwatch_scene_title'), this.label('app.string.fieldwatch_scene_hint'))
+      Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
+        ForEach(fieldwatchApplication.scenePacks(), (pack: ScenePack): void => {
+          FieldwatchPresetChip({
+            label: this.label(pack.titleKey),
+            active: false,
+            onTap: (): void => { this.applyScene(pack); }
+          })
+        }, (pack: ScenePack): string => pack.id)
+      }.width('100%')
+    }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
+  }
+
+  /** 套用场景包并给一次明确反馈（筛选条件变化在页面上不一定立刻可见）。 */
+  private applyScene(pack: ScenePack): void {
+    const name: string = fieldwatchApplication.applyScenePack(pack);
+    if (name.length === 0) return;
+    this.tick += 1;
+    this.getUIContext().getPromptAction().showToast({
+      message: this.label('app.string.fieldwatch_scene_applied').replace('%1', name),
+      duration: 1800
+    });
+  }
+
   @Builder private buildPresets() {
     Column({ space: 10 }) {
       this.section($r('app.string.fieldwatch_filter_presets'), this.label('app.string.fieldwatch_filter_presets_hint'))
@@ -3133,6 +3199,7 @@ struct FieldwatchFiltersPage {
       // 两个 `Column` 没有行对齐、也不需要测量，天然正确。
       Row({ space: 12 }) {
         Column({ space: 12 }) {
+          this.buildScenes()
           this.buildPresets()
           this.buildMovingWithYou()
           this.buildWhoStays()
@@ -3146,6 +3213,7 @@ struct FieldwatchFiltersPage {
         }.layoutWeight(1)
       }.width('100%').alignItems(VerticalAlign.Top)
     } else {
+        this.buildScenes()
         this.buildPresets()
         this.buildRadios()
         this.buildMovingWithYou()
