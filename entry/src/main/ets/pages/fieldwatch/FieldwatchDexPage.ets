@@ -63,6 +63,8 @@ export struct FieldwatchDexPage {
   @State private sharing: boolean = false;
   /** 选中条目（点开显示详情）；undefined 表示未选。 */
   @State private selected: DexEntry | undefined = undefined;
+  /** 详情 sheet 是否显示（改版设计 6.1：点格子进详情 sheet）。 */
+  @State private showDetail: boolean = false;
 
   aboutToAppear(): void {
     void this.reload();
@@ -143,6 +145,12 @@ export struct FieldwatchDexPage {
       false
     ))
     .hideTitleBar(!this.withShell)
+    // 详情 sheet（改版设计 6.1）：从页内切换改为底部 sheet，保留网格上下文。
+    .bindSheet($$this.showDetail, this.buildDetailSheet(), {
+      height: SheetSize.MEDIUM,
+      dragBar: true,
+      showClose: true
+    })
     .onBackPressed((): boolean => {
       if (this.selected !== undefined) { this.selected = undefined; return true; }
       this.onClose();
@@ -159,8 +167,10 @@ export struct FieldwatchDexPage {
         if (this.loading) {
           Text($r('app.string.fieldwatch_dex_loading')).fontSize(14)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
-        } else if (this.selected !== undefined) {
-          this.buildDetail(this.selected)
+        } else if (false) {
+          // 详情已改 sheet（见根节点 bindSheet），页内不再切换 ——
+          // 否则 sheet 弹出时背后还会同时渲染一份详情，出现「双层详情」。
+          this.buildDetail(this.selected as DexEntry)
         } else {
           this.buildGrid()
         }
@@ -540,7 +550,10 @@ export struct FieldwatchDexPage {
     }
     .width('100%').padding(8).borderRadius(14)
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
-    .onClick((): void => { this.selected = entry; })
+    .onClick((): void => {
+      this.selected = entry;
+      this.showDetail = true;
+    })
   }
 
   /** 首次/最近点亮日期的短格式（月-日）；0 返回空串。 */
@@ -548,6 +561,19 @@ export struct FieldwatchDexPage {
     if (!(at > 0)) return '';
     const date: Date = new Date(at);
     return (date.getMonth() + 1).toString() + '-' + date.getDate().toString();
+  }
+
+  /** 详情 sheet 的内容（改版设计 6.1）。 */
+  @Builder
+  private buildDetailSheet() {
+    Scroll() {
+      Column({ space: 12 }) {
+        if (this.selected !== undefined) {
+          this.buildDetail(this.selected)
+        }
+      }.width('100%').padding({ left: 16, right: 16, top: 16, bottom: 24 })
+      .alignItems(HorizontalAlign.Start)
+    }.width('100%').scrollBar(BarState.Off)
   }
 
   /** 详情：接 DeviceExplain 的文案（通过类标签与命中统计呈现）。 */
