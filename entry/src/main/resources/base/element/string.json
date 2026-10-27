@@ -11331,6 +11331,30 @@
     {
       "name": "fw_ws_following",
       "value": "有设备可能跟着你（评分 "
+    },
+    {
+      "name": "fieldwatch_daily_more_title",
+      "value": "更多工具"
+    },
+    {
+      "name": "fieldwatch_daily_more_hint",
+      "value": "安防汇总卡、逐房间 Wi-Fi 体检、设备图鉴、新面孔清单"
+    },
+    {
+      "name": "fieldwatch_daily_more_security",
+      "value": "安防扫描（60 秒）"
+    },
+    {
+      "name": "fieldwatch_daily_more_wifi",
+      "value": "Wi-Fi 体检（逐房间）"
+    },
+    {
+      "name": "fieldwatch_daily_more_dex",
+      "value": "设备图鉴"
+    },
+    {
+      "name": "fieldwatch_daily_more_newfaces",
+      "value": "新面孔清单"
     }
   ]
 }

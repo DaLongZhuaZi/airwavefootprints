@@ -691,7 +691,7 @@ struct FieldwatchRootPage {
   @Builder
   private buildPhoneLayout() {
     HdsTabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
-      TabContent() { FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
+      TabContent() { FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
       TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
             // `onEditFleet` 必须传：它的默认值是空函数，漏传就变成「点了没反应」。
       TabContent() { FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, landscape: this.isLandscape,
@@ -863,7 +863,7 @@ struct FieldwatchRootPage {
       // 点记录看到的是设置（实测反馈）。**入口与内容必须同时改。**
       // `visible` 必须显式传：它的默认值是 true，漏传时雷达的 16 ms 扫描定时器
       // 会在组件存活期间持续整幅重绘（竖屏 TabContent 路径一直传了，这里此前漏了）。
-      if (this.selectedTab === 0) FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); } }).width('100%').height('100%')
+      if (this.selectedTab === 0) FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }).width('100%').height('100%')
       else if (this.selectedTab === 1) FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
       // 同上：`onEditFleet` 漏传会让「新建」「编辑」两个按钮都变成空操作。
       else if (this.selectedTab === 2) FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
@@ -944,6 +944,11 @@ struct FieldwatchLivePage {
    */
   onOpenFind: () => void = (): void => {};
   onOpenFootprints: () => void = (): void => {};
+  // ── P1/P2 合入的四个页面入口（由根页面经 NavPathStack 打开）──
+  onOpenSecurity: () => void = (): void => {};
+  onOpenWifiDoctor: () => void = (): void => {};
+  onOpenDex: () => void = (): void => {};
+  onOpenNewFaces: () => void = (): void => {};
   /** 日常摘要默认显示，专业雷达与列表保留在一键切换后的完整视图中。 */
   @State private dailyMode: boolean = true;
   @State private safetyCheckActive: boolean = false;
@@ -3574,6 +3579,49 @@ struct FieldwatchLivePage {
           FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_wifi_open_tool'),
             tone: FieldwatchButtonTone.OUTLINE, compact: true,
             onTap: (): void => { this.onOpenWifiAnalysis(); } })
+        }
+        .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+        .alignItems(HorizontalAlign.Start)
+
+        // ── 更多工具（P1/P2 合入的四个页面入口）──
+        //
+        // 为什么放在这里：这些页面原本挂在 feat 的 DailyPage 上，而 DailyPage 依赖
+        // 尚未合入的 OwnDeviceProfile 体系，已随找东西专题暂缓。
+        // 功能代码本身是安全的（不依赖自有设备），所以保留下来，但需要一个入口。
+        // 放在「找东西」上方：找东西是 main 既有主入口，不该被新入口挤到下面。
+        Column({ space: 8 }) {
+          Row({ space: 8 }) {
+            SymbolGlyph($r('sys.symbol.wrench_and_screwdriver')).fontSize(18)
+              .fontColor([FieldwatchPaletteHolder.get().accent])
+            Text(fieldwatchText('app.string.fieldwatch_daily_more_title')).fontSize(16)
+              .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text)
+          }.width('100%')
+          Text(fieldwatchText('app.string.fieldwatch_daily_more_hint')).fontSize(11)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          Row({ space: 8 }) {
+            Column() {
+              FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_more_security'),
+                tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: true,
+                onTap: (): void => { this.onOpenSecurity(); } })
+            }.layoutWeight(1)
+            Column() {
+              FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_more_wifi'),
+                tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: true,
+                onTap: (): void => { this.onOpenWifiDoctor(); } })
+            }.layoutWeight(1)
+          }.width('100%')
+          Row({ space: 8 }) {
+            Column() {
+              FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_more_dex'),
+                tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: true,
+                onTap: (): void => { this.onOpenDex(); } })
+            }.layoutWeight(1)
+            Column() {
+              FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_more_newfaces'),
+                tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: true,
+                onTap: (): void => { this.onOpenNewFaces(); } })
+            }.layoutWeight(1)
+          }.width('100%')
         }
         .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)

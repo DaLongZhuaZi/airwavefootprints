@@ -11331,6 +11331,30 @@
     {
       "name": "fw_ws_following",
       "value": "A device may be following you (score "
+    },
+    {
+      "name": "fieldwatch_daily_more_title",
+      "value": "More tools"
+    },
+    {
+      "name": "fieldwatch_daily_more_hint",
+      "value": "Security summary card, room-by-room Wi-Fi checkup, device dex, new faces"
+    },
+    {
+      "name": "fieldwatch_daily_more_security",
+      "value": "Security scan (60s)"
+    },
+    {
+      "name": "fieldwatch_daily_more_wifi",
+      "value": "Wi-Fi checkup (per room)"
+    },
+    {
+      "name": "fieldwatch_daily_more_dex",
+      "value": "Device dex"
+    },
+    {
+      "name": "fieldwatch_daily_more_newfaces",
+      "value": "New faces"
     }
   ]
 }
