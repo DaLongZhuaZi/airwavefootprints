@@ -7,8 +7,25 @@ import {
 } from '../../fieldwatch/domain/FieldwatchWifiDoctor';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
+import {
+  ApDetailRow, apDetailRows, ApSnapshot, gradeOrder, roomTrends, RoomTrend, shouldPromptRetest
+} from '../../fieldwatch/domain/FieldwatchWifiDoctorDetail';
+import { WifiCurrentAp } from '../../fieldwatch/radio/FieldwatchWifiLink';
 
 const DOCTOR_UNDERLAY_HEIGHT: number = 168;
+
+/**
+ * `ApSnapshot` 的可实现类。
+ *
+ * ArkTS 不允许对象字面量直接当类型用，接口必须有显式实现类。
+ * 放在模块级而不是方法内：每个方法调用都 new 一次匿名类没有意义。
+ */
+class ApSnapshotValue implements ApSnapshot {
+  ssid: string = '';
+  bssid: string = '';
+  rssi: number = 0;
+  band: number = 0;
+}
 
 /**
  * Wi-Fi 体检（P1-7）。
@@ -33,6 +50,16 @@ export struct FieldwatchWifiDoctorPage {
   @State private roomName: string = '';
   @State private report: WifiDoctorReport | undefined = undefined;
   @State private tick: number = 0;
+  /** 当前连接的 AP（P3-3：详情区用，来自现有 WifiLink 能力，不新增权限）。 */
+  @State private currentAp: WifiCurrentAp | undefined = undefined;
+  /** 各房间历次分档趋势（P3-3，与 RoomCheckRepository 对账）。 */
+  @State private trends: RoomTrend[] = [];
+  /** 是否有待提示的复测（上次给了改信道建议）。 */
+  @State private retestPending: boolean = false;
+  /** 建议的信道。 */
+  @State private retestChannel: number = 0;
+  /** 用户是否关掉了复测提醒。 */
+  @State private retestDismissed: boolean = false;
   private timer: number = -1;
   private sampleTimer: number = -1;
 
@@ -52,6 +79,20 @@ export struct FieldwatchWifiDoctorPage {
   private async reload(): Promise<void> {
     this.rooms = await fieldwatchApplication.loadRoomChecks();
     this.report = fieldwatchApplication.wifiDoctorReport(this.rooms);
+    // P3-3：当前 AP + 房间趋势 + 复测提醒，全部来自已有能力。
+    this.currentAp = fieldwatchApplication.currentAp();
+    this.trends = roomTrends(this.rooms);
+    this.retestDismissed = fieldwatchApplication.retestPromptDismissed();
+    this.retestChannel = fieldwatchApplication.retestSuggestedChannel();
+    this.retestPending = shouldPromptRetest(
+      fieldwatchApplication.retestPromptPending(), this.retestDismissed);
+    // **给出建议之后**才记「待复测」：没有建议就没有可复测的东西，
+    // 无条件标记会让每个用户每次进页都看到一条无意义的提醒。
+    // 只在「本次确有建议、且提醒未被关闭」时写标记，避免覆盖用户的关闭偏好。
+    const recommended: number = fieldwatchApplication.wifiSurvey24().recommendedChannel;
+    if (recommended > 0 && !this.retestDismissed && !this.retestPending) {
+      fieldwatchApplication.markRetestPending(recommended);
+    }
     this.tick += 1;
   }
 
@@ -149,8 +190,12 @@ export struct FieldwatchWifiDoctorPage {
   private buildBody() {
     Scroll() {
       Column({ space: 14 }) {
+        // P3-3：复测提醒放在最上面 —— 用户上次被建议改信道，进来第一眼就该看到。
+        this.buildRetestPrompt()
         this.buildChannelCard()
+        this.buildApDetail()
         this.buildRoomSection()
+        this.buildRoomTrends()
         if (this.report !== undefined) this.buildReport()
         FieldwatchButton({ label: $r('app.string.fieldwatch_wifi_doctor_export'),
           tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.exportReport(); } })
@@ -160,6 +205,151 @@ export struct FieldwatchWifiDoctorPage {
     }
     .width('100%').height('100%')
     .scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+  }
+
+  /**
+   * 复测提醒（P3-3 第 1 项）。
+   *
+   * 只在「上次给过改信道建议、且用户没关掉」时出现；进页看一眼就走题，
+   * **没有定时器、没有通知**（文档明确不许做后台常驻提醒）。
+   */
+  @Builder
+  private buildRetestPrompt() {
+    if (this.retestPending) {
+      Column({ space: 8 }) {
+        Text($r('app.string.fieldwatch_wifi_retest_title')).fontSize(15)
+          .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+        Text(this.text('app.string.fieldwatch_wifi_retest_hint')
+          .replace('%1', this.retestChannel.toString()))
+          .fontSize(12).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+        Row({ space: 8 }) {
+          Column() {
+            FieldwatchButton({ label: $r('app.string.fieldwatch_wifi_retest_ok'),
+              tone: FieldwatchButtonTone.PRIMARY, compact: true, fillWidth: true,
+              onTap: (): void => { this.acceptRetest(); } })
+          }.layoutWeight(1)
+          Column() {
+            FieldwatchButton({ label: $r('app.string.fieldwatch_wifi_retest_dismiss'),
+              tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: true,
+              onTap: (): void => { this.dismissRetest(); } })
+          }.layoutWeight(1)
+        }.width('100%')
+      }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel)
+    }
+  }
+
+  private acceptRetest(): void {
+    fieldwatchApplication.clearRetestPrompt();
+    this.retestPending = false;
+  }
+
+  private dismissRetest(): void {
+    fieldwatchApplication.dismissRetestPrompt();
+    this.retestPending = false;
+    this.retestDismissed = true;
+  }
+
+  /**
+   * 当前 AP 详情（P3-3 第 1 项）。
+   *
+   * 数据全部来自现有 `WifiLink` 能力，**不新增权限**；
+   * 信道由频段推算（系统不给信道，见 `channelOfBand`）。
+   */
+  @Builder
+  private buildApDetail() {
+    if (this.currentAp !== undefined) {
+      Column({ space: 6 }) {
+        Text($r('app.string.fieldwatch_wifi_detail_title')).fontSize(15)
+          .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+        ForEach(this.apRows(), (row: ApDetailRow): void => {
+          Row({ space: 8 }) {
+            Text(this.text(row.labelKey)).fontSize(12)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).width(96)
+            Text(this.apValueText(row)).fontSize(12)
+              .fontColor(row.warn ? FieldwatchPaletteHolder.get().warn : FieldwatchPaletteHolder.get().text)
+              .layoutWeight(1).maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+          }.width('100%')
+        }, (row: ApDetailRow): string => row.labelKey)
+        // BSSID 随机化说明：不让用户把它当长期标识。
+        Text($r('app.string.fieldwatch_wifi_detail_bssid_hint')).fontSize(10)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel)
+    }
+  }
+
+  private apRows(): ApDetailRow[] {
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    if (ap === undefined) return [];
+    const snapshot: ApSnapshot = new ApSnapshotValue();
+    snapshot.ssid = ap.ssid;
+    snapshot.bssid = ap.bssid;
+    snapshot.rssi = ap.rssi;
+    snapshot.band = ap.band;
+    return apDetailRows(snapshot);
+  }
+
+  /** 详情值：频段与信道行是资源键，需要翻成文案。 */
+  private apValueText(row: ApDetailRow): string {
+    if (row.labelKey.indexOf('band') > 0) return this.text(row.value);
+    return row.value;
+  }
+
+  /**
+   * 各房间历次分档趋势（P3-3 第 1 项）。
+   *
+   * 与 `RoomCheckRepository` 的记录对账：趋势直接由仓储读出的记录聚合，
+   * 不另存一份，避免两处数字打架。
+   */
+  @Builder
+  private buildRoomTrends() {
+    Column({ space: 8 }) {
+      Text($r('app.string.fieldwatch_wifi_trend_title')).fontSize(15)
+        .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+      if (this.trends.length === 0) {
+        Text($r('app.string.fieldwatch_wifi_trend_empty')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      } else {
+        ForEach(this.trends, (trend: RoomTrend): void => {
+          Column({ space: 3 }) {
+            Row({ space: 6 }) {
+              Text(trend.label).fontSize(13).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+              Text(this.text('app.string.fieldwatch_wifi_trend_times')
+                .replace('%1', trend.count().toString()))
+                .fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
+            }.width('100%')
+            Text(this.trendDetail(trend)).fontSize(11)
+              .fontColor(trend.trend() > 0 ? FieldwatchPaletteHolder.get().accent
+                : (trend.trend() < 0 ? FieldwatchPaletteHolder.get().warn : FieldwatchPaletteHolder.get().textDim))
+              .width('100%')
+          }.width('100%').padding({ top: 4, bottom: 4 })
+        }, (trend: RoomTrend): string => trend.label)
+      }
+    }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
+  /** 趋势说明：档位序列 + 相比首次的变化。 */
+  private trendDetail(trend: RoomTrend): string {
+    const parts: string[] = [];
+    trend.grades.forEach((grade: RoomSignalGrade): void => {
+      parts.push(this.text(this.gradeKey(grade)));
+    });
+    const path: string = parts.join(' → ');
+    const delta: number = trend.trend();
+    let verdict: string = this.text('app.string.fieldwatch_wifi_trend_same');
+    if (delta > 0) verdict = this.text('app.string.fieldwatch_wifi_trend_better');
+    else if (delta < 0) verdict = this.text('app.string.fieldwatch_wifi_trend_worse');
+    return path + ' · ' + verdict;
+  }
+
+  private gradeKey(grade: RoomSignalGrade): string {
+    if (grade === RoomSignalGrade.STRONG) return 'app.string.fieldwatch_wifi_grade_strong';
+    if (grade === RoomSignalGrade.OK) return 'app.string.fieldwatch_wifi_grade_ok';
+    if (grade === RoomSignalGrade.WEAK) return 'app.string.fieldwatch_wifi_grade_weak';
+    if (grade === RoomSignalGrade.BAD) return 'app.string.fieldwatch_wifi_grade_bad';
+    return 'app.string.fieldwatch_wifi_grade_unknown';
   }
 
   /** 信道结论卡：复用 Toolbox 的 surveyBand，与工具箱页同一口径。 */

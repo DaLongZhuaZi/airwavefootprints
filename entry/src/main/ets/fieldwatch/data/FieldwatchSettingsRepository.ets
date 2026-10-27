@@ -271,6 +271,21 @@ export class FieldwatchSettingsRepository {
   loadAlertsAsked(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.alertsAsked', false); }
   saveAlertsAsked(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.alertsAsked', value); }
 
+  // ── 图鉴已弹过层级的 fleet（P3-3 第 2 项）──
+  // 存「已弹过」而不是「已点亮」：老用户升级进来时先对齐一次，不会集体弹层。
+  loadDexAnnounced(): string { return ngfSettingsStoreFacade.getString('fieldwatch.dexAnnounced', ''); }
+  saveDexAnnounced(value: string): void { ngfSettingsStoreFacade.setString('fieldwatch.dexAnnounced', value); }
+
+  // ── Wi-Fi 复测提醒（P3-3 第 1 项）──
+  // 只三个键：是否待提示 / 建议信道 / 用户是否关掉。**没有定时器、没有通知**，
+  // 文档明确「不是后台常驻提醒」，所以这里只做「下次进页时看一眼」的标记。
+  loadRetestPending(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.retestPending', false); }
+  saveRetestPending(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.retestPending', value); }
+  loadRetestChannel(): number { return ngfSettingsStoreFacade.getNumber('fieldwatch.retestChannel', 0); }
+  saveRetestChannel(value: number): void { ngfSettingsStoreFacade.setNumber('fieldwatch.retestChannel', value); }
+  loadRetestDismissed(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.retestDismissed', false); }
+  saveRetestDismissed(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.retestDismissed', value); }
+
   /** 人工排查清单的已勾选项（换行分隔的条目 id，P3-2）。 */
   loadChecklistRaw(): string { return ngfSettingsStoreFacade.getString('fieldwatch.checklistDone', ''); }
   saveChecklistRaw(value: string): void { ngfSettingsStoreFacade.setString('fieldwatch.checklistDone', value); }

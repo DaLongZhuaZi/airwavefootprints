@@ -9,7 +9,7 @@ import {
   capabilityBoundaryKeys, SecurityEvidence, SecurityEvidenceKind, SecurityVerdict, SuspectDevice
 } from '../../fieldwatch/domain/FieldwatchSecurityPassive';
 import { checkProgress, ManualCheckGroup, ManualCheckItem } from '../../fieldwatch/domain/FieldwatchSecurityChecklist';
-import { SecurityScanRecord } from '../../fieldwatch/data/FieldwatchSecurityHistoryRepository';
+import { SecurityScanRecord, SuspectSnapshot } from '../../fieldwatch/data/FieldwatchSecurityHistoryRepository';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
@@ -40,6 +40,8 @@ export struct FieldwatchSecurityScanPage {
   @State private checked: string[] = [];
   /** 历史扫描记录（新→旧，P3-2）。 */
   @State private history: SecurityScanRecord[] = [];
+  /** 正在回放的历史记录（P3-3）；undefined = 不显示回放面板。 */
+  @State private replay: SecurityScanRecord | undefined = undefined;
   private timer: number = -1;
 
   aboutToAppear(): void {
@@ -248,6 +250,7 @@ export struct FieldwatchSecurityScanPage {
       // 排查清单与历史是**常驻能力**，不该逼用户先等 60 秒扫描才能看到：
       // 真机上从别处返回时会回到这个 idle 页，清单就找不到了。
       this.buildChecklist()
+      this.buildReplay()
       this.buildHistory()
     }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Start)
   }
@@ -300,7 +303,8 @@ export struct FieldwatchSecurityScanPage {
       this.buildCapabilityLimits()
       // ── 人工排查清单（P3-2：扫不出来的部分由它补）──
       this.buildChecklist()
-      // ── 历史扫描记录（P3-2：汇总之下要能回看）──
+      // ── 历史扫描记录（P3-2：汇总之下要能回看）+ 回放面板（P3-3）──
+      this.buildReplay()
       this.buildHistory()
       // 脚注：**每一屏都要有**，包括结果屏。
       Text($r('app.string.fieldwatch_security_footnote')).fontSize(12)
@@ -365,6 +369,12 @@ export struct FieldwatchSecurityScanPage {
     if (ev.kind === SecurityEvidenceKind.VENDOR_OUI) return this.text('app.string.fieldwatch_security_evidence_vendor');
     if (ev.kind === SecurityEvidenceKind.NAME_PATTERN) return this.text('app.string.fieldwatch_security_evidence_name');
     if (ev.kind === SecurityEvidenceKind.MEDIA_SERVICE) return this.text('app.string.fieldwatch_security_evidence_service');
+    if (ev.kind === SecurityEvidenceKind.DEVICE_CLASS) {
+      // 拾音与拍摄分开说：措辞不同，用户据此决定要不要去「看」还是去「听」。
+      return ev.detailKey === 'cod_mic'
+        ? this.text('app.string.fieldwatch_security_evidence_cod_mic')
+        : this.text('app.string.fieldwatch_security_evidence_cod_cam');
+    }
     return this.text('app.string.fieldwatch_security_evidence_catalog');
   }
 
@@ -463,11 +473,88 @@ export struct FieldwatchSecurityScanPage {
             Text(this.historySummary(record)).fontSize(12)
               .fontColor(record.confirmedCount + record.suspiciousCount > 0
                 ? FieldwatchPaletteHolder.get().warn : FieldwatchPaletteHolder.get().textDim)
-          }.width('100%')
+            SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(12)
+              .fontColor([FieldwatchPaletteHolder.get().textDim])
+          }.width('100%').padding({ top: 4, bottom: 4 })
+          // P3-3：点进看当次结果（快照回放）。
+          .onClick((): void => { this.replay = record; })
         }, (record: SecurityScanRecord): string => record.id)
       }
     }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
     .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+  }
+
+  /**
+   * 历史回放面板（P3-3 第 3 项）。
+   *
+   * 三态必须分清：
+   *   · 有快照 → 列出当次可疑清单与证据分项
+   *   · 无快照（P3-2 老记录）→ 明示「该次记录无快照」，**不显示成「当时没有可疑」**
+   *   · 有快照但清单为空 → 才是「当时没有判定出可疑设备」
+   */
+  @Builder
+  private buildReplay() {
+    if (this.replay !== undefined) {
+      Column({ space: 10 }) {
+        Row({ space: 8 }) {
+          Text($r('app.string.fieldwatch_security_replay_title')).fontSize(16)
+            .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).layoutWeight(1)
+          Text(this.historyTime(this.replay as SecurityScanRecord)).fontSize(12)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
+        }.width('100%')
+        Text(this.historySummary(this.replay as SecurityScanRecord)).fontSize(14)
+          .fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
+        if (!(this.replay as SecurityScanRecord).hasSnapshot) {
+          Text($r('app.string.fieldwatch_security_replay_no_snapshot')).fontSize(13)
+            .fontColor(FieldwatchPaletteHolder.get().warn).width('100%')
+          Text($r('app.string.fieldwatch_security_replay_no_snapshot_hint')).fontSize(11)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        } else if ((this.replay as SecurityScanRecord).suspects.length === 0) {
+          Text($r('app.string.fieldwatch_security_replay_empty')).fontSize(13)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        } else {
+          ForEach((this.replay as SecurityScanRecord).suspects, (item: SuspectSnapshot): void => {
+            Column({ space: 3 }) {
+              Row({ space: 8 }) {
+                Text(item.label.length > 0 ? item.label : item.address).fontSize(14)
+                  .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(1)
+                Text(item.verdict === 'confirmed'
+                  ? this.text('app.string.fieldwatch_security_verdict_confirmed')
+                  : this.text('app.string.fieldwatch_security_verdict_suspicious'))
+                  .fontSize(11).fontWeight(FontWeight.Medium)
+                  .fontColor(item.verdict === 'confirmed'
+                    ? FieldwatchPaletteHolder.get().signalRed : FieldwatchPaletteHolder.get().warn)
+              }.width('100%')
+              // 证据分项快照：当时命中了哪几条规则。
+              if (item.address.length > 0) {
+                Text(item.address).fontSize(10).fontColor(FieldwatchPaletteHolder.get().textDim)
+                  .width('100%').maxLines(1)
+              }
+              ForEach(item.evidenceKeys, (key: string): void => {
+                Text('· ' + this.evidenceKeyText(key)).fontSize(10)
+                  .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+              }, (key: string): string => item.address + key)
+            }.width('100%').padding(8).borderRadius(8).alignItems(HorizontalAlign.Start)
+            .backgroundColor(FieldwatchPaletteHolder.get().panel)
+          }, (item: SuspectSnapshot): string => item.address + item.verdict)
+        }
+        FieldwatchButton({ label: $r('app.string.fieldwatch_dex_unlock_close'),
+          tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.replay = undefined; } })
+      }.width('100%').padding(14).borderRadius(12).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+    }
+  }
+
+  /** 快照里的证据键 → 文案（快照只存 detailKey，不存翻译结果）。 */
+  private evidenceKeyText(key: string): string {
+    if (key === 'oui' || key === 'company_id' || key === 'chipset') {
+      return this.text('app.string.fieldwatch_security_evidence_vendor');
+    }
+    if (key === 'name') return this.text('app.string.fieldwatch_security_evidence_name');
+    if (key === 'service') return this.text('app.string.fieldwatch_security_evidence_service');
+    if (key === 'cod_mic') return this.text('app.string.fieldwatch_security_evidence_cod_mic');
+    if (key === 'cod_cam') return this.text('app.string.fieldwatch_security_evidence_cod_cam');
+    return this.text('app.string.fieldwatch_security_evidence_catalog');
   }
 
   private historyTime(record: SecurityScanRecord): string {

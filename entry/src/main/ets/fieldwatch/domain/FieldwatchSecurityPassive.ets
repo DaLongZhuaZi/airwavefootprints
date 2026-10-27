@@ -38,7 +38,14 @@ export enum SecurityEvidenceKind {
   /** 视频/媒体服务宣告（service data 里出现 RTSP/ONVIF 类特征）。 */
   MEDIA_SERVICE = 'media_service',
   /** 特征库命中「疑似摄像头」类 fleet。 */
-  SIGNATURE = 'signature'
+  SIGNATURE = 'signature',
+  /**
+   * Class of Device 推出的音视频小类（P3-3 附带项）。
+   *
+   * 独立成一个类别而不是并进 VENDOR_OUI：CoD 描述的是「设备自称是什么」，
+   * 与厂商完全不同的信息维度，把它算进厂商会污染「独立证据」的计数。
+   */
+  DEVICE_CLASS = 'device_class'
 }
 
 /** 一条证据。 */
@@ -210,6 +217,76 @@ export function companyIdLooksLikeCamera(companyId: number): boolean {
   return CAMERA_COMPANY_IDS.indexOf(companyId) >= 0;
 }
 
+// ── CoD 音视频小类（P3-3 附带项，附录 C.3）──
+//
+// 蓝牙 Class of Device 的 major class 占 bit8..12，minor class 占 bit2..7。
+// 音视频大类（AUDIO_VIDEO = 0x04）下有若干小类，其中「麦克风」与「摄像头」最相关。
+//
+// **口径（文档硬要求）**：单独命中只作弱信号，绝不单命中即判「可疑」——
+// 耳机、音箱、会议设备全部落在 AUDIO_VIDEO 大类里，
+// 把它们一律算成拾音/拍摄设备等于把误报当功能（P3-1 芯片商 OUI 已经踩过同类坑）。
+
+/** AUDIO_VIDEO 大类的编码（CoD major class）。 */
+export const COD_MAJOR_AUDIO_VIDEO: number = 0x04;
+/** AV_MICROPHONE：疑似拾音设备。 */
+export const COD_MINOR_AV_MICROPHONE: number = 0x04;
+/** AV_VIDEO_CAMERA：摄像头类。 */
+export const COD_MINOR_AV_VIDEO_CAMERA: number = 0x0C;
+/** AV_CAMCORDER：摄像机类。 */
+export const COD_MINOR_AV_CAMCORDER: number = 0x0D;
+/** AV_VIDEO_CONFERENCING：视频会议终端。 */
+export const COD_MINOR_AV_VIDEO_CONFERENCING: number = 0x10;
+
+/** CoD 解析结果：大类 + 小类；无有效值时均为 -1。 */
+export class CodClass {
+  public major: number = -1;
+  public minor: number = -1;
+  constructor(major: number = -1, minor: number = -1) {
+    this.major = major;
+    this.minor = minor;
+  }
+}
+
+/**
+ * 从 24 位 Class of Device 里拆出 major / minor。
+ *
+ * CoD 布局（Bluetooth SIG Assigned Numbers, Class of Device）：
+ *   · bit 0..1  format
+ *   · bit 2..7  minor class（6 位）
+ *   · bit 8..12 major class（5 位）
+ * `deviceClass` 为 0 或负数视为「没有 CoD」，返回 -1/-1 而不是 0 ——
+ * 0 是合法的「Miscellaneous」，不能与「不知道」混为一谈。
+ */
+export function parseCod(deviceClass: number): CodClass {
+  if (!(deviceClass > 0)) return new CodClass();
+  const major: number = (deviceClass >> 8) & 0x1F;
+  const minor: number = (deviceClass >> 2) & 0x3F;
+  return new CodClass(major, minor);
+}
+
+/**
+ * CoD 是否指向「疑似拾音设备」（AV_MICROPHONE）。
+ *
+ * **只是弱信号判据**，调用方必须按弱信号处理。
+ */
+export function codLooksLikeMicrophone(deviceClass: number): boolean {
+  const cod: CodClass = parseCod(deviceClass);
+  return cod.major === COD_MAJOR_AUDIO_VIDEO && cod.minor === COD_MINOR_AV_MICROPHONE;
+}
+
+/**
+ * CoD 是否指向「摄像头类」（CAMERA / CAMCORDER / VIDEO_CONFERENCING）。
+ *
+ * **只是弱信号判据**：视频会议终端在企业与家用都很常见，单命中不能算可疑。
+ */
+export function codLooksLikeCamera(deviceClass: number): boolean {
+  const cod: CodClass = parseCod(deviceClass);
+  if (cod.major !== COD_MAJOR_AUDIO_VIDEO) return false;
+  return cod.minor === COD_MINOR_AV_VIDEO_CAMERA
+    || cod.minor === COD_MINOR_AV_CAMCORDER
+    || cod.minor === COD_MINOR_AV_VIDEO_CONFERENCING;
+}
+
 /** 地址前 6 位是否属于通用芯片/方案商（弱信号，只能辅助）。 */
 export function ouiLooksLikeChipset(address: string): boolean {
   // 同理：随机地址的 OUI 段毫无意义。
@@ -263,6 +340,15 @@ export function assessSighting(sighting: Sighting, signatureHit: boolean, mediaS
   // ⑤ 通用芯片方案商：**只能在已有其他证据时作为辅助**，单独命中不构成可疑。
   if (chipOnly && evidence.length > 0) {
     evidence.push(new SecurityEvidence(SecurityEvidenceKind.VENDOR_OUI, 'chipset'));
+  }
+  // ⑥ CoD 音视频小类（P3-3 附带项）：同样是**弱信号，只作辅助**。
+  //    耳机 / 音箱 / 会议终端全在 AUDIO_VIDEO 大类里，单命中不能算可疑。
+  //    保留两个不同的 detailKey 以便 UI 说清「像拾音」还是「像拍摄」。
+  const codDeviceClass: number = sighting.facts.deviceClass;
+  const codMic: boolean = codLooksLikeMicrophone(codDeviceClass);
+  const codCam: boolean = codLooksLikeCamera(codDeviceClass);
+  if ((codMic || codCam) && evidence.length > 0) {
+    evidence.push(new SecurityEvidence(SecurityEvidenceKind.DEVICE_CLASS, codMic ? 'cod_mic' : 'cod_cam'));
   }
   suspect.evidence = evidence;
   suspect.verdict = verdictOf(evidence);

@@ -11635,6 +11635,166 @@
     {
       "name": "fieldwatch_newfaces_detail",
       "value": "Details"
+    },
+    {
+      "name": "fieldwatch_security_evidence_cod_mic",
+      "value": "Bluetooth class indicates a microphone"
+    },
+    {
+      "name": "fieldwatch_security_evidence_cod_cam",
+      "value": "Bluetooth class indicates a camera device"
+    },
+    {
+      "name": "fieldwatch_wifi_band_24",
+      "value": "2.4G"
+    },
+    {
+      "name": "fieldwatch_wifi_band_5",
+      "value": "5G"
+    },
+    {
+      "name": "fieldwatch_wifi_band_6",
+      "value": "6G"
+    },
+    {
+      "name": "fieldwatch_wifi_band_unknown",
+      "value": "Unknown band"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_title",
+      "value": "Current access point"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_ssid",
+      "value": "SSID"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_bssid",
+      "value": "BSSID"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_band",
+      "value": "Band"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_channel",
+      "value": "Channel"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_rssi",
+      "value": "Signal"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_bssid_hint",
+      "value": "BSSID is randomized by the system; valid for this session only."
+    },
+    {
+      "name": "fieldwatch_wifi_trend_title",
+      "value": "Room history"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_empty",
+      "value": "No room records yet — measure a room and it will show here."
+    },
+    {
+      "name": "fieldwatch_wifi_trend_times",
+      "value": "%1 measurements"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_better",
+      "value": "Better than first time"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_worse",
+      "value": "Worse than first time"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_same",
+      "value": "Same as first time"
+    },
+    {
+      "name": "fieldwatch_wifi_retest_title",
+      "value": "Re-test after changing channel"
+    },
+    {
+      "name": "fieldwatch_wifi_retest_hint",
+      "value": "Last time we suggested channel %1. Re-test after changing it to confirm it helped."
+    },
+    {
+      "name": "fieldwatch_wifi_retest_dismiss",
+      "value": "Do not show again"
+    },
+    {
+      "name": "fieldwatch_wifi_retest_ok",
+      "value": "Got it"
+    },
+    {
+      "name": "fieldwatch_security_replay_title",
+      "value": "Result of this scan"
+    },
+    {
+      "name": "fieldwatch_security_replay_no_snapshot",
+      "value": "No snapshot for this record"
+    },
+    {
+      "name": "fieldwatch_security_replay_no_snapshot_hint",
+      "value": "This record was written by an earlier version that stored summary numbers only, so the suspect list cannot be replayed."
+    },
+    {
+      "name": "fieldwatch_security_replay_empty",
+      "value": "No suspicious devices were identified at the time."
+    },
+    {
+      "name": "fieldwatch_security_replay_tap",
+      "value": "View this scan"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_title",
+      "value": "New unlock!"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_score",
+      "value": "Dex score +%1"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_levelup",
+      "value": "Level up: %1"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_share",
+      "value": "Make a share card"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_close",
+      "value": "Got it"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_share_title",
+      "value": "My device dex"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_share_headline",
+      "value": "Unlocked %1"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_strong",
+      "value": "Strong"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_ok",
+      "value": "OK"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_weak",
+      "value": "Weak"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_bad",
+      "value": "Bad"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_unknown",
+      "value": "Not measured"
     }
   ]
 }

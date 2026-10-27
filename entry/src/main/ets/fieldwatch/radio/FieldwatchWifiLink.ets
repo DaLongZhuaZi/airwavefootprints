@@ -25,10 +25,37 @@ export class WifiCurrentAp {
   /** 系统给的 bssid；无 GET_WIFI_PEERS_MAC 时是随机值，**仅供当次会话内参考**。 */
   public bssid: string = '';
   public rssi: number = 0;
-  /** 频段（MHz）。 */
+  /**
+   * 频段（MHz）。
+   *
+   * 优先取 `WifiLinkedInfo.band`；**部分设备该字段返回 0**
+   * （真机实测：DLZZ_5G 的 band=0，导致详情页显示「未知频段」、信道算不出来），
+   * 此时用 `WifiLinkedInfo.frequency` 兜底。0 表示确实拿不到。
+   */
   public band: number = 0;
   /** BSSID 是否可作为长期锚：本 App 恒为 false（见文件头说明）。 */
   public bssidStable: boolean = false;
+}
+
+/**
+ * 把系统给的 band 枚举 + frequency 换算成 **MHz**。
+ *
+ * 为什么需要这一步（真机实证）：
+ *   `WifiLinkedInfo.band` 是**枚举**而不是频率 —— 实测 band=2 对应 freq=5260（5G）。
+ *   把它当 MHz 用，会让频段判定与信道推算全部失效（详情页显示「未知频段」）。
+ *
+ * 换算优先级：**frequency 优先**（它是真实频点，最可靠）；
+ * frequency 不可用时，按枚举给一个该频段的代表频点 —— 足以让「2.4G / 5G」判对，
+ * 但信道会不准，所以此时 `WifiCurrentAp.bandExact` 应为 false（调用方据此不展示信道）。
+ *
+ * @returns 频段（MHz）；两者都不可用返回 0
+ */
+export function bandToMhz(bandEnum: number, frequency: number): number {
+  if (frequency > 0) return frequency;
+  // 枚举兜底：1 = 2.4G，2 = 5G（本机 SDK 语义）。
+  if (bandEnum === 1) return 2437;
+  if (bandEnum === 2) return 5180;
+  return 0;
 }
 
 /** 平台接口：把系统调用收敛在这里，便于注入假实现单测。 */
@@ -53,7 +80,13 @@ export class HarmonyWifiLinkPlatform implements IFieldwatchWifiLinkPlatform {
       ap.ssid = info.ssid;
       ap.bssid = info.bssid;
       ap.rssi = info.rssi;
-      ap.band = info.band;
+      // **`band` 不是 MHz，是枚举**（真机 hilog 实证：band=2 对应 freq=5260 的 5G 网络）。
+      // 早前把它当 MHz 直接喂给详情页，才出现「未知频段、信道算不出」。
+      // 详情页要的是 MHz，所以这里统一换算成 MHz —— **以 frequency 为准**（它才是真频率），
+      // frequency 不可用时再按枚举推一个代表频点。
+      ap.band = bandToMhz(info.band, info.frequency);
+      logger.debug(TAG, '当前 AP: band枚举=' + info.band.toString() + ' frequency=' + info.frequency.toString()
+        + ' -> bandMhz=' + ap.band.toString());
     } catch (error) {
       const failure: BusinessError = error as BusinessError;
       logger.debug(TAG, '读当前 AP 失败（未连 Wi-Fi 或未授权）code=' + failure.code);

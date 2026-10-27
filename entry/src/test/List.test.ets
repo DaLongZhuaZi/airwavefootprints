@@ -49,6 +49,10 @@ import fieldwatchDeviceNamingTest from './FieldwatchDeviceNaming.test';
 import fieldwatchSecurityPassiveTest from './FieldwatchSecurityPassive.test';
 import fieldwatchChecklistTest from './FieldwatchChecklist.test';
 import fieldwatchDexBadgesTest from './FieldwatchDexBadges.test';
+import fieldwatchWifiDoctorDetailTest from './FieldwatchWifiDoctorDetail.test';
+import fieldwatchCodTest from './FieldwatchCod.test';
+import fieldwatchSecurityReplayTest from './FieldwatchSecurityReplay.test';
+import fieldwatchDexUnlockTest from './FieldwatchDexUnlock.test';
 
 export default function testsuite() {
   localUnitTest();
@@ -95,4 +99,8 @@ export default function testsuite() {
   fieldwatchSecurityPassiveTest();
   fieldwatchChecklistTest();
   fieldwatchDexBadgesTest();
+  fieldwatchWifiDoctorDetailTest();
+  fieldwatchCodTest();
+  fieldwatchSecurityReplayTest();
+  fieldwatchDexUnlockTest();
 }

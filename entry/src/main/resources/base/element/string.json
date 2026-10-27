@@ -11635,6 +11635,166 @@
     {
       "name": "fieldwatch_newfaces_detail",
       "value": "查看详情"
+    },
+    {
+      "name": "fieldwatch_security_evidence_cod_mic",
+      "value": "蓝牙类别显示为麦克风设备"
+    },
+    {
+      "name": "fieldwatch_security_evidence_cod_cam",
+      "value": "蓝牙类别显示为拍摄类设备"
+    },
+    {
+      "name": "fieldwatch_wifi_band_24",
+      "value": "2.4G"
+    },
+    {
+      "name": "fieldwatch_wifi_band_5",
+      "value": "5G"
+    },
+    {
+      "name": "fieldwatch_wifi_band_6",
+      "value": "6G"
+    },
+    {
+      "name": "fieldwatch_wifi_band_unknown",
+      "value": "未知频段"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_title",
+      "value": "当前连接的 AP"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_ssid",
+      "value": "名称"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_bssid",
+      "value": "BSSID"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_band",
+      "value": "频段"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_channel",
+      "value": "信道"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_rssi",
+      "value": "信号"
+    },
+    {
+      "name": "fieldwatch_wifi_detail_bssid_hint",
+      "value": "BSSID 由系统随机化，仅本次会话内参考。"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_title",
+      "value": "各房间历次分档"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_empty",
+      "value": "还没有房间记录，测一个房间就会出现在这里。"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_times",
+      "value": "共 %1 次"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_better",
+      "value": "比首次变好了"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_worse",
+      "value": "比首次变差了"
+    },
+    {
+      "name": "fieldwatch_wifi_trend_same",
+      "value": "与首次持平"
+    },
+    {
+      "name": "fieldwatch_wifi_retest_title",
+      "value": "改完信道记得复测"
+    },
+    {
+      "name": "fieldwatch_wifi_retest_hint",
+      "value": "上次建议换到信道 %1。改完后再测一次，才能确认有没有变好。"
+    },
+    {
+      "name": "fieldwatch_wifi_retest_dismiss",
+      "value": "不再提示"
+    },
+    {
+      "name": "fieldwatch_wifi_retest_ok",
+      "value": "知道了"
+    },
+    {
+      "name": "fieldwatch_security_replay_title",
+      "value": "这次扫描的结果"
+    },
+    {
+      "name": "fieldwatch_security_replay_no_snapshot",
+      "value": "该次记录无快照"
+    },
+    {
+      "name": "fieldwatch_security_replay_no_snapshot_hint",
+      "value": "这条记录由较早版本写入，只存了汇总数字，无法回放当时的可疑清单。"
+    },
+    {
+      "name": "fieldwatch_security_replay_empty",
+      "value": "当时没有判定出可疑设备。"
+    },
+    {
+      "name": "fieldwatch_security_replay_tap",
+      "value": "点进看当次结果"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_title",
+      "value": "点亮新设备！"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_score",
+      "value": "图鉴积分 +%1"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_levelup",
+      "value": "等级提升：%1"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_share",
+      "value": "生成分享卡"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_close",
+      "value": "知道了"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_share_title",
+      "value": "我的设备图鉴"
+    },
+    {
+      "name": "fieldwatch_dex_unlock_share_headline",
+      "value": "点亮了 %1"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_strong",
+      "value": "很强"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_ok",
+      "value": "够用"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_weak",
+      "value": "偏弱"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_bad",
+      "value": "很差"
+    },
+    {
+      "name": "fieldwatch_wifi_grade_unknown",
+      "value": "未测"
     }
   ]
 }

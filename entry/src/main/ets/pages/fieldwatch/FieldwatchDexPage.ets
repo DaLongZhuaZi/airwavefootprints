@@ -7,6 +7,8 @@ import { SignatureClass } from '../../fieldwatch/domain/FieldwatchModels';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { DexEntryDataSource } from '../../fieldwatch/ui/FieldwatchDexDataSource';
 import { DexBadge, DexLevelProgress } from '../../fieldwatch/domain/FieldwatchDexBadges';
+import { DexUnlock } from '../../fieldwatch/domain/FieldwatchDexUnlock';
+import { ShareCardContent } from '../../fieldwatch/platform/FieldwatchShareCard';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
 
@@ -46,6 +48,10 @@ export struct FieldwatchDexPage {
   @State private loading: boolean = true;
   /** 分类进度是否展开（默认折叠，避免把网格挤到屏幕外）。 */
   @State private progressExpanded: boolean = false;
+  /** 待弹的首次点亮（P3-3）。undefined = 不弹。 */
+  @State private unlock: DexUnlock | undefined = undefined;
+  /** 弹层是否正在分享（防重复点）。 */
+  @State private sharing: boolean = false;
   /** 选中条目（点开显示详情）；undefined 表示未选。 */
   @State private selected: DexEntry | undefined = undefined;
 
@@ -61,6 +67,9 @@ export struct FieldwatchDexPage {
     this.dataSource.reset(entries);
     this.summary = fieldwatchApplication.dexSummary(entries);
     this.loading = false;
+    // P3-3：只在**首次点亮**时出一条；已弹过、未点亮的都不会返回。
+    // 首次运行会把现状全部标记为已弹，因此老用户升级不会涌出几十个弹层。
+    this.unlock = fieldwatchApplication.nextDexUnlock(entries);
   }
 
   private text(key: string): string {
@@ -97,6 +106,17 @@ export struct FieldwatchDexPage {
           })
         }
         this.buildBody()
+        // P3-3 首次点亮弹层：盖在内容之上（Stack 后写的在上层）。
+        // 用半透明遮罩包一层，让点击不透到下面的格子；点遮罩也算「知道了」。
+        if (this.unlock !== undefined) {
+          Column() {
+            this.buildUnlockSheet()
+          }
+          .width('100%').height('100%')
+          .justifyContent(FlexAlign.Center)
+          .backgroundColor('#99000000')
+          .onClick((): void => { this.closeUnlock(); })
+        }
       }.width('100%').height('100%')
     }
     .titleBar(NGFHdsTitleBarOptionsFactory.build(
@@ -237,6 +257,84 @@ export struct FieldwatchDexPage {
   }
 
   private badges(): DexBadge[] { return fieldwatchApplication.dexBadgesOf(this.entries); }
+
+  /**
+   * 首次点亮弹层（P3-3 第 2 项）。
+   *
+   * 覆盖在页面之上而不是用系统 Dialog：需要展示内容（名称/类别/稀有度/积分变化）
+   * 与两个动作（分享 / 知道了），系统 Dialog 的自定义能力不够。
+   * **只在 `this.unlock !== undefined` 时出现**，关掉后立即置空，不会重复弹。
+   */
+  @Builder
+  private buildUnlockSheet() {
+    if (this.unlock !== undefined) {
+      Column({ space: 12 }) {
+        SymbolGlyph($r('sys.symbol.star_fill')).fontSize(40)
+          .fontColor([FieldwatchPaletteHolder.get().accent])
+        Text($r('app.string.fieldwatch_dex_unlock_title')).fontSize(20).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).textAlign(TextAlign.Center)
+        Text((this.unlock as DexUnlock).name).fontSize(17).fontWeight(FontWeight.Medium)
+          .fontColor(FieldwatchPaletteHolder.get().text).textAlign(TextAlign.Center)
+          .maxLines(2).textOverflow({ overflow: TextOverflow.Ellipsis })
+        Row({ space: 8 }) {
+          Text(this.text((this.unlock as DexUnlock).categoryKey)).fontSize(12)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
+          Text('·').fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
+          Text(this.text((this.unlock as DexUnlock).rarityKey)).fontSize(12)
+            .fontColor(FieldwatchPaletteHolder.get().accent)
+        }
+        Text(this.text('app.string.fieldwatch_dex_unlock_score')
+          .replace('%1', (this.unlock as DexUnlock).delta().toString()))
+          .fontSize(14).fontColor(FieldwatchPaletteHolder.get().accent)
+        // 跨级时额外说一句：只报积分不报升级会让人错过等级变化。
+        if ((this.unlock as DexUnlock).leveledUp()) {
+          Text(this.text('app.string.fieldwatch_dex_unlock_levelup')
+            .replace('%1', this.text((this.unlock as DexUnlock).levelAfterKey)))
+            .fontSize(13).fontColor(FieldwatchPaletteHolder.get().headerText)
+        }
+        FieldwatchButton({ label: $r('app.string.fieldwatch_dex_unlock_share'),
+          tone: FieldwatchButtonTone.PRIMARY, disabled: this.sharing,
+          onTap: (): void => { void this.shareUnlock(); } })
+        FieldwatchButton({ label: $r('app.string.fieldwatch_dex_unlock_close'),
+          tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.closeUnlock(); } })
+      }
+      .width('100%').padding(24).borderRadius(20).margin({ left: 24, right: 24 })
+      .backgroundColor(FieldwatchPaletteHolder.get().panel)
+      .alignItems(HorizontalAlign.Center)
+    }
+  }
+
+  /** 关闭弹层并记为已弹（下次不再弹同一条）。 */
+  private closeUnlock(): void {
+    const current: DexUnlock | undefined = this.unlock;
+    if (current !== undefined) fieldwatchApplication.markDexUnlockAnnounced(current.fleetId);
+    this.unlock = undefined;
+  }
+
+  /**
+   * 分享卡（P3-3 第 2 项）：**复用现有 ShareCard 能力**，不新增分享渠道。
+   */
+  private async shareUnlock(): Promise<void> {
+    const current: DexUnlock | undefined = this.unlock;
+    if (current === undefined || this.sharing) return;
+    this.sharing = true;
+    const content: ShareCardContent = new ShareCardContent();
+    content.title = this.text('app.string.fieldwatch_dex_unlock_share_title');
+    content.headline = this.text('app.string.fieldwatch_dex_unlock_share_headline')
+      .replace('%1', current.name);
+    const lines: string[] = [];
+    lines.push(this.text('app.string.fieldwatch_dex_level_line')
+      .replace('%1', this.text(current.levelAfterKey))
+      .replace('%2', current.scoreAfter.toString()));
+    // 分享卡用 extraLines 承载附加行（ShareCardContent 没有 lines 字段）。
+    content.extraLines = lines;
+    content.footnote = this.text('app.string.fieldwatch_dex_subtitle')
+      .replace('%1', (this.summary === undefined ? 0 : (this.summary as DexSummary).seen).toString())
+      .replace('%2', (this.summary === undefined ? 0 : (this.summary as DexSummary).total).toString());
+    const ok: boolean = await fieldwatchApplication.shareSecurityCard(content);
+    this.sharing = false;
+    if (ok) this.closeUnlock();
+  }
 
   /**
    * 分类进度：每类「点亮 / 共几」。

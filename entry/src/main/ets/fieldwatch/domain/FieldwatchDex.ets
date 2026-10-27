@@ -221,6 +221,14 @@ export function nameKeyOf(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+/** 稀有度的文案资源键（页面与弹层共用，避免两处各写一套）。 */
+export function dexRarityKey(rarity: DexRarity): string {
+  if (rarity === DexRarity.EPIC) return 'app.string.fieldwatch_dex_rarity_epic';
+  if (rarity === DexRarity.RARE) return 'app.string.fieldwatch_dex_rarity_rare';
+  if (rarity === DexRarity.UNCOMMON) return 'app.string.fieldwatch_dex_rarity_uncommon';
+  return 'app.string.fieldwatch_dex_rarity_common';
+}
+
 /** 未点亮的条目显示成「？？？」，不泄露名字。 */
 export function dexDisplayName(entry: DexEntry): string {
   return entry.seen ? entry.name : '？？？';

@@ -38,10 +38,13 @@ import { ngfSettingsStoreFacade, ngfWidgetManagerFacade } from 'ngf_framework';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../domain/FieldwatchPermissions';
 import { attachSuspects, buildSecuritySummary, SecuritySummary } from '../domain/FieldwatchSecurityScan';
 import { ServiceDataRecord } from '../domain/FieldwatchModels';
+import { FieldwatchWifiLink, WifiCurrentAp } from '../radio/FieldwatchWifiLink';
 import { assessSighting, SuspectDevice } from '../domain/FieldwatchSecurityPassive';
 import { FieldwatchSecurityHistoryRepository, SecurityScanRecord } from '../data/FieldwatchSecurityHistoryRepository';
 import { checkProgress, decodeChecks, encodeChecks, manualCheckGroups, toggleCheck } from '../domain/FieldwatchSecurityChecklist';
-import { consecutiveDays, dexBadges, DexBadge, dexScore, DexLevel, DexLevelProgress, levelProgress } from '../domain/FieldwatchDexBadges';
+import { consecutiveDays, dexBadges, DexBadge, dexScore, DexLevel, DexLevelProgress, entryScore, levelProgress } from '../domain/FieldwatchDexBadges';
+import { decodeAnnounced, DexUnlock, encodeAnnounced, pendingUnlock, reconcileAnnounced } from '../domain/FieldwatchDexUnlock';
+import { dexRarityKey } from '../domain/FieldwatchDex';
 import {
   buildWifiDoctor, doctorLines, DoctorLine, RoomCheck, ROOM_SCAN_DURATION_MS, WifiDoctorReport
 } from '../domain/FieldwatchWifiDoctor';
@@ -221,6 +224,8 @@ export class FieldwatchApplication {
   /** 反跟随自动提醒：上次评估时刻与已推送记录（P1-6）。 */
   private antiTrackEvaluatedAt: number = 0;
   private antiTrackHistory: AntiTrackPushRecord[] = [];
+  /** Wi-Fi 当前 AP 读取（P3-3：复用已有能力，不新增权限）。 */
+  private readonly wifiLink: FieldwatchWifiLink = new FieldwatchWifiLink();
   /** 安防扫描历史仓储（P3-2）。 */
   private readonly securityHistory: FieldwatchSecurityHistoryRepository = new FieldwatchSecurityHistoryRepository();
   /** 房间体检仓储（P1-7）。 */
@@ -476,6 +481,54 @@ export class FieldwatchApplication {
 
   /** 等级进度（当前级 / 下一级 / 还差多少）。 */
   dexLevelOf(entries: DexEntry[]): DexLevelProgress { return levelProgress(dexScore(entries)); }
+
+  // ── 图鉴首次点亮弹层（P3-3 第 2 项）──
+
+  /** 已弹过层的 fleetId。 */
+  dexAnnounced(): string[] {
+    return decodeAnnounced(this.settingsRepository.loadDexAnnounced());
+  }
+
+  /**
+   * 取出一条该弹层的解锁；没有返回 undefined。
+   *
+   * **只在首次点亮时返回**：已弹过的、未点亮的都不会返回。
+   * 老用户第一次进本版本时 `reconcileDexAnnounced` 会先把现状全部标记，
+   * 因此不会出现「升级后涌出几十个弹层」。
+   */
+  nextDexUnlock(entries: DexEntry[]): DexUnlock | undefined {
+    const announced: string[] = this.dexAnnounced();
+    // 首次运行（还没对齐过）：对齐现状后不弹，避免老用户被历史的几十条轰炸。
+    if (announced.length === 0 && this.settingsRepository.loadDexAnnounced().length === 0) {
+      const aligned: string[] = reconcileAnnounced(entries, []);
+      this.settingsRepository.saveDexAnnounced(encodeAnnounced(aligned));
+      return undefined;
+    }
+    const pending: DexEntry[] = pendingUnlock(entries, announced);
+    if (pending.length === 0) return undefined;
+    const target: DexEntry = pending[0];
+    const unlock: DexUnlock = new DexUnlock();
+    unlock.fleetId = target.fleetId;
+    unlock.name = target.name;
+    // 复用现有类别标签（它返回的就是资源键，不是文案）。
+    unlock.categoryKey = signatureClassLabel(target.category);
+    unlock.rarityKey = dexRarityKey(target.rarity);
+    // 积分变化：点亮后 vs 点亮前（把这一条当成未点亮来算差）。
+    const after: number = dexScore(entries);
+    unlock.scoreAfter = after;
+    unlock.scoreBefore = after - entryScore(target);
+    unlock.levelBeforeKey = levelProgress(unlock.scoreBefore).current.titleKey;
+    unlock.levelAfterKey = levelProgress(unlock.scoreAfter).current.titleKey;
+    return unlock;
+  }
+
+  /** 弹过之后记为已弹（下次不再弹同一条）。 */
+  markDexUnlockAnnounced(fleetId: string): void {
+    const announced: string[] = this.dexAnnounced();
+    if (announced.indexOf(fleetId) >= 0) return;
+    announced.push(fleetId);
+    this.settingsRepository.saveDexAnnounced(encodeAnnounced(announced));
+  }
 
   /** 勋章（含「连续 7 天新发现」需要的历史天数）。 */
   dexBadgesOf(entries: DexEntry[]): DexBadge[] {
@@ -832,6 +885,49 @@ export class FieldwatchApplication {
   /** 报告里的行（键 + 参数），页面按资源键渲染。 */
   wifiDoctorLines(report: WifiDoctorReport): DoctorLine[] {
     return doctorLines(report);
+  }
+
+  // ── Wi-Fi 详情 / 趋势 / 复测提醒（P3-3 第 1 项）──
+
+  /** 当前连接的 AP。**不新增权限**：只读系统已给的连接信息。 */
+  currentAp(): WifiCurrentAp | undefined {
+    return this.wifiLink.current();
+  }
+
+  /**
+   * 发出改信道建议时记下「待复测」。
+   *
+   * 只在真正给出了建议时调用；不是后台提醒，只是给下次进页留一个标记。
+   */
+  markRetestPending(channel: number): void {
+    this.settingsRepository.saveRetestPending(true);
+    this.settingsRepository.saveRetestChannel(channel);
+  }
+
+  /** 是否有待复测（用户没关掉才展示，见 `shouldPromptRetest`）。 */
+  retestPromptPending(): boolean {
+    return this.settingsRepository.loadRetestPending();
+  }
+
+  /** 建议的信道。 */
+  retestSuggestedChannel(): number {
+    return this.settingsRepository.loadRetestChannel();
+  }
+
+  /** 用户是否关掉了复测提醒（可关闭、不骚扰）。 */
+  retestPromptDismissed(): boolean {
+    return this.settingsRepository.loadRetestDismissed();
+  }
+
+  /** 关闭复测提醒（「不再提示」）。 */
+  dismissRetestPrompt(): void {
+    this.settingsRepository.saveRetestDismissed(true);
+    this.settingsRepository.saveRetestPending(false);
+  }
+
+  /** 完成复测（用户点了「知道了」）：清待提示，但保留用户的关闭偏好。 */
+  clearRetestPrompt(): void {
+    this.settingsRepository.saveRetestPending(false);
   }
 
   /**
