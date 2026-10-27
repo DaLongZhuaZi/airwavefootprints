@@ -12107,6 +12107,22 @@
     {
       "name": "fieldwatch_daily_pro_hint",
       "value": "雷达、分类、品牌筛选等专业能力"
+    },
+    {
+      "name": "fieldwatch_newfaces_block",
+      "value": "拉黑"
+    },
+    {
+      "name": "fieldwatch_newfaces_worth_note",
+      "value": "值得留意"
+    },
+    {
+      "name": "fieldwatch_newfaces_group_today",
+      "value": "今日"
+    },
+    {
+      "name": "fieldwatch_newfaces_group_week",
+      "value": "本周"
     }
   ]
 }

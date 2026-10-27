@@ -12107,6 +12107,22 @@
     {
       "name": "fieldwatch_daily_pro_hint",
       "value": "Radar, classification, brand filters and more"
+    },
+    {
+      "name": "fieldwatch_newfaces_block",
+      "value": "Block"
+    },
+    {
+      "name": "fieldwatch_newfaces_worth_note",
+      "value": "Worth a look"
+    },
+    {
+      "name": "fieldwatch_newfaces_group_today",
+      "value": "Today"
+    },
+    {
+      "name": "fieldwatch_newfaces_group_week",
+      "value": "This week"
     }
   ]
 }

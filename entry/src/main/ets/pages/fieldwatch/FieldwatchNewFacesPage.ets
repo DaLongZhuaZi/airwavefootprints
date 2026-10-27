@@ -130,6 +130,11 @@ export struct FieldwatchNewFacesPage {
   }
 
   @Builder
+  /**
+   * 一条新面孔（改版设计 6.2）：加首次出现时间、信号强度、风险提示、拉黑动作。
+   *
+   * 原来一行只有「名称 + 出现次数 + 特征名」，用户没法判断这台值不值得处理。
+   */
   private buildRow(entry: NewFaceEntry) {
     Column({ space: 6 }) {
       Row({ space: 8 }) {
@@ -141,11 +146,19 @@ export struct FieldwatchNewFacesPage {
         Text(entry.hits.toString() + '×').fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
       }.width('100%')
+      // 改版设计 6.2：首次出现时间 + 信号强度 + 风险提示（一行说清）。
+      Text(this.rowMeta(entry)).fontSize(11)
+        .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%').maxLines(2)
       if (entry.signatureName.length > 0) {
         Text(entry.signatureName).fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent)
       }
-      // 整条可点进详情（P3-2 第 1 项：新面孔不能只列名字，要能看证据/首次出现/轨迹）。
+      // 行动作：查看详情 / 这是我家的 / 拉黑。
       Row({ space: 6 }) {
+        FieldwatchButton({
+          label: $r('app.string.fieldwatch_newfaces_detail'),
+          tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
+          onTap: (): void => { this.onOpenDetail(entry.deviceKey); }
+        })
         FieldwatchButton({
           label: $r('app.string.fieldwatch_newfaces_mine'),
           tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
@@ -155,12 +168,32 @@ export struct FieldwatchNewFacesPage {
           }
         })
         FieldwatchButton({
-          label: $r('app.string.fieldwatch_newfaces_detail'),
+          label: $r('app.string.fieldwatch_newfaces_block'),
           tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
-          onTap: (): void => { this.onOpenDetail(entry.deviceKey); }
+          onTap: (): void => {
+            // 拉黑：与「这是我家的」同一套排除机制，只是语义不同（不再出现在新面孔里）。
+            fieldwatchApplication.excludeNewFace(entry.deviceKey);
+            void this.reload();
+          }
         })
       }.width('100%')
     }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
   }
+
+  /** 一行的次要信息：首次出现 · 信号 · 风险提示。 */
+  private rowMeta(entry: NewFaceEntry): string {
+    const parts: string[] = [];
+    if (entry.firstSeen > 0) {
+      const date: Date = new Date(entry.firstSeen);
+      const hh: string = date.getHours().toString().padStart(2, '0');
+      const mm: string = date.getMinutes().toString().padStart(2, '0');
+      parts.push((date.getMonth() + 1).toString() + '-' + date.getDate().toString() + ' ' + hh + ':' + mm);
+    }
+    if (entry.rssi < 0) parts.push(entry.rssi.toString() + ' dBm');
+    // 风险提示：用「值得留意」而不是「危险」定性（沿用三档口径的措辞克制）。
+    if (entry.hits >= 3) parts.push(this.text('app.string.fieldwatch_newfaces_worth_note'));
+    return parts.join(' · ');
+  }
+
 }

@@ -10,6 +10,7 @@ import { DexBadge, DexLevelProgress } from '../../fieldwatch/domain/FieldwatchDe
 import { DexUnlock } from '../../fieldwatch/domain/FieldwatchDexUnlock';
 import { ShareCardContent } from '../../fieldwatch/platform/FieldwatchShareCard';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
+import { deviceClassSymbol } from '../../fieldwatch/ui/FieldwatchDeviceTypeIcon';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
 
 const DEX_UNDERLAY_HEIGHT: number = 168;
@@ -420,9 +421,11 @@ export struct FieldwatchDexPage {
   /** 一格图鉴：点亮是彩色 + 名字，未点亮是剪影 + 「？？？」。 */
   @Builder
   private buildCell(entry: DexEntry) {
-    Column({ space: 6 }) {
+    Column({ space: 4 }) {
       Stack() {
-        SymbolGlyph($r('sys.symbol.dot_radiowaves_left_and_right')).fontSize(22)
+        // 改版设计 6.1：**按类别给专属图标**，不再全格子同一个电波符号；
+        // 稀有度仍用颜色区分，两者叠加可读（图标说「是什么」，颜色说「多稀有」）。
+        SymbolGlyph($r(deviceClassSymbol(entry.category))).fontSize(22)
           .fontColor([entry.seen ? this.rarityColor(entry.rarity) : FieldwatchPaletteHolder.get().outline])
       }
       .width(52).height(52).borderRadius(16)
@@ -434,10 +437,24 @@ export struct FieldwatchDexPage {
         .textAlign(TextAlign.Center)
       Text(this.text(this.rarityKey(entry.rarity))).fontSize(10)
         .fontColor(this.rarityColor(entry.rarity))
+      // 改版设计 6.1：格子再加两项信息 —— 出现次数与首次点亮时间。
+      if (entry.seen) {
+        Text('×' + entry.sightings.toString()).fontSize(9)
+          .fontColor(FieldwatchPaletteHolder.get().textDim)
+        Text(this.shortDate(entry.lastSeenAt)).fontSize(9)
+          .fontColor(FieldwatchPaletteHolder.get().textDim)
+      }
     }
     .width('100%').padding(8).borderRadius(14)
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
     .onClick((): void => { this.selected = entry; })
+  }
+
+  /** 首次/最近点亮日期的短格式（月-日）；0 返回空串。 */
+  private shortDate(at: number): string {
+    if (!(at > 0)) return '';
+    const date: Date = new Date(at);
+    return (date.getMonth() + 1).toString() + '-' + date.getDate().toString();
   }
 
   /** 详情：接 DeviceExplain 的文案（通过类标签与命中统计呈现）。 */
