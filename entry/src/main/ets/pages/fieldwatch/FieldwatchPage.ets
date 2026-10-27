@@ -3695,6 +3695,37 @@ struct FieldwatchLivePage {
         }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
 
+        // ── 设备趋势卡（改版设计 2：近 7 日每日发现设备数 + 一句话解读）──
+        Column({ space: 8 }) {
+          Text(fieldwatchText('app.string.fieldwatch_daily_trend_title')).fontSize(15)
+            .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+          Text(fieldwatchText('app.string.fieldwatch_daily_trend_hint')).fontSize(11)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          if (this.trendTotal() === 0) {
+            Text(fieldwatchText('app.string.fieldwatch_daily_trend_none')).fontSize(12)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          } else {
+            // 柱状图：7 根柱，高度按当日数量占最大值的比例。
+            Row({ space: 6 }) {
+              ForEach(this.trendBars(), (bar: DailyTrendBar): void => {
+                Column({ space: 4 }) {
+                  Column() {
+                    Column().width('100%').borderRadius(3)
+                      .height(bar.ratio * 56 + 4)
+                      .backgroundColor(bar.count > 0 ? FieldwatchPaletteHolder.get().accent
+                        : FieldwatchPaletteHolder.get().outline)
+                  }.width('100%').height(60).justifyContent(FlexAlign.End)
+                  Text(bar.label).fontSize(9).fontColor(FieldwatchPaletteHolder.get().textDim)
+                }.layoutWeight(1).alignItems(HorizontalAlign.Center)
+              }, (bar: DailyTrendBar): string => bar.label)
+            }.width('100%').alignItems(VerticalAlign.Bottom)
+            // 一句话解读：不让用户自己猜图表含义。
+            Text(this.trendInsight()).fontSize(11)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          }
+        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+        .backgroundColor(FieldwatchPaletteHolder.get().panel)
+
         if (this.recentDailySightings().length > 0) {
           Column({ space: 8 }) {
             Text(fieldwatchText('app.string.fieldwatch_daily_recent')).fontSize(14)
@@ -3806,37 +3837,6 @@ struct FieldwatchLivePage {
         }
         .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)
-
-        // ── 设备趋势卡（改版设计 2：近 7 日每日发现设备数 + 一句话解读）──
-        Column({ space: 8 }) {
-          Text(fieldwatchText('app.string.fieldwatch_daily_trend_title')).fontSize(15)
-            .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
-          Text(fieldwatchText('app.string.fieldwatch_daily_trend_hint')).fontSize(11)
-            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-          if (this.trendTotal() === 0) {
-            Text(fieldwatchText('app.string.fieldwatch_daily_trend_none')).fontSize(12)
-              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-          } else {
-            // 柱状图：7 根柱，高度按当日数量占最大值的比例。
-            Row({ space: 6 }) {
-              ForEach(this.trendBars(), (bar: DailyTrendBar): void => {
-                Column({ space: 4 }) {
-                  Column() {
-                    Column().width('100%').borderRadius(3)
-                      .height(bar.ratio * 56 + 4)
-                      .backgroundColor(bar.count > 0 ? FieldwatchPaletteHolder.get().accent
-                        : FieldwatchPaletteHolder.get().outline)
-                  }.width('100%').height(60).justifyContent(FlexAlign.End)
-                  Text(bar.label).fontSize(9).fontColor(FieldwatchPaletteHolder.get().textDim)
-                }.layoutWeight(1).alignItems(HorizontalAlign.Center)
-              }, (bar: DailyTrendBar): string => bar.label)
-            }.width('100%').alignItems(VerticalAlign.Bottom)
-            // 一句话解读：不让用户自己猜图表含义。
-            Text(this.trendInsight()).fontSize(11)
-              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-          }
-        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
-        .backgroundColor(FieldwatchPaletteHolder.get().panel)
 
         // ── 图鉴进度卡（改版设计 2：等级 + 积分 + 进度）──
         Column({ space: 8 }) {
