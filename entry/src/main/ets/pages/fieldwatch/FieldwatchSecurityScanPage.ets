@@ -48,6 +48,15 @@ export struct FieldwatchSecurityScanPage {
   // ── 主动扫描（设计文档 v2）──
   /** 0=未开始 1=扫描中 2=有结果。 */
   @State private activePhase: number = 0;
+  /** 主动扫描附加项是否勾选（改版设计 4.1：默认不勾选）。 */
+  @State private activeChecked: boolean = false;
+  /** 扫描阶段（改版设计 4.2）：0 发现 / 1 分类 / 2 判定 / 3 汇总。 */
+  @State private scanStage: number = 0;
+  /** 扫描中实时计数（改版设计 4.2）。 */
+  @State private liveFound: number = 0;
+  @State private liveSuspect: number = 0;
+  /** 人工排查清单是否展开（改版设计 4.4：默认收起）。 */
+  @State private checklistOpen: boolean = false;
   /** 当前网段范围；undefined 表示尚未读取。 */
   @State private activeScope: AclScope | undefined = undefined;
   /** 授权弹窗是否显示。 */
@@ -107,8 +116,21 @@ export struct FieldwatchSecurityScanPage {
     this.remainingSec = Math.floor(SECURITY_SCAN_DURATION_MS / 1000);
     this.summary = undefined;
     if (this.timer >= 0) clearInterval(this.timer);
+    // 阶段按剩余时间推进：前 1/4 发现、中段分类、后段判定、最后汇总。
+    this.scanStage = 0;
+    this.liveFound = 0;
+    this.liveSuspect = 0;
+    const total: number = Math.floor(SECURITY_SCAN_DURATION_MS / 1000);
     this.timer = setInterval((): void => {
       this.remainingSec -= 1;
+      // 实时计数：只读应用层当前观测，不额外采集（改版设计 4.2 要求「不谎称逐台探测」）。
+      const live: number = fieldwatchApplication.getState().sightings.length;
+      this.liveFound = live;
+      const elapsed: number = total - this.remainingSec;
+      if (elapsed >= total * 0.75) this.scanStage = 3;
+      else if (elapsed >= total * 0.5) this.scanStage = 2;
+      else if (elapsed >= total * 0.25) this.scanStage = 1;
+      else this.scanStage = 0;
       if (this.remainingSec <= 0) {
         clearInterval(this.timer);
         this.timer = -1;
@@ -119,6 +141,10 @@ export struct FieldwatchSecurityScanPage {
 
   private finishScan(): void {
     const result: SecuritySummary = fieldwatchApplication.finishSecurityScan();
+    // 勾了附加项时，被动结束后接着跑主动，结果分开展示（改版设计 4.1 末条）。
+    if (this.activeChecked) {
+      void this.startActiveScan();
+    }
     this.summary = result;
     this.headline = this.text(summaryHeadlineKey(result));
     this.phase = 2;
@@ -273,11 +299,10 @@ export struct FieldwatchSecurityScanPage {
       // 脚注在**开始之前**就要说明，不能让用户以为能查出所有东西。
       Text($r('app.string.fieldwatch_security_footnote')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().warn).textAlign(TextAlign.Center)
+      // 改版设计 4.1：主动扫描是主流程里的一个**勾选项**（默认不勾），放在开始按钮上方。
+      this.buildActiveOption()
       FieldwatchButton({ label: $r('app.string.fieldwatch_security_start'),
         tone: FieldwatchButtonTone.PRIMARY, onTap: (): void => { this.startScan(); } })
-      // **主动扫描是独立入口**（设计文档 6.1）：与上面的被动扫描按钮并列，
-      // 绝不藏进被动扫描的默认流程 —— 用户必须明确知道这是两件事。
-      this.buildActiveEntry()
       // 排查清单与历史是**常驻能力**，不该逼用户先等 60 秒扫描才能看到：
       // 真机上从别处返回时会回到这个 idle 页，清单就找不到了。
       this.buildChecklist()
@@ -286,17 +311,103 @@ export struct FieldwatchSecurityScanPage {
     }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Start)
   }
 
+  /**
+   * 主动扫描勾选项（改版设计 4.1）。
+   *
+   * **勾选本身不等于授权**：勾上立刻弹 ACL 四要素弹窗，用户点确认才是授权；
+   * 点取消则勾选自动回落。ACL 引擎、会话授权、审计、专页全部不动，
+   * 这里只改交互形态。
+   */
+  @Builder
+  private buildActiveOption() {
+    Column({ space: 4 }) {
+      // **自绘勾选行，不用 Checkbox 组件**：
+      // Checkbox 会维护自己的内部选中态，点「取消」后我们把 @State 置回 false，
+      // 界面上却仍是勾上的（真机实测）。自绘图标完全受 @State 驱动，行为可预期。
+      Row({ space: 10 }) {
+        SymbolGlyph($r(this.activeChecked ? 'sys.symbol.checkmark_circle_fill' : 'sys.symbol.circle'))
+          .fontSize(22)
+          .fontColor([this.activeChecked ? FieldwatchPaletteHolder.get().accent
+            : FieldwatchPaletteHolder.get().outline])
+          .onClick((): void => {
+            if (this.activeChecked) this.activeChecked = false;
+            else this.showActiveConsent();
+          })
+        Column({ space: 2 }) {
+          // **不能加 layoutWeight**：它在 Column 里是垂直权重，会把这一行文字拉满整屏。
+          Text($r('app.string.fieldwatch_sec_active_option')).fontSize(13)
+            .fontColor(FieldwatchPaletteHolder.get().text)
+          Text($r('app.string.fieldwatch_sec_active_option_hint')).fontSize(10)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
+        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+      }.width('100%').alignItems(VerticalAlign.Center)
+    }.width('100%').padding(12).borderRadius(12).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
+  /**
+   * 扫描过程（改版设计 4.2）：阶段条 + 实时计数 + 可取消。
+   *
+   * 被动扫描的 60 秒是**基线观察窗**，界面如实说「已发现 N 台」，
+   * 不谎称「正在逐台探测」—— 那会让人以为每一台都被主动连过。
+   */
   @Builder
   private buildScanning() {
-    Column({ space: 12 }) {
+    Column({ space: 14 }) {
       Text(this.text('app.string.fieldwatch_security_remaining').replace('%1', Math.max(0, this.remainingSec).toString()))
-        .fontSize(48).fontWeight(FontWeight.Bold).fontColor(FieldwatchPaletteHolder.get().accent)
-      Text($r('app.string.fieldwatch_security_scanning')).fontSize(15)
-        .fontColor(FieldwatchPaletteHolder.get().text)
+        .fontSize(44).fontWeight(FontWeight.Bold).fontColor(FieldwatchPaletteHolder.get().accent)
+      this.buildStageBar()
+      // 实时计数：数字滚动更新，不额外采集。
+      Row({ space: 16 }) {
+        Text(this.text('app.string.fieldwatch_sec_live_found').replace('%1', this.liveFound.toString()))
+          .fontSize(14).fontColor(FieldwatchPaletteHolder.get().text)
+        Text(this.text('app.string.fieldwatch_sec_live_suspect').replace('%1', this.liveSuspect.toString()))
+          .fontSize(14).fontColor(FieldwatchPaletteHolder.get().warn)
+      }
+      Text($r('app.string.fieldwatch_security_scanning')).fontSize(13)
+        .fontColor(FieldwatchPaletteHolder.get().textDim)
       Progress({ value: Math.floor(SECURITY_SCAN_DURATION_MS / 1000) - this.remainingSec,
         total: Math.floor(SECURITY_SCAN_DURATION_MS / 1000), type: ProgressType.Linear })
         .width('100%').color(FieldwatchPaletteHolder.get().accent)
-    }.width('100%').padding({ top: 60, bottom: 20 }).alignItems(HorizontalAlign.Center)
+      FieldwatchButton({ label: $r('app.string.fieldwatch_sec_cancel_scan'),
+        tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.cancelScan(); } })
+    }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Center)
+  }
+
+  /** 阶段指示条：已完成打勾、当前高亮。 */
+  @Builder
+  private buildStageBar() {
+    Row({ space: 6 }) {
+      this.buildStageCell(0, 'app.string.fieldwatch_sec_stage_discover')
+      this.buildStageCell(1, 'app.string.fieldwatch_sec_stage_classify')
+      this.buildStageCell(2, 'app.string.fieldwatch_sec_stage_judge')
+      this.buildStageCell(3, 'app.string.fieldwatch_sec_stage_summary')
+    }.width('100%')
+  }
+
+  @Builder
+  private buildStageCell(index: number, labelKey: string) {
+    Column({ space: 3 }) {
+      SymbolGlyph($r(index < this.scanStage ? 'sys.symbol.checkmark_circle_fill'
+        : (index === this.scanStage ? 'sys.symbol.circle_dashed' : 'sys.symbol.circle')))
+        .fontSize(16)
+        .fontColor([index <= this.scanStage ? FieldwatchPaletteHolder.get().accent
+          : FieldwatchPaletteHolder.get().outline])
+      Text($r(labelKey)).fontSize(10)
+        .fontColor(index <= this.scanStage ? FieldwatchPaletteHolder.get().text
+          : FieldwatchPaletteHolder.get().textDim)
+    }.layoutWeight(1)
+  }
+
+  /** 取消扫描：停定时器、结束 ACL 会话（关全部 socket），回 idle。 */
+  private cancelScan(): void {
+    if (this.timer >= 0) { clearInterval(this.timer); this.timer = -1; }
+    const scanner: FieldwatchActiveScanner | undefined = this.activeScanner;
+    if (scanner !== undefined) scanner.cancel();
+    this.activeScanner = undefined;
+    this.activePhase = 0;
+    this.phase = 0;
+    this.scanStage = 0;
   }
 
   @Builder
@@ -371,12 +482,12 @@ export struct FieldwatchSecurityScanPage {
           Column() {
             FieldwatchButton({ label: $r('app.string.fieldwatch_acl_agree'),
               tone: FieldwatchButtonTone.PRIMARY, fillWidth: true,
-              onTap: (): void => { void this.startActiveScan(); } })
+              onTap: (): void => { this.confirmActiveConsent(); } })
           }.layoutWeight(1)
           Column() {
             FieldwatchButton({ label: $r('app.string.fieldwatch_acl_cancel'),
               tone: FieldwatchButtonTone.OUTLINE, fillWidth: true,
-              onTap: (): void => { this.showConsent = false; } })
+              onTap: (): void => { this.cancelActiveConsent(); } })
           }.layoutWeight(1)
         }.width('100%')
       }.width('100%').padding(20).borderRadius(18).margin({ left: 20, right: 20 })
@@ -531,6 +642,18 @@ export struct FieldwatchSecurityScanPage {
     this.showConsent = true;
   }
 
+  /** 弹窗确认：勾选生效，并开本会话 ACL 授权（仅本会话有效）。 */
+  private confirmActiveConsent(): void {
+    this.showConsent = false;
+    this.activeChecked = true;
+  }
+
+  /** 弹窗取消：勾选自动回落（改版设计 4.1）。 */
+  private cancelActiveConsent(): void {
+    this.showConsent = false;
+    this.activeChecked = false;
+  }
+
   /** 用户确认：开本会话授权并开始主动扫描。 */
   private async startActiveScan(): Promise<void> {
     this.showConsent = false;
@@ -570,39 +693,58 @@ export struct FieldwatchSecurityScanPage {
    * 为什么放在安防结果页：用户看完「未发现」最需要的就是下一步做什么 ——
    * 只给免责声明等于把问题丢回给用户。
    */
+  /**
+   * 人工排查清单（改版设计 4.4）：**默认收起**，标题行显示进度，展开/收起带动画。
+   *
+   * 原来清单常驻展开，占掉结果页一半屏幕；而它恰恰是「扫描没结果时才要看」的东西。
+   * 收起后进度仍在标题行可见，清单不「消失」，勾选状态照旧持久化。
+   * idle 页与结果页共用这一个组件（改版要求：不各写一套）。
+   */
   @Builder
   private buildChecklist() {
     Column({ space: 8 }) {
-      Row({ space: 6 }) {
+      // 标题行：点它展开/收起。
+      Row({ space: 8 }) {
         Text($r('app.string.fieldwatch_check_title')).fontSize(15)
           .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).layoutWeight(1)
         Text(this.checkProgressText()).fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent)
-      }.width('100%')
-      Text($r('app.string.fieldwatch_check_hint')).fontSize(11)
-        .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-      ForEach(this.checkGroups(), (group: ManualCheckGroup): void => {
-        Column({ space: 4 }) {
-          Text(this.text(group.titleKey)).fontSize(13).fontWeight(FontWeight.Medium)
-            .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
-          ForEach(group.items, (item: ManualCheckItem): void => {
-            Row({ space: 8 }) {
-              SymbolGlyph($r(this.isChecked(item.id) ? 'sys.symbol.checkmark_circle_fill' : 'sys.symbol.circle'))
-                .fontSize(16)
-                .fontColor([this.isChecked(item.id) ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline])
-              Column({ space: 2 }) {
-                Text(this.text(item.labelKey)).fontSize(12)
-                  .fontColor(this.isChecked(item.id) ? FieldwatchPaletteHolder.get().textDim : FieldwatchPaletteHolder.get().text)
-                  .width('100%')
-                if (item.howKey.length > 0) {
-                  Text(this.text(item.howKey)).fontSize(10)
-                    .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-                }
-              }.layoutWeight(1).alignItems(HorizontalAlign.Start)
-            }.width('100%').padding({ top: 4, bottom: 4 })
-            .onClick((): void => { this.toggleCheck(item.id); })
-          }, (item: ManualCheckItem): string => item.id)
-        }.width('100%').alignItems(HorizontalAlign.Start).padding({ top: 4 })
-      }, (group: ManualCheckGroup): string => group.id)
+        SymbolGlyph($r(this.checklistOpen ? 'sys.symbol.chevron_up' : 'sys.symbol.chevron_down'))
+          .fontSize(13).fontColor([FieldwatchPaletteHolder.get().textDim])
+      }.width('100%').padding({ top: 2, bottom: 2 })
+      .onClick((): void => {
+        // 高度动画 240ms（改版设计：200–300ms）。
+        this.getUIContext().animateTo({ duration: 240, curve: Curve.FastOutSlowIn }, (): void => {
+          this.checklistOpen = !this.checklistOpen;
+        });
+      })
+      if (this.checklistOpen) {
+        Text($r('app.string.fieldwatch_check_hint')).fontSize(11)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        ForEach(this.checkGroups(), (group: ManualCheckGroup): void => {
+          Column({ space: 4 }) {
+            Text(this.text(group.titleKey)).fontSize(13).fontWeight(FontWeight.Medium)
+              .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+            ForEach(group.items, (item: ManualCheckItem): void => {
+              Row({ space: 8 }) {
+                SymbolGlyph($r(this.isChecked(item.id) ? 'sys.symbol.checkmark_circle_fill' : 'sys.symbol.circle'))
+                  .fontSize(16)
+                  .fontColor([this.isChecked(item.id) ? FieldwatchPaletteHolder.get().accent
+                    : FieldwatchPaletteHolder.get().outline])
+                Column({ space: 2 }) {
+                  Text(this.text(item.labelKey)).fontSize(12)
+                    .fontColor(this.isChecked(item.id) ? FieldwatchPaletteHolder.get().textDim
+                      : FieldwatchPaletteHolder.get().text).width('100%')
+                  if (item.howKey.length > 0) {
+                    Text(this.text(item.howKey)).fontSize(10)
+                      .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+                  }
+                }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+              }.width('100%').padding({ top: 4, bottom: 4 })
+              .onClick((): void => { this.toggleCheck(item.id); })
+            }, (item: ManualCheckItem): string => item.id)
+          }.width('100%').alignItems(HorizontalAlign.Start).padding({ top: 4 })
+        }, (group: ManualCheckGroup): string => group.id)
+      }
     }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
     .backgroundColor(FieldwatchPaletteHolder.get().panel2)
   }

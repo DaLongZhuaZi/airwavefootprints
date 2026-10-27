@@ -12015,6 +12015,74 @@
     {
       "name": "fieldwatch_wifi_band_summary",
       "value": "%2 APs heard on %1; busiest channel is %3"
+    },
+    {
+      "name": "fieldwatch_sec_active_option",
+      "value": "Add-on: also probe networked devices on your LAN"
+    },
+    {
+      "name": "fieldwatch_sec_active_option_hint",
+      "value": "Requires extra permission; sends probe packets to LAN devices"
+    },
+    {
+      "name": "fieldwatch_sec_stage_discover",
+      "value": "Discover"
+    },
+    {
+      "name": "fieldwatch_sec_stage_classify",
+      "value": "Classify"
+    },
+    {
+      "name": "fieldwatch_sec_stage_judge",
+      "value": "Judge"
+    },
+    {
+      "name": "fieldwatch_sec_stage_summary",
+      "value": "Summarize"
+    },
+    {
+      "name": "fieldwatch_sec_live_found",
+      "value": "%1 found"
+    },
+    {
+      "name": "fieldwatch_sec_live_suspect",
+      "value": "%1 suspicious"
+    },
+    {
+      "name": "fieldwatch_sec_cancel_scan",
+      "value": "Cancel scan"
+    },
+    {
+      "name": "fieldwatch_sec_conclusion_title",
+      "value": "This scan"
+    },
+    {
+      "name": "fieldwatch_sec_confirmed_n",
+      "value": "%1 confirmed"
+    },
+    {
+      "name": "fieldwatch_sec_suspicious_n",
+      "value": "%1 suspicious"
+    },
+    {
+      "name": "fieldwatch_sec_none_n",
+      "value": "%1 not found"
+    },
+    {
+      "name": "fieldwatch_sec_risk_cards",
+      "value": "Suspicious devices"
+    },
+    {
+      "name": "fieldwatch_sec_ignore",
+      "value": "Ignore"
+    },
+    {
+      "name": "fieldwatch_sec_block",
+      "value": "Block"
+    },
+    {
+      "name": "fieldwatch_sec_checklist_collapsed",
+      "value": "%1 of %2 done"
     }
   ]
 }

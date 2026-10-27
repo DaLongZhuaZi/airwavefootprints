@@ -12015,6 +12015,74 @@
     {
       "name": "fieldwatch_wifi_band_summary",
       "value": "%1 上听到 %2 个，最挤的信道是 %3"
+    },
+    {
+      "name": "fieldwatch_sec_active_option",
+      "value": "附加项：同时探测局域网内的联网设备"
+    },
+    {
+      "name": "fieldwatch_sec_active_option_hint",
+      "value": "需要额外授权，会向局域网设备发送探测包"
+    },
+    {
+      "name": "fieldwatch_sec_stage_discover",
+      "value": "发现设备"
+    },
+    {
+      "name": "fieldwatch_sec_stage_classify",
+      "value": "分类"
+    },
+    {
+      "name": "fieldwatch_sec_stage_judge",
+      "value": "判定"
+    },
+    {
+      "name": "fieldwatch_sec_stage_summary",
+      "value": "汇总"
+    },
+    {
+      "name": "fieldwatch_sec_live_found",
+      "value": "已发现 %1 台"
+    },
+    {
+      "name": "fieldwatch_sec_live_suspect",
+      "value": "可疑 %1 台"
+    },
+    {
+      "name": "fieldwatch_sec_cancel_scan",
+      "value": "取消扫描"
+    },
+    {
+      "name": "fieldwatch_sec_conclusion_title",
+      "value": "本次结论"
+    },
+    {
+      "name": "fieldwatch_sec_confirmed_n",
+      "value": "确认 %1"
+    },
+    {
+      "name": "fieldwatch_sec_suspicious_n",
+      "value": "可疑 %1"
+    },
+    {
+      "name": "fieldwatch_sec_none_n",
+      "value": "未发现 %1"
+    },
+    {
+      "name": "fieldwatch_sec_risk_cards",
+      "value": "可疑设备"
+    },
+    {
+      "name": "fieldwatch_sec_ignore",
+      "value": "忽略"
+    },
+    {
+      "name": "fieldwatch_sec_block",
+      "value": "拉黑"
+    },
+    {
+      "name": "fieldwatch_sec_checklist_collapsed",
+      "value": "已完成 %1 / %2"
     }
   ]
 }
