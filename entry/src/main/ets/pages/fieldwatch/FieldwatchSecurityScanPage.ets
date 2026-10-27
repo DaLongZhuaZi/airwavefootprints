@@ -61,6 +61,9 @@ export struct FieldwatchSecurityScanPage {
   @State private checklistOpen: boolean = false;
   /** 已忽略的可疑设备 key（只在本次结果页隐藏，不改变判定与审计）。 */
   @State private dismissedSuspects: string[] = [];
+  /** 雷达扫动角度（改版设计 4.2：扫描过程的雷达动画）。 */
+  @State private sweepAngle: number = 0;
+  private sweepTimer: number = -1;
   /** 当前网段范围；undefined 表示尚未读取。 */
   @State private activeScope: AclScope | undefined = undefined;
   /** 授权弹窗是否显示。 */
@@ -97,6 +100,7 @@ export struct FieldwatchSecurityScanPage {
 
   aboutToDisappear(): void {
     if (this.timer >= 0) { clearInterval(this.timer); this.timer = -1; }
+    this.stopSweep();
   }
 
   private text(key: string): string {
@@ -122,6 +126,7 @@ export struct FieldwatchSecurityScanPage {
     if (this.timer >= 0) clearInterval(this.timer);
     // 阶段按剩余时间推进：前 1/4 发现、中段分类、后段判定、最后汇总。
     this.scanStage = 0;
+    this.startSweep();
     this.liveFound = 0;
     this.liveSuspect = 0;
     const total: number = Math.floor(SECURITY_SCAN_DURATION_MS / 1000);
@@ -138,6 +143,7 @@ export struct FieldwatchSecurityScanPage {
       if (this.remainingSec <= 0) {
         clearInterval(this.timer);
         this.timer = -1;
+        this.stopSweep();
         this.finishScan();
       }
     }, 1000);
@@ -261,6 +267,10 @@ export struct FieldwatchSecurityScanPage {
             }.width('100%').height('100%')
             .justifyContent(FlexAlign.Center)
             .backgroundColor('#99000000')
+            // 弹窗出现动画（改版设计 4.1）：缩放 + 淡入，250ms。
+            .transition(TransitionEffect.OPACITY
+              .combine(TransitionEffect.scale({ x: 0.92, y: 0.92 }))
+              .animation({ duration: 250, curve: Curve.FastOutSlowIn }))
           }
         }.width('100%').height('100%')
     }
@@ -358,8 +368,10 @@ export struct FieldwatchSecurityScanPage {
   @Builder
   private buildScanning() {
     Column({ space: 14 }) {
+      // 雷达扫动动画（改版设计 4.2：复用实时页雷达动效的思路）。
+      this.buildSweepRadar()
       Text(this.text('app.string.fieldwatch_security_remaining').replace('%1', Math.max(0, this.remainingSec).toString()))
-        .fontSize(44).fontWeight(FontWeight.Bold).fontColor(FieldwatchPaletteHolder.get().accent)
+        .fontSize(36).fontWeight(FontWeight.Bold).fontColor(FieldwatchPaletteHolder.get().accent)
       this.buildStageBar()
       // 实时计数：数字滚动更新，不额外采集。
       Row({ space: 16 }) {
@@ -376,6 +388,55 @@ export struct FieldwatchSecurityScanPage {
       FieldwatchButton({ label: $r('app.string.fieldwatch_sec_cancel_scan'),
         tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.cancelScan(); } })
     }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Center)
+  }
+
+  /**
+   * 扫描中的雷达：同心圆 + 一条随角度旋转的扫描臂。
+   *
+   * 只用 ArkTS 现有机制：`@State` 角度 + 定时器递增，靠 `rotate` 的隐式动画平滑。
+   * 不引入任何动效库（改版设计第 1 节：动画只用现有机制）。
+   */
+  @Builder
+  private buildSweepRadar() {
+    Stack() {
+      // 三圈同心圆：给「这是雷达」的形状暗示。
+      Circle().width(150).height(150).fill(Color.Transparent)
+        .stroke(FieldwatchPaletteHolder.get().outline).strokeWidth(1)
+      Circle().width(100).height(100).fill(Color.Transparent)
+        .stroke(FieldwatchPaletteHolder.get().outline).strokeWidth(1)
+      Circle().width(50).height(50).fill(Color.Transparent)
+        .stroke(FieldwatchPaletteHolder.get().outline).strokeWidth(1)
+      // 扫描臂：一条从圆心指向外的短线，靠 rotate 转起来。
+      Column() {
+        Column().width(2).height(75)
+          .backgroundColor(FieldwatchPaletteHolder.get().accent)
+      }
+      .width(150).height(150)
+      .justifyContent(FlexAlign.Start)
+      .alignItems(HorizontalAlign.Center)
+      .rotate({ angle: this.sweepAngle, centerX: '50%', centerY: '100%' })
+      // 中心点。
+      Circle().width(8).height(8).fill(FieldwatchPaletteHolder.get().accent)
+    }.width(150).height(150)
+  }
+
+  /** 启动雷达扫动（扫描开始时调）。 */
+  private startSweep(): void {
+    this.stopSweep();
+    this.sweepAngle = 0;
+    this.sweepTimer = setInterval((): void => {
+      // 每 40ms 转 6°：一圈约 2.4 秒，肉眼是连续扫动而不是跳格。
+      this.getUIContext().animateTo({ duration: 40, curve: Curve.Linear }, (): void => {
+        this.sweepAngle = (this.sweepAngle + 6) % 360;
+      });
+    }, 40);
+  }
+
+  /** 停止雷达扫动（扫描结束 / 取消 / 离页时调）。 */
+  private stopSweep(): void {
+    if (this.sweepTimer < 0) return;
+    clearInterval(this.sweepTimer);
+    this.sweepTimer = -1;
   }
 
   /** 阶段指示条：已完成打勾、当前高亮。 */
@@ -406,6 +467,7 @@ export struct FieldwatchSecurityScanPage {
   /** 取消扫描：停定时器、结束 ACL 会话（关全部 socket），回 idle。 */
   private cancelScan(): void {
     if (this.timer >= 0) { clearInterval(this.timer); this.timer = -1; }
+    this.stopSweep();
     const scanner: FieldwatchActiveScanner | undefined = this.activeScanner;
     if (scanner !== undefined) scanner.cancel();
     this.activeScanner = undefined;
@@ -682,18 +744,25 @@ export struct FieldwatchSecurityScanPage {
     lines.push(this.text('app.string.fieldwatch_acl_data_local'));
     lines.push(this.text('app.string.fieldwatch_acl_other_network'));
     this.consentLines = lines;
-    this.showConsent = true;
+    // 用 animateTo 触发插入，transition 才会播放（直接赋值会瞬间出现）。
+    this.getUIContext().animateTo({ duration: 250, curve: Curve.FastOutSlowIn }, (): void => {
+      this.showConsent = true;
+    });
   }
 
   /** 弹窗确认：勾选生效，并开本会话 ACL 授权（仅本会话有效）。 */
   private confirmActiveConsent(): void {
-    this.showConsent = false;
+    this.getUIContext().animateTo({ duration: 200, curve: Curve.FastOutSlowIn }, (): void => {
+      this.showConsent = false;
+    });
     this.activeChecked = true;
   }
 
   /** 弹窗取消：勾选自动回落（改版设计 4.1）。 */
   private cancelActiveConsent(): void {
-    this.showConsent = false;
+    this.getUIContext().animateTo({ duration: 200, curve: Curve.FastOutSlowIn }, (): void => {
+      this.showConsent = false;
+    });
     this.activeChecked = false;
   }
 
