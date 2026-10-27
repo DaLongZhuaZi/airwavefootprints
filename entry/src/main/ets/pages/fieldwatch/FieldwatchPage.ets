@@ -1014,12 +1014,20 @@ struct FieldwatchRootPage {
 struct FieldwatchDailyMetric {
   @Prop label: ResourceStr = '';
   @Prop value: string = '';
+  /** 点击动作（改版设计 2：「一切关键数字都可点，不可点的数字不放大展示」）。 */
+  onTap: () => void = (): void => {};
 
   build() {
     Column({ space: 4 }) {
       Text(this.label).fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim).maxLines(1)
-      Text(this.value).fontSize(21).fontWeight(FontWeight.Bold).fontColor(FieldwatchPaletteHolder.get().text)
+      Row({ space: 3 }) {
+        Text(this.value).fontSize(21).fontWeight(FontWeight.Bold).fontColor(FieldwatchPaletteHolder.get().text)
+        // 小箭头暗示可点，避免用户不知道数字能进清单。
+        SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(11)
+          .fontColor([FieldwatchPaletteHolder.get().textDim])
+      }.alignItems(VerticalAlign.Center)
     }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+    .onClick((): void => { this.onTap(); })
   }
 }
 
@@ -3674,11 +3682,14 @@ struct FieldwatchLivePage {
             .fontSize(13).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
           Row({ space: 12 }) {
             FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_devices'),
-              value: this.dailySightings.length.toString() })
+              value: this.dailySightings.length.toString(),
+              onTap: (): void => { this.openProfessionalRadar(); } })
             FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_new'),
-              value: this.recentlySeenCount().toString() })
+              value: this.recentlySeenCount().toString(),
+              onTap: (): void => { this.onOpenNewFaces(); } })
             FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_wifi'),
-              value: this.observedCount(RadioKind.WIFI).toString() })
+              value: this.observedCount(RadioKind.WIFI).toString(),
+              onTap: (): void => { this.onOpenWifiDoctor(); } })
           }.width('100%')
         }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
