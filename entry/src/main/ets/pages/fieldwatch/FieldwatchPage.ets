@@ -663,6 +663,12 @@ struct FieldwatchRootPage {
       FieldwatchNewFacesPage({
         withShell: true,
         topInset: this.topInsetVp,
+        // 点「查看详情」进设备详情：先把新面孔页弹掉再压栈，
+        // 否则返回时会在「详情 → 新面孔」之间来回，用户以为卡住了。
+        onOpenDetail: (deviceKey: string): void => {
+          this.pathStack.pop();
+          this.openDeviceDetail(deviceKey);
+        },
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.SIGNATURE_DETAIL) {

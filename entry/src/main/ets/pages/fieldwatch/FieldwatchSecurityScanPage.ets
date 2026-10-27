@@ -8,6 +8,8 @@ import { ShareCardContent } from '../../fieldwatch/platform/FieldwatchShareCard'
 import {
   capabilityBoundaryKeys, SecurityEvidence, SecurityEvidenceKind, SecurityVerdict, SuspectDevice
 } from '../../fieldwatch/domain/FieldwatchSecurityPassive';
+import { checkProgress, ManualCheckGroup, ManualCheckItem } from '../../fieldwatch/domain/FieldwatchSecurityChecklist';
+import { SecurityScanRecord } from '../../fieldwatch/data/FieldwatchSecurityHistoryRepository';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
@@ -34,6 +36,10 @@ export struct FieldwatchSecurityScanPage {
   @State private summary: SecuritySummary | undefined = undefined;
   @State private sharing: boolean = false;
   @State private headline: string = '';
+  /** 人工排查清单的已勾项（P3-2）。 */
+  @State private checked: string[] = [];
+  /** 历史扫描记录（新→旧，P3-2）。 */
+  @State private history: SecurityScanRecord[] = [];
   private timer: number = -1;
 
   aboutToAppear(): void {
@@ -44,6 +50,14 @@ export struct FieldwatchSecurityScanPage {
       this.phase = 2;
       this.headline = this.text(summaryHeadlineKey(previous));
     }
+    // 排查清单的勾选状态是持久化的，进页先读回来。
+    this.checked = fieldwatchApplication.checklistDone();
+    void this.loadHistory();
+  }
+
+  /** 读历史扫描记录；失败不影响主流程。 */
+  private async loadHistory(): Promise<void> {
+    this.history = await fieldwatchApplication.securityHistoryRecords(10);
   }
 
   aboutToDisappear(): void {
@@ -86,6 +100,8 @@ export struct FieldwatchSecurityScanPage {
     this.summary = result;
     this.headline = this.text(summaryHeadlineKey(result));
     this.phase = 2;
+    // 本次结果已落库（应用层 save），刷新历史列表让它立刻出现。
+    void this.loadHistory();
   }
 
   /** 组装分享卡内容：**所有文案都在这里从资源取**，绘制层不接受裸文案。 */
@@ -229,7 +245,11 @@ export struct FieldwatchSecurityScanPage {
         .fontColor(FieldwatchPaletteHolder.get().warn).textAlign(TextAlign.Center)
       FieldwatchButton({ label: $r('app.string.fieldwatch_security_start'),
         tone: FieldwatchButtonTone.PRIMARY, onTap: (): void => { this.startScan(); } })
-    }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Center)
+      // 排查清单与历史是**常驻能力**，不该逼用户先等 60 秒扫描才能看到：
+      // 真机上从别处返回时会回到这个 idle 页，清单就找不到了。
+      this.buildChecklist()
+      this.buildHistory()
+    }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Start)
   }
 
   @Builder
@@ -270,11 +290,18 @@ export struct FieldwatchSecurityScanPage {
       } else {
         Text($r('app.string.fieldwatch_security_empty')).fontSize(14)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        // 空状态必须给动作，不能只有一句话（文档第 1 项「通用」要求）。
+        FieldwatchButton({ label: $r('app.string.fieldwatch_empty_scan_now'),
+          tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.startScan(); } })
       }
       // ── 可疑设备清单（P3-1 被动层）──
       this.buildSuspects()
       // ── 能力边界（文档 3.3 强制要求：写清扫不到什么）──
       this.buildCapabilityLimits()
+      // ── 人工排查清单（P3-2：扫不出来的部分由它补）──
+      this.buildChecklist()
+      // ── 历史扫描记录（P3-2：汇总之下要能回看）──
+      this.buildHistory()
       // 脚注：**每一屏都要有**，包括结果屏。
       Text($r('app.string.fieldwatch_security_footnote')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().warn).width('100%').padding({ top: 4 })
@@ -355,6 +382,107 @@ export struct FieldwatchSecurityScanPage {
       }, (key: string): string => key)
     }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
     .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+  }
+
+  /**
+   * 人工排查清单（P3-2 第 3 项）。
+   *
+   * 逐项打勾、状态落设置存储（换页/重启后仍在）。
+   * 为什么放在安防结果页：用户看完「未发现」最需要的就是下一步做什么 ——
+   * 只给免责声明等于把问题丢回给用户。
+   */
+  @Builder
+  private buildChecklist() {
+    Column({ space: 8 }) {
+      Row({ space: 6 }) {
+        Text($r('app.string.fieldwatch_check_title')).fontSize(15)
+          .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).layoutWeight(1)
+        Text(this.checkProgressText()).fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent)
+      }.width('100%')
+      Text($r('app.string.fieldwatch_check_hint')).fontSize(11)
+        .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      ForEach(this.checkGroups(), (group: ManualCheckGroup): void => {
+        Column({ space: 4 }) {
+          Text(this.text(group.titleKey)).fontSize(13).fontWeight(FontWeight.Medium)
+            .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+          ForEach(group.items, (item: ManualCheckItem): void => {
+            Row({ space: 8 }) {
+              SymbolGlyph($r(this.isChecked(item.id) ? 'sys.symbol.checkmark_circle_fill' : 'sys.symbol.circle'))
+                .fontSize(16)
+                .fontColor([this.isChecked(item.id) ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline])
+              Column({ space: 2 }) {
+                Text(this.text(item.labelKey)).fontSize(12)
+                  .fontColor(this.isChecked(item.id) ? FieldwatchPaletteHolder.get().textDim : FieldwatchPaletteHolder.get().text)
+                  .width('100%')
+                if (item.howKey.length > 0) {
+                  Text(this.text(item.howKey)).fontSize(10)
+                    .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+                }
+              }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+            }.width('100%').padding({ top: 4, bottom: 4 })
+            .onClick((): void => { this.toggleCheck(item.id); })
+          }, (item: ManualCheckItem): string => item.id)
+        }.width('100%').alignItems(HorizontalAlign.Start).padding({ top: 4 })
+      }, (group: ManualCheckGroup): string => group.id)
+    }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+  }
+
+  private checkGroups(): ManualCheckGroup[] { return fieldwatchApplication.checklistGroups(); }
+
+  private isChecked(id: string): boolean { return this.checked.indexOf(id) >= 0; }
+
+  private checkProgressText(): string {
+    const progress: number[] = checkProgress(this.checked);
+    return this.text('app.string.fieldwatch_check_done_count')
+      .replace('%1', progress[0].toString()).replace('%2', progress[1].toString());
+  }
+
+  private toggleCheck(id: string): void {
+    this.checked = fieldwatchApplication.toggleChecklistItem(id);
+  }
+
+  /**
+   * 历史扫描记录（P3-2）。
+   *
+   * 只列汇总级数据：时间、总数、可疑数。逐台明细属于当次实时会话，不回放。
+   */
+  @Builder
+  private buildHistory() {
+    Column({ space: 6 }) {
+      Text($r('app.string.fieldwatch_security_history_title')).fontSize(13)
+        .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().textDim)
+      if (this.history.length === 0) {
+        Text($r('app.string.fieldwatch_security_history_empty')).fontSize(11)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      } else {
+        ForEach(this.history, (record: SecurityScanRecord): void => {
+          Row({ space: 6 }) {
+            Text(this.historyTime(record)).fontSize(12)
+              .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+            Text(this.historySummary(record)).fontSize(12)
+              .fontColor(record.confirmedCount + record.suspiciousCount > 0
+                ? FieldwatchPaletteHolder.get().warn : FieldwatchPaletteHolder.get().textDim)
+          }.width('100%')
+        }, (record: SecurityScanRecord): string => record.id)
+      }
+    }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+  }
+
+  private historyTime(record: SecurityScanRecord): string {
+    const date: Date = new Date(record.endedAt);
+    const month: string = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day: string = date.getDate().toString().padStart(2, '0');
+    const hour: string = date.getHours().toString().padStart(2, '0');
+    const minute: string = date.getMinutes().toString().padStart(2, '0');
+    return month + '-' + day + ' ' + hour + ':' + minute;
+  }
+
+  private historySummary(record: SecurityScanRecord): string {
+    return this.text('app.string.fieldwatch_security_history_line')
+      .replace('%1', record.total.toString())
+      .replace('%2', (record.confirmedCount + record.suspiciousCount).toString());
   }
 
   private kindsText(): string {

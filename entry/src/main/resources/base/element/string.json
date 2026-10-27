@@ -11443,6 +11443,198 @@
     {
       "name": "fieldwatch_dex_class_progress",
       "value": "分类进度"
+    },
+    {
+      "name": "fieldwatch_check_title",
+      "value": "人工排查清单"
+    },
+    {
+      "name": "fieldwatch_check_hint",
+      "value": "扫描发现不了的部分，用眼睛和手补上。逐项打勾即可。"
+    },
+    {
+      "name": "fieldwatch_check_lens_title",
+      "value": "找镜头"
+    },
+    {
+      "name": "fieldwatch_check_lens_dark",
+      "value": "关灯后用手机手电扫一遍有孔的地方"
+    },
+    {
+      "name": "fieldwatch_check_lens_dark_how",
+      "value": "镜头玻璃会反光,在黑暗里是一个亮点"
+    },
+    {
+      "name": "fieldwatch_check_lens_reflect",
+      "value": "手电贴近眼睛,沿视线平扫,不要斜照"
+    },
+    {
+      "name": "fieldwatch_check_lens_reflect_how",
+      "value": "平行光更容易照出镜头反光"
+    },
+    {
+      "name": "fieldwatch_check_lens_smoke",
+      "value": "烟感、吊顶、电视盒子有没有多余的小孔"
+    },
+    {
+      "name": "fieldwatch_check_lens_socket",
+      "value": "插座、充电头、闹钟、路由器指示灯区域"
+    },
+    {
+      "name": "fieldwatch_check_lens_mirror",
+      "value": "镜子:用指甲尖贴着镜面,有缝隙可能是双向镜"
+    },
+    {
+      "name": "fieldwatch_check_lens_mirror_how",
+      "value": "真正的镜子指甲贴上去没有缝隙"
+    },
+    {
+      "name": "fieldwatch_check_lens_vent",
+      "value": "空调出风口、通风口内壁"
+    },
+    {
+      "name": "fieldwatch_check_power_title",
+      "value": "找异常供电"
+    },
+    {
+      "name": "fieldwatch_check_power_heat",
+      "value": "断电后仍发热、或不该有电的地方有电"
+    },
+    {
+      "name": "fieldwatch_check_power_heat_how",
+      "value": "手背靠近感受,不要直接触摸可疑设备"
+    },
+    {
+      "name": "fieldwatch_check_power_ir",
+      "value": "关灯后用手机相机看有没有红外灯常亮"
+    },
+    {
+      "name": "fieldwatch_check_power_ir_how",
+      "value": "夜视摄像头在暗处会亮红外,肉眼看不见但相机能看到"
+    },
+    {
+      "name": "fieldwatch_check_power_standby",
+      "value": "长期插着却没人用的充电头、延长线"
+    },
+    {
+      "name": "fieldwatch_check_network_title",
+      "value": "查网络设备"
+    },
+    {
+      "name": "fieldwatch_check_network_unknown",
+      "value": "路由器后台看有没有不认识的设备在线"
+    },
+    {
+      "name": "fieldwatch_check_network_unknown_how",
+      "value": "登录路由器管理页,比对设备名与数量"
+    },
+    {
+      "name": "fieldwatch_check_network_router",
+      "value": "有没有不是自己的路由器、中继器、网线"
+    },
+    {
+      "name": "fieldwatch_check_done_count",
+      "value": "已勾选 %1 / %2"
+    },
+    {
+      "name": "fieldwatch_dex_level_observer",
+      "value": "观察者"
+    },
+    {
+      "name": "fieldwatch_dex_level_explorer",
+      "value": "探索者"
+    },
+    {
+      "name": "fieldwatch_dex_level_hunter",
+      "value": "猎手"
+    },
+    {
+      "name": "fieldwatch_dex_level_master",
+      "value": "大师"
+    },
+    {
+      "name": "fieldwatch_dex_level_line",
+      "value": "%1 · %2 分"
+    },
+    {
+      "name": "fieldwatch_dex_level_next",
+      "value": "距下一级还差 %1 分"
+    },
+    {
+      "name": "fieldwatch_dex_level_max",
+      "value": "已达最高等级"
+    },
+    {
+      "name": "fieldwatch_dex_badges_title",
+      "value": "勋章"
+    },
+    {
+      "name": "fieldwatch_dex_badge_surveillance",
+      "value": "第一台监控类"
+    },
+    {
+      "name": "fieldwatch_dex_badge_surveillance_desc",
+      "value": "点亮任意一台监控或摄像头设备"
+    },
+    {
+      "name": "fieldwatch_dex_badge_epic",
+      "value": "罕见一遇"
+    },
+    {
+      "name": "fieldwatch_dex_badge_epic_desc",
+      "value": "点亮任意一条极稀有设备"
+    },
+    {
+      "name": "fieldwatch_dex_badge_full_class",
+      "value": "集齐一类"
+    },
+    {
+      "name": "fieldwatch_dex_badge_full_class_desc",
+      "value": "把任意一个类别全部点亮"
+    },
+    {
+      "name": "fieldwatch_dex_badge_streak",
+      "value": "七日不断"
+    },
+    {
+      "name": "fieldwatch_dex_badge_streak_desc",
+      "value": "连续 7 天都有新发现"
+    },
+    {
+      "name": "fieldwatch_dex_score_line",
+      "value": "图鉴积分 %1"
+    },
+    {
+      "name": "fieldwatch_security_history_title",
+      "value": "历史扫描记录"
+    },
+    {
+      "name": "fieldwatch_security_history_empty",
+      "value": "还没有历史记录，扫完一次就会出现在这里。"
+    },
+    {
+      "name": "fieldwatch_security_history_line",
+      "value": "%1 台 · %2 台可疑"
+    },
+    {
+      "name": "fieldwatch_empty_scan_now",
+      "value": "立即扫描一次"
+    },
+    {
+      "name": "fieldwatch_empty_open_bluetooth",
+      "value": "去开蓝牙"
+    },
+    {
+      "name": "fieldwatch_empty_check_wifi",
+      "value": "检查 Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_sec_empty_action",
+      "value": "扫一次看看身边有哪些设备在广播"
+    },
+    {
+      "name": "fieldwatch_newfaces_detail",
+      "value": "查看详情"
     }
   ]
 }

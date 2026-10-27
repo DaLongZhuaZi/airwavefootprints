@@ -47,6 +47,8 @@ import fieldwatchBatteryTest from './FieldwatchBattery.test';
 import fieldwatchNewFacesTest from './FieldwatchNewFaces.test';
 import fieldwatchDeviceNamingTest from './FieldwatchDeviceNaming.test';
 import fieldwatchSecurityPassiveTest from './FieldwatchSecurityPassive.test';
+import fieldwatchChecklistTest from './FieldwatchChecklist.test';
+import fieldwatchDexBadgesTest from './FieldwatchDexBadges.test';
 
 export default function testsuite() {
   localUnitTest();
@@ -91,4 +93,6 @@ export default function testsuite() {
   fieldwatchNewFacesTest();
   fieldwatchDeviceNamingTest();
   fieldwatchSecurityPassiveTest();
+  fieldwatchChecklistTest();
+  fieldwatchDexBadgesTest();
 }

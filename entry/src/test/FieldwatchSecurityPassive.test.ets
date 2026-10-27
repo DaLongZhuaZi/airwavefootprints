@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@ohos/hypium';
 import {
   assessSighting, CAMERA_COMPANY_IDS, CAMERA_OUI_PREFIXES, capabilityBoundaryKeys, companyIdLooksLikeCamera,
-  countVerdicts, nameLooksLikeCamera, ouiLooksLikeCamera, ouiLooksLikeChipset, SecurityEvidence, SecurityEvidenceKind,
+  countVerdicts, isRandomizedAddress, nameLooksLikeCamera, ouiLooksLikeCamera, ouiLooksLikeChipset, SecurityEvidence, SecurityEvidenceKind,
   SecurityVerdict, suspectListOf, SuspectDevice, verdictOf
 } from '../main/ets/fieldwatch/domain/FieldwatchSecurityPassive';
 import { RadioFacts, RadioKind, ScanObservation, Sighting } from '../main/ets/fieldwatch/domain/FieldwatchModels';
@@ -64,6 +64,28 @@ export default function fieldwatchSecurityPassiveTest() {
       expect(nameLooksLikeCamera('Camry-2019')).assertFalse();
       expect(nameLooksLikeCamera('camping')).assertFalse();
       expect(nameLooksLikeCamera('')).assertFalse();
+    });
+
+    // **真机回归教训（P3-2）**：随机（本地管理）地址不能拿去查 OUI。
+    // 初版把所有地址都查 OUI，一次扫描报出 15 台「可疑」，全是随机 MAC 碰巧落进厂商段。
+    it('ignores randomized addresses when matching OUIs', 0, () => {
+      // 首字节 bit1 = 1 即随机：0xE6 / 0x56 / 0xA2 / 0xCE 属于这一类。
+      expect(isRandomizedAddress('E6:98:04:8B:B2:DE')).assertTrue();
+      expect(isRandomizedAddress('56:6F:A5:6B:A1:53')).assertTrue();
+      expect(isRandomizedAddress('A2:40:74:DA:9E:4C')).assertTrue();
+      expect(isRandomizedAddress('CE:6E:C7:1D:D6:E3')).assertTrue();
+      // 全球唯一地址 bit1 = 0：0x0C / 0x8C / 0x6C / 0xB0 都是。
+      expect(isRandomizedAddress('0C:87:31:9A:DB:50')).assertFalse();
+      expect(isRandomizedAddress('8C:E4:F1:A1:FE:53')).assertFalse();
+      expect(isRandomizedAddress('B0:C5:54:11:22:33')).assertFalse();
+      // 随机地址即使前 6 位落在摄像头厂商段，也不判可疑。
+      // 这里用 0xE6 开头 + 海康 OUI 的中间段构造：0xE6 是随机，OI 比对必须整体跳过。
+      expect(isRandomizedAddress('E6:C5:54:11:22:33')).assertTrue();
+      expect(ouiLooksLikeCamera('E6:C5:54:11:22:33')).assertFalse();
+      const randomCam: Sighting = sightingOf('E6:C5:54:11:22:33', 'Speaker');
+      expect(assessSighting(randomCam, false, false).verdict).assertEqual(SecurityVerdict.NONE);
+      // 对照组：全球地址的同一条 OUI 仍然命中。
+      expect(ouiLooksLikeCamera('B0:C5:54:11:22:33')).assertTrue();
     });
 
     it('recognises camera vendor OUIs', 0, () => {

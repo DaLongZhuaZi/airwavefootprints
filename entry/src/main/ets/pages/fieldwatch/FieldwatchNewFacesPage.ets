@@ -18,6 +18,8 @@ export struct FieldwatchNewFacesPage {
   withShell: boolean = true;
   topInset: number = 0;
   onClose: () => void = (): void => {};
+  /** 打开该设备的详情页（P3-2：每条新面孔都要能点进去看证据）。 */
+  onOpenDetail: (deviceKey: string) => void = (deviceKey: string): void => {};
   @State private entries: NewFaceEntry[] = [];
   @State private loading: boolean = true;
   @State private compareOn: boolean = false;
@@ -80,6 +82,13 @@ export struct FieldwatchNewFacesPage {
         } else if (this.entries.length === 0) {
           Text($r('app.string.fieldwatch_newfaces_empty')).fontSize(14)
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          // 空状态给动作（文档第 1 项「通用」要求）：不开对比开关就没有基线，
+          // 而空清单最常见的原因正是开关没开 —— 直接把开关摆出来。
+          if (!this.compareOn) {
+            FieldwatchButton({ label: $r('app.string.fieldwatch_newfaces_compare'),
+              tone: FieldwatchButtonTone.OUTLINE,
+              onTap: (): void => { this.enableCompare(); } })
+          }
         } else {
           ForEach(this.entries, (entry: NewFaceEntry): void => {
             this.buildRow(entry)
@@ -91,6 +100,13 @@ export struct FieldwatchNewFacesPage {
     }
     .width('100%').height('100%')
     .scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+  }
+
+  /** 打开对比基线（空状态的动作按钮用，与 Toggle 同一条路径）。 */
+  private enableCompare(): void {
+    this.compareOn = true;
+    fieldwatchApplication.setBaselineCompare(true);
+    void this.reload();
   }
 
   /** 手动基线开关：**不做自动判定**（文档明确要求）。 */
@@ -128,14 +144,22 @@ export struct FieldwatchNewFacesPage {
       if (entry.signatureName.length > 0) {
         Text(entry.signatureName).fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent)
       }
-      FieldwatchButton({
-        label: $r('app.string.fieldwatch_newfaces_mine'),
-        tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
-        onTap: (): void => {
-          fieldwatchApplication.excludeNewFace(entry.deviceKey);
-          void this.reload();
-        }
-      })
+      // 整条可点进详情（P3-2 第 1 项：新面孔不能只列名字，要能看证据/首次出现/轨迹）。
+      Row({ space: 6 }) {
+        FieldwatchButton({
+          label: $r('app.string.fieldwatch_newfaces_mine'),
+          tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
+          onTap: (): void => {
+            fieldwatchApplication.excludeNewFace(entry.deviceKey);
+            void this.reload();
+          }
+        })
+        FieldwatchButton({
+          label: $r('app.string.fieldwatch_newfaces_detail'),
+          tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
+          onTap: (): void => { this.onOpenDetail(entry.deviceKey); }
+        })
+      }.width('100%')
     }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
   }

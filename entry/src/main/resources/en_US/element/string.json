@@ -11443,6 +11443,198 @@
     {
       "name": "fieldwatch_dex_class_progress",
       "value": "Progress by category"
+    },
+    {
+      "name": "fieldwatch_check_title",
+      "value": "Manual checklist"
+    },
+    {
+      "name": "fieldwatch_check_hint",
+      "value": "For what scanning cannot find, use your eyes and hands. Tick each item as you go."
+    },
+    {
+      "name": "fieldwatch_check_lens_title",
+      "value": "Look for lenses"
+    },
+    {
+      "name": "fieldwatch_check_lens_dark",
+      "value": "Turn off the lights and sweep pinholes with your phone torch"
+    },
+    {
+      "name": "fieldwatch_check_lens_dark_how",
+      "value": "Lens glass reflects light — in the dark it shows as a bright dot"
+    },
+    {
+      "name": "fieldwatch_check_lens_reflect",
+      "value": "Hold the torch near your eye and sweep flat, not at an angle"
+    },
+    {
+      "name": "fieldwatch_check_lens_reflect_how",
+      "value": "Parallel light reveals lens reflections best"
+    },
+    {
+      "name": "fieldwatch_check_lens_smoke",
+      "value": "Check smoke detectors, ceiling panels and TV boxes for extra pinholes"
+    },
+    {
+      "name": "fieldwatch_check_lens_socket",
+      "value": "Check sockets, chargers, alarm clocks and router indicator areas"
+    },
+    {
+      "name": "fieldwatch_check_lens_mirror",
+      "value": "Mirror: touch the glass with a fingernail — a gap suggests a two-way mirror"
+    },
+    {
+      "name": "fieldwatch_check_lens_mirror_how",
+      "value": "On a real mirror your fingernail meets its reflection with no gap"
+    },
+    {
+      "name": "fieldwatch_check_lens_vent",
+      "value": "Air-conditioner vents and duct walls"
+    },
+    {
+      "name": "fieldwatch_check_power_title",
+      "value": "Look for odd power draw"
+    },
+    {
+      "name": "fieldwatch_check_power_heat",
+      "value": "Something still warm after power-off, or power where there should be none"
+    },
+    {
+      "name": "fieldwatch_check_power_heat_how",
+      "value": "Feel with the back of your hand; do not touch a suspect device directly"
+    },
+    {
+      "name": "fieldwatch_check_power_ir",
+      "value": "In the dark, use your phone camera to spot constant IR lamps"
+    },
+    {
+      "name": "fieldwatch_check_power_ir_how",
+      "value": "Night-vision cameras emit IR invisible to the eye but visible to a camera"
+    },
+    {
+      "name": "fieldwatch_check_power_standby",
+      "value": "Chargers and extension leads left plugged in with nothing in use"
+    },
+    {
+      "name": "fieldwatch_check_network_title",
+      "value": "Check network gear"
+    },
+    {
+      "name": "fieldwatch_check_network_unknown",
+      "value": "Check the router admin page for devices you do not recognise"
+    },
+    {
+      "name": "fieldwatch_check_network_unknown_how",
+      "value": "Log into the router admin page and compare device names and counts"
+    },
+    {
+      "name": "fieldwatch_check_network_router",
+      "value": "Any router, repeater or cable that is not yours"
+    },
+    {
+      "name": "fieldwatch_check_done_count",
+      "value": "%1 of %2 checked"
+    },
+    {
+      "name": "fieldwatch_dex_level_observer",
+      "value": "Observer"
+    },
+    {
+      "name": "fieldwatch_dex_level_explorer",
+      "value": "Explorer"
+    },
+    {
+      "name": "fieldwatch_dex_level_hunter",
+      "value": "Hunter"
+    },
+    {
+      "name": "fieldwatch_dex_level_master",
+      "value": "Master"
+    },
+    {
+      "name": "fieldwatch_dex_level_line",
+      "value": "%1 · %2 pts"
+    },
+    {
+      "name": "fieldwatch_dex_level_next",
+      "value": "%1 pts to the next level"
+    },
+    {
+      "name": "fieldwatch_dex_level_max",
+      "value": "Top level reached"
+    },
+    {
+      "name": "fieldwatch_dex_badges_title",
+      "value": "Badges"
+    },
+    {
+      "name": "fieldwatch_dex_badge_surveillance",
+      "value": "First surveillance device"
+    },
+    {
+      "name": "fieldwatch_dex_badge_surveillance_desc",
+      "value": "Unlock any surveillance or camera device"
+    },
+    {
+      "name": "fieldwatch_dex_badge_epic",
+      "value": "Rare encounter"
+    },
+    {
+      "name": "fieldwatch_dex_badge_epic_desc",
+      "value": "Unlock any epic-rarity device"
+    },
+    {
+      "name": "fieldwatch_dex_badge_full_class",
+      "value": "Class complete"
+    },
+    {
+      "name": "fieldwatch_dex_badge_full_class_desc",
+      "value": "Unlock every entry in any one class"
+    },
+    {
+      "name": "fieldwatch_dex_badge_streak",
+      "value": "Seven-day streak"
+    },
+    {
+      "name": "fieldwatch_dex_badge_streak_desc",
+      "value": "New discoveries on 7 consecutive days"
+    },
+    {
+      "name": "fieldwatch_dex_score_line",
+      "value": "Dex score %1"
+    },
+    {
+      "name": "fieldwatch_security_history_title",
+      "value": "Scan history"
+    },
+    {
+      "name": "fieldwatch_security_history_empty",
+      "value": "No history yet — your first scan will show up here."
+    },
+    {
+      "name": "fieldwatch_security_history_line",
+      "value": "%1 devices · %2 suspicious"
+    },
+    {
+      "name": "fieldwatch_empty_scan_now",
+      "value": "Scan now"
+    },
+    {
+      "name": "fieldwatch_empty_open_bluetooth",
+      "value": "Turn on Bluetooth"
+    },
+    {
+      "name": "fieldwatch_empty_check_wifi",
+      "value": "Check Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_sec_empty_action",
+      "value": "Run a scan to see what is broadcasting nearby"
+    },
+    {
+      "name": "fieldwatch_newfaces_detail",
+      "value": "Details"
     }
   ]
 }

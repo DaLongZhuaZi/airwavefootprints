@@ -6,6 +6,7 @@ import { DexEntry, DexRarity, DexSummary, dexDisplayName } from '../../fieldwatc
 import { SignatureClass } from '../../fieldwatch/domain/FieldwatchModels';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { DexEntryDataSource } from '../../fieldwatch/ui/FieldwatchDexDataSource';
+import { DexBadge, DexLevelProgress } from '../../fieldwatch/domain/FieldwatchDexBadges';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
 
@@ -150,8 +151,12 @@ export struct FieldwatchDexPage {
   @Builder
   private buildGrid() {
     Column({ space: 10 }) {
+      // 等级与积分（P3-2 图鉴玩法）。
+      this.buildLevel()
       // 分类进度（P3-1：不要只有一个总数，每类点亮几 / 共几）。
       this.buildCategoryProgress()
+      // 勋章（P3-2）。
+      this.buildBadges()
       if (this.summary !== undefined && (this.summary as DexSummary).newToday > 0) {
         Text(this.text('app.string.fieldwatch_dex_new_today').replace('%1', (this.summary as DexSummary).newToday.toString()))
           .fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
@@ -170,6 +175,68 @@ export struct FieldwatchDexPage {
       .cachedCount(12)
     }.width('100%').alignItems(HorizontalAlign.Start)
   }
+
+  /** 等级：观察者 → 探索者 → 猎手 → 大师，附积分与下一级进度。 */
+  @Builder
+  private buildLevel() {
+    Column({ space: 4 }) {
+      Row({ space: 8 }) {
+        SymbolGlyph($r('sys.symbol.medal')).fontSize(20)
+          .fontColor([FieldwatchPaletteHolder.get().accent])
+        Text(this.levelTitle()).fontSize(17).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).layoutWeight(1)
+        Text(this.text('app.string.fieldwatch_dex_score_line').replace('%1', this.score().toString()))
+          .fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent)
+      }.width('100%')
+      Text(this.levelHint()).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      if (!this.levelProgress().isMax()) {
+        Progress({ value: this.score(), total: Math.max(1, this.score() + this.levelProgress().remain),
+          type: ProgressType.Linear })
+          .width('100%').height(4).color(FieldwatchPaletteHolder.get().accent)
+      }
+    }.width('100%').padding(12).borderRadius(12).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
+  private score(): number { return fieldwatchApplication.dexScoreOf(this.entries); }
+
+  private levelProgress(): DexLevelProgress { return fieldwatchApplication.dexLevelOf(this.entries); }
+
+  private levelTitle(): string {
+    return this.text(this.levelProgress().current.titleKey);
+  }
+
+  private levelHint(): string {
+    const progress: DexLevelProgress = this.levelProgress();
+    if (progress.isMax()) return this.text('app.string.fieldwatch_dex_level_max');
+    return this.text('app.string.fieldwatch_dex_level_next').replace('%1', progress.remain.toString());
+  }
+
+  /** 勋章：四枚，已获得的亮色、未获得灰色并给出达成条件。 */
+  @Builder
+  private buildBadges() {
+    Column({ space: 6 }) {
+      Text($r('app.string.fieldwatch_dex_badges_title')).fontSize(13)
+        .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      Row({ space: 8 }) {
+        ForEach(this.badges(), (badge: DexBadge): void => {
+          Column({ space: 3 }) {
+            SymbolGlyph($r(badge.earned ? 'sys.symbol.medal_fill' : 'sys.symbol.medal'))
+              .fontSize(20)
+              .fontColor([badge.earned ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().outline])
+            Text(this.text(badge.titleKey)).fontSize(10).maxLines(1)
+              .fontColor(badge.earned ? FieldwatchPaletteHolder.get().text : FieldwatchPaletteHolder.get().textDim)
+              .textAlign(TextAlign.Center)
+            Text(this.text(badge.descKey)).fontSize(9).maxLines(2)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).textAlign(TextAlign.Center)
+          }.layoutWeight(1).padding(6).borderRadius(10)
+          .backgroundColor(badge.earned ? FieldwatchPaletteHolder.get().badgeBg : Color.Transparent)
+        }, (badge: DexBadge): string => badge.id)
+      }.width('100%').alignItems(VerticalAlign.Top)
+    }.width('100%').alignItems(HorizontalAlign.Start)
+  }
+
+  private badges(): DexBadge[] { return fieldwatchApplication.dexBadgesOf(this.entries); }
 
   /**
    * 分类进度：每类「点亮 / 共几」。

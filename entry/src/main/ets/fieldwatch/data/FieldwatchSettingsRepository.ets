@@ -271,6 +271,10 @@ export class FieldwatchSettingsRepository {
   loadAlertsAsked(): boolean { return ngfSettingsStoreFacade.getBoolean('fieldwatch.alertsAsked', false); }
   saveAlertsAsked(value: boolean): void { ngfSettingsStoreFacade.setBoolean('fieldwatch.alertsAsked', value); }
 
+  /** 人工排查清单的已勾选项（换行分隔的条目 id，P3-2）。 */
+  loadChecklistRaw(): string { return ngfSettingsStoreFacade.getString('fieldwatch.checklistDone', ''); }
+  saveChecklistRaw(value: string): void { ngfSettingsStoreFacade.setString('fieldwatch.checklistDone', value); }
+
   /**
    * 新面孔清单的手动基线开关（P2-14）。
    *

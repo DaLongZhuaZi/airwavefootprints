@@ -39,6 +39,9 @@ import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissio
 import { attachSuspects, buildSecuritySummary, SecuritySummary } from '../domain/FieldwatchSecurityScan';
 import { ServiceDataRecord } from '../domain/FieldwatchModels';
 import { assessSighting, SuspectDevice } from '../domain/FieldwatchSecurityPassive';
+import { FieldwatchSecurityHistoryRepository, SecurityScanRecord } from '../data/FieldwatchSecurityHistoryRepository';
+import { checkProgress, decodeChecks, encodeChecks, manualCheckGroups, toggleCheck } from '../domain/FieldwatchSecurityChecklist';
+import { consecutiveDays, dexBadges, DexBadge, dexScore, DexLevel, DexLevelProgress, levelProgress } from '../domain/FieldwatchDexBadges';
 import {
   buildWifiDoctor, doctorLines, DoctorLine, RoomCheck, ROOM_SCAN_DURATION_MS, WifiDoctorReport
 } from '../domain/FieldwatchWifiDoctor';
@@ -72,6 +75,12 @@ function wifiChannelOfFrequency(frequencyMhz: number): number {
 /** 样本中位数（无样本返回 0）。 */
 function medianOfSamples(values: number[]): number {
   return medianOf(values);
+}
+
+/** 某时刻所在自然日的零点（本机时区）。 */
+function startOfLocalDay(at: number): number {
+  const date: Date = new Date(at);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
 /**
@@ -212,6 +221,8 @@ export class FieldwatchApplication {
   /** 反跟随自动提醒：上次评估时刻与已推送记录（P1-6）。 */
   private antiTrackEvaluatedAt: number = 0;
   private antiTrackHistory: AntiTrackPushRecord[] = [];
+  /** 安防扫描历史仓储（P3-2）。 */
+  private readonly securityHistory: FieldwatchSecurityHistoryRepository = new FieldwatchSecurityHistoryRepository();
   /** 房间体检仓储（P1-7）。 */
   private readonly roomCheckRepository: FieldwatchRoomCheckRepository = new FieldwatchRoomCheckRepository();
   /** 本次房间采样的样本（RSSI 序列）。 */
@@ -379,6 +390,8 @@ export class FieldwatchApplication {
     });
     attachSuspects(summary, assessed);
     this.lastSecuritySummary = summary;
+    // 落一条历史记录（P3-2：汇总之下要能看历史扫描记录）。
+    void this.securityHistory.save(summary);
     logger.info(TAG, '安防扫描结束: 设备=' + summary.total.toString() + ' 新面孔=' + summary.newFaces.toString()
       + ' 跟随=' + summary.followScore.toString() + ' 确认=' + summary.confirmedCount.toString()
       + ' 可疑=' + summary.suspiciousCount.toString());
@@ -430,6 +443,63 @@ export class FieldwatchApplication {
 
   /** 最近一次安防扫描汇总（页面重进时用来恢复结果）。 */
   recentSecuritySummary(): SecuritySummary | undefined { return this.lastSecuritySummary; }
+
+  /** 历史扫描记录（新→旧）。 */
+  async securityHistoryRecords(limit: number = 10): Promise<SecurityScanRecord[]> {
+    return await this.securityHistory.loadRecent(limit);
+  }
+
+  // ── 人工排查清单（P3-2）──
+
+  /** 清单分组（供 UI 遍历）。 */
+  checklistGroups() { return manualCheckGroups(); }
+
+  /** 已勾选项。 */
+  checklistDone(): string[] {
+    return decodeChecks(this.settingsRepository.loadChecklistRaw());
+  }
+
+  /** 切换一项并落盘，返回新的已勾集合。 */
+  toggleChecklistItem(id: string): string[] {
+    const next: string[] = toggleCheck(this.checklistDone(), id);
+    this.settingsRepository.saveChecklistRaw(encodeChecks(next));
+    return next;
+  }
+
+  /** 清单进度：[已勾, 总数]。 */
+  checklistProgress(): number[] { return checkProgress(this.checklistDone()); }
+
+  // ── 图鉴玩法（P3-2）──
+
+  /** 图鉴积分。 */
+  dexScoreOf(entries: DexEntry[]): number { return dexScore(entries); }
+
+  /** 等级进度（当前级 / 下一级 / 还差多少）。 */
+  dexLevelOf(entries: DexEntry[]): DexLevelProgress { return levelProgress(dexScore(entries)); }
+
+  /** 勋章（含「连续 7 天新发现」需要的历史天数）。 */
+  dexBadgesOf(entries: DexEntry[]): DexBadge[] {
+    return dexBadges(entries, consecutiveDays(this.dexDiscoveryDays(), Date.now()));
+  }
+
+  /**
+   * 有过新发现的日子（本地日零点，升序）。
+   *
+   * 从历史观测的 `firstSeen` 推：某天有设备首次出现，就算那天有新发现。
+   * 只扫最近 60 天，避免把整张观测表读进来。
+   */
+  private dexDiscoveryDays(): number[] {
+    const days: number[] = [];
+    const DAY: number = 24 * 60 * 60 * 1000;
+    const cutoff: number = Date.now() - 60 * DAY;
+    this.state.sightings.forEach((item: Sighting): void => {
+      if (item.firstSeen < cutoff) return;
+      const day: number = startOfLocalDay(item.firstSeen);
+      if (days.indexOf(day) < 0) days.push(day);
+    });
+    days.sort((a: number, b: number): number => a - b);
+    return days;
+  }
 
   /** 把汇总画成分享卡并调起系统分享面板；返回是否成功拉起。 */
   async shareSecurityCard(content: ShareCardContent): Promise<boolean> {

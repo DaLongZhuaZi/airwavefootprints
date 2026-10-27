@@ -175,8 +175,30 @@ export function nameLooksLikeCamera(name: string): boolean {
   return bare.test(lower);
 }
 
-/** 地址前 8 位（OUI）是否命中摄像头厂商表。 */
+/**
+ * 地址是否是**随机（本地管理）地址**。
+ *
+ * 判据：第一个字节的 bit1（0x02）为 1 —— 蓝牙与 Wi-Fi 的随机地址都用这一位标记「本地管理」。
+ *
+ * **真机教训**：初版把所有地址都拿去查 OUI，结果一次扫描报出 15 台「可疑」，
+ * 全部是随机 MAC 恰好落在某厂商 OUI 段里。随机地址是系统现编的，
+ * 它的前 6 位与厂商毫无关系 —— 拿它查 OUI 等于掷骰子。
+ */
+export function isRandomizedAddress(address: string): boolean {
+  const hex: string = address.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
+  if (hex.length < 2) return false;
+  const firstByte: number = parseInt(hex.substring(0, 2), 16);
+  if (isNaN(firstByte)) return false;
+  return (firstByte & 0x02) !== 0;
+}
+
+/**
+ * 地址前 6 位（OUI）是否命中摄像头厂商表。
+ *
+ * **随机地址直接返回 false**：见 `isRandomizedAddress` 的说明。
+ */
 export function ouiLooksLikeCamera(address: string): boolean {
+  if (isRandomizedAddress(address)) return false;
   const hex: string = address.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
   if (hex.length < 6) return false;
   const oui: string = hex.substring(0, 2) + ':' + hex.substring(2, 4) + ':' + hex.substring(4, 6);
@@ -190,6 +212,8 @@ export function companyIdLooksLikeCamera(companyId: number): boolean {
 
 /** 地址前 6 位是否属于通用芯片/方案商（弱信号，只能辅助）。 */
 export function ouiLooksLikeChipset(address: string): boolean {
+  // 同理：随机地址的 OUI 段毫无意义。
+  if (isRandomizedAddress(address)) return false;
   const hex: string = address.replace(/[^0-9A-Fa-f]/g, '').toUpperCase();
   if (hex.length < 6) return false;
   const oui: string = hex.substring(0, 2) + ':' + hex.substring(2, 4) + ':' + hex.substring(4, 6);
