@@ -10679,6 +10679,658 @@
     {
       "name": "fw_cl_fix_2",
       "value": "修复「找东西」页无法上下滑动的问题"
+    },
+    {
+      "name": "fieldwatch_daily_greeting",
+      "value": "今天想做什么"
+    },
+    {
+      "name": "fieldwatch_daily_card_find_title",
+      "value": "找东西"
+    },
+    {
+      "name": "fieldwatch_daily_card_find_desc",
+      "value": "耳机、手表、车钥匙，听到了就能带你去"
+    },
+    {
+      "name": "fieldwatch_daily_card_security_title",
+      "value": "安防扫描"
+    },
+    {
+      "name": "fieldwatch_daily_card_security_desc",
+      "value": "看看身边出现了哪些设备，有没有跟着你的"
+    },
+    {
+      "name": "fieldwatch_daily_card_wifi_title",
+      "value": "Wi-Fi 体检"
+    },
+    {
+      "name": "fieldwatch_daily_card_wifi_desc",
+      "value": "看看家里网络挤不挤，会告诉你要不要换一个"
+    },
+    {
+      "name": "fieldwatch_daily_own_title",
+      "value": "我的设备"
+    },
+    {
+      "name": "fieldwatch_daily_own_empty",
+      "value": "还没有认领设备，认领后一眼就能找到"
+    },
+    {
+      "name": "fieldwatch_daily_own_more",
+      "value": "查看全部"
+    },
+    {
+      "name": "fieldwatch_daily_own_count",
+      "value": "已认领 %1 台"
+    },
+    {
+      "name": "fieldwatch_daily_nearby",
+      "value": "附近 %1 台设备"
+    },
+    {
+      "name": "fieldwatch_daily_switch_pro",
+      "value": "切到专业模式"
+    },
+    {
+      "name": "fieldwatch_daily_switch_hint",
+      "value": "专业模式的雷达、筛选、设备库全部保留，随时可以切回来"
+    },
+    {
+      "name": "fieldwatch_find_subtitle",
+      "value": "选一台要找回的设备"
+    },
+    {
+      "name": "fieldwatch_find_paired",
+      "value": "手机上已配对的"
+    },
+    {
+      "name": "fieldwatch_find_own",
+      "value": "我的设备"
+    },
+    {
+      "name": "fieldwatch_find_scan_list",
+      "value": "最近听到的"
+    },
+    {
+      "name": "fieldwatch_find_claim_action",
+      "value": "这是我的"
+    },
+    {
+      "name": "fieldwatch_find_start",
+      "value": "开始找"
+    },
+    {
+      "name": "fieldwatch_find_stop",
+      "value": "结束"
+    },
+    {
+      "name": "fieldwatch_find_empty",
+      "value": "还没有可用的设备，先去认领一台"
+    },
+    {
+      "name": "fieldwatch_find_heat",
+      "value": "靠近程度"
+    },
+    {
+      "name": "fieldwatch_find_trouble_title",
+      "value": "听不到？试试这些"
+    },
+    {
+      "name": "fieldwatch_find_trouble_1",
+      "value": "确认这台设备的蓝牙是开着的"
+    },
+    {
+      "name": "fieldwatch_find_trouble_2",
+      "value": "靠近它常放的地方：包、抽屉、外套口袋"
+    },
+    {
+      "name": "fieldwatch_find_trouble_3",
+      "value": "有些设备放回充电盒后会静音"
+    },
+    {
+      "name": "fieldwatch_find_last_seen",
+      "value": "上次见到：%1"
+    },
+    {
+      "name": "fieldwatch_find_wiggle",
+      "value": "同名有多台？拿起你的那台晃一晃"
+    },
+    {
+      "name": "fieldwatch_find_heat_low",
+      "value": "远"
+    },
+    {
+      "name": "fieldwatch_find_heat_mid",
+      "value": "近一些"
+    },
+    {
+      "name": "fieldwatch_find_heat_high",
+      "value": "很近"
+    },
+    {
+      "name": "fieldwatch_find_heat_very_high",
+      "value": "就在旁边"
+    },
+    {
+      "name": "fieldwatch_settings_mode",
+      "value": "界面模式"
+    },
+    {
+      "name": "fieldwatch_settings_mode_daily",
+      "value": "日常"
+    },
+    {
+      "name": "fieldwatch_settings_mode_pro",
+      "value": "专业"
+    },
+    {
+      "name": "fieldwatch_daily_coming_soon",
+      "value": "下个版本见"
+    },
+    {
+      "name": "fieldwatch_find_trouble_4",
+      "value": "把它从贴着的东西上取下来再试"
+    },
+    {
+      "name": "fieldwatch_find_claim_failed",
+      "value": "认领失败，稍后再试"
+    },
+    {
+      "name": "fieldwatch_find_not_heard",
+      "value": "现在还没听到它，靠近一点再试"
+    },
+    {
+      "name": "fieldwatch_find_found_toast",
+      "value": "找到就好"
+    },
+    {
+      "name": "fieldwatch_find_denied_toast",
+      "value": "已记下，不会再把它当成你的设备"
+    },
+    {
+      "name": "fieldwatch_find_wiggle_confirmed",
+      "value": "就是这台"
+    },
+    {
+      "name": "fieldwatch_find_source_own",
+      "value": "我的设备"
+    },
+    {
+      "name": "fieldwatch_find_source_paired",
+      "value": "手机上已配对"
+    },
+    {
+      "name": "fieldwatch_find_source_paired_in_use",
+      "value": "手机上已配对 · 正在使用中"
+    },
+    {
+      "name": "fieldwatch_find_source_scan",
+      "value": "最近听到"
+    },
+    {
+      "name": "fieldwatch_find_empty_hint",
+      "value": "先到「我的设备」认领一台，或打开蓝牙再回来"
+    },
+    {
+      "name": "fieldwatch_find_just_now",
+      "value": "刚刚"
+    },
+    {
+      "name": "fieldwatch_find_minutes_ago",
+      "value": "%1 分钟前"
+    },
+    {
+      "name": "fieldwatch_find_hours_ago",
+      "value": "%1 小时前"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_title",
+      "value": "要不要提醒你"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_body",
+      "value": "有陌生设备或你关注过的设备出现时，可以通知你一次。这个开关随时可以在设置里改。"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_ask",
+      "value": "是否开启关注提醒？（有陌生/关注设备出现时通知你）"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_hint",
+      "value": "默认关闭。开启后只会因为「出现」而通知，不会持续打扰。"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_on",
+      "value": "开启提醒"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_skip",
+      "value": "先不用"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_enabled",
+      "value": "已开启"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_declined",
+      "value": "已跳过，可在设置里再开"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_need_system",
+      "value": "系统没有弹出通知授权窗口（可能此前拒绝过）。请到「设置 → 通知」里允许本应用通知。"
+    },
+    {
+      "name": "fieldwatch_security_title",
+      "value": "安防扫描"
+    },
+    {
+      "name": "fieldwatch_security_subtitle",
+      "value": "看看身边有哪些设备正在广播"
+    },
+    {
+      "name": "fieldwatch_security_start",
+      "value": "开始扫描（60 秒）"
+    },
+    {
+      "name": "fieldwatch_security_scanning",
+      "value": "正在扫描…"
+    },
+    {
+      "name": "fieldwatch_security_remaining",
+      "value": "还剩 %1 秒"
+    },
+    {
+      "name": "fieldwatch_security_summary_title",
+      "value": "扫描完成"
+    },
+    {
+      "name": "fieldwatch_security_total_label",
+      "value": "台设备正在广播"
+    },
+    {
+      "name": "fieldwatch_security_classes_title",
+      "value": "分类 Top"
+    },
+    {
+      "name": "fieldwatch_security_newfaces",
+      "value": "这次新出现的：%1 台"
+    },
+    {
+      "name": "fieldwatch_security_follow",
+      "value": "跟随评分：%1"
+    },
+    {
+      "name": "fieldwatch_security_follow_hint",
+      "value": "有设备可能跟着你"
+    },
+    {
+      "name": "fieldwatch_security_headline_suspicious",
+      "value": "有设备可能跟着你"
+    },
+    {
+      "name": "fieldwatch_security_headline_crowded",
+      "value": "身边设备挺多的"
+    },
+    {
+      "name": "fieldwatch_security_headline_quiet",
+      "value": "身边比较安静"
+    },
+    {
+      "name": "fieldwatch_security_footnote",
+      "value": "只统计正在广播的设备；不广播的设备发现不了。"
+    },
+    {
+      "name": "fieldwatch_security_share",
+      "value": "生成分享卡"
+    },
+    {
+      "name": "fieldwatch_security_share_failed",
+      "value": "分享卡生成失败，请稍后再试"
+    },
+    {
+      "name": "fieldwatch_security_again",
+      "value": "再扫一次"
+    },
+    {
+      "name": "fieldwatch_security_empty",
+      "value": "这次什么都没听到。可以靠近一点再试。"
+    },
+    {
+      "name": "fieldwatch_security_ble",
+      "value": "蓝牙"
+    },
+    {
+      "name": "fieldwatch_security_wifi",
+      "value": "Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_security_nearlink",
+      "value": "星闪"
+    },
+    {
+      "name": "fieldwatch_security_kinds",
+      "value": "蓝牙 %1 · Wi-Fi %2 · 星闪 %3"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_title",
+      "value": "有设备可能跟着你"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_body",
+      "value": "%1 已经跟着你一段时间了，点开看看"
+    },
+    {
+      "name": "fieldwatch_onb_antitrack_ask",
+      "value": "要不要在「有设备可能跟着你」时提醒你？"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack",
+      "value": "跟随提醒"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack_hint",
+      "value": "应用在前台时每 15 分钟评估一次；只有评分很高的目标才会提醒，同一台一天最多一次"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_title",
+      "value": "Wi-Fi 体检"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_subtitle",
+      "value": "看看你家网络挤不挤、哪个房间最弱"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_channel_summary",
+      "value": "2.4G 上听到 %1 个，最挤的信道是 %2"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_recommend",
+      "value": "建议换到信道 %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_title",
+      "value": "逐房间测一测"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_hint",
+      "value": "拿着手机走进房间，放桌上别动，等 20 秒"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_add",
+      "value": "测这个房间"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_name",
+      "value": "房间名（如 客厅）"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_scanning",
+      "value": "正在测…还剩 %1 秒"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_done",
+      "value": "测好了：%1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_worst",
+      "value": "最弱的房间：%1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade",
+      "value": "信号档位：%1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_crowded",
+      "value": "信道 %1 比较挤"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_dualband",
+      "value": "听得到 5G 但房间里的设备没在用，可以试试"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_strong",
+      "value": "很好"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_ok",
+      "value": "够用"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_weak",
+      "value": "偏弱"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_bad",
+      "value": "很差"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_unknown",
+      "value": "还没测"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_export",
+      "value": "导出报告"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_exported",
+      "value": "报告已保存到导出目录"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_empty",
+      "value": "至少测两个房间才能比出最弱的那个"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_no_aps",
+      "value": "这台设备上没扫到 Wi-Fi 接入点"
+    },
+    {
+      "name": "fieldwatch_scene_title",
+      "value": "场景"
+    },
+    {
+      "name": "fieldwatch_scene_hint",
+      "value": "一键套用一套筛选条件，随时可换回"
+    },
+    {
+      "name": "fieldwatch_scene_dorm",
+      "value": "宿舍"
+    },
+    {
+      "name": "fieldwatch_scene_dorm_hint",
+      "value": "室友的耳机手表、手机，以及可能的防丢标签"
+    },
+    {
+      "name": "fieldwatch_scene_hotel",
+      "value": "酒店"
+    },
+    {
+      "name": "fieldwatch_scene_hotel_hint",
+      "value": "房间里不该出现的摄像头、录音类设备"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun",
+      "value": "夜跑"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun_hint",
+      "value": "只留下足够近、可能跟着你一起移动的东西"
+    },
+    {
+      "name": "fieldwatch_scene_office",
+      "value": "办公室"
+    },
+    {
+      "name": "fieldwatch_scene_office_hint",
+      "value": "同事的手机电脑、公司网络"
+    },
+    {
+      "name": "fieldwatch_scene_applied",
+      "value": "已套用：%1"
+    },
+    {
+      "name": "fieldwatch_rating_title",
+      "value": "觉得好用吗？"
+    },
+    {
+      "name": "fieldwatch_rating_body",
+      "value": "去商店打个分，能帮到我们很多。"
+    },
+    {
+      "name": "fieldwatch_rating_go",
+      "value": "去评分"
+    },
+    {
+      "name": "fieldwatch_rating_later",
+      "value": "以后再说"
+    },
+    {
+      "name": "fieldwatch_rating_open_failed",
+      "value": "没能打开应用市场，可以在里面搜「电波足迹」"
+    },
+    {
+      "name": "fieldwatch_dex_title",
+      "value": "设备图鉴"
+    },
+    {
+      "name": "fieldwatch_dex_subtitle",
+      "value": "已点亮 %1 / %2"
+    },
+    {
+      "name": "fieldwatch_dex_new_today",
+      "value": "今天新认识了 %1 种设备"
+    },
+    {
+      "name": "fieldwatch_dex_loading",
+      "value": "正在统计…"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_common",
+      "value": "常见"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_uncommon",
+      "value": "少见"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_rare",
+      "value": "稀有"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_epic",
+      "value": "极稀有"
+    },
+    {
+      "name": "fieldwatch_dex_seen_times",
+      "value": "见过 %1 次"
+    },
+    {
+      "name": "fieldwatch_dex_last_seen",
+      "value": "最近见到：%1"
+    },
+    {
+      "name": "fieldwatch_dex_not_seen",
+      "value": "还没见过。多留意身边，遇到就会点亮。"
+    },
+    {
+      "name": "fieldwatch_dex_footnote",
+      "value": "图鉴只统计本机历史数据。卸载重装后会清零，与我们「数据只在本机」的做法一致。"
+    },
+    {
+      "name": "fieldwatch_daily_dex_hint",
+      "value": "点点看遇见过哪些设备"
+    },
+    {
+      "name": "fieldwatch_board_title",
+      "value": "我的设备"
+    },
+    {
+      "name": "fieldwatch_board_subtitle",
+      "value": "每台自有设备一张卡"
+    },
+    {
+      "name": "fieldwatch_board_empty",
+      "value": "还没有认领设备"
+    },
+    {
+      "name": "fieldwatch_board_empty_hint",
+      "value": "到「找东西」里认领一台，之后这里就有卡片了"
+    },
+    {
+      "name": "fieldwatch_board_nearby",
+      "value": "在附近"
+    },
+    {
+      "name": "fieldwatch_board_last_seen",
+      "value": "上次见到：%1"
+    },
+    {
+      "name": "fieldwatch_board_never_seen",
+      "value": "还没有见到过"
+    },
+    {
+      "name": "fieldwatch_board_mark_car",
+      "value": "标记为我的车"
+    },
+    {
+      "name": "fieldwatch_board_unmark_car",
+      "value": "取消车辆标记"
+    },
+    {
+      "name": "fieldwatch_board_open_map",
+      "value": "打开地图"
+    },
+    {
+      "name": "fieldwatch_board_map_failed",
+      "value": "没能打开地图"
+    },
+    {
+      "name": "fieldwatch_board_car_line",
+      "value": "最后听到它：%1 %2"
+    },
+    {
+      "name": "fieldwatch_board_car_hint",
+      "value": "熄火前的最后位置约等于停车位置。地下车库只能给到大致的点，不保证楼层与精确车位。"
+    },
+    {
+      "name": "fieldwatch_newfaces_title",
+      "value": "新面孔"
+    },
+    {
+      "name": "fieldwatch_newfaces_subtitle",
+      "value": "最近才出现、一直在旁边的设备"
+    },
+    {
+      "name": "fieldwatch_newfaces_loading",
+      "value": "正在对比本机历史…"
+    },
+    {
+      "name": "fieldwatch_newfaces_empty",
+      "value": "暂时没有新面孔。历史积累得越多，这个清单越准。"
+    },
+    {
+      "name": "fieldwatch_newfaces_compare",
+      "value": "对比本机历史基线"
+    },
+    {
+      "name": "fieldwatch_newfaces_compare_hint",
+      "value": "由你手动开关，不按位置自动判断。"
+    },
+    {
+      "name": "fieldwatch_newfaces_mine",
+      "value": "这是我家的"
+    },
+    {
+      "name": "fieldwatch_daily_newfaces_hint",
+      "value": "最近才出现、一直在旁边的设备"
+    },
+    {
+      "name": "fw_ws_new_today",
+      "value": "今天新认识了 "
+    },
+    {
+      "name": "fw_ws_following",
+      "value": "有设备可能跟着你（评分 "
     }
   ]
 }

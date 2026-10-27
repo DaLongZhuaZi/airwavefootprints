@@ -28,4 +28,15 @@ export class FieldwatchRouteName {
   /** 反馈中心：设置页入口 + 深度链接直达。 */
   static readonly FEEDBACK: string = 'fieldwatch.feedback';
   static readonly HUNT: string = 'fieldwatch.hunt';
+  // 日常首屏（daily）、找东西日常版（find）、我的设备看板（board）三条路由
+  // **本次合并暂不注册**：它们指向的页面都依赖 feat 的 OwnDeviceProfile 体系，
+  // 而那套体系已随「找东西专题」一并暂缓。留着常量会引用不存在的页面，编译必然断裂。
+  /** 一键安防扫描（60 秒 → 汇总 → 分享卡）。 */
+  static readonly SECURITY: string = 'fieldwatch.security';
+  /** Wi-Fi 体检（信道结论 + 房间版）。 */
+  static readonly WIFI_DOCTOR: string = 'fieldwatch.wifi_doctor';
+  /** 设备图鉴（按 fleet 聚合历史）。 */
+  static readonly DEX: string = 'fieldwatch.dex';
+  /** 新面孔清单。 */
+  static readonly NEW_FACES: string = 'fieldwatch.new_faces';
 }

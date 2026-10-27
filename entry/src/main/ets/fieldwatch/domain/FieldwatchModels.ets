@@ -218,6 +218,13 @@ export class RadioFacts {
   public txPower: number;
   /** 广播 Flags 原始字节（AD type 0x01）；-1 表示未携带。 */
   public advertiseFlags: number;
+  /**
+   * 广播里声明的电量百分比（0–100）；-1 表示解不出来。
+   *
+   * **解不到就不显示，绝不用 RSSI 顶替**（文档 P2-12 红线）。
+   * 覆盖率注定有限：只有以 Battery Service 服务数据形式广播的设备才有。
+   */
+  public batteryPercent: number;
   /** AD type 0x02/0x03 的 16 位服务 UUID（补足 0000xxxx-0000-1000-8000-00805F9B34FB 形式）。 */
   public serviceUuids16: string[];
   /** AD type 0x06/0x07 的 128 位服务 UUID。 */
@@ -269,6 +276,7 @@ export class RadioFacts {
     this.appearance = -1;
     this.txPower = -128;
     this.advertiseFlags = -1;
+    this.batteryPercent = -1;
     this.serviceUuids16 = [];
     this.serviceUuids128 = [];
     this.rawAdHex = '';
@@ -535,6 +543,21 @@ export class FieldwatchLogFootprint {
   /** 以 KB 显示，向上取整。 */
   kilobytes(): number { return Math.ceil(this.bytes / 1024); }
 }
+/**
+ * 界面模式。
+ *
+ * 日常模式不是「阉割版」：它只是把专业模式的入口收进二级页面，
+ * 专业模式的全部能力在 `pro` 下原样保留（见落地文档「明确不做」一节）。
+ * 因此这里只存「首屏长什么样」，不参与任何采集或判定逻辑。
+ */
+export class FieldwatchUiMode {
+  static readonly DAILY: string = 'daily';
+  static readonly PRO: string = 'pro';
+  /** 只认两个合法值，其余一律回落到 pro（宁可多给能力，不要少给）。 */
+  static normalize(value: string): string {
+    return value === FieldwatchUiMode.DAILY ? FieldwatchUiMode.DAILY : FieldwatchUiMode.PRO;
+  }
+}
 export class AppSettings { public displayPaused: boolean = false; public darkMode: boolean = true; public keepScreenOn: boolean = false; public locationTagging: boolean = false; public privacyMode: boolean = false; public watchNotifications: boolean = false;
   // ── 关注列表的可听告警（§12.3 关注与声音设置）──
   //
@@ -606,7 +629,27 @@ export class AppSettings { public displayPaused: boolean = false; public darkMod
   public radarIconSize: number = 26;
   public backgroundScanning: boolean = false; public scanIntensity: string = 'balanced'; public liveMode: string = 'radar';
   /** 实时页默认形态：true = 日常摘要，false = 专业视图（引导页「模式选择」与设置页「显示」共用）。 */
-  public dailyMode: boolean = true; }
+  public dailyMode: boolean = true;
+  /**
+   * 界面模式：日常（daily）/ 专业（pro）。见 `FieldwatchUiMode`。
+   *
+   * **默认写 pro 而不是 daily**：这是「读不到存储时的兜底值」。
+   * 真正的默认值在 `FieldwatchSettingsRepository.loadUiMode()` 里按用户是否已有使用痕迹判定 ——
+   * 老用户升级上来必须留在专业模式，不能因为一次读不到存储就被踢到日常模式。
+   *
+   * 本次合并只把字段带进来，**不接线、不暴露入口**：日常首屏（DailyPage）依赖
+   * feat 的 OwnDeviceProfile 体系，随「找东西专题」一并暂缓。
+   */
+  public uiMode: string = FieldwatchUiMode.PRO;
+  /**
+   * 反跟随自动提醒（P1-6）。
+   *
+   * **默认关**：它与 `watchNotifications` 是两件事 ——
+   * 后者是「关注列表里的设备出现时提醒」，这里是「有设备可能在跟着你时提醒」。
+   * 后者的措辞更重，不能替用户默认打开；讨论见落地文档第五节拍板点 1 的推荐方案。
+   */
+  public antiTrackAlerts: boolean = false;
+}
 export class LogEntry { public id: string; public observation: ScanObservation; public signatureIds: string[]; constructor(id: string, observation: ScanObservation, signatureIds: string[] = []) { this.id = id; this.observation = observation; this.signatureIds = signatureIds; } }
 export class SitSummary { public id: string; public name: string; public startedAt: number; public endedAt: number; public radioCount: number; public deviceKeys: string[]; constructor(id: string, name: string, startedAt: number, endedAt: number = 0, radioCount: number = 0, deviceKeys: string[] = []) { this.id = id; this.name = name; this.startedAt = startedAt; this.endedAt = endedAt; this.radioCount = radioCount; this.deviceKeys = deviceKeys; } }
 export class SitFile { public summary: SitSummary; public radios: Sighting[]; public path: GpsSample[]; constructor(summary: SitSummary, radios: Sighting[] = [], path: GpsSample[] = []) { this.summary = summary; this.radios = radios; this.path = path; } }

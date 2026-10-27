@@ -10679,6 +10679,658 @@
     {
       "name": "fw_cl_fix_2",
       "value": "Fixed: the Find things page could not be scrolled"
+    },
+    {
+      "name": "fieldwatch_daily_greeting",
+      "value": "What would you like to do?"
+    },
+    {
+      "name": "fieldwatch_daily_card_find_title",
+      "value": "Find My Things"
+    },
+    {
+      "name": "fieldwatch_daily_card_find_desc",
+      "value": "Earbuds, watch, car keys — follow the sound to them"
+    },
+    {
+      "name": "fieldwatch_daily_card_security_title",
+      "value": "Security Scan"
+    },
+    {
+      "name": "fieldwatch_daily_card_security_desc",
+      "value": "See which devices are around, and whether any follow you"
+    },
+    {
+      "name": "fieldwatch_daily_card_wifi_title",
+      "value": "Wi-Fi Checkup"
+    },
+    {
+      "name": "fieldwatch_daily_card_wifi_desc",
+      "value": "See how busy your home network is, and whether to switch"
+    },
+    {
+      "name": "fieldwatch_daily_own_title",
+      "value": "My Devices"
+    },
+    {
+      "name": "fieldwatch_daily_own_empty",
+      "value": "No devices claimed yet. Claim one and finding it takes two taps"
+    },
+    {
+      "name": "fieldwatch_daily_own_more",
+      "value": "See all"
+    },
+    {
+      "name": "fieldwatch_daily_own_count",
+      "value": "%1 claimed"
+    },
+    {
+      "name": "fieldwatch_daily_nearby",
+      "value": "%1 devices nearby"
+    },
+    {
+      "name": "fieldwatch_daily_switch_pro",
+      "value": "Switch to Pro"
+    },
+    {
+      "name": "fieldwatch_daily_switch_hint",
+      "value": "Pro keeps radar, filters and the device library — switch back any time"
+    },
+    {
+      "name": "fieldwatch_find_subtitle",
+      "value": "Pick the device you are looking for"
+    },
+    {
+      "name": "fieldwatch_find_paired",
+      "value": "Paired with this phone"
+    },
+    {
+      "name": "fieldwatch_find_own",
+      "value": "My Devices"
+    },
+    {
+      "name": "fieldwatch_find_scan_list",
+      "value": "Recently heard"
+    },
+    {
+      "name": "fieldwatch_find_claim_action",
+      "value": "This is mine"
+    },
+    {
+      "name": "fieldwatch_find_start",
+      "value": "Start"
+    },
+    {
+      "name": "fieldwatch_find_stop",
+      "value": "Stop"
+    },
+    {
+      "name": "fieldwatch_find_empty",
+      "value": "Nothing to look for yet — claim a device first"
+    },
+    {
+      "name": "fieldwatch_find_heat",
+      "value": "Closeness"
+    },
+    {
+      "name": "fieldwatch_find_trouble_title",
+      "value": "Nothing yet? Try this"
+    },
+    {
+      "name": "fieldwatch_find_trouble_1",
+      "value": "Make sure the device's Bluetooth is on"
+    },
+    {
+      "name": "fieldwatch_find_trouble_2",
+      "value": "Move near where it usually lives: bag, drawer, coat pocket"
+    },
+    {
+      "name": "fieldwatch_find_trouble_3",
+      "value": "Some devices go quiet once back in the charging case"
+    },
+    {
+      "name": "fieldwatch_find_last_seen",
+      "value": "Last seen: %1"
+    },
+    {
+      "name": "fieldwatch_find_wiggle",
+      "value": "Several share this name? Pick yours up and give it a shake"
+    },
+    {
+      "name": "fieldwatch_find_heat_low",
+      "value": "Far"
+    },
+    {
+      "name": "fieldwatch_find_heat_mid",
+      "value": "Closer"
+    },
+    {
+      "name": "fieldwatch_find_heat_high",
+      "value": "Very close"
+    },
+    {
+      "name": "fieldwatch_find_heat_very_high",
+      "value": "Right here"
+    },
+    {
+      "name": "fieldwatch_settings_mode",
+      "value": "Interface mode"
+    },
+    {
+      "name": "fieldwatch_settings_mode_daily",
+      "value": "Daily"
+    },
+    {
+      "name": "fieldwatch_settings_mode_pro",
+      "value": "Pro"
+    },
+    {
+      "name": "fieldwatch_daily_coming_soon",
+      "value": "Coming in the next version"
+    },
+    {
+      "name": "fieldwatch_find_trouble_4",
+      "value": "Take it off whatever it is stuck to and try again"
+    },
+    {
+      "name": "fieldwatch_find_claim_failed",
+      "value": "Could not claim it — try again"
+    },
+    {
+      "name": "fieldwatch_find_not_heard",
+      "value": "Cannot hear it yet — move a little closer"
+    },
+    {
+      "name": "fieldwatch_find_found_toast",
+      "value": "Glad you found it"
+    },
+    {
+      "name": "fieldwatch_find_denied_toast",
+      "value": "Noted — we will not treat it as yours again"
+    },
+    {
+      "name": "fieldwatch_find_wiggle_confirmed",
+      "value": "That is the one"
+    },
+    {
+      "name": "fieldwatch_find_source_own",
+      "value": "My device"
+    },
+    {
+      "name": "fieldwatch_find_source_paired",
+      "value": "Paired with this phone"
+    },
+    {
+      "name": "fieldwatch_find_source_paired_in_use",
+      "value": "Paired · in use right now"
+    },
+    {
+      "name": "fieldwatch_find_source_scan",
+      "value": "Recently heard"
+    },
+    {
+      "name": "fieldwatch_find_empty_hint",
+      "value": "Claim a device first, or turn Bluetooth on and come back"
+    },
+    {
+      "name": "fieldwatch_find_just_now",
+      "value": "just now"
+    },
+    {
+      "name": "fieldwatch_find_minutes_ago",
+      "value": "%1 min ago"
+    },
+    {
+      "name": "fieldwatch_find_hours_ago",
+      "value": "%1 h ago"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_title",
+      "value": "Want to be notified?"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_body",
+      "value": "We can notify you when an unfamiliar device — or one you follow — shows up. You can change this any time in Settings."
+    },
+    {
+      "name": "fieldwatch_onb_alerts_ask",
+      "value": "Turn on device alerts? (Notify you when an unfamiliar or followed device appears)"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_hint",
+      "value": "Off by default. Once on, it only notifies on appearance — it will not keep buzzing."
+    },
+    {
+      "name": "fieldwatch_onb_alerts_on",
+      "value": "Turn on alerts"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_skip",
+      "value": "Not now"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_enabled",
+      "value": "Alerts on"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_declined",
+      "value": "Skipped — you can enable it in Settings"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_need_system",
+      "value": "The system did not show the notification prompt (it may have been denied before). Please allow notifications for this app in Settings → Notifications."
+    },
+    {
+      "name": "fieldwatch_security_title",
+      "value": "Security Scan"
+    },
+    {
+      "name": "fieldwatch_security_subtitle",
+      "value": "See which devices are broadcasting around you"
+    },
+    {
+      "name": "fieldwatch_security_start",
+      "value": "Start scan (60s)"
+    },
+    {
+      "name": "fieldwatch_security_scanning",
+      "value": "Scanning…"
+    },
+    {
+      "name": "fieldwatch_security_remaining",
+      "value": "%1 s left"
+    },
+    {
+      "name": "fieldwatch_security_summary_title",
+      "value": "Scan complete"
+    },
+    {
+      "name": "fieldwatch_security_total_label",
+      "value": "devices broadcasting"
+    },
+    {
+      "name": "fieldwatch_security_classes_title",
+      "value": "Top categories"
+    },
+    {
+      "name": "fieldwatch_security_newfaces",
+      "value": "New this time: %1"
+    },
+    {
+      "name": "fieldwatch_security_follow",
+      "value": "Follow score: %1"
+    },
+    {
+      "name": "fieldwatch_security_follow_hint",
+      "value": "A device may be following you"
+    },
+    {
+      "name": "fieldwatch_security_headline_suspicious",
+      "value": "A device may be following you"
+    },
+    {
+      "name": "fieldwatch_security_headline_crowded",
+      "value": "Quite a few devices around"
+    },
+    {
+      "name": "fieldwatch_security_headline_quiet",
+      "value": "Pretty quiet around you"
+    },
+    {
+      "name": "fieldwatch_security_footnote",
+      "value": "Only devices that broadcast are counted; devices that stay silent cannot be found."
+    },
+    {
+      "name": "fieldwatch_security_share",
+      "value": "Make a share card"
+    },
+    {
+      "name": "fieldwatch_security_share_failed",
+      "value": "Could not make the share card — try again"
+    },
+    {
+      "name": "fieldwatch_security_again",
+      "value": "Scan again"
+    },
+    {
+      "name": "fieldwatch_security_empty",
+      "value": "Nothing heard this time. Try again a little closer."
+    },
+    {
+      "name": "fieldwatch_security_ble",
+      "value": "Bluetooth"
+    },
+    {
+      "name": "fieldwatch_security_wifi",
+      "value": "Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_security_nearlink",
+      "value": "NearLink"
+    },
+    {
+      "name": "fieldwatch_security_kinds",
+      "value": "Bluetooth %1 · Wi-Fi %2 · NearLink %3"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_title",
+      "value": "A device may be following you"
+    },
+    {
+      "name": "fieldwatch_antitrack_notif_body",
+      "value": "%1 has been with you for a while — tap to see"
+    },
+    {
+      "name": "fieldwatch_onb_antitrack_ask",
+      "value": "Get notified when a device may be following you?"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack",
+      "value": "Follow alerts"
+    },
+    {
+      "name": "fieldwatch_settings_antitrack_hint",
+      "value": "Evaluated every 15 minutes while the app is open. Only high-scoring devices trigger it, once per device per day"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_title",
+      "value": "Wi-Fi Checkup"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_subtitle",
+      "value": "See how crowded your network is and which room is weakest"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_channel_summary",
+      "value": "Heard %1 on 2.4G; busiest channel is %2"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_recommend",
+      "value": "Suggest switching to channel %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_title",
+      "value": "Check room by room"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_hint",
+      "value": "Walk into the room, put the phone down and wait 20 seconds"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_add",
+      "value": "Check this room"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_name",
+      "value": "Room name (e.g. Living room)"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_scanning",
+      "value": "Measuring… %1 s left"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_room_done",
+      "value": "Done: %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_worst",
+      "value": "Weakest room: %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade",
+      "value": "Signal grade: %1"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_crowded",
+      "value": "Channel %1 is crowded"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_dualband",
+      "value": "5G is available but not in use — worth trying"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_strong",
+      "value": "Great"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_ok",
+      "value": "Good enough"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_weak",
+      "value": "Weak"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_bad",
+      "value": "Poor"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_grade_unknown",
+      "value": "Not measured"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_export",
+      "value": "Export report"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_exported",
+      "value": "Report saved to the export folder"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_empty",
+      "value": "Check at least two rooms to compare"
+    },
+    {
+      "name": "fieldwatch_wifi_doctor_no_aps",
+      "value": "No Wi-Fi access points found on this device"
+    },
+    {
+      "name": "fieldwatch_scene_title",
+      "value": "Scenes"
+    },
+    {
+      "name": "fieldwatch_scene_hint",
+      "value": "Apply a filter set in one tap - switch back any time"
+    },
+    {
+      "name": "fieldwatch_scene_dorm",
+      "value": "Dorm"
+    },
+    {
+      "name": "fieldwatch_scene_dorm_hint",
+      "value": "Roommates earbuds, watches, phones and the odd tracker"
+    },
+    {
+      "name": "fieldwatch_scene_hotel",
+      "value": "Hotel"
+    },
+    {
+      "name": "fieldwatch_scene_hotel_hint",
+      "value": "Cameras and audio devices that should not be in your room"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun",
+      "value": "Night run"
+    },
+    {
+      "name": "fieldwatch_scene_nightrun_hint",
+      "value": "Only nearby things that may be moving with you"
+    },
+    {
+      "name": "fieldwatch_scene_office",
+      "value": "Office"
+    },
+    {
+      "name": "fieldwatch_scene_office_hint",
+      "value": "Coworkers phones and laptops, office network"
+    },
+    {
+      "name": "fieldwatch_scene_applied",
+      "value": "Applied: %1"
+    },
+    {
+      "name": "fieldwatch_rating_title",
+      "value": "Enjoying it?"
+    },
+    {
+      "name": "fieldwatch_rating_body",
+      "value": "A quick rating in the store helps us a lot."
+    },
+    {
+      "name": "fieldwatch_rating_go",
+      "value": "Rate it"
+    },
+    {
+      "name": "fieldwatch_rating_later",
+      "value": "Not now"
+    },
+    {
+      "name": "fieldwatch_rating_open_failed",
+      "value": "Could not open the store — search for Airwave Footprints there"
+    },
+    {
+      "name": "fieldwatch_dex_title",
+      "value": "Device Dex"
+    },
+    {
+      "name": "fieldwatch_dex_subtitle",
+      "value": "%1 of %2 unlocked"
+    },
+    {
+      "name": "fieldwatch_dex_new_today",
+      "value": "%1 new today"
+    },
+    {
+      "name": "fieldwatch_dex_loading",
+      "value": "Counting…"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_common",
+      "value": "Common"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_uncommon",
+      "value": "Uncommon"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_rare",
+      "value": "Rare"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_epic",
+      "value": "Epic"
+    },
+    {
+      "name": "fieldwatch_dex_seen_times",
+      "value": "Seen %1 times"
+    },
+    {
+      "name": "fieldwatch_dex_last_seen",
+      "value": "Last seen: %1"
+    },
+    {
+      "name": "fieldwatch_dex_not_seen",
+      "value": "Not seen yet. Keep an eye out and it will light up."
+    },
+    {
+      "name": "fieldwatch_dex_footnote",
+      "value": "The dex only counts history on this device. Uninstalling clears it, consistent with our local-only data policy."
+    },
+    {
+      "name": "fieldwatch_daily_dex_hint",
+      "value": "See which devices you have met"
+    },
+    {
+      "name": "fieldwatch_board_title",
+      "value": "My Devices"
+    },
+    {
+      "name": "fieldwatch_board_subtitle",
+      "value": "One card per device you own"
+    },
+    {
+      "name": "fieldwatch_board_empty",
+      "value": "No devices claimed yet"
+    },
+    {
+      "name": "fieldwatch_board_empty_hint",
+      "value": "Claim one in Find My Things and it will show up here"
+    },
+    {
+      "name": "fieldwatch_board_nearby",
+      "value": "Nearby"
+    },
+    {
+      "name": "fieldwatch_board_last_seen",
+      "value": "Last seen: %1"
+    },
+    {
+      "name": "fieldwatch_board_never_seen",
+      "value": "Not seen yet"
+    },
+    {
+      "name": "fieldwatch_board_mark_car",
+      "value": "This is my car"
+    },
+    {
+      "name": "fieldwatch_board_unmark_car",
+      "value": "Unmark car"
+    },
+    {
+      "name": "fieldwatch_board_open_map",
+      "value": "Open map"
+    },
+    {
+      "name": "fieldwatch_board_map_failed",
+      "value": "Could not open the map"
+    },
+    {
+      "name": "fieldwatch_board_car_line",
+      "value": "Last heard: %1 %2"
+    },
+    {
+      "name": "fieldwatch_board_car_hint",
+      "value": "The last position before the engine stops is roughly where you parked. In a garage you only get an approximate point, not the floor or exact bay."
+    },
+    {
+      "name": "fieldwatch_newfaces_title",
+      "value": "New Faces"
+    },
+    {
+      "name": "fieldwatch_newfaces_subtitle",
+      "value": "Devices that only recently showed up and stay nearby"
+    },
+    {
+      "name": "fieldwatch_newfaces_loading",
+      "value": "Comparing with local history…"
+    },
+    {
+      "name": "fieldwatch_newfaces_empty",
+      "value": "No new faces right now. The more history you build up, the more accurate this list gets."
+    },
+    {
+      "name": "fieldwatch_newfaces_compare",
+      "value": "Compare against local history"
+    },
+    {
+      "name": "fieldwatch_newfaces_compare_hint",
+      "value": "You control this manually — nothing is decided by your location."
+    },
+    {
+      "name": "fieldwatch_newfaces_mine",
+      "value": "That is mine"
+    },
+    {
+      "name": "fieldwatch_daily_newfaces_hint",
+      "value": "Devices that recently showed up and stay nearby"
+    },
+    {
+      "name": "fw_ws_new_today",
+      "value": "New today: "
+    },
+    {
+      "name": "fw_ws_following",
+      "value": "A device may be following you (score "
     }
   ]
 }

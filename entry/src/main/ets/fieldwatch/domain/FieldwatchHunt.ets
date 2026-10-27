@@ -265,6 +265,32 @@ export function huntTickIntervalMs(rssi: number, cue: HuntCue): number {
   return Math.round(HUNT_TICK_SLOW_MS + (HUNT_TICK_FAST_MS - HUNT_TICK_SLOW_MS) * ratio);
 }
 
+/**
+ * 最近一段样本的**离散度**（极差，dB），用于「同名多台用晃一晃确认」。
+ *
+ * 为什么用极差而不是方差：晃动的特征就是「这一小段里有过大起伏」，
+ * 极差直接反映这件事且不需要开方，读数能直接对着 UI 说人话；
+ * 方差对单个野值的惩罚更重，反而容易被一次误码带偏。
+ *
+ * 只统计**最近 count 条已测量样本**：更早的样本属于「拿起来之前」，
+ * 混进来会把静止设备的历史波动也算成本次晃动。
+ */
+export function huntRecentSpread(samples: HuntSample[], now: number, windowMs: number): number {
+  let low: number = 127;
+  let high: number = -127;
+  let count: number = 0;
+  samples.forEach((sample: HuntSample): void => {
+    if (!huntRssiMeasured(sample.rssi)) return;
+    if (now - sample.at > windowMs) return;
+    if (sample.rssi < low) low = sample.rssi;
+    if (sample.rssi > high) high = sample.rssi;
+    count += 1;
+  });
+  // 少于两条谈不上「起伏」：一条样本的极差恒为 0，会把它误判成静止。
+  if (count < 2) return 0;
+  return high - low;
+}
+
 /** 视觉强度 0..3；UI 用它决定脉冲与颜色强度。 */
 export function huntCueLevel(cue: HuntCue): number {
   if (cue === HuntCue.VERY_CLOSE) return 3;

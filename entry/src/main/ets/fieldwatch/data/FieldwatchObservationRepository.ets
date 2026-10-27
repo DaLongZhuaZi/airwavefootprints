@@ -16,6 +16,13 @@ export class FieldwatchStoredObservation {
   public channelWidth: number = 0;
   public securityType: number = 0;
   public fresh: boolean = false;
+  /**
+   * 该观测**当时**命中的特征库 id（P2-11 图鉴的唯一数据源）。
+   *
+   * 为什么要落库：图鉴要统计「历史上一共见过哪些特征」，
+   * 而实时列表只保留当前在场的设备 —— 只查实时列表会让图鉴永远点不亮。
+   */
+  public signatureIds: string[] = [];
 }
 
 export class FieldwatchStoredSit extends SitSummary {
@@ -25,10 +32,12 @@ export class FieldwatchStoredSit extends SitSummary {
 }
 
 /** 批量插入的列前缀与单行占位符；行数可变，串在运行时拼。 */
+// 合并要点：main 的批量写入（P7–P10 热路径治理）**完整保留**，
+// 只把 feat 新增的 `signature_ids` 列并进批次 —— 它是图鉴的数据源。
 const OBSERVATION_INSERT_PREFIX: string =
   'INSERT INTO fieldwatch_observations (observation_key, kind, address, name, rssi, seen_at, ssid, '
-  + 'frequency_mhz, band, channel_width, security_type, fresh) VALUES ';
-const OBSERVATION_ROW_PLACEHOLDER: string = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  + 'frequency_mhz, band, channel_width, security_type, fresh, signature_ids) VALUES ';
+const OBSERVATION_ROW_PLACEHOLDER: string = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
 export class FieldwatchObservationRepository {
   private initialized: boolean = false;
@@ -56,13 +65,34 @@ export class FieldwatchObservationRepository {
   }
 
   /**
+   * 最近一次 ingest 命中的特征 id，供批写入一起落库（图鉴的数据源）。
+   *
+   * 为什么走一个字段而不是改 `ScanObservation`：观测对象是平台层的产物，
+   * 它只描述「听到了什么」，不该带签名结果（签名是应用层的判断）。
+   * 应用层在调用 `append` 前把这个字段设上，**入队时立刻取走并随批次保存** ——
+   * 批处理是延迟落库的，若留到 `writePending` 再读，字段早已被后续观测覆盖。
+   */
+  private signatureIdsHint: string[] = [];
+  /** 与 `pending` 一一对应的签名 id 快照（同批同序）。 */
+  private pendingSignatureIds: string[][] = [];
+
+  /** 设置下一次 `append` 要一起落库的签名 id（入队后自动清空）。 */
+  setSignatureIdsHint(ids: string[]): void {
+    this.signatureIdsHint = ids.slice();
+  }
+
+  /**
    * 观测入队。
    *
    * 攒够 BATCH_ROWS 条立即落库，否则等 FLUSH_DELAY_MS 再落库；调用方（采集回调）
    * 不再逐条等待事务提交。
    */
   async append(observation: ScanObservation): Promise<void> {
+    // 入队时就取走签名快照：批处理延迟落库，留到 writePending 再读会串味。
+    const hint: string[] = this.signatureIdsHint;
+    this.signatureIdsHint = [];
     this.pending.push(observation);
+    this.pendingSignatureIds.push(hint);
     if (this.pending.length >= FieldwatchObservationRepository.BATCH_ROWS) {
       this.cancelFlushTimer();
       await this.writePending();
@@ -90,7 +120,9 @@ export class FieldwatchObservationRepository {
     this.writeChain = this.writeChain.then(async (): Promise<void> => {
       if (this.pending.length === 0) return;
       const batch: ScanObservation[] = this.pending;
+      const batchSignatureIds: string[][] = this.pendingSignatureIds;
       this.pending = [];
+      this.pendingSignatureIds = [];
       if (!await this.initialize()) return;
       const placeholders: string[] = [];
       const args: Array<string | number | boolean> = [];
@@ -109,6 +141,9 @@ export class FieldwatchObservationRepository {
         args.push(observation.facts.channelWidth);
         args.push(observation.facts.securityType);
         args.push(observation.fresh);
+        // 签名 id 与观测同批同序；缺失时写空数组，读回来是「没命中」而不是坏行。
+        const ids: string[] = index < batchSignatureIds.length ? batchSignatureIds[index] : [];
+        args.push(JSON.stringify(ids));
       }
       try {
         await ngfRdbManager.executeSql(OBSERVATION_INSERT_PREFIX + placeholders.join(', '), args);
@@ -145,7 +180,7 @@ export class FieldwatchObservationRepository {
       //      而库里明明有 64 台 Wi-Fi 设备。
       // 改成每 key 取最新一行后，实测可覆盖全部 **149 台（ble 85 / wifi 64）**。
       const rows: Array<Record<string, string | number | boolean>> = await ngfRdbManager.querySql(
-        'SELECT observation_key, kind, address, name, rssi, seen_at, ssid, frequency_mhz, band, channel_width, security_type, fresh '
+        'SELECT observation_key, kind, address, name, rssi, seen_at, ssid, frequency_mhz, band, channel_width, security_type, fresh, signature_ids '
         + 'FROM fieldwatch_observations '
         + 'WHERE id IN (SELECT MAX(id) FROM fieldwatch_observations GROUP BY observation_key) '
         + 'ORDER BY seen_at DESC LIMIT ?', [limit]);
@@ -166,6 +201,7 @@ export class FieldwatchObservationRepository {
         item.channelWidth = Number(row['channel_width'] ?? 0);
         item.securityType = Number(row['security_type'] ?? 0);
         item.fresh = this.readBoolean(row['fresh']);
+        item.signatureIds = this.readStringList(row['signature_ids']);
         if (item.key.length > 0) result.push(item);
       });
     } catch (error) {
@@ -244,14 +280,16 @@ export class FieldwatchObservationRepository {
   private async initializeStore(): Promise<boolean> {
     try {
       const created: boolean = await ngfRdbManager.init({ name: 'fieldwatch.db', securityLevel: 1 }, [
-        'CREATE TABLE IF NOT EXISTS fieldwatch_observations (id INTEGER PRIMARY KEY AUTOINCREMENT, observation_key TEXT NOT NULL, kind TEXT NOT NULL, address TEXT NOT NULL, name TEXT, rssi REAL, seen_at INTEGER NOT NULL, ssid TEXT, frequency_mhz REAL, band INTEGER, channel_width INTEGER, security_type INTEGER, fresh INTEGER)',
+        'CREATE TABLE IF NOT EXISTS fieldwatch_observations (id INTEGER PRIMARY KEY AUTOINCREMENT, observation_key TEXT NOT NULL, kind TEXT NOT NULL, address TEXT NOT NULL, name TEXT, rssi REAL, seen_at INTEGER NOT NULL, ssid TEXT, frequency_mhz REAL, band INTEGER, channel_width INTEGER, security_type INTEGER, fresh INTEGER, signature_ids TEXT NOT NULL DEFAULT \'[]\')',
         'CREATE INDEX IF NOT EXISTS idx_fieldwatch_observations_seen_at ON fieldwatch_observations (seen_at DESC)',
         'CREATE TABLE IF NOT EXISTS fieldwatch_sits (sit_id TEXT PRIMARY KEY, name TEXT NOT NULL, started_at INTEGER NOT NULL, ended_at INTEGER NOT NULL, radio_count INTEGER NOT NULL, device_keys TEXT NOT NULL DEFAULT \'[]\')',
         'CREATE TABLE IF NOT EXISTS fieldwatch_schema (version INTEGER NOT NULL)'
       ]);
       this.initialized = created;
       // Execute the schema contract for both first install and existing stores.
-      await ngfRdbManager.executeSql('CREATE TABLE IF NOT EXISTS fieldwatch_observations (id INTEGER PRIMARY KEY AUTOINCREMENT, observation_key TEXT NOT NULL, kind TEXT NOT NULL, address TEXT NOT NULL, name TEXT, rssi REAL, seen_at INTEGER NOT NULL, ssid TEXT, frequency_mhz REAL, band INTEGER, channel_width INTEGER, security_type INTEGER, fresh INTEGER)');
+      await ngfRdbManager.executeSql('CREATE TABLE IF NOT EXISTS fieldwatch_observations (id INTEGER PRIMARY KEY AUTOINCREMENT, observation_key TEXT NOT NULL, kind TEXT NOT NULL, address TEXT NOT NULL, name TEXT, rssi REAL, seen_at INTEGER NOT NULL, ssid TEXT, frequency_mhz REAL, band INTEGER, channel_width INTEGER, security_type INTEGER, fresh INTEGER, signature_ids TEXT NOT NULL DEFAULT \'[]\')');
+      // 老库补列：`CREATE TABLE IF NOT EXISTS` 对已存在的表**不会加列**。
+      await this.ensureSignatureIdsColumn();
       await ngfRdbManager.executeSql('CREATE INDEX IF NOT EXISTS idx_fieldwatch_observations_seen_at ON fieldwatch_observations (seen_at DESC)');
       await ngfRdbManager.executeSql('CREATE TABLE IF NOT EXISTS fieldwatch_sits (sit_id TEXT PRIMARY KEY, name TEXT NOT NULL, started_at INTEGER NOT NULL, ended_at INTEGER NOT NULL, radio_count INTEGER NOT NULL, device_keys TEXT NOT NULL DEFAULT \'[]\')');
       await ngfRdbManager.executeSql('CREATE TABLE IF NOT EXISTS fieldwatch_schema (version INTEGER NOT NULL)');
@@ -280,6 +318,17 @@ export class FieldwatchObservationRepository {
     return value === '1' || value === 'true';
   }
 
+  /** 读一个 JSON 字符串数组；坏数据返回空数组（图鉴据此不点亮，而不是崩）。 */
+  private readStringList(value: string | number | boolean | undefined): string[] {
+    if (typeof value !== 'string' || value.length === 0) return [];
+    try {
+      const parsed: string[] = JSON.parse(value) as string[];
+      return parsed.filter((item: string): boolean => item.length > 0);
+    } catch (error) {
+      return [];
+    }
+  }
+
   private readDeviceKeys(value: string | number | boolean | undefined): string[] {
     if (typeof value !== 'string' || value.length === 0) return [];
     try {
@@ -288,6 +337,20 @@ export class FieldwatchObservationRepository {
     } catch (error) {
       logger.warn(TAG, '读取 sit 设备快照失败: ' + this.errorMessage(error));
       return [];
+    }
+  }
+
+  /**
+   * 给老库补 `signature_ids` 列。
+   *
+   * 与 `ensureSitDeviceKeysColumn` 同一个套路：重复加列会抛「duplicate column」，
+   * 那是正常路径，降级成 debug 日志即可。
+   */
+  private async ensureSignatureIdsColumn(): Promise<void> {
+    try {
+      await ngfRdbManager.executeSql("ALTER TABLE fieldwatch_observations ADD COLUMN signature_ids TEXT NOT NULL DEFAULT '[]'");
+    } catch (error) {
+      logger.debug(TAG, 'signature_ids 字段已存在或无需迁移: ' + this.errorMessage(error));
     }
   }
 

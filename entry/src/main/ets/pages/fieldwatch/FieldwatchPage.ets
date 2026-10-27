@@ -26,7 +26,7 @@ import { ClassRow, ClassRowDataSource, ClassRowKind } from '../../fieldwatch/ui/
  * 而 ArkTS 的 struct 方法不能跨结构体调用。
  */
 import { CandidateReport, SignatureCandidate } from '../../fieldwatch/domain/FieldwatchCandidateEngine';
-import { countSightingsByKind, DecodedFieldValue, FieldwatchLogFootprint, FieldwatchRssiTrend, FilterDefinition, FilterLogic, FilterPreset, GpsSample, isRadioPhaseActive, mergeScanError, RadioKind, RadioSourceSnapshot, ServiceDataRecord, SignatureClass, Sighting, SitSummary, WatchTarget, WifiScanPhase, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
+import { countSightingsByKind, DecodedFieldValue, FieldwatchLogFootprint, FieldwatchRssiTrend, FieldwatchUiMode, FilterDefinition, FilterLogic, FilterPreset, GpsSample, isRadioPhaseActive, mergeScanError, RadioKind, RadioSourceSnapshot, ServiceDataRecord, SignatureClass, Sighting, SitSummary, WatchTarget, WifiScanPhase, foldedSignatureClass, visibleSignatureClasses } from '../../fieldwatch/domain/FieldwatchModels';
 import { SignatureFleet } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
 import { SignatureMatchExplanation } from '../../fieldwatch/domain/signatures/FieldwatchSignatureEngine';
 import { FieldwatchHuntParam, FieldwatchRouteName, FieldwatchSignatureEditorParam } from '../../fieldwatch/ui/FieldwatchRoutes';
@@ -45,6 +45,13 @@ import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { FieldwatchSignatureDetail } from '../../fieldwatch/ui/FieldwatchSignatureDetail';
 import { FieldwatchOnboardingPage } from './FieldwatchOnboardingPage';
 import { CHANGELOG_HEAD, ChangelogEntry } from '../../fieldwatch/domain/FieldwatchChangelog';
+// 本次合入的四个新页面。DailyPage / feat 版 FindPage / DeviceBoardPage 随找东西专题暂缓，
+// 它们依赖 feat 的 OwnDeviceProfile 体系，不在此引入。
+import { FieldwatchSecurityScanPage } from './FieldwatchSecurityScanPage';
+import { FieldwatchWifiDoctorPage } from './FieldwatchWifiDoctorPage';
+import { FieldwatchDexPage } from './FieldwatchDexPage';
+import { FieldwatchNewFacesPage } from './FieldwatchNewFacesPage';
+import { ScenePack } from '../../fieldwatch/domain/FieldwatchScenePacks';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 import { FieldwatchFileActionStatus, FieldwatchFileSaveResult } from '../../fieldwatch/platform/FieldwatchCatalogFileGateway';
 
@@ -99,6 +106,14 @@ struct FieldwatchRootPage {
   @State private followTick: number = 0;
   /** 首次启动引导：未完成时先走引导，再进主界面。 */
   @State private showOnboarding: boolean = false;
+  /**
+   * 界面模式（daily / pro）。
+   *
+   * 只决定**首屏分发**，不影响任何采集、匹配、导出逻辑 ——
+   * 文档「明确不做」里写着不许为日常模式阉割专业模式，所以功能面完全一致。
+   * 初值读应用层（那里已经按「老用户 pro / 新用户 daily」解析过），
+   * 页面不重复做这套判定，避免两处规则漂移。
+   */
   @StorageProp('ngf_is_dark_mode') @Watch('onDarkModeChanged') private isDarkMode: boolean = true;
   @State private isLandscape: boolean = false;
   /**
@@ -410,6 +425,10 @@ struct FieldwatchRootPage {
   }
 
   private refreshView(): void {
+    // 反跟随自动提醒（P1-6）：内部按 15 分钟节流，所以挂在这个每秒刷新上是安全的。
+    fieldwatchApplication.tickAntiTrackAlerts();
+    // 界面模式可能被设置页或深链改掉（应用层是唯一真值，本页只是它的镜像）。
+    // 每秒对一次，避免「在设置里切了模式，回到首屏还是老样子」。
     // 快捷方式 / 卡片点击带进来的目标标签页。
     //
     // 放在 1 秒刷新里消费，而不是只在 `aboutToAppear`：
@@ -493,6 +512,30 @@ struct FieldwatchRootPage {
     this.pathStack.pushPathByName(FieldwatchRouteName.HUNT, null);
   }
 
+  /** 打开一键安防扫描（P1-5）。 */
+  private openSecurity(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.SECURITY, null);
+  }
+
+  /** 打开 Wi-Fi 体检（P1-7）。 */
+  private openWifiDoctor(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.WIFI_DOCTOR, null);
+  }
+
+  /** 打开设备图鉴（P2-11）。 */
+  private openDex(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.DEX, null);
+  }
+
+  /** 打开新面孔清单（P2-14）。 */
+  private openNewFaces(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.NEW_FACES, null);
+  }
+
   private openWatchlist(): void {
     this.subPageOpen = true;
     this.pathStack.pushPathByName(FieldwatchRouteName.WATCHLIST, '');
@@ -531,6 +574,10 @@ struct FieldwatchRootPage {
     HdsNavigation(this.pathStack) {
       Stack({ alignContent: Alignment.TopStart }) {
         NGFImmersiveTopChromeUnderlay({ spec: NGFImmersiveTopChromePresetFactory.build(FieldwatchPaletteHolder.get().night, FieldwatchPaletteHolder.get().panel, FieldwatchPaletteHolder.get().panel2, FieldwatchPaletteHolder.get().accentActive, FieldwatchPaletteHolder.get().accent, PAGE_UNDERLAY_HEIGHT) })
+        // 日常模式首屏（DailyPage）本次合并**暂不接线**：它依赖 feat 的 OwnDeviceProfile
+        // 体系（我的设备摘要条要 ownDevices()），随「找东西专题」一并暂缓。
+        // 当前首屏沿用 main 的两种形态（横屏侧栏 / 竖屏底栏），
+        // 「实时页默认形态」入口仍在设置页的 dailyMode。
         if (this.isLandscape) {
           this.buildLandscapeLayout()
         } else {
@@ -582,7 +629,33 @@ struct FieldwatchRootPage {
     else if (name === FieldwatchRouteName.SIGNATURE_CATALOG) {
       FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, landscape: this.isLandscape, onEditFleet: (fleetId: string, deviceKey: string): void => { this.openSignatureEditor(fleetId, deviceKey); }, onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, followTick: this.followTick, onOpenWatchlist: (): void => { this.openWatchlist(); } });
     } else if (name === FieldwatchRouteName.HUNT) {
+      // 保留 main 的 bottomInset：底部留白修复（b09d806 / df24b53）靠它，
+      // 合并时丢掉会让子页面重新被底栏遮挡。
       FieldwatchHuntPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, onClose: (): void => { this.pathStack.pop(); } });
+    } else if (name === FieldwatchRouteName.SECURITY) {
+      FieldwatchSecurityScanPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.WIFI_DOCTOR) {
+      FieldwatchWifiDoctorPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.DEX) {
+      FieldwatchDexPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.NEW_FACES) {
+      FieldwatchNewFacesPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
     } else if (name === FieldwatchRouteName.SIGNATURE_DETAIL) {
       // 横屏右栏的特征详情：与竖屏 sheet 共用同一个内容组件。
       FieldwatchSignatureDetail({
@@ -3125,6 +3198,8 @@ struct FieldwatchLivePage {
             }.layoutWeight(1).alignItems(HorizontalAlign.Start)
             Column({ space: 4 }) {
               Row({ space: 4 }) {
+                // main 已把趋势标记抽成 buildTrailTrendMark（内含修复后的 equals 图标），
+                // 这里取 main 版；feat 侧内联修复的目的已由 main 的实现覆盖。
                 this.buildTrailTrendMark(item)
                 Text(item.rssi.toString()).fontSize(this.rowM().valueSize).fontColor(FieldwatchPaletteHolder.get().rssiBar)
               }
@@ -3702,6 +3777,39 @@ struct FieldwatchFiltersPage {
     });
   }
   // ── 1 预设 ──
+  /**
+   * 「场景」区（P1-9）：四个内置包一键套用。
+   *
+   * **放在预设区之前**：场景是「我现在的处境」，预设是「我上次存的条件」，
+   * 前者是入口、后者是回访，顺序反了会让新用户以为必须先自己存一个。
+   */
+  @Builder private buildScenes() {
+    Column({ space: 10 }) {
+      this.section($r('app.string.fieldwatch_scene_title'), this.label('app.string.fieldwatch_scene_hint'))
+      Flex({ wrap: FlexWrap.Wrap, space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) } }) {
+        ForEach(fieldwatchApplication.scenePacks(), (pack: ScenePack): void => {
+          FieldwatchPresetChip({
+            label: this.label(pack.titleKey),
+            active: false,
+            onTap: (): void => { this.applyScene(pack); }
+          })
+        }, (pack: ScenePack): string => pack.id)
+      }.width('100%')
+    }.width('100%').padding(14).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(16)
+  }
+
+  /** 套用场景包并给一次明确反馈（筛选条件变化在页面上不一定立刻可见）。 */
+  private applyScene(pack: ScenePack): void {
+    const name: string = fieldwatchApplication.applyScenePack(pack);
+    if (name.length === 0) return;
+    this.tick += 1;
+    this.getUIContext().getPromptAction().showToast({
+      message: this.label('app.string.fieldwatch_scene_applied').replace('%1', name),
+      duration: 1800
+    });
+  }
+
   @Builder private buildPresets() {
     Column({ space: 10 }) {
       this.section(fieldwatchText('app.string.fieldwatch_filter_presets'), this.label('app.string.fieldwatch_filter_presets_hint'))
@@ -3910,6 +4018,7 @@ struct FieldwatchFiltersPage {
       // 两个 `Column` 没有行对齐、也不需要测量，天然正确。
       Row({ space: 12 }) {
         Column({ space: 12 }) {
+          this.buildScenes()
           this.buildPresets()
           this.buildMovingWithYou()
           this.buildWhoStays()
@@ -3923,6 +4032,7 @@ struct FieldwatchFiltersPage {
         }.layoutWeight(1)
       }.width('100%').alignItems(VerticalAlign.Top)
     } else {
+        this.buildScenes()
         this.buildPresets()
         this.buildRadios()
         this.buildMovingWithYou()
@@ -4920,6 +5030,9 @@ struct FieldwatchSettingsPage {
     fieldwatchApplication.setDailyMode(daily);
     this.tick += 1;
   }
+
+  // 注：feat 侧原有的 `buildSettingsMode()`（界面模式 daily/pro 卡片）本次不启用 ——
+  // 它切换的是日常首屏，而 DailyPage 依赖 feat 的 OwnDeviceProfile 体系，随专题暂缓。
 
   @Builder private buildSettingsListDisplay() {
     Column({ space: 8 }) {
