@@ -8,11 +8,22 @@ import {
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
 import {
-  ApDetailRow, apDetailRows, ApSnapshot, gradeOrder, roomTrends, RoomTrend, shouldPromptRetest
+  ApDetailRow, apDetailRows, ApSnapshot, bandLabelKey, channelOfBand, gradeOrder, roomTrends, RoomTrend,
+  shouldPromptRetest
 } from '../../fieldwatch/domain/FieldwatchWifiDoctorDetail';
 import { WifiCurrentAp } from '../../fieldwatch/radio/FieldwatchWifiLink';
+import { WifiBand } from '../../fieldwatch/domain/FieldwatchChannelAnalysis';
+import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 const DOCTOR_UNDERLAY_HEIGHT: number = 168;
+
+/** 「其他频段」折叠区的一行。 */
+class OtherBandRow {
+  public bandText: string = '';
+  public summary: string = '';
+  public hasData: boolean = false;
+  constructor() {}
+}
 
 /**
  * `ApSnapshot` 的可实现类。
@@ -42,6 +53,12 @@ export struct FieldwatchWifiDoctorPage {
   withShell: boolean = true;
   topInset: number = 0;
   onClose: () => void = (): void => {};
+  /**
+   * 打开信道分析页（改版设计第 3 节：带当前频段参数）。
+   *
+   * @param bandMhz 2400 / 5000 / 6000，表示进去后落在哪个频段。
+   */
+  onOpenChannelAnalysis: (bandMhz: number) => void = (bandMhz: number): void => {};
   /** 已测过的房间（新→旧）。 */
   @State private rooms: RoomCheck[] = [];
   /** 0 = 空闲，1 = 正在测某个房间。 */
@@ -60,6 +77,8 @@ export struct FieldwatchWifiDoctorPage {
   @State private retestChannel: number = 0;
   /** 用户是否关掉了复测提醒。 */
   @State private retestDismissed: boolean = false;
+  /** 「其他频段」折叠区是否展开（改版设计 5.1：默认收起）。 */
+  @State private otherBandsOpen: boolean = false;
   private timer: number = -1;
   private sampleTimer: number = -1;
 
@@ -89,7 +108,7 @@ export struct FieldwatchWifiDoctorPage {
     // **给出建议之后**才记「待复测」：没有建议就没有可复测的东西，
     // 无条件标记会让每个用户每次进页都看到一条无意义的提醒。
     // 只在「本次确有建议、且提醒未被关闭」时写标记，避免覆盖用户的关闭偏好。
-    const recommended: number = fieldwatchApplication.wifiSurvey24().recommendedChannel;
+    const recommended: number = fieldwatchApplication.wifiSurveyCurrentBand().recommendedChannel;
     if (recommended > 0 && !this.retestDismissed && !this.retestPending) {
       fieldwatchApplication.markRetestPending(recommended);
     }
@@ -192,11 +211,14 @@ export struct FieldwatchWifiDoctorPage {
       Column({ space: 14 }) {
         // P3-3：复测提醒放在最上面 —— 用户上次被建议改信道，进来第一眼就该看到。
         this.buildRetestPrompt()
+        this.buildHeroCard()
         this.buildChannelCard()
         this.buildApDetail()
         this.buildRoomSection()
         this.buildRoomTrends()
+        this.buildOtherBands()
         if (this.report !== undefined) this.buildReport()
+        this.buildChannelEntry()
         FieldwatchButton({ label: $r('app.string.fieldwatch_wifi_doctor_export'),
           tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.exportReport(); } })
       }
@@ -352,6 +374,177 @@ export struct FieldwatchWifiDoctorPage {
     return 'app.string.fieldwatch_wifi_grade_unknown';
   }
 
+  /**
+   * 顶部 hero 卡（改版设计 5.2）：大字 SSID + 频段/信道/信号三项 + 一句话状态。
+   *
+   * 为什么单独一张卡：用户进体检页第一眼要回答「我现在连的是什么、好不好」，
+   * 而原来的信道结论卡只谈「最挤信道」，答的不是这个问题。
+   */
+  @Builder
+  private buildHeroCard() {
+    Column({ space: 10 }) {
+      Row({ space: 8 }) {
+        SymbolGlyph($r('sys.symbol.wifi')).fontSize(20)
+          .fontColor([FieldwatchPaletteHolder.get().accent])
+        Text(this.heroSsid()).fontSize(22).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).layoutWeight(1)
+          .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
+      }.width('100%')
+      // **动态值必须写在 Text 节点里**，不能经 @Builder 字符串参数传：
+      // 那样只在首帧求值一次，currentAp 异步读到后不会重绘（真机踩到过：三项全是 -）。
+      Row({ space: 10 }) {
+        Column({ space: 2 }) {
+          Text($r('app.string.fieldwatch_wifi_detail_band')).fontSize(10)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
+          Text(this.heroBandText()).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
+        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+        Column({ space: 2 }) {
+          Text($r('app.string.fieldwatch_wifi_detail_channel')).fontSize(10)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
+          Text(this.heroChannelText()).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
+        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+        Column({ space: 2 }) {
+          Text($r('app.string.fieldwatch_wifi_detail_rssi')).fontSize(10)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
+          Text(this.heroSignalText()).fontSize(15).fontColor(FieldwatchPaletteHolder.get().text)
+        }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+      }.width('100%')
+      Text(this.heroStatusText()).fontSize(13)
+        .fontColor(this.heroStatusColor()).width('100%')
+    }.width('100%').padding(16).borderRadius(16).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
+  /** 当前频段的文案键（供结论句使用）。 */
+  private bandKeyOfCurrent(): string {
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    return bandLabelKey(ap === undefined ? 0 : ap.band);
+  }
+
+  private heroSsid(): string {
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    if (ap === undefined || ap.ssid.length === 0) {
+      return this.text('app.string.fieldwatch_wifi_hero_no_wifi');
+    }
+    return ap.ssid;
+  }
+
+  private heroBandText(): string {
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    if (ap === undefined) return '-';
+    return this.text(bandLabelKey(ap.band));
+  }
+
+  private heroChannelText(): string {
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    if (ap === undefined) return '-';
+    const channel: number = channelOfBand(ap.band);
+    return channel > 0 ? channel.toString() : '-';
+  }
+
+  private heroSignalText(): string {
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    if (ap === undefined || ap.rssi >= 0) return '-';
+    return ap.rssi.toString() + ' dBm';
+  }
+
+  /** 一句话状态：优先说「建议换信道」，否则按信号强弱给结论。 */
+  private heroStatusText(): string {
+    const survey: BandSurvey = fieldwatchApplication.wifiSurveyCurrentBand();
+    if (survey.recommendedChannel > 0) {
+      return this.text('app.string.fieldwatch_wifi_hero_status_change')
+        .replace('%1', survey.recommendedChannel.toString());
+    }
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    if (ap === undefined || ap.rssi >= 0) return this.text('app.string.fieldwatch_wifi_hero_no_wifi');
+    if (ap.rssi >= -55) return this.text('app.string.fieldwatch_wifi_signal_strong');
+    if (ap.rssi >= -70) return this.text('app.string.fieldwatch_wifi_signal_ok');
+    return this.text('app.string.fieldwatch_wifi_signal_weak');
+  }
+
+  private heroStatusColor(): ResourceColor {
+    const survey: BandSurvey = fieldwatchApplication.wifiSurveyCurrentBand();
+    if (survey.recommendedChannel > 0) return FieldwatchPaletteHolder.get().warn;
+    const ap: WifiCurrentAp | undefined = this.currentAp;
+    if (ap === undefined || ap.rssi >= 0) return FieldwatchPaletteHolder.get().textDim;
+    if (ap.rssi >= -70) return FieldwatchPaletteHolder.get().accent;
+    return FieldwatchPaletteHolder.get().warn;
+  }
+
+  /**
+   * 其他频段（改版设计 5.1）：默认收起，点开看对应频段结论。
+   *
+   * 为什么不并进主卡：主卡只回答「我现在连的这个频段挤不挤」，
+   * 其他频段是参考信息，抢位置反而让主结论失焦。
+   */
+  @Builder
+  private buildOtherBands() {
+    Column({ space: 8 }) {
+      Row({ space: 8 }) {
+        Text($r('app.string.fieldwatch_wifi_other_bands')).fontSize(13)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).layoutWeight(1)
+        SymbolGlyph($r(this.otherBandsOpen ? 'sys.symbol.chevron_up' : 'sys.symbol.chevron_down'))
+          .fontSize(13).fontColor([FieldwatchPaletteHolder.get().textDim])
+      }.width('100%')
+      .onClick((): void => {
+        this.getUIContext().animateTo({ duration: 240, curve: Curve.FastOutSlowIn }, (): void => {
+          this.otherBandsOpen = !this.otherBandsOpen;
+        });
+      })
+      if (this.otherBandsOpen) {
+        ForEach(this.otherBandRows(), (row: OtherBandRow): void => {
+          Row({ space: 8 }) {
+            Text(row.bandText).fontSize(12).fontColor(FieldwatchPaletteHolder.get().text).width(56)
+            Text(row.summary).fontSize(12)
+              .fontColor(row.hasData ? FieldwatchPaletteHolder.get().text
+                : FieldwatchPaletteHolder.get().textDim).layoutWeight(1)
+          }.width('100%').padding({ top: 3, bottom: 3 })
+        }, (row: OtherBandRow): string => row.bandText)
+      }
+    }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
+  private otherBandRows(): OtherBandRow[] {
+    const current: WifiBand = fieldwatchApplication.currentApBand();
+    const rows: OtherBandRow[] = [];
+    const all: WifiBand[] = [WifiBand.BAND_24, WifiBand.BAND_5, WifiBand.BAND_6];
+    all.forEach((band: WifiBand): void => {
+      if (band === current) return;
+      const survey: BandSurvey = fieldwatchApplication.wifiSurveyFor(band);
+      const row: OtherBandRow = new OtherBandRow();
+      row.bandText = this.text(bandLabelKey(band === WifiBand.BAND_24 ? 2437
+        : (band === WifiBand.BAND_5 ? 5180 : 5955)));
+      row.hasData = survey.totalAps > 0;
+      if (!row.hasData) {
+        row.summary = this.text('app.string.fieldwatch_wifi_band_empty');
+      } else {
+        row.summary = this.text('app.string.fieldwatch_wifi_doctor_channel_summary')
+          .replace('%1', row.bandText)
+          .replace('%2', survey.totalAps.toString())
+          .replace('%3', survey.busiestChannel > 0 ? survey.busiestChannel.toString() : '—');
+      }
+      rows.push(row);
+    });
+    return rows;
+  }
+
+  /** 底部「去信道分析」入口：带当前频段参数，进去就落在同一频段。 */
+  @Builder
+  private buildChannelEntry() {
+    FieldwatchButton({ label: $r('app.string.fieldwatch_wifi_goto_channel'),
+      tone: FieldwatchButtonTone.OUTLINE,
+      onTap: (): void => { this.onOpenChannelAnalysis(this.currentBandMhz()); } })
+  }
+
+  /** 当前频段换成信道分析页认的 MHz 标识（2400/5000/6000）。 */
+  private currentBandMhz(): number {
+    const band: WifiBand = fieldwatchApplication.currentApBand();
+    if (band === WifiBand.BAND_5) return 5000;
+    if (band === WifiBand.BAND_6) return 6000;
+    return 2400;
+  }
+
   /** 信道结论卡：复用 Toolbox 的 surveyBand，与工具箱页同一口径。 */
   @Builder
   private buildChannelCard() {
@@ -373,17 +566,20 @@ export struct FieldwatchWifiDoctorPage {
   }
 
   private channelSummary(): string {
-    const survey: BandSurvey = fieldwatchApplication.wifiSurvey24();
+    const survey: BandSurvey = fieldwatchApplication.wifiSurveyCurrentBand();
     // 这里说的是**信道**调查，0 个 AP 才是真的没扫到；
     // 不能用「房间不够」的文案（那是另一件事，会在报告区单独说）。
-    if (survey.totalAps === 0) return this.text('app.string.fieldwatch_wifi_doctor_no_aps');
-    return this.text('app.string.fieldwatch_wifi_doctor_channel_summary')
-      .replace('%1', survey.totalAps.toString())
-      .replace('%2', survey.busiestChannel > 0 ? survey.busiestChannel.toString() : '—');
+    // 空态必须按**频段**说话：该频段没数据时明说，绝不回落到别的频段的数据。
+    if (survey.totalAps === 0) return this.text('app.string.fieldwatch_wifi_band_empty');
+    // 频段必须写进文案：原模板写死「2.4G」，5G 下就成了「2.4G 上听到 27 个，最挤的信道是 52」。
+    return this.text('app.string.fieldwatch_wifi_band_summary')
+      .replace('%1', this.text(this.bandKeyOfCurrent()))
+      .replace('%2', survey.totalAps.toString())
+      .replace('%3', survey.busiestChannel > 0 ? survey.busiestChannel.toString() : '—');
   }
 
   private recommendText(): string {
-    const survey: BandSurvey = fieldwatchApplication.wifiSurvey24();
+    const survey: BandSurvey = fieldwatchApplication.wifiSurveyCurrentBand();
     if (survey.recommendedChannel <= 0) return '';
     return this.text('app.string.fieldwatch_wifi_doctor_recommend').replace('%1', survey.recommendedChannel.toString());
   }

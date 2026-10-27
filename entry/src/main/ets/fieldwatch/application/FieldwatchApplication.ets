@@ -801,18 +801,54 @@ export class FieldwatchApplication {
   // 首页卡与管理页**复用 Toolbox 的 `surveyBand`**：两个页面必须给出同一个
   // 「最挤信道」，各写一套计数必然漂移（P2 图鉴那类问题同理）。
 
-  /** 当前 2.4G 的信道调查结果（首页卡与体检页共用）。 */
-  wifiSurvey24(): BandSurvey {
+  /**
+   * 按频段取信道调查结果。
+   *
+   * **改版修复点**：原来只有写死 2.4G 的 `wifiSurvey24()`，体检页无论当前连的是哪个频段
+   * 都拿 2.4G 的数据 —— 真机实测：当前 AP 是 DLZZ_5G / 信道 52，结论卡却写
+   * 「2.4G 上听到 28 个，最挤的信道是 9」。这不是显示错误，是数据源写死。
+   *
+   * @param band 目标频段；该频段没有观测时返回 `totalAps=0` 的空结果，
+   *             **调用方不得回落到其他频段**（那正是要修掉的毛病）。
+   */
+  wifiSurveyFor(band: WifiBand): BandSurvey {
     const arcs: ChannelArc[] = [];
     this.state.sightings.forEach((item: Sighting): void => {
       if (item.kind !== RadioKind.WIFI) return;
       const frequency: number = item.facts.frequencyMhz;
-      if (wifiBandOf(frequency) !== WifiBand.BAND_24) return;
+      if (wifiBandOf(frequency) !== band) return;
       const width: number = item.facts.channelWidth > 0 ? item.facts.channelWidth : 20;
       const label: string = item.name.length > 0 ? item.name : item.facts.ssid;
       arcs.push(new ChannelArc(item.key, label, frequency, width, item.rssi));
     });
-    return surveyBand(WifiBand.BAND_24, arcs);
+    return surveyBand(band, arcs);
+  }
+
+  /**
+   * 当前连接 AP 所在的频段；未连 WiFi 或频段未知时返回 BAND_24。
+   *
+   * 体检页用它决定「看哪个频段的拥堵」—— 连着 5G 就该看 5G。
+   */
+  currentApBand(): WifiBand {
+    const ap: WifiCurrentAp | undefined = this.wifiLink.current();
+    if (ap === undefined) return WifiBand.BAND_24;
+    const band: WifiBand = wifiBandOf(ap.band);
+    return band === WifiBand.UNKNOWN ? WifiBand.BAND_24 : band;
+  }
+
+  /**
+   * 当前连接 AP 频段的信道调查结果（体检页主卡用）。
+   *
+   * 保留 `wifiSurvey24()` 作为「固定看 2.4G」的显式入口（首页卡仍用它），
+   * 但体检页**必须**用这个，否则又会退回到写死 2.4G 的老毛病。
+   */
+  wifiSurveyCurrentBand(): BandSurvey {
+    return this.wifiSurveyFor(this.currentApBand());
+  }
+
+  /** 当前 2.4G 的信道调查结果（首页卡与「其他频段」折叠区共用）。 */
+  wifiSurvey24(): BandSurvey {
+    return this.wifiSurveyFor(WifiBand.BAND_24);
   }
 
   /** 5G 上听到的 AP 数（判双频缺口用）。 */
@@ -887,7 +923,8 @@ export class FieldwatchApplication {
 
   /** 组装体检报告。 */
   wifiDoctorReport(rooms: RoomCheck[]): WifiDoctorReport {
-    const survey: BandSurvey = this.wifiSurvey24();
+    // 报告与页面主卡同一口径：都按**当前连接 AP 的频段**取 survey。
+    const survey: BandSurvey = this.wifiSurveyCurrentBand();
     return buildWifiDoctor(rooms, survey.totalAps, this.wifiApCount5g(), survey);
   }
 

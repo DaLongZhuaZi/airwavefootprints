@@ -11971,6 +11971,50 @@
     {
       "name": "fieldwatch_toolbox_entry_hunt_desc",
       "value": "Walk toward a target using signal strength"
+    },
+    {
+      "name": "fieldwatch_wifi_band_empty",
+      "value": "No scan data for this band yet"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_status_ok",
+      "value": "Your network looks fine"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_status_crowded",
+      "value": "This channel is crowded"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_status_change",
+      "value": "Consider channel %1"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_no_wifi",
+      "value": "Not connected to Wi-Fi"
+    },
+    {
+      "name": "fieldwatch_wifi_other_bands",
+      "value": "Other bands"
+    },
+    {
+      "name": "fieldwatch_wifi_goto_channel",
+      "value": "Open channel analysis"
+    },
+    {
+      "name": "fieldwatch_wifi_signal_strong",
+      "value": "Excellent signal"
+    },
+    {
+      "name": "fieldwatch_wifi_signal_ok",
+      "value": "Signal is fine"
+    },
+    {
+      "name": "fieldwatch_wifi_signal_weak",
+      "value": "Weak signal"
+    },
+    {
+      "name": "fieldwatch_wifi_band_summary",
+      "value": "%2 APs heard on %1; busiest channel is %3"
     }
   ]
 }

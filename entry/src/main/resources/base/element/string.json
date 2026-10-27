@@ -11971,6 +11971,50 @@
     {
       "name": "fieldwatch_toolbox_entry_hunt_desc",
       "value": "按信号强弱一步步靠近目标设备"
+    },
+    {
+      "name": "fieldwatch_wifi_band_empty",
+      "value": "该频段暂无扫描数据"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_status_ok",
+      "value": "当前网络正常"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_status_crowded",
+      "value": "当前信道偏挤"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_status_change",
+      "value": "建议换到信道 %1"
+    },
+    {
+      "name": "fieldwatch_wifi_hero_no_wifi",
+      "value": "未连接 WiFi"
+    },
+    {
+      "name": "fieldwatch_wifi_other_bands",
+      "value": "其他频段"
+    },
+    {
+      "name": "fieldwatch_wifi_goto_channel",
+      "value": "去信道分析"
+    },
+    {
+      "name": "fieldwatch_wifi_signal_strong",
+      "value": "信号很好"
+    },
+    {
+      "name": "fieldwatch_wifi_signal_ok",
+      "value": "信号够用"
+    },
+    {
+      "name": "fieldwatch_wifi_signal_weak",
+      "value": "信号偏弱"
+    },
+    {
+      "name": "fieldwatch_wifi_band_summary",
+      "value": "%1 上听到 %2 个，最挤的信道是 %3"
     }
   ]
 }

@@ -698,6 +698,8 @@ struct FieldwatchRootPage {
       FieldwatchWifiDoctorPage({
         withShell: true,
         topInset: this.topInsetVp,
+        // 改版设计第 3 节：带当前频段参数，进去就落在同一频段。
+        onOpenChannelAnalysis: (bandMhz: number): void => { this.openChannelAnalysis(bandMhz); },
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.DEX) {
