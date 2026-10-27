@@ -1300,17 +1300,18 @@ export class FieldwatchApplication {
     else if (name === 'signatures') this.pendingTab = 2;
     else if (name === 'reports') this.pendingTab = 3;
     else if (name === 'toolbox') this.pendingTab = 4;
-    // 深链到工具箱里的某一个工具页：
-    // 与 `targetTab` 同一条链（快捷方式 / 卡片 / `aa start --ps` 都能用），
-    // 这样「打开反追踪」不必先落到工具箱再让用户点一下。
-    else if (name === 'toolbox-channel') { this.pendingTab = 4; this.pendingTool = 0; }
-    // 「寻踪」（原寻线）现在是**独立压栈页面**，不再是工具箱里的一个标签页：
-    // 工具箱里那个内联追踪面板已删除（用户反馈：那种设计不实用）。
+    // 工具页已从工具箱拆成独立子页面（改版设计第 3 节）：
+    // 这里直接压栈到对应路由，不再经 `pendingTool` 指定「第几个标签」。
+    // 旧名 `toolbox-*` 保留为别名，避免既有快捷方式/卡片/`aa start --ps` 失效。
+    else if (name === 'channel-analysis' || name === 'toolbox-channel') {
+      this.pendingRoute = 'fieldwatch.channel_analysis';
+    }
+    // 「寻踪」（原寻线）本来就是独立压栈页面。
     else if (name === 'toolbox-hunt') { this.pendingRoute = 'fieldwatch.hunt'; }
-    else if (name === 'toolbox-antitrack') { this.pendingTab = 4; this.pendingTool = 1; }
-    // 「找东西」是工具箱的第 3 个工具页（下标 2）。
-    // **必须与工具箱里 `tool` 的下标一致**：漏在这里的话，快捷方式/卡片点了会落到别的工具页。
-    else if (name === 'toolbox-find') { this.pendingTab = 4; this.pendingTool = 2; }
+    else if (name === 'anti-track' || name === 'toolbox-antitrack') {
+      this.pendingRoute = 'fieldwatch.anti_track';
+    }
+    else if (name === 'find' || name === 'toolbox-find') { this.pendingRoute = 'fieldwatch.find'; }
     else if (name === 'settings') this.pendingTab = 5;
   }
 

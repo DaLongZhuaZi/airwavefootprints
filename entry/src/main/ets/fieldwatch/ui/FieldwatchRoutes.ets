@@ -46,4 +46,16 @@ export class FieldwatchRouteName {
    * 审计日志（可查可删）、一键关闭，内容量已经超过「设置项」的量级。
    */
   static readonly ACTIVE_ACL: string = 'fieldwatch.active_acl';
+  // ── 从工具箱拆出的三个独立子页面（改版设计第 3 节）──
+  /** 信道分析（原工具箱第 1 个标签）。 */
+  static readonly CHANNEL_ANALYSIS: string = 'fieldwatch.channel_analysis';
+  /** 反追踪（原工具箱第 2 个标签）。 */
+  static readonly ANTI_TRACK: string = 'fieldwatch.anti_track';
+  /**
+   * 找东西（原工具箱第 3 个标签）。
+   *
+   * 注意：找东西**专题**（OwnDeviceProfile 体系、日常首页、看板、找车）仍暂缓，
+   * 这里只是把 main 既有的 `FieldwatchFindPage` 从标签里拆成独立页。
+   */
+  static readonly FIND: string = 'fieldwatch.find';
 }

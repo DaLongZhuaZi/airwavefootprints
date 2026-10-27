@@ -11903,6 +11903,74 @@
     {
       "name": "fieldwatch_acl_version_line",
       "value": "ACL table version %1"
+    },
+    {
+      "name": "fieldwatch_back",
+      "value": "Back"
+    },
+    {
+      "name": "fieldwatch_toolbox_search",
+      "value": "Search tools"
+    },
+    {
+      "name": "fieldwatch_toolbox_no_match",
+      "value": "No matching tool — try another word"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_channel",
+      "value": "Channel analysis"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_channel_desc",
+      "value": "See how crowded each channel is and find the emptiest"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_antitrack",
+      "value": "Anti-tracking"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_antitrack_desc",
+      "value": "Check whether a device is following you"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_find",
+      "value": "Find things"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_find_desc",
+      "value": "Claim and locate your own devices"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_security",
+      "value": "Security scan"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_security_desc",
+      "value": "See what is broadcasting nearby and flag suspects"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_wifi",
+      "value": "Wi-Fi checkup"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_wifi_desc",
+      "value": "Current network, per-room signal and channel advice"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_acl",
+      "value": "Active scan permission"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_acl_desc",
+      "value": "Manage active probing capabilities and audit log"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_hunt",
+      "value": "Hunt"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_hunt_desc",
+      "value": "Walk toward a target using signal strength"
     }
   ]
 }

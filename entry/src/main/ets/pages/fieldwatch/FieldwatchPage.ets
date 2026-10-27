@@ -52,6 +52,9 @@ import { FieldwatchWifiDoctorPage } from './FieldwatchWifiDoctorPage';
 import { FieldwatchDexPage } from './FieldwatchDexPage';
 import { FieldwatchNewFacesPage } from './FieldwatchNewFacesPage';
 import { FieldwatchAclPage } from './FieldwatchAclPage';
+import { FieldwatchChannelAnalysisPage } from './FieldwatchChannelAnalysisPage';
+import { FieldwatchAntiTrackPage } from './FieldwatchAntiTrackPage';
+import { FieldwatchFindPage } from './FieldwatchFindPage';
 import { ScenePack } from '../../fieldwatch/domain/FieldwatchScenePacks';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 import { FieldwatchFileActionStatus, FieldwatchFileSaveResult } from '../../fieldwatch/platform/FieldwatchCatalogFileGateway';
@@ -136,6 +139,13 @@ struct FieldwatchRootPage {
   @State private wifiNextAttemptAt: number = 0;
   @State private wifiErrorMessage: string = '';
   @State private liveMode: FieldwatchLiveMode = FieldwatchLiveMode.RADAR;
+  /**
+   * 打开信道分析时要落在哪个频段（2400/5000/6000；0 = 不指定）。
+   *
+   * 由调用方（体检页）在压栈前设置：不这样传的话，用户在 5G 上点「去信道分析」，
+   * 进去却看到 2.4G 的图，还得自己再切一次。
+   */
+  @State private channelAnalysisBand: number = 0;
   @State private visibleSightings: Sighting[] = [];
   @State private scanIntensity: string = 'balanced';
   /** 当前外观主题覆盖（auto / light / dark），用于给三个按钮显示选中态。 */
@@ -537,6 +547,51 @@ struct FieldwatchRootPage {
     this.pathStack.pushPathByName(FieldwatchRouteName.NEW_FACES, null);
   }
 
+  /**
+   * 打开信道分析子页面。
+   *
+   * @param band 初始频段（2400/5000/6000）；0 表示不指定。
+   *             体检页会带当前连接 AP 的频段，让用户落在同一频段上。
+   */
+  private openChannelAnalysis(band: number): void {
+    this.channelAnalysisBand = band;
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.CHANNEL_ANALYSIS, null);
+  }
+
+  /**
+   * 按路由名打开工具页（工具箱 hub 的入口点击走这里）。
+   *
+   * 用路由名而不是下标：下标与页面顺序耦合，加一个工具就要改所有调用方；
+   * 路由名是稳定标识，工具页增删不影响这里。
+   */
+  private openToolByRoute(route: string): void {
+    if (route === FieldwatchRouteName.CHANNEL_ANALYSIS) { this.openChannelAnalysis(0); return; }
+    if (route === FieldwatchRouteName.ANTI_TRACK) { this.openAntiTrack(); return; }
+    if (route === FieldwatchRouteName.FIND) { this.openFindPage(); return; }
+    if (route === FieldwatchRouteName.SECURITY) { this.openSecurity(); return; }
+    if (route === FieldwatchRouteName.WIFI_DOCTOR) { this.openWifiDoctor(); return; }
+    if (route === FieldwatchRouteName.ACTIVE_ACL) {
+      this.subPageOpen = true;
+      this.pathStack.pushPathByName(FieldwatchRouteName.ACTIVE_ACL, null);
+      return;
+    }
+    if (route === FieldwatchRouteName.HUNT) { this.openHunt(); return; }
+    logger.warn('FieldwatchToolbox', '未知工具路由: ' + route);
+  }
+
+  /** 打开反追踪子页面。 */
+  private openAntiTrack(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.ANTI_TRACK, null);
+  }
+
+  /** 打开找东西子页面。 */
+  private openFindPage(): void {
+    this.subPageOpen = true;
+    this.pathStack.pushPathByName(FieldwatchRouteName.FIND, null);
+  }
+
   private openWatchlist(): void {
     this.subPageOpen = true;
     this.pathStack.pushPathByName(FieldwatchRouteName.WATCHLIST, '');
@@ -672,6 +727,25 @@ struct FieldwatchRootPage {
         },
         onClose: (): void => { this.pathStack.pop(); }
       });
+    } else if (name === FieldwatchRouteName.CHANNEL_ANALYSIS) {
+      FieldwatchChannelAnalysisPage({
+        topInset: this.topInsetVp,
+        bottomInset: this.bottomInsetVp,
+        // 体检页跳进来会带当前连接的频段，落在同一频段上。
+        initialBand: this.channelAnalysisBand,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.ANTI_TRACK) {
+      FieldwatchAntiTrackPage({
+        topInset: this.topInsetVp,
+        bottomInset: this.bottomInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
+    } else if (name === FieldwatchRouteName.FIND) {
+      // 找东西页本身自含认领与向导，这里只给它套一层独立页的壳。
+      Column() {
+        FieldwatchFindPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp })
+      }.width('100%').height('100%')
     } else if (name === FieldwatchRouteName.ACTIVE_ACL) {
       FieldwatchAclPage({
         withShell: true,
@@ -713,7 +787,7 @@ struct FieldwatchRootPage {
   @Builder
   private buildPhoneLayout() {
     HdsTabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
-      TabContent() { FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
+      TabContent() { FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.openChannelAnalysis(0); }, onOpenFind: (): void => { this.openFindPage(); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
       TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
             // `onEditFleet` 必须传：它的默认值是空函数，漏传就变成「点了没反应」。
       TabContent() { FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, landscape: this.isLandscape,
@@ -721,7 +795,7 @@ struct FieldwatchRootPage {
         onOpenDetail: (fleetId: string): void => { this.openSignatureDetail(fleetId); }, onOpenWatchlist: (): void => { this.openWatchlist(); }, pageVisible: this.selectedTab === 2 })
       }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2))
       TabContent() { FieldwatchReportsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3))
-      TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
+      TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 4, onOpenTool: (route: string): void => { this.openToolByRoute(route); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
       TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; }, onOpenActiveAcl: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.ACTIVE_ACL, null); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
     }
     .width('100%').height('100%').backgroundColor(FieldwatchPaletteHolder.get().night).barMode(BarMode.Fixed).barOverlap(true).barFloatingStyle({ adaptToHandedness: true, systemMaterialEffect: { materialType: hdsMaterial.MaterialType.IMMERSIVE, materialLevel: hdsMaterial.MaterialLevel.EXQUISITE }, thermoCtrl: true, barOpacity: 0.94, barBottomMargin: this.bottomInsetVp })
@@ -885,7 +959,7 @@ struct FieldwatchRootPage {
       // 点记录看到的是设置（实测反馈）。**入口与内容必须同时改。**
       // `visible` 必须显式传：它的默认值是 true，漏传时雷达的 16 ms 扫描定时器
       // 会在组件存活期间持续整幅重绘（竖屏 TabContent 路径一直传了，这里此前漏了）。
-      if (this.selectedTab === 0) FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.switchTab(4); }, onOpenFind: (): void => { fieldwatchApplication.requestTab('toolbox-find'); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }).width('100%').height('100%')
+      if (this.selectedTab === 0) FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.openChannelAnalysis(0); }, onOpenFind: (): void => { this.openFindPage(); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }).width('100%').height('100%')
       else if (this.selectedTab === 1) FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
       // 同上：`onEditFleet` 漏传会让「新建」「编辑」两个按钮都变成空操作。
       else if (this.selectedTab === 2) FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
@@ -896,7 +970,7 @@ struct FieldwatchRootPage {
         pageVisible: this.selectedTab === 2
       }).width('100%').height('100%')
       else if (this.selectedTab === 3) FieldwatchReportsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
-      else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }).width('100%').height('100%')
+      else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 4, onOpenTool: (route: string): void => { this.openToolByRoute(route); } }).width('100%').height('100%')
       else FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; }, onOpenActiveAcl: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.ACTIVE_ACL, null); } }).width('100%').height('100%')
     }.width('100%').height('100%')
     /**

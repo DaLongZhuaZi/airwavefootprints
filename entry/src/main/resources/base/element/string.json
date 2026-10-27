@@ -11903,6 +11903,74 @@
     {
       "name": "fieldwatch_acl_version_line",
       "value": "ACL 表版本 %1"
+    },
+    {
+      "name": "fieldwatch_back",
+      "value": "返回"
+    },
+    {
+      "name": "fieldwatch_toolbox_search",
+      "value": "搜索工具"
+    },
+    {
+      "name": "fieldwatch_toolbox_no_match",
+      "value": "没有匹配的工具，换个词试试"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_channel",
+      "value": "信道分析"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_channel_desc",
+      "value": "看各信道拥堵程度，找出最空的信道"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_antitrack",
+      "value": "反追踪"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_antitrack_desc",
+      "value": "判断是否有设备一路跟着你"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_find",
+      "value": "找东西"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_find_desc",
+      "value": "认领并定位自己的设备"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_security",
+      "value": "安防扫描"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_security_desc",
+      "value": "看身边有哪些设备在广播，判定可疑"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_wifi",
+      "value": "WiFi 体检"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_wifi_desc",
+      "value": "当前网络状况、房间信号与信道建议"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_acl",
+      "value": "主动扫描授权"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_acl_desc",
+      "value": "管理主动探测能力开关与审计记录"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_hunt",
+      "value": "寻踪"
+    },
+    {
+      "name": "fieldwatch_toolbox_entry_hunt_desc",
+      "value": "按信号强弱一步步靠近目标设备"
     }
   ]
 }
