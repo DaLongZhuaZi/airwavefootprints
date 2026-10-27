@@ -11795,6 +11795,98 @@
     {
       "name": "fieldwatch_wifi_grade_unknown",
       "value": "未测"
+    },
+    {
+      "name": "fieldwatch_acl_title",
+      "value": "主动扫描授权"
+    },
+    {
+      "name": "fieldwatch_acl_intro",
+      "value": "主动扫描会向局域网内的设备发送探测包。它与被动扫描是分开的入口，只在本次扫描会话内有效。"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a1",
+      "value": "A1 网段存活探测（判断网里有哪些设备在线）"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a2",
+      "value": "A2 端口探针（只看端口是否开放）"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a3",
+      "value": "A3 RTSP 探测（只取服务标识类别）"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a4",
+      "value": "A4 ONVIF 探测（只取设备类型与服务清单）"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a5",
+      "value": "A5 HTTP 横幅（只取服务标识类别）"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a6",
+      "value": "A6 服务发现查询（M-SEARCH）"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a7",
+      "value": "A7 厂商二进制握手（只比对魔数）"
+    },
+    {
+      "name": "fieldwatch_acl_risk_protocol",
+      "value": "将与目标设备建立协议交互"
+    },
+    {
+      "name": "fieldwatch_acl_expose_local_ip",
+      "value": "你的本机 IP 会出现在目标设备与路由器的日志里 —— 主动扫描无法做到不留痕。"
+    },
+    {
+      "name": "fieldwatch_acl_agree",
+      "value": "本次允许"
+    },
+    {
+      "name": "fieldwatch_acl_start",
+      "value": "开始主动扫描"
+    },
+    {
+      "name": "fieldwatch_acl_cancel",
+      "value": "取消"
+    },
+    {
+      "name": "fieldwatch_acl_running",
+      "value": "主动扫描中…"
+    },
+    {
+      "name": "fieldwatch_acl_result_title",
+      "value": "主动扫描结果"
+    },
+    {
+      "name": "fieldwatch_acl_result_hosts",
+      "value": "在线主机 %1 台"
+    },
+    {
+      "name": "fieldwatch_acl_audit_title",
+      "value": "审计记录"
+    },
+    {
+      "name": "fieldwatch_acl_audit_empty",
+      "value": "还没有审计记录。"
+    },
+    {
+      "name": "fieldwatch_acl_audit_clear",
+      "value": "删除全部记录"
+    },
+    {
+      "name": "fieldwatch_acl_disable_all",
+      "value": "一键关闭全部主动能力"
+    },
+    {
+      "name": "fieldwatch_acl_settings_title",
+      "value": "主动扫描"
+    },
+    {
+      "name": "fieldwatch_acl_scope_unknown",
+      "value": "无法确定当前网段，主动扫描不可用。"
     }
   ]
 }

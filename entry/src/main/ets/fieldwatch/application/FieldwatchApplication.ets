@@ -39,6 +39,13 @@ import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissio
 import { attachSuspects, buildSecuritySummary, SecuritySummary } from '../domain/FieldwatchSecurityScan';
 import { ServiceDataRecord } from '../domain/FieldwatchModels';
 import { FieldwatchWifiLink, WifiCurrentAp } from '../radio/FieldwatchWifiLink';
+import { LocalNetworkInfo, readLocalNetwork } from '../platform/FieldwatchAclTransport';
+import { aclEntries, AclCapability, AclEntry } from '../domain/FieldwatchAcl';
+import { AclAuditRecord, FieldwatchAclEngine } from '../domain/FieldwatchAclEngine';
+import { AclScope, scopeFromLocal } from '../domain/FieldwatchAclScope';
+import { FieldwatchAclAuditRepository } from '../data/FieldwatchAclAuditRepository';
+import { FieldwatchActiveScanner } from '../domain/FieldwatchActiveScanner';
+import { FieldwatchProtocolProber } from '../domain/FieldwatchProtocolProber';
 import { assessSighting, SuspectDevice } from '../domain/FieldwatchSecurityPassive';
 import { FieldwatchSecurityHistoryRepository, SecurityScanRecord } from '../data/FieldwatchSecurityHistoryRepository';
 import { checkProgress, decodeChecks, encodeChecks, manualCheckGroups, toggleCheck } from '../domain/FieldwatchSecurityChecklist';
@@ -226,6 +233,8 @@ export class FieldwatchApplication {
   private antiTrackHistory: AntiTrackPushRecord[] = [];
   /** Wi-Fi 当前 AP 读取（P3-3：复用已有能力，不新增权限）。 */
   private readonly wifiLink: FieldwatchWifiLink = new FieldwatchWifiLink();
+  /** ACL 审计仓储（主动扫描审计）。 */
+  private readonly aclAudit: FieldwatchAclAuditRepository = new FieldwatchAclAuditRepository();
   /** 安防扫描历史仓储（P3-2）。 */
   private readonly securityHistory: FieldwatchSecurityHistoryRepository = new FieldwatchSecurityHistoryRepository();
   /** 房间体检仓储（P1-7）。 */
@@ -886,6 +895,77 @@ export class FieldwatchApplication {
   wifiDoctorLines(report: WifiDoctorReport): DoctorLine[] {
     return doctorLines(report);
   }
+
+  // ── 主动扫描 ACL（设计文档 v2）──
+
+  /** ACL 引擎：**全 App 唯一的主动能力放行点**。 */
+  private readonly aclEngine: FieldwatchAclEngine = new FieldwatchAclEngine(new FieldwatchAclAuditRepository());
+
+  /** 取 ACL 引擎（扫描器与设置页用）。 */
+  acl(): FieldwatchAclEngine { return this.aclEngine; }
+
+  /** 当前网段范围（UI 展示与审计用）。 */
+  aclScope(): AclScope {
+    const info: LocalNetworkInfo = readLocalNetwork();
+    const scope: AclScope = scopeFromLocal(info);
+    this.aclEngine.setScope(scope);
+    return scope;
+  }
+
+  /** 能力表（设置页与授权弹窗用）。 */
+  aclCapabilities(): AclEntry[] { return aclEntries(); }
+
+  /** 审计记录（新→旧）。 */
+  async aclAuditRecords(limit: number = 50): Promise<AclAuditRecord[]> {
+    return await this.aclAudit.loadRecent(limit);
+  }
+
+  /** 清空审计（设置页「删除全部记录」）。 */
+  async clearAclAudit(): Promise<boolean> { return await this.aclAudit.clearAll(); }
+
+  /** 一键关闭全部主动能力。 */
+  disableAllActive(): void {
+    this.aclEngine.disableAll([AclCapability.SUBNET_SWEEP, AclCapability.PORT_PROBE,
+      AclCapability.RTSP_PROBE, AclCapability.ONVIF_PROBE, AclCapability.HTTP_BANNER,
+      AclCapability.SERVICE_DISCOVERY, AclCapability.VENDOR_MAGIC]);
+  }
+
+  /** 恢复全部主动能力（设置页手动重开）。 */
+  enableAllActive(): void {
+    this.aclEngine.setCapabilityDisabled(AclCapability.SUBNET_SWEEP, false);
+    this.aclEngine.setCapabilityDisabled(AclCapability.PORT_PROBE, false);
+    this.aclEngine.setCapabilityDisabled(AclCapability.RTSP_PROBE, false);
+    this.aclEngine.setCapabilityDisabled(AclCapability.ONVIF_PROBE, false);
+    this.aclEngine.setCapabilityDisabled(AclCapability.HTTP_BANNER, false);
+    this.aclEngine.setCapabilityDisabled(AclCapability.SERVICE_DISCOVERY, false);
+    this.aclEngine.setCapabilityDisabled(AclCapability.VENDOR_MAGIC, false);
+  }
+
+  /** 某项主动能力是否被用户关闭。 */
+  isActiveCapabilityDisabled(capability: AclCapability): boolean {
+    return this.aclEngine.isDisabled(capability);
+  }
+
+  /** 设置某项主动能力的开关。 */
+  setActiveCapability(capability: AclCapability, enabled: boolean): void {
+    this.aclEngine.setCapabilityDisabled(capability, !enabled);
+  }
+
+  /**
+   * 用户确认授权后开一个扫描会话，返回扫描器。
+   *
+   * 授权**仅对本会话有效**：会话结束（完成 / 取消 / 切后台 / 断网）即失效。
+   */
+  beginActiveScan(scope: AclScope): FieldwatchActiveScanner {
+    this.aclEngine.setScope(scope);
+    this.aclEngine.grantSession([AclCapability.SUBNET_SWEEP, AclCapability.PORT_PROBE,
+      AclCapability.RTSP_PROBE, AclCapability.ONVIF_PROBE, AclCapability.HTTP_BANNER,
+      AclCapability.SERVICE_DISCOVERY, AclCapability.VENDOR_MAGIC]);
+    return new FieldwatchActiveScanner(this.aclEngine);
+  }
+
+  /** 协议探测器的工厂（与扫描器共用同一个引擎）。 */
+  protocolProber(): FieldwatchProtocolProber { return new FieldwatchProtocolProber(this.aclEngine); }
 
   // ── Wi-Fi 详情 / 趋势 / 复测提醒（P3-3 第 1 项）──
 

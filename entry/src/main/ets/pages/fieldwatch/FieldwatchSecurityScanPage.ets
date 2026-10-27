@@ -10,6 +10,9 @@ import {
 } from '../../fieldwatch/domain/FieldwatchSecurityPassive';
 import { checkProgress, ManualCheckGroup, ManualCheckItem } from '../../fieldwatch/domain/FieldwatchSecurityChecklist';
 import { SecurityScanRecord, SuspectSnapshot } from '../../fieldwatch/data/FieldwatchSecurityHistoryRepository';
+import { AclEntry, AclSubject } from '../../fieldwatch/domain/FieldwatchAcl';
+import { AclScope } from '../../fieldwatch/domain/FieldwatchAclScope';
+import { ActiveHost, ActiveScanResult, FieldwatchActiveScanner } from '../../fieldwatch/domain/FieldwatchActiveScanner';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
@@ -42,6 +45,21 @@ export struct FieldwatchSecurityScanPage {
   @State private history: SecurityScanRecord[] = [];
   /** 正在回放的历史记录（P3-3）；undefined = 不显示回放面板。 */
   @State private replay: SecurityScanRecord | undefined = undefined;
+  // ── 主动扫描（设计文档 v2）──
+  /** 0=未开始 1=扫描中 2=有结果。 */
+  @State private activePhase: number = 0;
+  /** 当前网段范围；undefined 表示尚未读取。 */
+  @State private activeScope: AclScope | undefined = undefined;
+  /** 授权弹窗是否显示。 */
+  @State private showConsent: boolean = false;
+  /** 弹窗里的四要素文本行。 */
+  @State private consentLines: string[] = [];
+  /** 主动扫描结果明细行。 */
+  @State private activeLines: string[] = [];
+  /** 存活主机数。 */
+  @State private activeHosts: number = 0;
+  /** 正在跑的扫描器（用于取消）。 */
+  private activeScanner: FieldwatchActiveScanner | undefined = undefined;
   private timer: number = -1;
 
   aboutToAppear(): void {
@@ -55,6 +73,8 @@ export struct FieldwatchSecurityScanPage {
     // 排查清单的勾选状态是持久化的，进页先读回来。
     this.checked = fieldwatchApplication.checklistDone();
     void this.loadHistory();
+    // 主动扫描入口需要当前网段；读不到就禁用入口（失败关闭）。
+    this.activeScope = fieldwatchApplication.aclScope();
   }
 
   /** 读历史扫描记录；失败不影响主流程。 */
@@ -204,6 +224,14 @@ export struct FieldwatchSecurityScanPage {
             })
           }
           this.buildBody()
+          // 授权弹窗盖在最上层（Stack 后写的在上）。
+          if (this.showConsent) {
+            Column() {
+              this.buildConsentSheet()
+            }.width('100%').height('100%')
+            .justifyContent(FlexAlign.Center)
+            .backgroundColor('#99000000')
+          }
         }.width('100%').height('100%')
     }
       .titleBar(NGFHdsTitleBarOptionsFactory.build(
@@ -247,6 +275,9 @@ export struct FieldwatchSecurityScanPage {
         .fontColor(FieldwatchPaletteHolder.get().warn).textAlign(TextAlign.Center)
       FieldwatchButton({ label: $r('app.string.fieldwatch_security_start'),
         tone: FieldwatchButtonTone.PRIMARY, onTap: (): void => { this.startScan(); } })
+      // **主动扫描是独立入口**（设计文档 6.1）：与上面的被动扫描按钮并列，
+      // 绝不藏进被动扫描的默认流程 —— 用户必须明确知道这是两件事。
+      this.buildActiveEntry()
       // 排查清单与历史是**常驻能力**，不该逼用户先等 60 秒扫描才能看到：
       // 真机上从别处返回时会回到这个 idle 页，清单就找不到了。
       this.buildChecklist()
@@ -315,6 +346,42 @@ export struct FieldwatchSecurityScanPage {
       FieldwatchButton({ label: $r('app.string.fieldwatch_security_again'),
         tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.startScan(); } })
     }.width('100%').alignItems(HorizontalAlign.Start)
+  }
+
+  /**
+   * 授权弹窗（设计文档 6.2 四要素，缺一不可）。
+   *
+   * 覆盖层形式而非系统 Dialog：需要展示能力清单（A1–A7 逐项）+ 暴露面 + 数据去向，
+   * 系统 Dialog 放不下这么多内容，也做不了「逐项列出」这个要求。
+   */
+  @Builder
+  private buildConsentSheet() {
+    if (this.showConsent) {
+      Column({ space: 10 }) {
+        Text($r('app.string.fieldwatch_acl_title')).fontSize(18).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+        Scroll() {
+          Column({ space: 4 }) {
+            ForEach(this.consentLines, (line: string): void => {
+              Text(line).fontSize(11).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+            }, (line: string, index: number): string => index.toString())
+          }.width('100%').alignItems(HorizontalAlign.Start)
+        }.width('100%').height(360).scrollBar(BarState.Off)
+        Row({ space: 8 }) {
+          Column() {
+            FieldwatchButton({ label: $r('app.string.fieldwatch_acl_agree'),
+              tone: FieldwatchButtonTone.PRIMARY, fillWidth: true,
+              onTap: (): void => { void this.startActiveScan(); } })
+          }.layoutWeight(1)
+          Column() {
+            FieldwatchButton({ label: $r('app.string.fieldwatch_acl_cancel'),
+              tone: FieldwatchButtonTone.OUTLINE, fillWidth: true,
+              onTap: (): void => { this.showConsent = false; } })
+          }.layoutWeight(1)
+        }.width('100%')
+      }.width('100%').padding(20).borderRadius(18).margin({ left: 20, right: 20 })
+      .backgroundColor(FieldwatchPaletteHolder.get().panel)
+    }
   }
 
   /**
@@ -392,6 +459,108 @@ export struct FieldwatchSecurityScanPage {
       }, (key: string): string => key)
     }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
     .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+  }
+
+  /**
+   * 主动扫描入口（设计文档第 6 节）。
+   *
+   * 点击前先展示**四要素**：能力清单、目标范围、暴露面、数据去向。
+   * 用户确认后授权仅对本次会话有效。
+   */
+  @Builder
+  private buildActiveEntry() {
+    if (this.activePhase === 0) {
+      Column({ space: 8 }) {
+        Text($r('app.string.fieldwatch_acl_settings_title')).fontSize(15)
+          .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+        Text($r('app.string.fieldwatch_acl_intro')).fontSize(11)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        // 范围不在可用状态时**禁用入口**并说清原因（失败关闭）。
+        if (this.activeScope === undefined || !this.activeScope.usable) {
+          Text($r('app.string.fieldwatch_acl_scope_unknown')).fontSize(12)
+            .fontColor(FieldwatchPaletteHolder.get().warn).width('100%')
+        } else {
+          Text(this.text('app.string.fieldwatch_acl_scope_line')
+            .replace('%1', (this.activeScope as AclScope).subnetText))
+            .fontSize(12).fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
+          FieldwatchButton({ label: $r('app.string.fieldwatch_acl_start'),
+            tone: FieldwatchButtonTone.OUTLINE,
+            onTap: (): void => { this.showActiveConsent(); } })
+        }
+      }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel)
+    }
+    if (this.activePhase === 1) {
+      Text($r('app.string.fieldwatch_acl_running')).fontSize(14)
+        .fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
+      FieldwatchButton({ label: $r('app.string.fieldwatch_acl_cancel'),
+        tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.cancelActiveScan(); } })
+    }
+    if (this.activePhase === 2) {
+      Column({ space: 6 }) {
+        Text($r('app.string.fieldwatch_acl_result_title')).fontSize(15)
+          .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+        Text(this.text('app.string.fieldwatch_acl_result_hosts')
+          .replace('%1', this.activeHosts.toString()))
+          .fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
+        ForEach(this.activeLines, (line: string): void => {
+          Text(line).fontSize(11).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+        }, (line: string, index: number): string => index.toString())
+      }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel)
+    }
+  }
+
+  /** 展示授权弹窗（四要素）。 */
+  private showActiveConsent(): void {
+    const scope: AclScope | undefined = this.activeScope;
+    if (scope === undefined || !scope.usable) return;
+    const caps: AclEntry[] = fieldwatchApplication.aclCapabilities();
+    const lines: string[] = [];
+    caps.forEach((entry: AclEntry): void => {
+      let line: string = '· ' + this.text(entry.titleKey);
+      if (entry.riskNoteKey.length > 0) line += '（' + this.text(entry.riskNoteKey) + '）';
+      lines.push(line);
+    });
+    lines.push('');
+    lines.push(this.text('app.string.fieldwatch_acl_expose_local_ip'));
+    lines.push(this.text('app.string.fieldwatch_acl_expose_pattern'));
+    lines.push(this.text('app.string.fieldwatch_acl_data_local'));
+    lines.push(this.text('app.string.fieldwatch_acl_other_network'));
+    this.consentLines = lines;
+    this.showConsent = true;
+  }
+
+  /** 用户确认：开本会话授权并开始主动扫描。 */
+  private async startActiveScan(): Promise<void> {
+    this.showConsent = false;
+    const scope: AclScope | undefined = this.activeScope;
+    if (scope === undefined || !scope.usable) return;
+    this.activePhase = 1;
+    const scanner: FieldwatchActiveScanner = fieldwatchApplication.beginActiveScan(scope);
+    this.activeScanner = scanner;
+    // 上限 254：/24 网段最多 254 个可用主机（已排除本机与网关）。
+    const result: ActiveScanResult = await scanner.run(scope, AclSubject.SECURITY_SCAN, 254);
+    this.activeHosts = result.hosts.length;
+    const lines: string[] = [];
+    result.hosts.forEach((host: ActiveHost): void => {
+      let line: string = host.address;
+      if (host.openPorts.length > 0) line += ' · 开放 ' + host.openPorts.join('/');
+      if (host.serviceAnswered) line += ' · 服务应答';
+      lines.push(line);
+    });
+    if (result.skippedByScope) lines.push(this.text('app.string.fieldwatch_acl_scope_unknown'));
+    this.activeLines = lines;
+    this.activePhase = 2;
+    this.activeScanner = undefined;
+  }
+
+  /** 取消主动扫描：置标记并结束会话（transport 会关掉在途 socket）。 */
+  private cancelActiveScan(): void {
+    const scanner: FieldwatchActiveScanner | undefined = this.activeScanner;
+    if (scanner !== undefined) scanner.cancel();
+    this.activePhase = 0;
+    this.activeScanner = undefined;
   }
 
   /**

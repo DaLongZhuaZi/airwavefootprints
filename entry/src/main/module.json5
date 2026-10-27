@@ -25,6 +25,12 @@
         "name": "ohos.permission.INTERNET"
       },
       {
+        // 主动扫描的网段推导需要 linkAddresses（含前缀长）。
+        // 这是**系统授予类**权限（安装时自动给、不弹窗），不是 user_grant，
+        // 因此不构成「新增敏感权限」。详见《主动扫描授权与隐私体系设计》第 8 节。
+        "name": "ohos.permission.GET_NETWORK_INFO"
+      },
+      {
         "name": "ohos.permission.ACCESS_NEARLINK",
         "reason": "$string:nearlink_scan_reason",
         "usedScene": {

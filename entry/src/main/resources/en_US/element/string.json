@@ -11795,6 +11795,98 @@
     {
       "name": "fieldwatch_wifi_grade_unknown",
       "value": "Not measured"
+    },
+    {
+      "name": "fieldwatch_acl_title",
+      "value": "Active scanning permission"
+    },
+    {
+      "name": "fieldwatch_acl_intro",
+      "value": "Active scanning sends probe packets to devices on your LAN. It is a separate entry from passive scanning and only lasts for this scan session."
+    },
+    {
+      "name": "fieldwatch_acl_cap_a1",
+      "value": "A1 Subnet sweep (which hosts are online)"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a2",
+      "value": "A2 Port probe (open or not)"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a3",
+      "value": "A3 RTSP probe (server type only)"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a4",
+      "value": "A4 ONVIF probe (device type and service list)"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a5",
+      "value": "A5 HTTP banner (server type only)"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a6",
+      "value": "A6 Service discovery query (M-SEARCH)"
+    },
+    {
+      "name": "fieldwatch_acl_cap_a7",
+      "value": "A7 Vendor handshake (magic bytes only)"
+    },
+    {
+      "name": "fieldwatch_acl_risk_protocol",
+      "value": "Will establish protocol interaction with the target"
+    },
+    {
+      "name": "fieldwatch_acl_expose_local_ip",
+      "value": "Your local IP will appear in target and router logs — active scanning cannot be untraceable."
+    },
+    {
+      "name": "fieldwatch_acl_agree",
+      "value": "Allow for this scan"
+    },
+    {
+      "name": "fieldwatch_acl_start",
+      "value": "Start active scan"
+    },
+    {
+      "name": "fieldwatch_acl_cancel",
+      "value": "Cancel"
+    },
+    {
+      "name": "fieldwatch_acl_running",
+      "value": "Active scanning…"
+    },
+    {
+      "name": "fieldwatch_acl_result_title",
+      "value": "Active scan result"
+    },
+    {
+      "name": "fieldwatch_acl_result_hosts",
+      "value": "%1 hosts online"
+    },
+    {
+      "name": "fieldwatch_acl_audit_title",
+      "value": "Audit log"
+    },
+    {
+      "name": "fieldwatch_acl_audit_empty",
+      "value": "No audit records yet."
+    },
+    {
+      "name": "fieldwatch_acl_audit_clear",
+      "value": "Delete all records"
+    },
+    {
+      "name": "fieldwatch_acl_disable_all",
+      "value": "Turn off all active capabilities"
+    },
+    {
+      "name": "fieldwatch_acl_settings_title",
+      "value": "Active scanning"
+    },
+    {
+      "name": "fieldwatch_acl_scope_unknown",
+      "value": "Cannot determine the current subnet; active scanning is unavailable."
     }
   ]
 }

@@ -53,6 +53,10 @@ import fieldwatchWifiDoctorDetailTest from './FieldwatchWifiDoctorDetail.test';
 import fieldwatchCodTest from './FieldwatchCod.test';
 import fieldwatchSecurityReplayTest from './FieldwatchSecurityReplay.test';
 import fieldwatchDexUnlockTest from './FieldwatchDexUnlock.test';
+import fieldwatchAclTest from './FieldwatchAcl.test';
+import fieldwatchAclScopeTest from './FieldwatchAclScope.test';
+import fieldwatchAclEngineTest from './FieldwatchAclEngine.test';
+import fieldwatchProtocolProberTest from './FieldwatchProtocolProber.test';
 
 export default function testsuite() {
   localUnitTest();
@@ -103,4 +107,8 @@ export default function testsuite() {
   fieldwatchCodTest();
   fieldwatchSecurityReplayTest();
   fieldwatchDexUnlockTest();
+  fieldwatchAclTest();
+  fieldwatchAclScopeTest();
+  fieldwatchAclEngineTest();
+  fieldwatchProtocolProberTest();
 }
