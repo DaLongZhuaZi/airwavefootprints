@@ -12143,6 +12143,22 @@
     {
       "name": "fieldwatch_dex_no_match",
       "value": "没有匹配的条目，换个词或筛选试试"
+    },
+    {
+      "name": "fieldwatch_daily_trend_title",
+      "value": "近 7 日发现"
+    },
+    {
+      "name": "fieldwatch_daily_trend_hint",
+      "value": "每天首次出现的设备数"
+    },
+    {
+      "name": "fieldwatch_daily_trend_none",
+      "value": "还没有足够的历史数据"
+    },
+    {
+      "name": "fieldwatch_daily_trend_peak",
+      "value": "%1 最多，新出现 %2 台"
     }
   ]
 }

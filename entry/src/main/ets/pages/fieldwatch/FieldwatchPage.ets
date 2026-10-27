@@ -1026,6 +1026,15 @@ const RADAR_TRAIL_SPAN: number = 0.5;
 /** 放不下标签的点降级成圆点时的半径。 */
 const RADAR_DOT_RADIUS: number = 4;
 
+/** 趋势柱：一天一根。 */
+class DailyTrendBar {
+  public label: string = '';
+  public count: number = 0;
+  /** 相对最大值的比例 0..1。 */
+  public ratio: number = 0;
+  constructor() {}
+}
+
 @Component
 struct FieldwatchLivePage {
   onCreateSignature: (deviceKey: string) => void = (): void => {};
@@ -3533,6 +3542,62 @@ struct FieldwatchLivePage {
   }
 
   /**
+   * 近 7 日每日首次出现的设备数（改版设计 2 设备趋势卡）。
+   *
+   * 数据源是**既有实时观测的 `firstSeen`**，不新采集、不查历史表 ——
+   * 首页要的是「最近一周大概什么节奏」，不是精确统计。
+   */
+  private trendBars(): DailyTrendBar[] {
+    const bars: DailyTrendBar[] = [];
+    const day: number = 24 * 60 * 60 * 1000;
+    const today: Date = new Date();
+    const startOfToday: number = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const counts: number[] = [];
+    for (let i: number = 6; i >= 0; i -= 1) counts.push(0);
+    this.dailySightings.forEach((item: Sighting): void => {
+      if (!(item.firstSeen > 0)) return;
+      for (let i: number = 6; i >= 0; i -= 1) {
+        const from: number = startOfToday - i * day;
+        const to: number = from + day;
+        if (item.firstSeen >= from && item.firstSeen < to) {
+          counts[6 - i] = counts[6 - i] + 1;
+          break;
+        }
+      }
+    });
+    let max: number = 1;
+    counts.forEach((n: number): void => { if (n > max) max = n; });
+    for (let i: number = 0; i < 7; i += 1) {
+      const bar: DailyTrendBar = new DailyTrendBar();
+      const d: Date = new Date(startOfToday - (6 - i) * day);
+      bar.label = (d.getMonth() + 1).toString() + '/' + d.getDate().toString();
+      bar.count = counts[i];
+      bar.ratio = counts[i] / max;
+      bars.push(bar);
+    }
+    return bars;
+  }
+
+  private trendTotal(): number {
+    let total: number = 0;
+    this.trendBars().forEach((bar: DailyTrendBar): void => { total += bar.count; });
+    return total;
+  }
+
+  /** 一句话解读：指出峰值日，没有峰值就说平稳。 */
+  private trendInsight(): string {
+    const bars: DailyTrendBar[] = this.trendBars();
+    let peakIndex: number = 0;
+    for (let i: number = 1; i < bars.length; i += 1) {
+      if (bars[i].count > bars[peakIndex].count) peakIndex = i;
+    }
+    const peak: DailyTrendBar = bars[peakIndex];
+    if (peak.count <= 0) return fieldwatchText('app.string.fieldwatch_daily_trend_none');
+    return fieldwatchText('app.string.fieldwatch_daily_trend_peak')
+      .replace('%1', peak.label).replace('%2', peak.count.toString());
+  }
+
+  /**
    * 异步加载图鉴摘要（改版设计 2 图鉴进度卡）。
    *
    * **不在渲染里读历史**：`loadObservationHistory(2000)` 是异步且可能上千行，
@@ -3724,6 +3789,37 @@ struct FieldwatchLivePage {
         }
         .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)
+
+        // ── 设备趋势卡（改版设计 2：近 7 日每日发现设备数 + 一句话解读）──
+        Column({ space: 8 }) {
+          Text(fieldwatchText('app.string.fieldwatch_daily_trend_title')).fontSize(15)
+            .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+          Text(fieldwatchText('app.string.fieldwatch_daily_trend_hint')).fontSize(11)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          if (this.trendTotal() === 0) {
+            Text(fieldwatchText('app.string.fieldwatch_daily_trend_none')).fontSize(12)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          } else {
+            // 柱状图：7 根柱，高度按当日数量占最大值的比例。
+            Row({ space: 6 }) {
+              ForEach(this.trendBars(), (bar: DailyTrendBar): void => {
+                Column({ space: 4 }) {
+                  Column() {
+                    Column().width('100%').borderRadius(3)
+                      .height(bar.ratio * 56 + 4)
+                      .backgroundColor(bar.count > 0 ? FieldwatchPaletteHolder.get().accent
+                        : FieldwatchPaletteHolder.get().outline)
+                  }.width('100%').height(60).justifyContent(FlexAlign.End)
+                  Text(bar.label).fontSize(9).fontColor(FieldwatchPaletteHolder.get().textDim)
+                }.layoutWeight(1).alignItems(HorizontalAlign.Center)
+              }, (bar: DailyTrendBar): string => bar.label)
+            }.width('100%').alignItems(VerticalAlign.Bottom)
+            // 一句话解读：不让用户自己猜图表含义。
+            Text(this.trendInsight()).fontSize(11)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          }
+        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+        .backgroundColor(FieldwatchPaletteHolder.get().panel)
 
         // ── 图鉴进度卡（改版设计 2：等级 + 积分 + 进度）──
         Column({ space: 8 }) {

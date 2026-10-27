@@ -12143,6 +12143,22 @@
     {
       "name": "fieldwatch_dex_no_match",
       "value": "No matching entries — try another word or filter"
+    },
+    {
+      "name": "fieldwatch_daily_trend_title",
+      "value": "Last 7 days"
+    },
+    {
+      "name": "fieldwatch_daily_trend_hint",
+      "value": "Devices first seen each day"
+    },
+    {
+      "name": "fieldwatch_daily_trend_none",
+      "value": "Not enough history yet"
+    },
+    {
+      "name": "fieldwatch_daily_trend_peak",
+      "value": "Peak on %1 with %2 new devices"
     }
   ]
 }
