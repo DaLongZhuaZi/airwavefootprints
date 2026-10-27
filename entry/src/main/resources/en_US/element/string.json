@@ -12123,6 +12123,26 @@
     {
       "name": "fieldwatch_newfaces_group_week",
       "value": "This week"
+    },
+    {
+      "name": "fieldwatch_dex_search",
+      "value": "Search devices"
+    },
+    {
+      "name": "fieldwatch_dex_filter_all",
+      "value": "All"
+    },
+    {
+      "name": "fieldwatch_dex_filter_seen",
+      "value": "Unlocked"
+    },
+    {
+      "name": "fieldwatch_dex_filter_unseen",
+      "value": "Locked"
+    },
+    {
+      "name": "fieldwatch_dex_no_match",
+      "value": "No matching entries — try another word or filter"
     }
   ]
 }

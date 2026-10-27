@@ -12123,6 +12123,26 @@
     {
       "name": "fieldwatch_newfaces_group_week",
       "value": "本周"
+    },
+    {
+      "name": "fieldwatch_dex_search",
+      "value": "搜索设备名"
+    },
+    {
+      "name": "fieldwatch_dex_filter_all",
+      "value": "全部"
+    },
+    {
+      "name": "fieldwatch_dex_filter_seen",
+      "value": "已点亮"
+    },
+    {
+      "name": "fieldwatch_dex_filter_unseen",
+      "value": "未点亮"
+    },
+    {
+      "name": "fieldwatch_dex_no_match",
+      "value": "没有匹配的条目，换个词或筛选试试"
     }
   ]
 }

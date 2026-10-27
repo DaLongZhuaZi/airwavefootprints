@@ -49,6 +49,12 @@ export struct FieldwatchDexPage {
   @State private loading: boolean = true;
   /** 分类进度是否展开（默认折叠，避免把网格挤到屏幕外）。 */
   @State private progressExpanded: boolean = false;
+  /** 搜索关键词（改版设计 6.1：611 个格子没有筛选等于没有）。 */
+  @State private keyword: string = '';
+  /** 筛选：0 全部 / 1 已点亮 / 2 未点亮。 */
+  @State private filterMode: number = 0;
+  /** 过滤后的条目数（用于空态判断）。 */
+  @State private visibleCount: number = 0;
   /** 待弹的首次点亮（P3-3）。undefined = 不弹。 */
   @State private unlock: DexUnlock | undefined = undefined;
   /** 弹层是否正在分享（防重复点）。 */
@@ -65,8 +71,8 @@ export struct FieldwatchDexPage {
     const history: FieldwatchStoredObservation[] = await fieldwatchApplication.loadObservationHistory(2000);
     const entries: DexEntry[] = fieldwatchApplication.dexEntries(history);
     this.entries = entries;
-    this.dataSource.reset(entries);
     this.summary = fieldwatchApplication.dexSummary(entries);
+    this.applyFilter();
     this.loading = false;
     // P3-3：只在**首次点亮**时出一条；已弹过、未点亮的都不会返回。
     // 首次运行会把现状全部标记为已弹，因此老用户升级不会涌出几十个弹层。
@@ -178,6 +184,12 @@ export struct FieldwatchDexPage {
       this.buildCategoryProgress()
       // 勋章（P3-2）。
       this.buildBadges()
+      // 搜索 + 筛选（改版设计 6.1）。
+      this.buildSearchBar()
+      if (this.visibleCount === 0) {
+        Text(this.text('app.string.fieldwatch_dex_no_match')).fontSize(13)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%').padding({ top: 20 })
+      }
       if (this.summary !== undefined && (this.summary as DexSummary).newToday > 0) {
         Text(this.text('app.string.fieldwatch_dex_new_today').replace('%1', (this.summary as DexSummary).newToday.toString()))
           .fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
@@ -195,6 +207,67 @@ export struct FieldwatchDexPage {
       .width('100%').height('100%').layoutWeight(1)
       .cachedCount(12)
     }.width('100%').alignItems(HorizontalAlign.Start)
+  }
+
+  /** 搜索框 + 三档筛选芯片。 */
+  @Builder
+  private buildSearchBar() {
+    Column({ space: 8 }) {
+      Row({ space: 8 }) {
+        SymbolGlyph($r('sys.symbol.magnifyingglass')).fontSize(15)
+          .fontColor([FieldwatchPaletteHolder.get().textDim])
+        TextInput({ placeholder: this.text('app.string.fieldwatch_dex_search'), text: this.keyword })
+          .layoutWeight(1).backgroundColor(Color.Transparent)
+          .fontColor(FieldwatchPaletteHolder.get().text)
+          .placeholderColor(FieldwatchPaletteHolder.get().textDim)
+          .onChange((value: string): void => {
+            this.keyword = value;
+            this.applyFilter();
+          })
+      }.width('100%').height(42).padding({ left: 12, right: 12 })
+      .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+      Row({ space: 8 }) {
+        this.buildFilterChip('app.string.fieldwatch_dex_filter_all', 0)
+        this.buildFilterChip('app.string.fieldwatch_dex_filter_seen', 1)
+        this.buildFilterChip('app.string.fieldwatch_dex_filter_unseen', 2)
+      }.width('100%')
+    }.width('100%').alignItems(HorizontalAlign.Start)
+  }
+
+  @Builder
+  private buildFilterChip(labelKey: string, mode: number) {
+    Text(this.text(labelKey)).fontSize(12)
+      .fontColor(this.filterMode === mode ? FieldwatchPaletteHolder.get().accent
+        : FieldwatchPaletteHolder.get().textDim)
+      .padding({ left: 12, right: 12, top: 6, bottom: 6 })
+      .borderRadius(14)
+      .borderWidth(1)
+      .borderColor(this.filterMode === mode ? FieldwatchPaletteHolder.get().accent
+        : FieldwatchPaletteHolder.get().outline)
+      .onClick((): void => {
+        this.filterMode = mode;
+        this.applyFilter();
+      })
+  }
+
+  /**
+   * 按关键词与筛选档位重算可见条目，并重置数据源。
+   *
+   * 过滤在**已算好的 entries 上做**，不重新查库 —— 稀有度/积分/等级都基于全集，
+   * 过滤只影响网格显示什么，不影响统计口径。
+   */
+  private applyFilter(): void {
+    const key: string = this.keyword.trim().toLowerCase();
+    const out: DexEntry[] = [];
+    for (let i: number = 0; i < this.entries.length; i += 1) {
+      const entry: DexEntry = this.entries[i];
+      if (this.filterMode === 1 && !entry.seen) continue;
+      if (this.filterMode === 2 && entry.seen) continue;
+      if (key.length > 0 && entry.name.toLowerCase().indexOf(key) < 0) continue;
+      out.push(entry);
+    }
+    this.visibleCount = out.length;
+    this.dataSource.reset(out);
   }
 
   /** 等级：观察者 → 探索者 → 猎手 → 大师，附积分与下一级进度。 */
