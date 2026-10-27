@@ -12083,6 +12083,30 @@
     {
       "name": "fieldwatch_sec_checklist_collapsed",
       "value": "已完成 %1 / %2"
+    },
+    {
+      "name": "fieldwatch_daily_conclusion_title",
+      "value": "今天的情况"
+    },
+    {
+      "name": "fieldwatch_daily_conclusion_line",
+      "value": "身边共 %1 台设备，今天新出现 %2 台"
+    },
+    {
+      "name": "fieldwatch_daily_dex_title",
+      "value": "设备图鉴"
+    },
+    {
+      "name": "fieldwatch_daily_dex_line",
+      "value": "%1 · 已点亮 %2 / %3"
+    },
+    {
+      "name": "fieldwatch_daily_pro_section",
+      "value": "专业视图"
+    },
+    {
+      "name": "fieldwatch_daily_pro_hint",
+      "value": "雷达、分类、品牌筛选等专业能力"
     }
   ]
 }

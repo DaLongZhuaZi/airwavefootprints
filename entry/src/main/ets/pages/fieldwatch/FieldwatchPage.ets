@@ -1059,6 +1059,12 @@ struct FieldwatchLivePage {
   @State private dailySightings: Sighting[] = [];
   @State private dailyActiveFootprint: string = '';
   @State private dailyFootprintCount: number = 0;
+  /** 专业视图折叠区是否展开（改版设计 2：默认收起）。 */
+  @State private proSectionOpen: boolean = false;
+  /** 图鉴摘要缓存（改版设计 2 图鉴进度卡）：进页异步读一次历史后填充。 */
+  @State private dexSeenCount: number = 0;
+  @State private dexTotalCount: number = 0;
+  @State private dexLevelLabel: string = '';
   @State private mode: FieldwatchLiveMode = FieldwatchLiveMode.RADAR;
   @State private sightings: Sighting[] = [];
   /**
@@ -1252,6 +1258,7 @@ struct FieldwatchLivePage {
     this.mode = this.savedLiveMode;
     // 日常 / 专业由设置里的「模式选择」决定默认入口（引导页与设置页共用同一项）。
     this.dailyMode = fieldwatchApplication.getState().settings.dailyMode;
+    void this.loadDexSummary();
     this.refresh();
     this.startTimers();
   }
@@ -3525,6 +3532,34 @@ struct FieldwatchLivePage {
     this.safetyRemainingSeconds = 0;
   }
 
+  /**
+   * 异步加载图鉴摘要（改版设计 2 图鉴进度卡）。
+   *
+   * **不在渲染里读历史**：`loadObservationHistory(2000)` 是异步且可能上千行，
+   * 放进 build 会让每一帧都去查一次。这里进页读一次、结果进 @State。
+   */
+  private async loadDexSummary(): Promise<void> {
+    const history = await fieldwatchApplication.loadObservationHistory(2000);
+    const entries = fieldwatchApplication.dexEntries(history);
+    const summary = fieldwatchApplication.dexSummary(entries);
+    const level = fieldwatchApplication.dexLevelOf(entries);
+    this.dexSeenCount = summary.seen;
+    this.dexTotalCount = summary.total;
+    this.dexLevelLabel = fieldwatchText(level.current.titleKey);
+  }
+
+  private dailyDexSeen(): number { return this.dexSeenCount; }
+
+  private dailyDexTotal(): number { return this.dexTotalCount; }
+
+  /** 图鉴一行摘要：等级 · 已点亮 x / y。 */
+  private dailyDexLine(): string {
+    return fieldwatchText('app.string.fieldwatch_daily_dex_line')
+      .replace('%1', this.dexLevelLabel.length > 0 ? this.dexLevelLabel : '—')
+      .replace('%2', this.dexSeenCount.toString())
+      .replace('%3', this.dexTotalCount.toString());
+  }
+
   private openProfessionalRadar(): void {
     this.mode = FieldwatchLiveMode.RADAR;
     fieldwatchApplication.updateLiveMode(FieldwatchLiveMode.RADAR);
@@ -3558,16 +3593,25 @@ struct FieldwatchLivePage {
   private buildDailyOverview() {
     Scroll() {
       Column({ space: 14 }) {
-        Text(fieldwatchText('app.string.fieldwatch_daily_subtitle')).fontSize(13)
-          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-        Row({ space: 12 }) {
-          FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_devices'),
-            value: this.dailySightings.length.toString() })
-          FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_new'),
-            value: this.recentlySeenCount().toString() })
-          FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_wifi'),
-            value: this.observedCount(RadioKind.WIFI).toString() })
-        }.width('100%').padding({ top: 12, bottom: 12 })
+        // ── 今日结论卡（改版设计 2：一屏一结论，数字可点）──
+        Column({ space: 8 }) {
+          Text(fieldwatchText('app.string.fieldwatch_daily_conclusion_title')).fontSize(15)
+            .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+          // 结论句本身就是可视化：不给「概览」这类空标题。
+          Text(fieldwatchText('app.string.fieldwatch_daily_conclusion_line')
+            .replace('%1', this.dailySightings.length.toString())
+            .replace('%2', this.recentlySeenCount().toString()))
+            .fontSize(13).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+          Row({ space: 12 }) {
+            FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_devices'),
+              value: this.dailySightings.length.toString() })
+            FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_new'),
+              value: this.recentlySeenCount().toString() })
+            FieldwatchDailyMetric({ label: fieldwatchText('app.string.fieldwatch_daily_wifi'),
+              value: this.observedCount(RadioKind.WIFI).toString() })
+          }.width('100%')
+        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+        .backgroundColor(FieldwatchPaletteHolder.get().panel)
 
         if (this.recentDailySightings().length > 0) {
           Column({ space: 8 }) {
@@ -3681,6 +3725,26 @@ struct FieldwatchLivePage {
         .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)
 
+        // ── 图鉴进度卡（改版设计 2：等级 + 积分 + 进度）──
+        Column({ space: 8 }) {
+          Row({ space: 8 }) {
+            SymbolGlyph($r('sys.symbol.medal')).fontSize(18)
+              .fontColor([FieldwatchPaletteHolder.get().accent])
+            Text(fieldwatchText('app.string.fieldwatch_daily_dex_title')).fontSize(16)
+              .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+            SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(14)
+              .fontColor([FieldwatchPaletteHolder.get().textDim])
+          }.width('100%')
+          Text(this.dailyDexLine()).fontSize(12)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+          if (this.dailyDexTotal() > 0) {
+            Progress({ value: this.dailyDexSeen(), total: this.dailyDexTotal(), type: ProgressType.Linear })
+              .width('100%').height(4).color(FieldwatchPaletteHolder.get().accent)
+          }
+        }.width('100%').padding(14).borderRadius(12).alignItems(HorizontalAlign.Start)
+        .backgroundColor(FieldwatchPaletteHolder.get().panel)
+        .onClick((): void => { this.onOpenDex(); })
+
         // ── 更多工具（P1/P2 合入的四个页面入口）──
         //
         // 为什么放在这里：这些页面原本挂在 feat 的 DailyPage 上，而 DailyPage 依赖
@@ -3744,8 +3808,29 @@ struct FieldwatchLivePage {
         .alignItems(HorizontalAlign.Start)
         .onClick((): void => { this.onOpenFind(); })
 
-        FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_open_radar'),
-          tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.openProfessionalRadar(); } })
+        // ── 专业视图折叠区（改版设计 2：专业能力不删，收进折叠区）──
+        Column({ space: 8 }) {
+          Row({ space: 8 }) {
+            Column({ space: 2 }) {
+              Text(fieldwatchText('app.string.fieldwatch_daily_pro_section')).fontSize(15)
+                .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText)
+              Text(fieldwatchText('app.string.fieldwatch_daily_pro_hint')).fontSize(11)
+                .fontColor(FieldwatchPaletteHolder.get().textDim)
+            }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+            SymbolGlyph($r(this.proSectionOpen ? 'sys.symbol.chevron_up' : 'sys.symbol.chevron_down'))
+              .fontSize(13).fontColor([FieldwatchPaletteHolder.get().textDim])
+          }.width('100%').alignItems(VerticalAlign.Center)
+          .onClick((): void => {
+            this.getUIContext().animateTo({ duration: 240, curve: Curve.FastOutSlowIn }, (): void => {
+              this.proSectionOpen = !this.proSectionOpen;
+            });
+          })
+          if (this.proSectionOpen) {
+            FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_open_radar'),
+              tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.openProfessionalRadar(); } })
+          }
+        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+        .backgroundColor(FieldwatchPaletteHolder.get().panel)
       }
       .width('100%').padding({ left: 16, right: 16, top: 14, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       .alignItems(HorizontalAlign.Start)

@@ -12083,6 +12083,30 @@
     {
       "name": "fieldwatch_sec_checklist_collapsed",
       "value": "%1 of %2 done"
+    },
+    {
+      "name": "fieldwatch_daily_conclusion_title",
+      "value": "Today"
+    },
+    {
+      "name": "fieldwatch_daily_conclusion_line",
+      "value": "%1 devices nearby, %2 new today"
+    },
+    {
+      "name": "fieldwatch_daily_dex_title",
+      "value": "Device dex"
+    },
+    {
+      "name": "fieldwatch_daily_dex_line",
+      "value": "%1 · %2 of %3 unlocked"
+    },
+    {
+      "name": "fieldwatch_daily_pro_section",
+      "value": "Professional view"
+    },
+    {
+      "name": "fieldwatch_daily_pro_hint",
+      "value": "Radar, classification, brand filters and more"
     }
   ]
 }
