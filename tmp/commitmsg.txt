@@ -1,0 +1,33 @@
+feat(fieldwatch): 语言设置与 i18n 全覆盖，并完成 P7–P10 热路径治理
+
+语言与国际化
+- 设置 → 显示 新增「语言」三选一（跟随系统 / 中文 / English）。覆盖值走
+  PersistentStorage 持久化，冷启动由 EntryAbility 在 loadContent 回调后重新施加
+  （setLanguage 要求窗口与页面已就绪，放在 onCreate 里会被系统拒绝，表现为丢语言）。
+- 切换语言后重建整棵页面树：部分文案经 @Builder 字符串参数在首帧固化，只刷状态会
+  中英混杂。为此 PlatformWindowManagerFacade 新增 getWindowStage()。
+- 资源文本缓存下沉到框架层（ngfText / ResourceTextCache），fieldwatchText 退化为别名，
+  领域层不再反向依赖 ui 层工具。
+- 硬编码中文转资源 355 → 125：设备解释 110、设备类型名 51、候选特征 33、实时页聚合
+  与标注 20、桌面小组件 10、更新日志 4、扫码器错误提示 21 等。
+- en_US 补齐 37 条：隐私声明 24 段英译；auto_str_1092..1104 原为日文且 base 值被破坏，
+  一并修正。审计：en_US 中文值 0 条、缺失键 0 条，与 base 各 2663 条对齐。
+
+性能
+- P7 资源解析：599 处 $r('app.string.*') 改走缓存，67 处颜色收敛到调色板
+  （Energy3 录制里 __getResourceId__ 占已归因 JS CPU 40.8%）。
+- P8 广播解析：十六进制改 256 项查表 + 区间取值；decodeBytes 直接按字节解析，去掉
+  「字节→hex→正则→字节」往返；rawAdHex 只算一次；逐条广播发布状态改 500ms 节流。
+- P9 重建范围：设置页与工具箱页加 pageVisible 闸门（隐藏时不再每秒写 @State、
+  不重画隐藏画布）；权限快照 500ms 缓存并在授予后失效。
+- P10 雷达绘制：降级小圆点并入底板离屏缓存，稳态每帧只剩一次 drawImage + 扫描线。
+
+文档
+- 性能优化实施方案_20261017.md 增补 §10–§16（Energy3 三次录制对比、P7–P10 明细、
+  剩余项盘点与验证方案、i18n 治理）。
+- Fieldwatch功能完整清单.md 补充语言设置与实现要点。
+
+验证：assembleHap 通过；未运行自动化测试，真机回归由开发者手动执行。
+
+注：build-profile.json5 与 ngf_framework/BuildProfile.ets 属本机调试签名/构建模式产物，
+仍在工作区保留、不纳入提交。

@@ -1,0 +1,99 @@
+auto_str_1001 = չ��
+auto_str_1002 = �۵�
+auto_str_1003 = ���۵�/��ͣ
+auto_str_1004 = δ֪
+auto_str_1005 = ������: displayOrientation=%s, isDisplayLandscape=%s, 
+auto_str_1006 = isViewportLandscape=%s, ��=%s, ��=%s, 
+auto_str_1007 = λ�÷�����ϵͳ�ṩ
+auto_str_1008 = ������ϵͳ֧��
+auto_str_1009 = WiFi ��ϵͳ֧��
+auto_str_1010 = ����ʶ����ϵͳ����ṩ
+auto_str_1011 = δ֪��������
+auto_str_1012 = ����쳣: %s
+auto_str_1013 = �ֻ�/�۵����豸ͨ���䱸����ͷ
+auto_str_1014 = ƽ��/����һ�豸ͨ���䱸����ͷ
+auto_str_1015 = �����豸ͨ��������ͷ
+auto_str_1016 = ���豸���Ϳ���������ͷ
+auto_str_1017 = �����豸�䱸����ͷ
+auto_str_1018 = �ֻ�/�۵����豸ͨ��֧�� NFC
+auto_str_1019 = %s �豸ͨ����֧�� NFC
+auto_str_1020 = ���豸����ͨ��֧����
+auto_str_1021 = %s �豸ͨ����֧����
+auto_str_1022 = %s �豸ͨ���䱸 %s ������
+auto_str_1023 = ƽ��ͨ���䱸 %s ������
+auto_str_1024 = ƽ����ܲ��䱸 %s ������
+auto_str_1025 = %s �豸������״̬δ֪
+auto_str_1026 = ACTIVITY_MOTION Ȩ��������ɣ��������=%s��������Ȩ=%s
+auto_str_1027 = �޷���ȡ accessTokenId
+auto_str_1028 = �ճָ�֪Ȩ��״̬��ˢ�£�DETECT_GESTURE=%s��ACTIVITY_MOTION=%s
+auto_str_1029 = �����Ǹ����˼���ʧ�ܣ�ԭ��=%s��������=%s������=%s
+auto_str_1030 = ���ò����ּ���ʧ�ܣ�ԭ��=%s��������=%s������=%s
+auto_str_1031 = ��ˢ�����һ�β�����״̬��״̬=%s��ԭ��=%s
+auto_str_1032 = ˢ�����һ�β�����״̬ʧ�ܣ�ԭ��=%s��������=%s������=%s
+auto_str_1033 = �ճָ�֪�����Ѹ��£��Ƽ�ͣ��=%s��
+auto_str_1034 = �ճֲ�=%s����Դ=%s��
+auto_str_1035 = ���Ŷ�=%s������=%s��
+auto_str_1036 = ��ȷ֧��=%s����������ǿ=%s��
+auto_str_1037 = ACTIVITY_MOTION=%s��ԭ��=%s
+auto_str_1038 = ��������ǿ������ǰ�豸��֧�֣��ѽ���Ϊ��ʹ���Ǹ����ˣ�ԭ��=%s��������=%s������=%s
+auto_str_1039 = ��
+auto_str_1040 = ��
+auto_str_1041 = ���
+auto_str_1042 = �Ҳ�
+auto_str_1043 = δ�ճ�
+auto_str_1044 = �����ճ�
+auto_str_1045 = �����ճ�
+auto_str_1046 = ˫���ճ�
+auto_str_1047 = �Ǹ�����
+auto_str_1048 = ������
+auto_str_1049 = ����+�����������ж�
+auto_str_1050 = Ĭ�ϻ���
+auto_str_1051 = ��ȷ
+auto_str_1052 = �ƶ�
+auto_str_1053 = ����
+auto_str_1054 = δ��⵽�ճ�
+auto_str_1055 = δ֪����
+auto_str_1056 = ���ֲ���
+auto_str_1057 = ���ֲ���
+auto_str_1058 = δ֪������
+auto_str_1059 = �־û��洢
+auto_str_1060 = ϵͳ���
+auto_str_1061 = ��ʼ���Ӿ�Ч����������ɣ�ģʽ=%s����Ч�ȼ�=%s��������Դ=%s
+auto_str_1062 = NONE���޲��ʣ�
+auto_str_1063 = ADAPTIVE��ϵͳ����Ӧ��
+auto_str_1064 = IMMERSIVE������ʽ��
+auto_str_1065 = δ֪����(%s)
+auto_str_1066 = EXQUISITE��������
+auto_str_1067 = GENTLE�����ᣩ
+auto_str_1068 = SMOOTH��������
+auto_str_1069 = δ֪�ȼ�(%s)
+auto_str_1070 = �ֶ��̶���λ
+auto_str_1071 = ϵͳ����Ӧ���Ƽ���
+auto_str_1072 = ϵͳ�������������ɣ�֧�ֳ���ʽ=%s��֧������Ӧ=%s������=%s
+auto_str_1073 = �����ϴ���������
+auto_str_1074 = ����������Ĭ��ֵ
+auto_str_1075 = �����������ʧ�ܣ�%s��%s
+auto_str_1076 = �Ѵӳ־û��洢���ز����������գ����ʱ��=%s���д���=%s������=%s
+auto_str_1077 = just_now', ['�ո�
+auto_str_1078 = second_ago', ['{}��ǰ
+auto_str_1079 = minute_ago', ['{}����ǰ
+auto_str_1080 = hour_ago', ['{}Сʱǰ
+auto_str_1081 = day_ago', ['{}��ǰ
+auto_str_1082 = week_ago', ['{}��ǰ
+auto_str_1083 = month_ago', ['{}����ǰ
+auto_str_1084 = year_ago', ['{}��ǰ
+auto_str_1085 = second_later', ['{}���
+auto_str_1086 = minute_later', ['{}���Ӻ�
+auto_str_1087 = hour_later', ['{}Сʱ��
+auto_str_1088 = day_later', ['{}���
+auto_str_1089 = week_later', ['{}�ܺ�
+auto_str_1090 = month_later', ['{}���º�
+auto_str_1091 = year_later', ['{}���
+auto_str_1092 = just_now', ['���ä���
+auto_str_1093 = minute_ago', ['{}��ǰ
+auto_str_1094 = hour_ago', ['{}�r�gǰ
+auto_str_1095 = day_ago', ['{}��ǰ
+auto_str_1096 = week_ago', ['{}�L�gǰ
+auto_str_1097 = month_ago', ['{}����ǰ
+auto_str_1098 = second_later', ['{}����
+auto_str_1099 = minute_later', ['{}����

@@ -1,0 +1,89 @@
+## pages/fieldwatch/FieldwatchPage.ets
+516|」 栈深 
+1422| 台 · 
+1443|…共 
+2222|Wi-Fi 4 及更早
+2261|开放（无密码）
+2262|WEP（已过时）
+2711|首 
+3981| 台信号源 · 未匹配 
+3982| · 跳过随机 
+4268| 台
+4582| 个
+4836| 个结果
+4945|中文
+5497|漫匣
+5500|花漾字影
+5503|书脉
+5506|移动端 AI 编程协作工具
+5509|神秘 APP
+## pages/fieldwatch/FieldwatchToolboxPage.ets
+1041| 分钟
+1043| 分
+1067| 分
+## pages/fieldwatch/FieldwatchFeedbackPage.ets
+557|# 电波足迹 · 记录导出
+558|# 导出时间: 
+559|# 应用版本: 
+1140|管理
+## pages/fieldwatch/FieldwatchSignatureEditorPage.ets
+735|星闪
+744|星闪
+## fieldwatch/ui/FieldwatchFindWizard.ets
+257| 地址直配=
+## pages/fieldwatch/FieldwatchDeviceDetailPage.ets
+527| dBm —— 它自称的发射强度，不代表距离
+## fieldwatch/domain/FieldwatchChangelog.ets
+49|首个公开发布版本：实时雷达、强度 / 时间线 / 信号轨迹 / 分类四种视图与工具箱（信道分析、信号追踪、反追踪）
+50|611 条内置特征签名、候选特征发现与「添加到目录」；支持目录导出 / 导入 / 更新与恢复默认
+51|观测会话（开始 / 结束 / 对比）、CSV / JSONL / GPX / KML / WiGLE 导出与复盘 PDF
+52|隐私模式（地址脱敏）与严格离线：除主动更新特征目录外不产生任何联网
+## fieldwatch/domain/FieldwatchWidgetState.ets
+76| 秒前
+77| 分钟前
+78| 小时前
+104|app 未运行
+105|开启后台运行并切到后台后，这里会显示扫描情况
+109| · 星闪 
+110| · 已暂停
+114|关注 · 
+117|特征族 · 
+119|尚未命中关注目标或特征族
+## fieldwatch/domain/FieldwatchRadioDb.ets
+164| 条, MA-S 
+174|未载入
+178| 首键=
+181| 名称数=
+182| 名0=[
+183| 名1=[
+184| 池长=
+## fieldwatch/platform/FieldwatchFeedbackService.ets
+173|上传已取消
+310|读取附件失败: expected=
+340|本地文件大小在上传前发生变化
+343|上传会话偏移无效
+353|读取附件失败: expected=
+357|分块上传失败
+358|服务器未推进上传偏移
+## fieldwatch/radio/FieldwatchWifiScanner.ets
+146|注册 Wi-Fi 扫描状态监听失败
+161|Wi-Fi 信息权限未授予，请重新授权
+165|Wi-Fi 未开启，请先打开 Wi-Fi
+170|系统位置信息未开启，Wi-Fi 扫描需要位置服务
+200|系统暂时拒绝或节流 Wi-Fi 扫描
+357|Wi-Fi 扫描失败
+## fieldwatch/radio/FieldwatchBleScanner.ets
+31|蓝牙未开启，请先开启蓝牙后重试
+121| 条观测
+212|BLE 扫描失败（
+## fieldwatch/radio/FieldwatchNearLinkScanner.ets
+48|星闪能力探测失败：
+52|本机不支持星闪
+60|星闪未开启，请先开启星闪后重试
+64|读取星闪状态失败：
+154|星闪扫描权限未授予
+155|本机不支持星闪
+156|星闪未开启，请先开启星闪后重试
+157|星闪扫描失败（
+## fieldwatch/data/FieldwatchSettingsRepository.ets
+225|预设 1

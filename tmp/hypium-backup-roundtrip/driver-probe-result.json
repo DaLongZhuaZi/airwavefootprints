@@ -1,0 +1,79 @@
+{
+  "device": "192.168.5.133:42355",
+  "closed": true,
+  "actions": [
+    "current_window_observed",
+    "open_settings_from_live_tab"
+  ],
+  "window": "UiWindow#0",
+  "screenshots": [
+    "tmp\\hypium-backup-roundtrip\\backup-before.jpeg",
+    "tmp\\hypium-backup-roundtrip\\settings-top.jpeg",
+    "tmp\\hypium-backup-roundtrip\\buttons.jpeg"
+  ],
+  "buttons": [
+    {
+      "text": "\u57fa\u7840 30 \u79d2",
+      "text_ascii": "'\\u57fa\\u7840 30 \\u79d2'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 461, right: 699, top: 407, bottom: 493)"
+    },
+    {
+      "text": "\u5e73\u8861 45 \u79d2",
+      "text_ascii": "'\\u5e73\\u8861 45 \\u79d2'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 718, right: 956, top: 407, bottom: 493)"
+    },
+    {
+      "text": "\u8282\u80fd 60 \u79d2",
+      "text_ascii": "'\\u8282\\u80fd 60 \\u79d2'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 975, right: 1213, top: 407, bottom: 493)"
+    },
+    {
+      "text": "\u7acb\u5373\u91cd\u8bd5",
+      "text_ascii": "'\\u7acb\\u5373\\u91cd\\u8bd5'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 461, right: 694, top: 887, bottom: 982)"
+    },
+    {
+      "text": "\u5141\u8bb8",
+      "text_ascii": "'\\u5141\\u8bb8'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 2101, right: 2239, top: 820, bottom: 906)"
+    },
+    {
+      "text": "\u7cfb\u7edf\u8bbe\u7f6e",
+      "text_ascii": "'\\u7cfb\\u7edf\\u8bbe\\u7f6e'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 2253, right: 2457, top: 825, bottom: 901)"
+    },
+    {
+      "text": "\u5141\u8bb8",
+      "text_ascii": "'\\u5141\\u8bb8'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 2101, right: 2239, top: 1185, bottom: 1271)"
+    },
+    {
+      "text": "\u7cfb\u7edf\u8bbe\u7f6e",
+      "text_ascii": "'\\u7cfb\\u7edf\\u8bbe\\u7f6e'",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 2253, right: 2457, top: 1190, bottom: 1266)"
+    },
+    {
+      "text": "",
+      "text_ascii": "''",
+      "enabled": true,
+      "clickable": true,
+      "bounds": "(left: 1223, right: 1337, top: 17, bottom: 60)"
+    }
+  ]
+}

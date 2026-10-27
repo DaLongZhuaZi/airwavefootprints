@@ -1,0 +1,26 @@
+FieldwatchNearLinkScanner.ets:48 | this.fail('星闪能力探测失败：' + this.errorMessage(error));
+FieldwatchNearLinkScanner.ets:52 | this.fail('本机不支持星闪');
+FieldwatchNearLinkScanner.ets:60 | this.fail('星闪未开启，请先开启星闪后重试');
+FieldwatchNearLinkScanner.ets:64 | this.fail('读取星闪状态失败：' + this.errorMessage(error));
+FieldwatchNearLinkScanner.ets:154 | if (code === 201) return '星闪扫描权限未授予';
+FieldwatchNearLinkScanner.ets:155 | if (code === 801) return '本机不支持星闪';
+FieldwatchNearLinkScanner.ets:156 | if (code === 36100003) return '星闪未开启，请先开启星闪后重试';
+FieldwatchNearLinkScanner.ets:157 | return '星闪扫描失败（' + code.toString() + '）：' + error.message;
+FieldwatchSettingsRepository.ets:225 | const migrated: FilterPreset[] = [new FilterPreset('预设 1', legacy)];
+FieldwatchWidgetState.ets:76 | if (seconds < 60) return seconds.toString() + ' 秒前';
+FieldwatchWidgetState.ets:77 | if (seconds < 3600) return Math.round(seconds / 60).toString() + ' 分钟前';
+FieldwatchWidgetState.ets:78 | return Math.round(seconds / 3600).toString() + ' 小时前';
+FieldwatchWidgetState.ets:104 | data[FieldwatchWidgetKeys.STATUS] = 'app 未运行';
+FieldwatchWidgetState.ets:105 | data[FieldwatchWidgetKeys.DETAIL] = '开启后台运行并切到后台后，这里会显示扫描情况';
+FieldwatchWidgetState.ets:109 | + ' · 星闪 ' + state.nearLink.toString();
+FieldwatchWidgetState.ets:110 | if (state.paused) status += ' · 已暂停';
+FieldwatchWidgetState.ets:114 | parts.push('关注 · ' + state.watchLabel + ' ' + state.watchRssi.toString() + ' dBm · ' + ageText(state.watchAgeSec));
+FieldwatchWidgetState.ets:117 | parts.push('特征族 · ' + state.familyLabel + ' · ' + ageText(state.familyAgeSec));
+FieldwatchWidgetState.ets:119 | data[FieldwatchWidgetKeys.DETAIL] = parts.length > 0 ? parts.join('\n') : '尚未命中关注目标或特征族';
+FieldwatchFeedbackService.ets:173 | public constructor() { super('上传已取消'); }
+FieldwatchFeedbackService.ets:310 | throw new Error('读取附件失败: expected=' + readSize.toString() + ' actual=' + readBytes.toString());
+FieldwatchFeedbackService.ets:340 | throw new Error('本地文件大小在上传前发生变化');
+FieldwatchFeedbackService.ets:343 | if (offset < 0 || offset > session.requested_size) throw new Error('上传会话偏移无效');
+FieldwatchFeedbackService.ets:353 | throw new Error('读取附件失败: expected=' + readSize.toString() + ' actual=' + readBytes.toString());
+FieldwatchFeedbackService.ets:357 | if (result === undefined) throw new Error('分块上传失败');
+FieldwatchFeedbackService.ets:358 | if (result.received_size <= offset && !result.complete) throw new Error('服务器未推进上传偏移');

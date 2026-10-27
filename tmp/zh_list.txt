@@ -1,0 +1,121 @@
+FieldwatchDeviceExplain.ets:71|有限可发现：正在短暂寻找附近的连接。
+FieldwatchDeviceExplain.ets:72|可发现：其它 BLE 设备能找到它。
+FieldwatchDeviceExplain.ets:73|仅 BLE：不支持经典蓝牙（耳机／传文件那条射频）。
+FieldwatchDeviceExplain.ets:74|除 BLE 外，可能也支持经典蓝牙（BR/EDR）。
+FieldwatchDeviceExplain.ets:75|双模芯片：BLE 与经典蓝牙可同时工作。
+FieldwatchDeviceExplain.ets:81| —— 长距离 BLE（更慢、更远）
+FieldwatchDeviceExplain.ets:82| —— 更快的 BLE（蓝牙 5）
+FieldwatchDeviceExplain.ets:83| —— 标准 BLE 无线电
+FieldwatchDeviceExplain.ets:97|本地管理 BSSID。车载、Mesh 与访客 AP 常长期保留这个地址，不是手机那种轮换 MAC。
+FieldwatchDeviceExplain.ets:99|公开的出厂地址（稳定，由 IEEE 分配）。
+FieldwatchDeviceExplain.ets:100|随机／隐私地址。MAC 会变化，因此不是持久的身份标识。
+FieldwatchDeviceExplain.ets:101| · 通用 IEEE 地址（稳定的 OUI）。
+FieldwatchDeviceExplain.ets:102|通用 IEEE 地址（稳定的 OUI）。
+FieldwatchDeviceExplain.ets:107|不可用
+FieldwatchDeviceExplain.ets:108|很强
+FieldwatchDeviceExplain.ets:109|强
+FieldwatchDeviceExplain.ets:110|中等
+FieldwatchDeviceExplain.ets:111|弱
+FieldwatchDeviceExplain.ets:112|很弱
+FieldwatchDeviceExplain.ets:117|不可用
+FieldwatchDeviceExplain.ets:123|不可用
+FieldwatchDeviceExplain.ets:149|WPA3 密码（SAE 握手）
+FieldwatchDeviceExplain.ets:150|增强开放（加密但无密码）
+FieldwatchDeviceExplain.ets:151|WPA2 密码（PSK）
+FieldwatchDeviceExplain.ets:152|Wi-Fi 密码（WPA/PSK）
+FieldwatchDeviceExplain.ets:153|企业登录（802.1X）
+FieldwatchDeviceExplain.ets:154|WEP（老旧、脆弱）
+FieldwatchDeviceExplain.ets:155|开放网络，或加密方式未解析出来
+FieldwatchDeviceExplain.ets:156|AES 加密
+FieldwatchDeviceExplain.ets:157|TKIP（较老、较弱的密码套件）
+FieldwatchDeviceExplain.ets:158|已启用 WPS 配网
+FieldwatchDeviceExplain.ets:159|Mesh 节点
+FieldwatchDeviceExplain.ets:160|自组网（ad-hoc）
+FieldwatchDeviceExplain.ets:161|基础设施接入点
+FieldwatchDeviceExplain.ets:173|连接基础服务
+FieldwatchDeviceExplain.ets:174|属性协议
+FieldwatchDeviceExplain.ets:175|型号 / 序列号 / 固件
+FieldwatchDeviceExplain.ets:176|电量
+FieldwatchDeviceExplain.ets:177|键盘、鼠标或手柄
+FieldwatchDeviceExplain.ets:178|心率传感器
+FieldwatchDeviceExplain.ets:179|血压传感器
+FieldwatchDeviceExplain.ets:180|温湿度一类环境传感器
+FieldwatchDeviceExplain.ets:181|LE 骑行功率／速度
+FieldwatchDeviceExplain.ets:183|Google Fast Pair（多为耳机／音箱）
+FieldwatchDeviceExplain.ets:185|Apple Find My 相关
+FieldwatchDeviceExplain.ets:186|Tile 追踪器
+FieldwatchDeviceExplain.ets:187|涂鸦 IoT
+FieldwatchDeviceExplain.ets:189|HP 打印机
+FieldwatchDeviceExplain.ets:190|Sonos 音箱
+FieldwatchDeviceExplain.ets:192|ASSA ABLOY 门禁
+FieldwatchDeviceExplain.ets:193|August Home 门锁
+FieldwatchDeviceExplain.ets:195|Apple（不是 ASSA ABLOY）
+FieldwatchDeviceExplain.ets:233|Wi-Fi 接入点
+FieldwatchDeviceExplain.ets:235|它确实在广播，但没有声明任何产品类别（没有 Appearance、Class of Device，也没有知名的服务）。
+FieldwatchDeviceExplain.ets:249|未知广播源
+FieldwatchDeviceExplain.ets:260|很可能是
+FieldwatchDeviceExplain.ets:261|可能是
+FieldwatchDeviceExplain.ets:263|这是设备自己广播的内容，不是视觉识别结果。
+FieldwatchDeviceExplain.ets:275|耳机或头戴耳机
+FieldwatchDeviceExplain.ets:277|音箱
+FieldwatchDeviceExplain.ets:278|鼠标
+FieldwatchDeviceExplain.ets:279|键盘
+FieldwatchDeviceExplain.ets:280|游戏手柄
+FieldwatchDeviceExplain.ets:281|手表或腕戴设备
+FieldwatchDeviceExplain.ets:282|手机
+FieldwatchDeviceExplain.ets:284|电脑或平板
+FieldwatchDeviceExplain.ets:285|查找标签 / 追踪器
+FieldwatchDeviceExplain.ets:286|遥控器
+FieldwatchDeviceExplain.ets:287|输入设备（键盘、鼠标之类）
+FieldwatchDeviceExplain.ets:288|心率监测器
+FieldwatchDeviceExplain.ets:290|健康传感器
+FieldwatchDeviceExplain.ets:291|显示器或电视棒
+FieldwatchDeviceExplain.ets:292|时钟
+FieldwatchDeviceExplain.ets:293|智能眼镜
+FieldwatchDeviceExplain.ets:295|它声明的外观（Appearance）是 
+FieldwatchDeviceExplain.ets:308|耳机或头戴耳机
+FieldwatchDeviceExplain.ets:309|音箱
+FieldwatchDeviceExplain.ets:310|音频设备
+FieldwatchDeviceExplain.ets:313|鼠标
+FieldwatchDeviceExplain.ets:314|键盘
+FieldwatchDeviceExplain.ets:315|输入设备
+FieldwatchDeviceExplain.ets:316|游戏手柄
+FieldwatchDeviceExplain.ets:317|输入配件
+FieldwatchDeviceExplain.ets:320|手机
+FieldwatchDeviceExplain.ets:323|电脑
+FieldwatchDeviceExplain.ets:324|手表
+FieldwatchDeviceExplain.ets:327|健康传感器
+FieldwatchDeviceExplain.ets:333|Class of Device 显示它是
+FieldwatchDeviceExplain.ets:349|键盘、鼠标或手柄
+FieldwatchDeviceExplain.ets:351|LE Audio 耳机或音箱
+FieldwatchDeviceExplain.ets:352|心率监测器
+FieldwatchDeviceExplain.ets:353|血压计
+FieldwatchDeviceExplain.ets:354|环境传感器
+FieldwatchDeviceExplain.ets:355|耳机或音箱
+FieldwatchDeviceExplain.ets:356|SmartTag 服务 UUID。
+FieldwatchDeviceExplain.ets:357|Apple Find My 配件
+FieldwatchDeviceExplain.ets:358|Tile 追踪器
+FieldwatchDeviceExplain.ets:378|匹配到特征 
+FieldwatchDeviceExplain.ets:387|隐藏 SSID 的接入点
+FieldwatchCandidateEngine.ets:156|已标记
+FieldwatchCandidateEngine.ets:157|匹配到特征 
+FieldwatchCandidateEngine.ets:158|。第二条特征仍可能同时标记这台无线电（服务 UUID、产品 OUI）。
+FieldwatchCandidateEngine.ets:162|仅此一台
+FieldwatchCandidateEngine.ets:163|没有可聚类的空中唯一 ID。随机地址、家用型名称与通用芯片会被跳过。
+FieldwatchCandidateEngine.ets:183|仅此一台
+FieldwatchCandidateEngine.ets:184|在场设备里没有别的 MAC 共享这个空中唯一 ID。从这里建的签名基本只标到这一个地址。
+FieldwatchCandidateEngine.ets:192|强特征族
+FieldwatchCandidateEngine.ets:193|在场有 
+FieldwatchCandidateEngine.ets:194|这是目录级模式，不是单个 MAC。
+FieldwatchCandidateEngine.ets:200|名称模式
+FieldwatchCandidateEngine.ets:201|厂商 IE
+FieldwatchCandidateEngine.ets:202|服务 UUID
+FieldwatchCandidateEngine.ets:203|厂商数据前缀
+FieldwatchCandidateEngine.ets:205|空中唯一 ID
+FieldwatchCandidateEngine.ets:339|个 AP
+FieldwatchCandidateEngine.ets:340| 在日志中命中 
+FieldwatchCandidateEngine.ets:348|同一名称通配在 
+FieldwatchCandidateEngine.ets:349|同一 vendor IE 出现在 
+FieldwatchCandidateEngine.ets:350|同一服务 UUID 出现在 
+FieldwatchCandidateEngine.ets:351|同一制造商数据前缀出现在 
+FieldwatchCandidateEngine.ets:352|同一 IEEE OUI 出现在 

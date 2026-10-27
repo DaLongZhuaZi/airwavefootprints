@@ -5,13 +5,13 @@
         "name": "default",
         "type": "HarmonyOS",
         "material": {
-          "certpath": "C:\\Users\\13359\\.ohos\\config\\default_NGF_JDB3kluqIj7qxGPW8Q8f_cGAegyyShqaVNLCSj8S55M=.cer",
+          "certpath": "C:\\Users\\13359\\.ohos\\config\\default_airwavefootprints_XY6fTSeF8ZAn-tTJ-Y6IbMPzbgS_TgEhxU8xMb_TYWA=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001BCCB90B430B44928694613A90CD8FC16B52AD8D6FCA3D77419EB66068EC94D9B76FB08C7ABFFD83",
-          "profile": "C:\\Users\\13359\\.ohos\\config\\default_NGF_JDB3kluqIj7qxGPW8Q8f_cGAegyyShqaVNLCSj8S55M=.p7b",
+          "keyPassword": "0000001B161FC602345225316CA239D22FAF66349F086BBDD6EA9908A2ED527DBFDE7C8C8246EA353C7E1F",
+          "profile": "C:\\Users\\13359\\.ohos\\config\\default_airwavefootprints_XY6fTSeF8ZAn-tTJ-Y6IbMPzbgS_TgEhxU8xMb_TYWA=.p7b",
           "signAlg": "SHA256withECDSA",
-          "storeFile": "C:\\Users\\13359\\.ohos\\config\\default_NGF_JDB3kluqIj7qxGPW8Q8f_cGAegyyShqaVNLCSj8S55M=.p12",
-          "storePassword": "0000001BF1CF289831B7F450FB9E0A95B225938F844C625DEF3F63F7AB337F50E6404729A1526F15708A50"
+          "storeFile": "C:\\Users\\13359\\.ohos\\config\\default_airwavefootprints_XY6fTSeF8ZAn-tTJ-Y6IbMPzbgS_TgEhxU8xMb_TYWA=.p12",
+          "storePassword": "0000001B445C031DB48C25CA25E5D72C30ECD85DA6DD817068DB423696BCBEE37B81EF84616414BC730658"
         }
       }
     ],

@@ -1,0 +1,13 @@
+files: 19 total: 149
+    60  fieldwatch/application/FieldwatchApplication.ets
+    10  fieldwatch/domain/FieldwatchCandidateEngine.ets
+    12  fieldwatch/domain/FieldwatchDeviceExplain.ets
+     7  fieldwatch/domain/FieldwatchRadioDb.ets
+     2  fieldwatch/radio/FieldwatchBleScanner.ets
+     1  fieldwatch/ui/FieldwatchFindWizard.ets
+     1  pages/fieldwatch/FieldwatchFeedbackPage.ets
+     8  pages/fieldwatch/FieldwatchPage.ets
+     2  pages/ngf/HdsNavigationOfficialShowcasePage.ets
+    22  pages/ngf/MainMenuPage.ets
+     1  pages/ngf/NGFCapabilitiesDatabasePage.ets
+     3  pages/ngf/NGFDemoDataStoragePage.ets

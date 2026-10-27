@@ -1,0 +1,14 @@
+fix(test): 修正两个单测的 ArkTS 编译错误，`hvigor test` 恢复通过
+
+`hvigor assembleHap` 不编译 entry/src/test，所以此前只跑构建时这些错误一直没暴露。
+用 `hvigor test` 才发现并修掉：
+
+1. FieldwatchScenePacks.test：`let hotel: ScenePack | undefined` 在 forEach 闭包里赋值后，
+   ArkTS 把类型收窄成 `never`，下一行 `hotel.filter` 报 10605999。
+   改成返回值式的 `packOf(id)` 查找函数。
+2. FieldwatchBattery.test：函数名里带点（`fieldwatchBattery.test`）导致解析失败；
+   另有两处 `const` 缺少显式类型，触发 arkts-no-implicit-return-types。
+   改为驼峰命名并补上 `BleAdvertisementFacts` 显式标注。
+
+验证：`hvigorw test --no-daemon` BUILD SUCCESSFUL（UnitTestArkTS 编译通过）。
+注：该任务只做编译，不执行用例；用例执行需在 IDE 或设备上跑。

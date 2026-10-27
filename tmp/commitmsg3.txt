@@ -1,0 +1,16 @@
+fix(fieldwatch): 统一页面底部留白，修复找东西页无法滑动与子页面被底栏遮挡
+
+底栏是 HdsTabs 的浮动页签（barOverlap + barFloatingStyle），浮在内容之上且不占布局高度，
+因此每个可滚动页面必须自己预留「栏高 + 间距 + 系统导航条」。此前各页各写一个数：
+实时页 112（正确）、筛选/报告/设置 48、找东西 24、压栈子页面 20~48 —— 除实时页外全部偏小，
+表现为滚到底部时最后一块内容停在底栏下面、且滚动范围到那里就结束，看起来「滑不动」。
+
+- 新增 fieldwatch/ui/FieldwatchLayout.ets：FIELDWATCH_TAB_BAR_RESERVE(88) 与
+  FIELDWATCH_SAFE_BOTTOM_GAP(24)，统一两种口径；
+- 页面统一改为 bottom: this.bottomInset + 常量，bottomInset 由根页从
+  TYPE_NAVIGATION_INDICATOR 避开区取到后下发；设备详情页自行查询窗口；
+- 覆盖：实时页日常视图、筛选、报告、设置、工具箱两页、找东西、特征库（内嵌与压栈）、
+  设备详情、寻踪、特征编辑器、反馈中心、关注列表、特征详情；
+- 实时页列表/类别/轨迹本来就有 96vp 尾部占位项，保持不变，避免重复预留。
+
+验证：assembleHap 通过。

@@ -1,0 +1,13 @@
+fix(fieldwatch): 找东西页改用与信道/反追踪一致的滚动容器
+
+上一版只补了底部留白，解决的是「滚到底看不见」，没有解决「完全拖不动」。
+对比工具箱三页的滚动容器：信道与反追踪是
+`Scroll{…}.width('100%').layoutWeight(1).edgeEffect(EdgeEffect.Spring)`，
+而找东西页少了 layoutWeight 与 edgeEffect —— 缺少 Spring 后，内容短于视口时滚动范围为零，
+手指怎么拖都没有反应；layoutWeight 则保证 Scroll 在父 Column 里拿到确定高度。
+
+- FieldwatchFindPage 的滚动容器改为与另两页完全一致：layoutWeight(1) + edgeEffect(Spring) + align(TopStart)；
+- 保留 height('100%') 作为非 flex 容器下的兜底；
+- 文档 §18 补充差异对照。
+
+验证：assembleHap 通过。

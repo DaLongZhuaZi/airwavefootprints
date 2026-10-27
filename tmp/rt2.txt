@@ -1,0 +1,13 @@
+auto_str_1092 | base=just_now', ['たった今 | en=たった今
+auto_str_1093 | base=minute_ago', ['{}分前 | en={}分前
+auto_str_1094 | base=hour_ago', ['{}時間前 | en={}時間前
+auto_str_1095 | base=day_ago', ['{}日前 | en={}日前
+auto_str_1096 | base=week_ago', ['{}週間前 | en={}週間前
+auto_str_1097 | base=month_ago', ['{}ヶ月前 | en={}ヶ月前
+auto_str_1098 | base=second_later', ['{}秒後 | en={}秒後
+auto_str_1099 | base=minute_later', ['{}分後 | en={}分後
+auto_str_1100 | base=hour_later', ['{}時間後 | en={}時間後
+auto_str_1101 | base=day_later', ['{}日後 | en={}日後
+auto_str_1102 | base=week_later', ['{}週間後 | en={}週間後
+auto_str_1103 | base=month_later', ['{}ヶ月後 | en={}ヶ月後
+auto_str_1104 | base=year_later', ['{}年後 | en={}年後

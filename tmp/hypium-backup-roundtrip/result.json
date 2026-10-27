@@ -1,0 +1,24 @@
+{
+  "status": "failed",
+  "package": "com.dlzz.airwavefootprints",
+  "ability": "EntryAbility",
+  "device_sn": "192.168.5.133:42355",
+  "output_dir": "F:\\DevEcoStudioProject\\airwavefootprints\\tmp\\hypium-backup-roundtrip",
+  "actions": [
+    "connect",
+    "unlock",
+    "start_app",
+    "wait_for_idle"
+  ],
+  "driver_closed": true,
+  "hypium_forward_port_policy": "high_port_46000_46999",
+  "display_size": [
+    2560,
+    1600
+  ],
+  "device_type": "tablet",
+  "error": "TestFailure: [Script-0203003] Step uidriver.check_current_window(192.168.5.133:42355, bundle_name=com.dlzz.airwavefootprints) result TestError!",
+  "screenshots": {
+    "failure": "F:\\DevEcoStudioProject\\airwavefootprints\\tmp\\hypium-backup-roundtrip\\failure.jpeg"
+  }
+}

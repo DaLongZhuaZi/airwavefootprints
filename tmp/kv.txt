@@ -1,0 +1,18 @@
+fieldwatch_filter_selected_signatures
+  base: 已选特征
+  en  : Selected signatures
+fieldwatch_filter_fine
+  base: 精细筛选
+  en  : Fine filter
+fieldwatch_filter_show_selected
+  base: 仅显示选中的特征
+  en  : Show only selected signatures
+fieldwatch_toolbox_tab_channel
+  base: 信道分析
+  en  : Channels
+fieldwatch_reports_compare
+  base: 对比观测
+  en  : Compare sits
+fieldwatch_signatures_category_all
+  base: 全部类别
+  en  : All classes

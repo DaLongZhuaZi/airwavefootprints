@@ -1,0 +1,10 @@
+chore(changelog): 补录 2026-10-21 的底部留白与找东西滚动修复
+
+按 FieldwatchChangelog 的维护约定，版本号未变但当天合入了要告知用户的修复时，
+在 CHANGELOG_HEAD 头部插入手动补录（buildNumber 记 0，versionLabel 沿用当前 1.1.0）。
+
+- 新增条目 2026-10-21：统一页面底部留白、修复「找东西」页无法上下滑动；
+- 新增资源键 fw_cl_fix_1 / fw_cl_fix_2（base / en_US 各 2670 条，键集一致）；
+- CHANGELOG_CURRENT_BUILD 对齐到 app.json5 当前的 versionCode 1010001（不递增版本号）。
+
+验证：assembleHap 通过。

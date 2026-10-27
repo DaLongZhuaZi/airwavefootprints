@@ -1,0 +1,33 @@
+FieldwatchCandidateEngine.ets:193 | strong ? ngfText('app.string.fw_cand_192') : '可能的特征族',
+FieldwatchCandidateEngine.ets:194 | ngfText('app.string.fw_cand_193') + bestCount.toString() + ' 台共享同一个' + kindLabel + '。'
+FieldwatchCandidateEngine.ets:195 | + (strong ? ngfText('app.string.fw_cand_194') : '样本偏薄 —— 可能是目录级模式。'),
+FieldwatchCandidateEngine.ets:340 | const word: string = cluster.radioKind === RadioKind.WIFI ? ngfText('app.string.fw_cand_339') : '个广播源';
+FieldwatchCandidateEngine.ets:341 | candidate.notes = candidate.distinctRadios.toString() + ' ' + word + ngfText('app.string.fw_cand_340') + this.ruleLabel(cluster.primary) + '。共享的空中 ID，
+FieldwatchCandidateEngine.ets:349 | if (kind === CandidateRuleKind.NAME_GLOB) return ngfText('app.string.fw_cand_348') + count.toString() + ' 台信号源上 —— 不是家用 SSID。';
+FieldwatchCandidateEngine.ets:350 | if (kind === CandidateRuleKind.VENDOR_IE) return ngfText('app.string.fw_cand_349') + count.toString() + ' 个 BSSID 上。不是 WPS / P2P。';
+FieldwatchCandidateEngine.ets:351 | if (kind === CandidateRuleKind.SERVICE_UUID) return ngfText('app.string.fw_cand_350') + count.toString() + ' 个 BLE 广播源上。';
+FieldwatchCandidateEngine.ets:352 | if (kind === CandidateRuleKind.MANUFACTURER_DATA) return ngfText('app.string.fw_cand_351') + count.toString() + ' 个 BLE 广播源上。';
+FieldwatchCandidateEngine.ets:353 | return ngfText('app.string.fw_cand_352') + count.toString() + ' 个稳定 BSSID 上。不是芯片模组前缀。';
+FieldwatchDeviceExplain.ets:234 | const kindLabel: string = sighting.kind === RadioKind.WIFI ? ngfText('app.string.fw_dx_233') : '蓝牙 LE 广播源';
+FieldwatchDeviceExplain.ets:250 | return new ExplainGuess(ngfText('app.string.fw_dx_249'), ngfText('app.string.fw_dx_249'), '线索不足。', ExplainConfidence.LOW, true);
+FieldwatchDeviceExplain.ets:262 | : (confidence === ExplainConfidence.MEDIUM ? ngfText('app.string.fw_dx_261') : '也许是');
+FieldwatchDeviceExplain.ets:350 | if (id === 0x1812) out.push(new ExplainHint('hid', ngfText('app.string.fw_dx_177'), '它提供 HID（人机接口）服务。', 5));
+FieldwatchDeviceExplain.ets:352 | out.push(new ExplainHint('audio-personal', ngfText('app.string.fw_dx_351'), '它提供蓝牙 LE Audio 服务。', 6));
+FieldwatchDeviceExplain.ets:353 | } else if (id === 0x180D) out.push(new ExplainHint('health', ngfText('app.string.fw_dx_288'), '它提供心率服务。', 6));
+FieldwatchDeviceExplain.ets:354 | else if (id === 0x1810) out.push(new ExplainHint('health', ngfText('app.string.fw_dx_353'), '它提供血压服务。', 6));
+FieldwatchDeviceExplain.ets:355 | else if (id === 0x181A) out.push(new ExplainHint('sensor', ngfText('app.string.fw_dx_354'), '它提供环境感知服务。', 4));
+FieldwatchDeviceExplain.ets:356 | else if (id === 0xFE2C) out.push(new ExplainHint('audio-personal', ngfText('app.string.fw_dx_355'), '带 Google Fast Pair（多见于耳机与音箱）。', 5));
+FieldwatchDeviceExplain.ets:358 | else if (id === 0xFD44) out.push(new ExplainHint('tag', ngfText('app.string.fw_dx_357'), 'Find My 相关 UUID。', 6));
+FieldwatchDeviceExplain.ets:359 | else if (id === 0xFEED || id === 0xFEDD) out.push(new ExplainHint('tag', ngfText('app.string.fw_dx_186'), 'Tile 服务 UUID。', 7));
+FieldwatchDeviceExplain.ets:388 | out.push(new ExplainHint('wifi-hidden', ngfText('app.string.fw_dx_387'), '它在广播但刻意不公布网络名。', 4));
+FieldwatchPage.ets:516 | + '」 栈深 ' + before.toString() + ' -> ' + this.pathStack.size().toString());
+FieldwatchPage.ets:2711 | return ngfText('app.string.fw_pg_2711') + this.durationText(now - firstMillis) + ' · ' + (lastMillis >= now - 2000 ? '末 now' : '末 ' + this.durationTex
+FieldwatchPage.ets:3982 | + ngfText('app.string.fw_pg_3982') + report.skippedRandomized.toString() + ' · 跳过家用 ' + report.skippedHouseLike.toString();
+FieldwatchPage.ets:4957 | Button('中文').backgroundColor(Color.Transparent).borderWidth(1)
+FieldwatchPage.ets:5509 | list.push(new DeveloperApp('漫匣', ngfText('app.string.fw_pg_5497'),
+FieldwatchPage.ets:5512 | list.push(new DeveloperApp('花漾字影', ngfText('app.string.fw_pg_5500'),
+FieldwatchPage.ets:5515 | list.push(new DeveloperApp('书脉', ngfText('app.string.fw_pg_5503'),
+FieldwatchPage.ets:5521 | list.push(new DeveloperApp('神秘 APP', ngfText('app.string.fw_pg_5509'), '', undefined));
+FieldwatchBleScanner.ets:121 | + this.observationsSinceLog.toString() + ' 条观测');
+FieldwatchBleScanner.ets:212 | return 'BLE 扫描失败（' + businessError.code.toString() + '）：' + businessError.message;
+FieldwatchFindWizard.ets:257 | + ' 地址直配=' + (addressHit ? '命中' : '未命中') + ' 同名候选=' + nameCount.toString());

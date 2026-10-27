@@ -1,0 +1,28 @@
+FieldwatchPage.ets:516 | + '」 栈深 ' + before.toString() + ' -> ' + this.pathStack.size().toString());
+FieldwatchPage.ets:1422 | Text('+' + node.count.toString() + ' 台 · ' + node.clusterLabel)
+FieldwatchPage.ets:1443 | Text('…共 ' + node.memberKeys.length.toString() + ' 台')
+FieldwatchPage.ets:2222 | if (mhz < 2500) return width >= 40 ? 'Wi-Fi 4 (802.11n)' : 'Wi-Fi 4 及更早';
+FieldwatchPage.ets:2261 | if (value === 1) return '开放（无密码）';
+FieldwatchPage.ets:2262 | if (value === 2) return 'WEP（已过时）';
+FieldwatchPage.ets:2711 | return '首 ' + this.durationText(now - firstMillis) + ' · ' + (lastMillis >= now - 2000 ? '末 now' : '末 ' + this.durationText(now - lastMillis));
+FieldwatchPage.ets:3981 | this.candidateStats = report.uniqueRadios.toString() + ' 台信号源 · 未匹配 ' + report.unmatchedRadios.toString()
+FieldwatchPage.ets:3982 | + ' · 跳过随机 ' + report.skippedRandomized.toString() + ' · 跳过家用 ' + report.skippedHouseLike.toString();
+FieldwatchPage.ets:4268 | Text(item.distinctRadios.toString() + ' 台')
+FieldwatchPage.ets:4582 | return prefix + this.nearLinkPhase + ' · ' + this.nearLinkCount.toString() + ' 个';
+FieldwatchPage.ets:4836 | + (this.wifiResultCount > 0 ? ' · ' + this.wifiResultCount.toString() + ' 个结果' : '')
+FieldwatchPage.ets:4945 | Button('中文').backgroundColor(Color.Transparent).borderWidth(1)
+FieldwatchPage.ets:5497 | list.push(new DeveloperApp('漫匣', '一款基于 HarmonyOS 的现代化漫画阅读应用',
+FieldwatchPage.ets:5500 | list.push(new DeveloperApp('花漾字影', '帮您轻松创作更亮眼的手持弹幕内容',
+FieldwatchPage.ets:5503 | list.push(new DeveloperApp('书脉', '支持多种格式的元数据编辑与封面管理',
+FieldwatchPage.ets:5506 | list.push(new DeveloperApp('NGF Coder', '移动端 AI 编程协作工具',
+FieldwatchPage.ets:5509 | list.push(new DeveloperApp('神秘 APP', '敬请期待', '', undefined));
+FieldwatchToolboxPage.ets:1041 | Text(formatMinutes(suspect.evidence.spanMs) + ' 分钟').fontSize(11)
+FieldwatchToolboxPage.ets:1043 | Text(suspect.evidence.score.toString() + ' 分').fontSize(13)
+FieldwatchToolboxPage.ets:1067 | Text(event.score.toString() + ' 分').fontSize(12)
+FieldwatchFeedbackPage.ets:557 | lines.push('# 电波足迹 · 记录导出');
+FieldwatchFeedbackPage.ets:558 | lines.push('# 导出时间: ' + new Date().toISOString());
+FieldwatchFeedbackPage.ets:559 | lines.push('# 应用版本: ' + deviceInfo.displayVersion + ' / ' + deviceInfo.osFullName);
+FieldwatchFeedbackPage.ets:1140 | post.author_kind.indexOf('admin') >= 0 || post.author_kind.indexOf('管理') >= 0)
+FieldwatchSignatureEditorPage.ets:735 | : (value.indexOf('星闪') >= 0 ? RadioKind.NEARLINK : RadioKind.BLE);
+FieldwatchSignatureEditorPage.ets:744 | if (kind === RadioKind.NEARLINK) return '星闪';
+FieldwatchDeviceDetailPage.ets:527 | item.facts.txPower.toString() + ' dBm —— 它自称的发射强度，不代表距离', FieldwatchPaletteHolder.get().text)
