@@ -12159,6 +12159,18 @@
     {
       "name": "fieldwatch_daily_trend_peak",
       "value": "%1 最多，新出现 %2 台"
+    },
+    {
+      "name": "fieldwatch_sec_card_detail",
+      "value": "查看详情"
+    },
+    {
+      "name": "fieldwatch_sec_card_dismiss",
+      "value": "忽略"
+    },
+    {
+      "name": "fieldwatch_sec_card_address",
+      "value": "地址"
     }
   ]
 }

@@ -12159,6 +12159,18 @@
     {
       "name": "fieldwatch_daily_trend_peak",
       "value": "Peak on %1 with %2 new devices"
+    },
+    {
+      "name": "fieldwatch_sec_card_detail",
+      "value": "Details"
+    },
+    {
+      "name": "fieldwatch_sec_card_dismiss",
+      "value": "Ignore"
+    },
+    {
+      "name": "fieldwatch_sec_card_address",
+      "value": "Address"
     }
   ]
 }

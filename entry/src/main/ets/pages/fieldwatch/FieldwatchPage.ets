@@ -692,6 +692,11 @@ struct FieldwatchRootPage {
       FieldwatchSecurityScanPage({
         withShell: true,
         topInset: this.topInsetVp,
+        // 风险卡片「查看详情」跳设备详情：先弹掉扫描页再压栈，避免返回时来回。
+        onOpenDetail: (deviceKey: string): void => {
+          this.pathStack.pop();
+          this.openDeviceDetail(deviceKey);
+        },
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.WIFI_DOCTOR) {

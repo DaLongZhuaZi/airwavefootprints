@@ -33,6 +33,8 @@ export struct FieldwatchSecurityScanPage {
   withShell: boolean = true;
   topInset: number = 0;
   onClose: () => void = (): void => {};
+  /** 打开某台可疑设备的详情页（由根页面注入）。 */
+  onOpenDetail: (deviceKey: string) => void = (deviceKey: string): void => {};
   /** 0 = 未开始，1 = 扫描中，2 = 出结果。 */
   @State private phase: number = 0;
   @State private remainingSec: number = Math.floor(SECURITY_SCAN_DURATION_MS / 1000);
@@ -57,6 +59,8 @@ export struct FieldwatchSecurityScanPage {
   @State private liveSuspect: number = 0;
   /** 人工排查清单是否展开（改版设计 4.4：默认收起）。 */
   @State private checklistOpen: boolean = false;
+  /** 已忽略的可疑设备 key（只在本次结果页隐藏，不改变判定与审计）。 */
+  @State private dismissedSuspects: string[] = [];
   /** 当前网段范围；undefined 表示尚未读取。 */
   @State private activeScope: AclScope | undefined = undefined;
   /** 授权弹窗是否显示。 */
@@ -510,27 +514,66 @@ export struct FieldwatchSecurityScanPage {
         Text($r('app.string.fieldwatch_security_suspects_empty')).fontSize(13)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       } else {
-        ForEach(this.suspectRows(), (item: SuspectDevice): void => {
-          Column({ space: 4 }) {
-            Row({ space: 8 }) {
-              Text(item.label.length > 0 ? item.label : item.address).fontSize(15)
-                .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(1)
-              Text(this.verdictText(item))
-                .fontSize(12).fontWeight(FontWeight.Medium)
-                .fontColor(item.verdict === SecurityVerdict.CONFIRMED
-                  ? FieldwatchPaletteHolder.get().signalRed : FieldwatchPaletteHolder.get().warn)
-            }.width('100%')
-            // 证据分项：让用户看到「为什么判定成可疑」，而不是一个黑箱结论。
-            ForEach(item.evidence, (ev: SecurityEvidence): void => {
-              Text('· ' + this.evidenceText(ev)).fontSize(11)
-                .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
-            }, (ev: SecurityEvidence): string => String(ev.kind) + ev.detailKey)
-          }.width('100%').padding(10).borderRadius(10).alignItems(HorizontalAlign.Start)
+        // 改版设计 4.3：**每台可疑设备一张风险卡片** —— 左侧风险色条 + 名称 + 证据分项 + 处置按钮。
+        ForEach(this.visibleSuspects(), (item: SuspectDevice): void => {
+          Row({ space: 0 }) {
+            // 风险等级色条：确认=红，可疑=橙。
+            Column().width(4).height('100%')
+              .backgroundColor(item.verdict === SecurityVerdict.CONFIRMED
+                ? FieldwatchPaletteHolder.get().signalRed : FieldwatchPaletteHolder.get().warn)
+            Column({ space: 6 }) {
+              Row({ space: 8 }) {
+                Text(item.label.length > 0 ? item.label : item.address).fontSize(15)
+                  .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(1)
+                Text(this.verdictText(item))
+                  .fontSize(12).fontWeight(FontWeight.Medium)
+                  .fontColor(item.verdict === SecurityVerdict.CONFIRMED
+                    ? FieldwatchPaletteHolder.get().signalRed : FieldwatchPaletteHolder.get().warn)
+              }.width('100%')
+              if (item.label.length > 0 && item.address.length > 0) {
+                Text(item.address).fontSize(10)
+                  .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%').maxLines(1)
+              }
+              // 证据分项：让用户看到「为什么判定成可疑」，而不是一个黑箱结论。
+              ForEach(item.evidence, (ev: SecurityEvidence): void => {
+                Text('· ' + this.evidenceText(ev)).fontSize(11)
+                  .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+              }, (ev: SecurityEvidence): string => String(ev.kind) + ev.detailKey)
+              // 处置按钮：查看详情 / 忽略（忽略只是本页不再显示，不改变判定）。
+              Row({ space: 6 }) {
+                FieldwatchButton({ label: $r('app.string.fieldwatch_sec_card_detail'),
+                  tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
+                  onTap: (): void => { this.onOpenSuspectDetail(item.key); } })
+                FieldwatchButton({ label: $r('app.string.fieldwatch_sec_card_dismiss'),
+                  tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
+                  onTap: (): void => { this.dismissSuspect(item.key); } })
+              }.width('100%')
+            }.layoutWeight(1).padding(10).alignItems(HorizontalAlign.Start)
+          }.width('100%').borderRadius(10).clip(true)
           .backgroundColor(FieldwatchPaletteHolder.get().panel2)
         }, (item: SuspectDevice): string => item.key)
       }
     }.width('100%').alignItems(HorizontalAlign.Start)
   }
+
+  /** 过滤掉已忽略的可疑设备。 */
+  private visibleSuspects(): SuspectDevice[] {
+    const out: SuspectDevice[] = [];
+    this.suspectRows().forEach((item: SuspectDevice): void => {
+      if (this.dismissedSuspects.indexOf(item.key) >= 0) return;
+      out.push(item);
+    });
+    return out;
+  }
+
+  /** 忽略一台：只影响本页显示。 */
+  private dismissSuspect(key: string): void {
+    if (this.dismissedSuspects.indexOf(key) >= 0) return;
+    this.dismissedSuspects.push(key);
+  }
+
+  /** 打开可疑设备的详情（由根页面注入，跳设备详情页）。 */
+  private onOpenSuspectDetail(key: string): void { this.onOpenDetail(key); }
 
   private suspectRows(): SuspectDevice[] {
     const summary: SecuritySummary | undefined = this.summary;
