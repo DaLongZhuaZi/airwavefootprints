@@ -13,6 +13,13 @@ const FACES_UNDERLAY_HEIGHT: number = 168;
  * 列出「从未见过 + 信号较强 + 持续出现」的设备；每条都可以一键「这是我家的」移出。
  * 家庭场景的基线对比由用户手动开启（文档明确不做地理围栏自动判定）。
  */
+/** 新面孔分组（今日 / 本周）。 */
+class NewFaceGroup {
+  public titleKey: string = '';
+  public items: NewFaceEntry[] = [];
+  constructor(titleKey: string = '') { this.titleKey = titleKey; }
+}
+
 @Component
 export struct FieldwatchNewFacesPage {
   withShell: boolean = true;
@@ -90,9 +97,15 @@ export struct FieldwatchNewFacesPage {
               onTap: (): void => { this.enableCompare(); } })
           }
         } else {
-          ForEach(this.entries, (entry: NewFaceEntry): void => {
-            this.buildRow(entry)
-          }, (entry: NewFaceEntry): string => entry.deviceKey)
+          // 改版设计 6.2：按今日 / 本周分组，今日组置顶。
+          ForEach(this.groupedRows(), (group: NewFaceGroup): void => {
+            Text(this.text(group.titleKey)).fontSize(13).fontWeight(FontWeight.Medium)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+              .padding({ top: 6, bottom: 2 })
+            ForEach(group.items, (entry: NewFaceEntry): void => {
+              this.buildRow(entry)
+            }, (entry: NewFaceEntry): string => entry.deviceKey)
+          }, (group: NewFaceGroup): string => group.titleKey)
         }
       }
       .width('100%').constraintSize({ maxWidth: 560 })
@@ -179,6 +192,28 @@ export struct FieldwatchNewFacesPage {
       }.width('100%')
     }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
+  /**
+   * 按今日 / 本周分组（改版设计 6.2）。
+   *
+   * 判据用 `firstSeen`：今天首次出现的进「今日」，其余进「本周」。
+   * 空组不显示，避免出现一个只有标题的空段。
+   */
+  private groupedRows(): NewFaceGroup[] {
+    const today: Date = new Date();
+    const startOfToday: number = new Date(today.getFullYear(), today.getMonth(),
+      today.getDate()).getTime();
+    const todayGroup: NewFaceGroup = new NewFaceGroup('app.string.fieldwatch_newfaces_group_today');
+    const weekGroup: NewFaceGroup = new NewFaceGroup('app.string.fieldwatch_newfaces_group_week');
+    this.entries.forEach((entry: NewFaceEntry): void => {
+      if (entry.firstSeen >= startOfToday) todayGroup.items.push(entry);
+      else weekGroup.items.push(entry);
+    });
+    const out: NewFaceGroup[] = [];
+    if (todayGroup.items.length > 0) out.push(todayGroup);
+    if (weekGroup.items.length > 0) out.push(weekGroup);
+    return out;
   }
 
   /** 一行的次要信息：首次出现 · 信号 · 风险提示。 */
