@@ -5,6 +5,9 @@ import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchAp
 import { RadioKind, SignatureClass, Sighting } from '../../fieldwatch/domain/FieldwatchModels';
 import { SECURITY_SCAN_DURATION_MS, SecurityClassCount, SecuritySummary, summaryHeadlineKey } from '../../fieldwatch/domain/FieldwatchSecurityScan';
 import { ShareCardContent } from '../../fieldwatch/platform/FieldwatchShareCard';
+import {
+  capabilityBoundaryKeys, SecurityEvidence, SecurityEvidenceKind, SecurityVerdict, SuspectDevice
+} from '../../fieldwatch/domain/FieldwatchSecurityPassive';
 import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
@@ -268,6 +271,10 @@ export struct FieldwatchSecurityScanPage {
         Text($r('app.string.fieldwatch_security_empty')).fontSize(14)
           .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
       }
+      // ── 可疑设备清单（P3-1 被动层）──
+      this.buildSuspects()
+      // ── 能力边界（文档 3.3 强制要求：写清扫不到什么）──
+      this.buildCapabilityLimits()
       // 脚注：**每一屏都要有**，包括结果屏。
       Text($r('app.string.fieldwatch_security_footnote')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().warn).width('100%').padding({ top: 4 })
@@ -277,6 +284,77 @@ export struct FieldwatchSecurityScanPage {
       FieldwatchButton({ label: $r('app.string.fieldwatch_security_again'),
         tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.startScan(); } })
     }.width('100%').alignItems(HorizontalAlign.Start)
+  }
+
+  /**
+   * 可疑设备清单：每台显示档位（确认 / 可疑）与命中的证据分项。
+   *
+   * **档位只有三档**（确认 / 可疑 / 未发现），绝不出现「安全 / 已排除」——
+   * 这是文档 3.3 的硬口径，扫描到的东西有限，说「安全」就是在骗人。
+   */
+  @Builder
+  private buildSuspects() {
+    Column({ space: 8 }) {
+      Text($r('app.string.fieldwatch_security_suspects_title')).fontSize(15)
+        .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText)
+      if (this.suspectRows().length === 0) {
+        Text($r('app.string.fieldwatch_security_suspects_empty')).fontSize(13)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      } else {
+        ForEach(this.suspectRows(), (item: SuspectDevice): void => {
+          Column({ space: 4 }) {
+            Row({ space: 8 }) {
+              Text(item.label.length > 0 ? item.label : item.address).fontSize(15)
+                .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1).maxLines(1)
+              Text(this.verdictText(item))
+                .fontSize(12).fontWeight(FontWeight.Medium)
+                .fontColor(item.verdict === SecurityVerdict.CONFIRMED
+                  ? FieldwatchPaletteHolder.get().signalRed : FieldwatchPaletteHolder.get().warn)
+            }.width('100%')
+            // 证据分项：让用户看到「为什么判定成可疑」，而不是一个黑箱结论。
+            ForEach(item.evidence, (ev: SecurityEvidence): void => {
+              Text('· ' + this.evidenceText(ev)).fontSize(11)
+                .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+            }, (ev: SecurityEvidence): string => String(ev.kind) + ev.detailKey)
+          }.width('100%').padding(10).borderRadius(10).alignItems(HorizontalAlign.Start)
+          .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+        }, (item: SuspectDevice): string => item.key)
+      }
+    }.width('100%').alignItems(HorizontalAlign.Start)
+  }
+
+  private suspectRows(): SuspectDevice[] {
+    const summary: SecuritySummary | undefined = this.summary;
+    return summary === undefined ? [] : summary.suspects;
+  }
+
+  private verdictText(item: SuspectDevice): string {
+    if (item.verdict === SecurityVerdict.CONFIRMED) return this.text('app.string.fieldwatch_security_verdict_confirmed');
+    if (item.verdict === SecurityVerdict.SUSPICIOUS) return this.text('app.string.fieldwatch_security_verdict_suspicious');
+    return this.text('app.string.fieldwatch_security_verdict_none');
+  }
+
+  private evidenceText(ev: SecurityEvidence): string {
+    if (ev.kind === SecurityEvidenceKind.VENDOR_OUI) return this.text('app.string.fieldwatch_security_evidence_vendor');
+    if (ev.kind === SecurityEvidenceKind.NAME_PATTERN) return this.text('app.string.fieldwatch_security_evidence_name');
+    if (ev.kind === SecurityEvidenceKind.MEDIA_SERVICE) return this.text('app.string.fieldwatch_security_evidence_service');
+    return this.text('app.string.fieldwatch_security_evidence_catalog');
+  }
+
+  /** 能力边界：四条逐条列出，外加「当前只做被动扫描」的说明。 */
+  @Builder
+  private buildCapabilityLimits() {
+    Column({ space: 4 }) {
+      Text($r('app.string.fieldwatch_security_limits_title')).fontSize(13)
+        .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().textDim)
+      Text($r('app.string.fieldwatch_security_passive_only')).fontSize(11)
+        .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      ForEach(capabilityBoundaryKeys(), (key: string): void => {
+        Text('· ' + this.text(key)).fontSize(11)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      }, (key: string): string => key)
+    }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel2)
   }
 
   private kindsText(): string {

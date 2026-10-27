@@ -36,13 +36,15 @@ import { manager as nearlinkManager } from '@kit.ConnectivityKit';
 import { FieldwatchRadioDb } from '../domain/FieldwatchRadioDb';
 import { ngfSettingsStoreFacade, ngfWidgetManagerFacade } from 'ngf_framework';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../domain/FieldwatchPermissions';
-import { buildSecuritySummary, SecuritySummary } from '../domain/FieldwatchSecurityScan';
+import { attachSuspects, buildSecuritySummary, SecuritySummary } from '../domain/FieldwatchSecurityScan';
+import { ServiceDataRecord } from '../domain/FieldwatchModels';
+import { assessSighting, SuspectDevice } from '../domain/FieldwatchSecurityPassive';
 import {
   buildWifiDoctor, doctorLines, DoctorLine, RoomCheck, ROOM_SCAN_DURATION_MS, WifiDoctorReport
 } from '../domain/FieldwatchWifiDoctor';
 import { FieldwatchRoomCheckRepository } from '../data/FieldwatchRoomCheckRepository';
 import { builtinScenePacks, ScenePack } from '../domain/FieldwatchScenePacks';
-import { buildDex, DexEntry, DexSummary, summarizeDex, sortDex } from '../domain/FieldwatchDex';
+import { buildDex, DexEntry, DexSummary, mapLegacyIds, summarizeDex, sortDex } from '../domain/FieldwatchDex';
 import { baselineUsable, NewFaceEntry, newFacesOf } from '../domain/FieldwatchNewFaces';
 import {
   decodeRatingState, encodeRatingState, markRatingDeclined, markRatingRated, markRatingShown,
@@ -370,10 +372,60 @@ export class FieldwatchApplication {
     });
     const summary: SecuritySummary = buildSecuritySummary(this.state.sightings, this.state.signatures,
       this.securityScanKeys, best, startedAt, endedAt);
+    // 被动层判定（P3-1 第 3 项）：只读已收到的广播，不做任何主动探测。
+    const assessed: SuspectDevice[] = [];
+    this.state.sightings.forEach((item: Sighting): void => {
+      assessed.push(assessSighting(item, this.hasCameraSignature(item), this.hasMediaService(item)));
+    });
+    attachSuspects(summary, assessed);
     this.lastSecuritySummary = summary;
     logger.info(TAG, '安防扫描结束: 设备=' + summary.total.toString() + ' 新面孔=' + summary.newFaces.toString()
-      + ' 跟随=' + summary.followScore.toString());
+      + ' 跟随=' + summary.followScore.toString() + ' 确认=' + summary.confirmedCount.toString()
+      + ' 可疑=' + summary.suspiciousCount.toString());
     return summary;
+  }
+
+  /**
+   * 该设备是否命中「疑似摄像头」类特征库条目。
+   *
+   * 判据是命中的 fleet 类别：特征库里已经有 `CAMERA` / `SURVEILLANCE` 这两个类别，
+   * 直接复用而不另造一套「摄像头特征库」—— 两套命中逻辑必然漂移。
+   */
+  private hasCameraSignature(sighting: Sighting): boolean {
+    let hit: boolean = false;
+    sighting.signatureIds.forEach((id: string): void => {
+      if (hit) return;
+      const fleet: SignatureFleet | undefined = this.state.signatures.find(
+        (item: SignatureFleet): boolean => item.id === id);
+      if (fleet === undefined) return;
+      if (fleet.category === SignatureClass.CAMERA || fleet.category === SignatureClass.SURVEILLANCE) hit = true;
+    });
+    return hit;
+  }
+
+  /**
+   * 广播里是否宣告了视频类服务。
+   *
+   * **只查已经收到的 service data**（被动），不做任何探测：
+   * 服务 UUID 或服务数据里出现媒体/视频相关特征即算。
+   */
+  private hasMediaService(sighting: Sighting): boolean {
+    let hit: boolean = false;
+    sighting.facts.serviceUuids.forEach((uuid: string): void => {
+      if (hit) return;
+      const key: string = uuid.trim().toUpperCase();
+      // 0x110A/0x110B 为 A2DP 音频（不算视频）；这里只看视频/媒体类常见 UUID。
+      if (key.indexOf('1105') >= 0) hit = true; // A/V Remote Control
+      if (key.indexOf('1110') >= 0) hit = true; // A2DP Sink（媒体接收端）
+      if (key.indexOf('1844') >= 0) hit = true; // Video Distribution
+      if (key.indexOf('FF00') >= 0 && sighting.kind === RadioKind.WIFI) hit = true;
+    });
+    sighting.facts.serviceData.forEach((record: ServiceDataRecord): void => {
+      if (hit) return;
+      const uuid: string = record.uuid.trim().toUpperCase();
+      if (uuid.indexOf('1844') >= 0) hit = true;
+    });
+    return hit;
   }
 
   /** 最近一次安防扫描汇总（页面重进时用来恢复结果）。 */
@@ -467,7 +519,24 @@ export class FieldwatchApplication {
         }
       });
     });
-    return sortDex(buildDex(this.state.signatures, stats, this.dexSeenToday()));
+    // 特征库更新后旧 id 会失效：先按 fleet 名把历史 id 映射到当前 id，避免旧点亮丢失。
+    const legacyIds: string[] = [];
+    stats.forEach((value: number[], key: string): void => { legacyIds.push(key); });
+    const mapping: Map<string, string> = mapLegacyIds(this.state.signatures, legacyIds);
+    const remapped: Map<string, number[]> = new Map<string, number[]>();
+    stats.forEach((value: number[], key: string): void => {
+      const target: string | undefined = mapping.get(key);
+      if (target === undefined) return;
+      const existing: number[] | undefined = remapped.get(target);
+      if (existing === undefined) {
+        remapped.set(target, [value[0], value[1]]);
+      } else {
+        // 新旧 id 都指向同一条 fleet 时合并计数，取更近的时间。
+        existing[0] = existing[0] + value[0];
+        if (value[1] > existing[1]) existing[1] = value[1];
+      }
+    });
+    return sortDex(buildDex(this.state.signatures, remapped, this.dexSeenToday()));
   }
 
   /** 图鉴汇总（配合 `dexEntries` 一起用，避免页面算两遍）。 */

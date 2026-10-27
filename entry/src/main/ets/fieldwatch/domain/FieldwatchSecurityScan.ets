@@ -1,15 +1,18 @@
 /**
  * 一键安防扫描的汇总与分享卡内容（纯逻辑，可单测）。
  *
- * 口径红线（落地文档 P1-5）：
- *   · 只说「正在广播的设备」，不出现「防偷拍」「查摄像头」；
- *   · 分享卡脚注必须写明「不广播的设备发现不了」；
- *   · 本模块**不产生任何用户可见文案**，只产出「有哪些数字」，
- *     文案由 UI 走资源键解析，术语红线只需在一处把关。
+ * 口径说明（**已被《日常功能实测反馈四项完善方案》第 3 项更新**）：
+ *   · 原 P1-5 要求「只说正在广播的设备，不出现摄像头字样」，
+ *     该限制的依据是「当时没有摄像头判定能力，说了就是骗人」；
+ *   · P3-1 第 3 项补上了被动层判定能力，因此现在**允许**出现「疑似摄像头」这类表述，
+ *     但结论必须严格分三档（确认 / 可疑 / 未发现），**绝不说「安全」「已排除」**；
+ *   · 能力边界（不联网 / 关机 / 客户端隔离 / GSM）必须写在结果页；
+ *   · 本模块仍**不产生任何用户可见文案**，只产出数字与结构，文案由 UI 走资源键。
  */
 
 import { RadioKind, Sighting, SignatureClass, foldedSignatureClass } from './FieldwatchModels';
 import { SignatureFleet } from './signatures/FieldwatchSignatureModels';
+import { countVerdicts, SuspectDevice, suspectListOf } from './FieldwatchSecurityPassive';
 
 /** 一次安防扫描的时长（文档：60 秒）。 */
 export const SECURITY_SCAN_DURATION_MS: number = 60000;
@@ -53,8 +56,21 @@ export class SecuritySummary {
   public followSuspect: boolean = false;
   public startedAt: number = 0;
   public endedAt: number = 0;
+  /**
+   * 可疑设备清单（P3-1 被动层）。
+   *
+   * 与 `followScore` 是**两条独立的线**（文档 3.1 末条）：可疑清单看「像不像摄像头」，
+   * 跟随评分看「是不是跟着你」，一台设备可同时出现在两边，**不互相折算**。
+   */
+  public suspects: SuspectDevice[] = [];
+  /** 确认档数量。 */
+  public confirmedCount: number = 0;
+  /** 可疑档数量。 */
+  public suspiciousCount: number = 0;
 
   durationMs(): number { return this.endedAt - this.startedAt; }
+  /** 是否有需要展示的可疑设备。 */
+  hasSuspects(): boolean { return this.suspects.length > 0; }
   /** 0 台时 UI 要说「什么都没听到」，而不是显示一排 0。 */
   hasDevices(): boolean { return this.total > 0; }
   /** 是否值得展示跟随评分（只有过关注线才展示，避免永远显示一个 0）。 */
@@ -159,6 +175,21 @@ export function buildSecuritySummary(sightings: Sighting[], fleets: SignatureFle
   summary.followSuspect = safeScore >= SECURITY_FOLLOW_SUSPECT_SCORE;
   summary.startedAt = startedAt;
   summary.endedAt = endedAt;
+  return summary;
+}
+
+/**
+ * 把被动层判定结果并入汇总。
+ *
+ * 单独一个函数而不是塞进 `buildSecuritySummary`：判定要查特征库与媒体服务，
+ * 而 `buildSecuritySummary` 只做纯计数（它的单测不依赖这些输入）。
+ */
+export function attachSuspects(summary: SecuritySummary, assessed: SuspectDevice[]): SecuritySummary {
+  const list: SuspectDevice[] = suspectListOf(assessed);
+  const counts: number[] = countVerdicts(list);
+  summary.suspects = list;
+  summary.confirmedCount = counts[0];
+  summary.suspiciousCount = counts[1];
   return summary;
 }
 

@@ -52,14 +52,35 @@ export function isEpicClass(category: SignatureClass): boolean {
  * @param fleet      目标特征
  * @param allFleets  当前特征库全集（用来数同类有多少条）
  */
-export function rarityOf(fleet: SignatureFleet, allFleets: SignatureFleet[]): DexRarity {
-  if (isEpicClass(fleet.category)) return DexRarity.EPIC;
-  let sameClass: number = 0;
+/**
+ * 按类别预计算「同类有多少条」。
+ *
+ * **这是性能修复点（P3-1 第 4 项）**：原来的 `rarityOf` 对每一条 fleet 都要遍历
+ * 整个特征库数同类数量 —— 611 条就是 611×611 ≈ 37 万次比较，进页即卡。
+ * 现在全库只扫一遍得到「类别 → 条数」，之后每条 O(1) 查。
+ */
+export function classCountsOf(allFleets: SignatureFleet[]): Map<string, number> {
+  const counts: Map<string, number> = new Map<string, number>();
   allFleets.forEach((item: SignatureFleet): void => {
-    if (item.category === fleet.category) sameClass += 1;
+    const key: string = String(item.category);
+    const current: number | undefined = counts.get(key);
+    counts.set(key, current === undefined ? 1 : current + 1);
   });
-  if (sameClass >= DEX_COMMON_COUNT) return DexRarity.COMMON;
-  if (sameClass < DEX_RARE_COUNT) return DexRarity.RARE;
+  return counts;
+}
+
+/**
+ * 用**预计算的类计数**算一个 fleet 的稀有度。
+ *
+ * 只提供 Map 版本（不再有「传全库数组」的重载）：那样调用方想写出 O(n²) 都做不到，
+ * 性能问题从接口形状上消失，而不是靠注释提醒。
+ */
+export function rarityOf(fleet: SignatureFleet, counts: Map<string, number>): DexRarity {
+  if (isEpicClass(fleet.category)) return DexRarity.EPIC;
+  const sameClass: number | undefined = counts.get(String(fleet.category));
+  const total: number = sameClass === undefined ? 0 : sameClass;
+  if (total >= DEX_COMMON_COUNT) return DexRarity.COMMON;
+  if (total < DEX_RARE_COUNT) return DexRarity.RARE;
   return DexRarity.UNCOMMON;
 }
 
@@ -101,11 +122,13 @@ export class DexSummary {
 export function buildDex(allFleets: SignatureFleet[], seenFleetIds: Map<string, number[]>,
   seenToday: string[]): DexEntry[] {
   const entries: DexEntry[] = [];
+  // 类计数只算一次，供全表复用（原来是每条 fleet 各扫一遍全库）。
+  const counts: Map<string, number> = classCountsOf(allFleets);
   allFleets.forEach((fleet: SignatureFleet): void => {
     if (!fleet.enabled) return;
     const entry: DexEntry = new DexEntry(fleet.id, fleet.name);
     entry.category = fleet.category;
-    entry.rarity = rarityOf(fleet, allFleets);
+    entry.rarity = rarityOf(fleet, counts);
     const stats: number[] | undefined = seenFleetIds.get(fleet.id);
     if (stats !== undefined) {
       entry.seen = true;
@@ -154,6 +177,48 @@ function rarityRank(rarity: DexRarity): number {
   if (rarity === DexRarity.RARE) return 3;
   if (rarity === DexRarity.UNCOMMON) return 2;
   return 1;
+}
+
+/**
+ * 把历史里的旧 fleetId 映射到当前特征库的 id（按 **fleet 名归一**）。
+ *
+ * 为什么需要（P3-1「联动」）：点亮存在观测表的 `signature_ids` 里，那串 id 是
+ * **当时那版特征库**的 id。特征库在线更新后，同一条 fleet 可能换了 id ——
+ * 不做映射的话，用户的旧点亮会集体失效（图鉴突然「变空」）。
+ *
+ * 归一键用 fleet 名（小写去空白）而不是 id：名字是稳定的人类可读标识，
+ * id 是内部键、会随库版本变化。同名重名时以**先出现的**为准（与排序口径一致）。
+ *
+ * @returns 历史 id → 当前 id 的映射；对不上的旧 id 不出现在结果里（其点亮会丢，
+ *          但这是数据里确实找不到对应 fleet 的情况，不编造匹配）。
+ */
+export function mapLegacyIds(allFleets: SignatureFleet[], legacyIds: string[]): Map<string, string> {
+  const mapping: Map<string, string> = new Map<string, string>();
+  if (legacyIds.length === 0) return mapping;
+  // 当前库的 id 集合：已经能对上的旧 id 直接跳过，省掉后面的名字比对。
+  const currentIds: Map<string, string> = new Map<string, string>();
+  allFleets.forEach((fleet: SignatureFleet): void => { currentIds.set(fleet.id, fleet.id); });
+  const byName: Map<string, string> = new Map<string, string>();
+  allFleets.forEach((fleet: SignatureFleet): void => {
+    const key: string = nameKeyOf(fleet.name);
+    if (key.length === 0) return;
+    if (byName.get(key) === undefined) byName.set(key, fleet.id);
+  });
+  legacyIds.forEach((oldId: string): void => {
+    if (currentIds.get(oldId) !== undefined) {
+      mapping.set(oldId, oldId);
+      return;
+    }
+    // 旧 id 已不存在：尝试把它当成「名字」再匹配一次（有些历史库把名字当 id 存过）。
+    const byNameHit: string | undefined = byName.get(nameKeyOf(oldId));
+    if (byNameHit !== undefined) mapping.set(oldId, byNameHit);
+  });
+  return mapping;
+}
+
+/** fleet 名归一键：小写、去首尾空白、压缩内部空白。 */
+export function nameKeyOf(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 /** 未点亮的条目显示成「？？？」，不泄露名字。 */

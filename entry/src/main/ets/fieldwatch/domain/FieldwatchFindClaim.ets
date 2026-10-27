@@ -3,6 +3,7 @@ import { WifiCurrentAp } from '../radio/FieldwatchWifiLink';
 import { RadioKind, Sighting } from './FieldwatchModels';
 import { SignatureClass } from './FieldwatchModels';
 import { OwnDevice, OwnDeviceFingerprint } from './FieldwatchOwnDevice';
+import { NameInputs } from './FieldwatchDeviceNaming';
 
 /**
  * 自有设备**认领候选**的领域模型。
@@ -77,6 +78,14 @@ export class FindClaimCandidate {
   public addressStable: boolean = false;
   /** 是否已经在自有设备档案里（UI 显示「已认领」而不是可点）。 */
   public alreadyClaimed: boolean = false;
+  /**
+   * 命名回退链的输入（P3-1 第 2 项）。
+   *
+   * UI 不再用 `title` 直接当显示名，而是走 `resolveDeviceName(nameInputs)`：
+   * `title` 只有一级回退（空即「未命名设备」），用不上配对名 / 厂商 / 类别。
+   * 命名决策交给纯函数，因此可单测；这里只负责把链上每一级的原料带上。
+   */
+  public nameInputs: NameInputs = new NameInputs();
 }
 
 /** 已认领判定：地址优先；**Wi-Fi 只能按名字**（见下）。 */
@@ -108,6 +117,9 @@ export function pairedCandidates(devices: PairedDeviceInfo[], claimed: OwnDevice
     candidate.address = device.virtualAddress;
     candidate.key = claimKeyOf(device.kind, device.virtualAddress);
     candidate.title = device.name;
+    candidate.nameInputs.pairedName = device.name;
+    candidate.nameInputs.address = device.virtualAddress;
+    candidate.nameInputs.kind = device.kind;
     candidate.category = device.category;
     candidate.nearLinkDeviceClass = device.nearLinkDeviceClass;
     candidate.connected = device.connected;
@@ -129,6 +141,9 @@ export function currentApCandidate(ap: WifiCurrentAp | undefined, claimed: OwnDe
   candidate.address = ap.bssid;
   candidate.key = claimKeyOf(RadioKind.WIFI, ap.bssid);
   candidate.title = ap.ssid;
+  candidate.nameInputs.broadcastName = ap.ssid;
+  candidate.nameInputs.address = ap.bssid;
+  candidate.nameInputs.kind = RadioKind.WIFI;
   candidate.category = SignatureClass.ROUTER;
   candidate.connected = true;
   // bssidStable 恒 false（V6-b）：认领后也只能靠 SSID 认它。
@@ -197,13 +212,21 @@ export function scanCandidates(sightings: Sighting[], claimed: OwnDevice[], limi
   const out: FindClaimCandidate[] = [];
   sightings.forEach((item: Sighting): void => {
     if (item.kind === RadioKind.WIFI) return;
-    if (item.name.length === 0) return;
+    // **不再丢弃无名设备**（P3-1 第 2 项）：
+    // 原来这里写 `if (item.name.length === 0) return;`，于是广播里不带名字的设备
+    // 在认领列表里**根本不出现** —— 用户想找它却找不到，比显示「未命名设备」更糟。
+    // 现在放行，由命名回退链（配对名 / fleet 名 / CoD / 厂商 / 尾号）补出可读名字。
     const candidate: FindClaimCandidate = new FindClaimCandidate();
     candidate.source = FindClaimSource.SCAN;
     candidate.kind = item.kind;
     candidate.address = item.address;
     candidate.key = claimKeyOf(item.kind, item.address);
     candidate.title = item.name;
+    // 命名原料：广播名 + 地址 + 类别；配对名 / 厂商 / fleet 名由调用方补齐
+    // （它们要么要查配对名单、要么要查特征库，不适合在纯函数的遍历里做）。
+    candidate.nameInputs.broadcastName = item.name;
+    candidate.nameInputs.address = item.address;
+    candidate.nameInputs.kind = item.kind;
     candidate.subtitle = 'scan';
     candidate.connected = false;
     // 扫描来的地址同样**不当作长期锚**：星闪没验证同源、蓝牙随机地址也可能轮换。

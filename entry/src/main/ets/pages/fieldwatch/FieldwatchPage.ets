@@ -648,6 +648,15 @@ struct FieldwatchRootPage {
       FieldwatchDexPage({
         withShell: true,
         topInset: this.topInsetVp,
+        // 「在特征库里看它」：压栈到特征详情（与特征库页同一个目标页）。
+        onOpenCatalog: (fleetId: string): void => { this.openSignatureDetail(fleetId); },
+        // 「去实时页找它」：回到实时标签。特征库的筛选语义与图鉴的 fleetId 不同源,
+        // 强行按 fleetId 设筛选会把用户的现有筛选覆盖掉，所以只做「带他过去」。
+        onFindLive: (fleetId: string): void => {
+          logger.info('FieldwatchDex', '从图鉴跳实时页: fleetId=' + fleetId);
+          this.pathStack.pop();
+          this.switchTab(0);
+        },
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.NEW_FACES) {

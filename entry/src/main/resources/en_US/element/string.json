@@ -11355,6 +11355,94 @@
     {
       "name": "fieldwatch_daily_more_newfaces",
       "value": "New faces"
+    },
+    {
+      "name": "fieldwatch_find_unnamed_tail",
+      "value": "Unnamed device · …%1"
+    },
+    {
+      "name": "fieldwatch_find_unnamed_why",
+      "value": "This device does not broadcast a name"
+    },
+    {
+      "name": "fieldwatch_security_suspects_title",
+      "value": "Suspicious devices"
+    },
+    {
+      "name": "fieldwatch_security_suspects_empty",
+      "value": "No camera-like devices this time. That is not the same as safe — see the manual checklist below."
+    },
+    {
+      "name": "fieldwatch_security_verdict_confirmed",
+      "value": "Confirmed"
+    },
+    {
+      "name": "fieldwatch_security_verdict_suspicious",
+      "value": "Suspicious"
+    },
+    {
+      "name": "fieldwatch_security_verdict_none",
+      "value": "Not found"
+    },
+    {
+      "name": "fieldwatch_security_evidence_vendor",
+      "value": "Vendor matched a camera vendor"
+    },
+    {
+      "name": "fieldwatch_security_evidence_name",
+      "value": "Name looks like a camera"
+    },
+    {
+      "name": "fieldwatch_security_evidence_catalog",
+      "value": "Matched a camera signature"
+    },
+    {
+      "name": "fieldwatch_security_evidence_service",
+      "value": "Announced a video service"
+    },
+    {
+      "name": "fieldwatch_security_limit_local_only",
+      "value": "Cameras that are offline or store locally cannot be found by scanning"
+    },
+    {
+      "name": "fieldwatch_security_limit_powered_off",
+      "value": "Devices that are powered off do not broadcast and cannot be found"
+    },
+    {
+      "name": "fieldwatch_security_limit_client_isolation",
+      "value": "If hotel Wi-Fi uses client isolation, even LAN probing is not possible"
+    },
+    {
+      "name": "fieldwatch_security_limit_gsm",
+      "value": "GSM/SIM bugs use cellular networks and cannot be found by Wi-Fi or Bluetooth"
+    },
+    {
+      "name": "fieldwatch_security_limits_title",
+      "value": "What scanning cannot do"
+    },
+    {
+      "name": "fieldwatch_security_passive_only",
+      "value": "Passive scanning only (listening to broadcasts). LAN probing is off."
+    },
+    {
+      "name": "fieldwatch_dex_rarity_note",
+      "value": "Rarity is based on how many entries share this class in the catalog, not on how likely you are to meet one."
+    },
+    {
+      "name": "fieldwatch_dex_open_catalog",
+      "value": "Open in signature catalog"
+    },
+    {
+      "name": "fieldwatch_dex_find_live",
+      "value": "Find it on the live page"
+    },
+    {
+      "name": "fieldwatch_dex_jump_failed",
+      "value": "This signature is currently disabled in the catalog"
+    },
+    {
+      "name": "fieldwatch_dex_class_progress",
+      "value": "Progress by category"
     }
   ]
 }

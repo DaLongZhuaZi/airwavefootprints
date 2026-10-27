@@ -1,7 +1,7 @@
 import { describe, it, expect } from '@ohos/hypium';
 import {
   buildDex, DexEntry, DexRarity, DEX_COMMON_COUNT, DEX_RARE_COUNT, dexDisplayName, isEpicClass,
-  rarityOf, sortDex, summarizeDex
+  classCountsOf, mapLegacyIds, nameKeyOf, rarityOf, sortDex, summarizeDex
 } from '../main/ets/fieldwatch/domain/FieldwatchDex';
 import { SignatureClass } from '../main/ets/fieldwatch/domain/FieldwatchModels';
 import { SignatureFleet } from '../main/ets/fieldwatch/domain/signatures/FieldwatchSignatureModels';
@@ -25,12 +25,13 @@ export default function fieldwatchDexTest() {
     it('derives rarity from how many peers share the class', 0, () => {
       const many: SignatureFleet[] = [];
       for (let i: number = 0; i < DEX_COMMON_COUNT; i += 1) many.push(fleet('p' + i.toString(), SignatureClass.PHONE));
-      expect(rarityOf(many[0], many)).assertEqual(DexRarity.COMMON);
+      // 稀有度现在吃**预计算的类计数**（P3-1 性能修复：不再每条扫全库）。
+      expect(rarityOf(many[0], classCountsOf(many))).assertEqual(DexRarity.COMMON);
       const few: SignatureFleet[] = [fleet('a', SignatureClass.LOCK), fleet('b', SignatureClass.LOCK)];
-      expect(rarityOf(few[0], few)).assertEqual(DexRarity.RARE);
+      expect(rarityOf(few[0], classCountsOf(few))).assertEqual(DexRarity.RARE);
       const mid: SignatureFleet[] = [];
       for (let i: number = 0; i < DEX_RARE_COUNT + 2; i += 1) mid.push(fleet('m' + i.toString(), SignatureClass.AUDIO));
-      expect(rarityOf(mid[0], mid)).assertEqual(DexRarity.UNCOMMON);
+      expect(rarityOf(mid[0], classCountsOf(mid))).assertEqual(DexRarity.UNCOMMON);
     });
 
     it('skips disabled fleets so no cell can never light up', 0, () => {
@@ -70,6 +71,24 @@ export default function fieldwatchDexTest() {
     });
 
     // **已点亮的排前面**：611 条特征库下，把已点亮的埋到页尾等于看不见进度。
+    // P3-1 联动：特征库更新后旧 id 要按 fleet 名映射，旧点亮不能丢。
+    it('maps legacy signature ids by fleet name after a catalog update', 0, () => {
+      const current: SignatureFleet[] = [fleet('new-id-1', SignatureClass.PHONE), fleet('new-id-2', SignatureClass.AUDIO)];
+      current[0].name = 'Apple AirTags';
+      current[1].name = 'Sony WH-1000XM5';
+      // 当前 id 原样返回。
+      expect(mapLegacyIds(current, ['new-id-1']).get('new-id-1')).assertEqual('new-id-1');
+      // 把名字当 id 存过的历史数据也能救回来。
+      expect(mapLegacyIds(current, ['Apple AirTags']).get('Apple AirTags')).assertEqual('new-id-1');
+      // 完全对不上的不编造匹配。
+      expect(mapLegacyIds(current, ['ghost-id-9']).get('ghost-id-9')).assertUndefined();
+    });
+
+    it('normalises fleet names for mapping', 0, () => {
+      expect(nameKeyOf('  Apple   AirTags ')).assertEqual('apple airtags');
+      expect(nameKeyOf('')).assertEqual('');
+    });
+
     it('sorts unlocked entries first, then by rarity', 0, () => {
       const fleets: SignatureFleet[] = [
         fleet('seen-common', SignatureClass.PHONE),

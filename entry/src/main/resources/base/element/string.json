@@ -11355,6 +11355,94 @@
     {
       "name": "fieldwatch_daily_more_newfaces",
       "value": "新面孔清单"
+    },
+    {
+      "name": "fieldwatch_find_unnamed_tail",
+      "value": "未命名设备 · 尾号 %1"
+    },
+    {
+      "name": "fieldwatch_find_unnamed_why",
+      "value": "该设备广播里没有名字"
+    },
+    {
+      "name": "fieldwatch_security_suspects_title",
+      "value": "可疑设备"
+    },
+    {
+      "name": "fieldwatch_security_suspects_empty",
+      "value": "本次没有发现符合摄像头特征的设备。这不等于安全，请看下方人工排查清单。"
+    },
+    {
+      "name": "fieldwatch_security_verdict_confirmed",
+      "value": "确认"
+    },
+    {
+      "name": "fieldwatch_security_verdict_suspicious",
+      "value": "可疑"
+    },
+    {
+      "name": "fieldwatch_security_verdict_none",
+      "value": "未发现"
+    },
+    {
+      "name": "fieldwatch_security_evidence_vendor",
+      "value": "厂商命中摄像头厂商库"
+    },
+    {
+      "name": "fieldwatch_security_evidence_name",
+      "value": "名称像摄像头设备"
+    },
+    {
+      "name": "fieldwatch_security_evidence_catalog",
+      "value": "命中特征库摄像头条目"
+    },
+    {
+      "name": "fieldwatch_security_evidence_service",
+      "value": "宣告了视频类服务"
+    },
+    {
+      "name": "fieldwatch_security_limit_local_only",
+      "value": "不联网或纯本地存储的摄像头，扫描发现不了"
+    },
+    {
+      "name": "fieldwatch_security_limit_powered_off",
+      "value": "关机状态的设备不会广播，扫描发现不了"
+    },
+    {
+      "name": "fieldwatch_security_limit_client_isolation",
+      "value": "酒店 WiFi 若开了客户端隔离，局域网探测也无法进行"
+    },
+    {
+      "name": "fieldwatch_security_limit_gsm",
+      "value": "GSM/SIM 类窃听器走蜂窝网络，WiFi 与蓝牙都扫不到"
+    },
+    {
+      "name": "fieldwatch_security_limits_title",
+      "value": "扫描的能力边界"
+    },
+    {
+      "name": "fieldwatch_security_passive_only",
+      "value": "当前只做被动扫描（只听广播）；局域网探测未开启。"
+    },
+    {
+      "name": "fieldwatch_dex_rarity_note",
+      "value": "稀有度按「库内同类条目数量」计算，不是遇见概率。"
+    },
+    {
+      "name": "fieldwatch_dex_open_catalog",
+      "value": "在特征库里看它"
+    },
+    {
+      "name": "fieldwatch_dex_find_live",
+      "value": "去实时页找它"
+    },
+    {
+      "name": "fieldwatch_dex_jump_failed",
+      "value": "这条特征在特征库里已是停用状态"
+    },
+    {
+      "name": "fieldwatch_dex_class_progress",
+      "value": "分类进度"
     }
   ]
 }

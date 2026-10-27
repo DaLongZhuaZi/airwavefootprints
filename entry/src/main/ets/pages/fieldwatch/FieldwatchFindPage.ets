@@ -11,6 +11,7 @@ import {
   refreshAddressStability, scanCandidates
 } from '../../fieldwatch/domain/FieldwatchFindClaim';
 import { SignatureClass } from '../../fieldwatch/domain/FieldwatchModels';
+import { fallbackTail, NameInputs, NamedDevice, resolveDeviceName } from '../../fieldwatch/domain/FieldwatchDeviceNaming';
 import { OwnDevice } from '../../fieldwatch/domain/FieldwatchOwnDevice';
 import { FieldwatchPairedDevices, PairedDeviceInfo } from '../../fieldwatch/radio/FieldwatchPairedDevices';
 import { FieldwatchWifiLink, WifiCurrentAp } from '../../fieldwatch/radio/FieldwatchWifiLink';
@@ -213,6 +214,35 @@ export struct FieldwatchFindPage {
     this.wifiCard = currentApCandidate(this.wifiSnapshot, this.owned);
   }
 
+  /**
+   * 扫描列表的命名补全（P3-1「扫描 enrich」）。
+   *
+   * 为什么必须补：`scanCandidates` 是纯函数、不查系统；而很多设备广播里不带名字，
+   * 名字只在**系统配对名单**里。不补的话，已配对的耳机在扫描列表里依然是「未命名设备」。
+   *
+   * 按地址查配对名；查不到时**不做地址直配的假设** ——
+   * 落地文档附录 A 的 V1 明确指出：扫描 deviceId 与配对虚拟地址未必同值
+   * （Wizard 的 `judgeV1` 就是这条的取证点），所以这里只做「地址恰好相等」的弱关联，
+   * 不相等时留着后续由指纹匹配补，绝不假装地址直配成立。
+   */
+  private enrichScanNames(list: FindClaimCandidate[]): FindClaimCandidate[] {
+    if (this.pairedSnapshot.length === 0) return list;
+    const nameByAddress: Map<string, string> = new Map<string, string>();
+    this.pairedSnapshot.forEach((device: PairedDeviceInfo): void => {
+      if (device.virtualAddress.length === 0) return;
+      if (device.name.length === 0) return;
+      nameByAddress.set(device.virtualAddress, device.name);
+    });
+    if (nameByAddress.size === 0) return list;
+    list.forEach((candidate: FindClaimCandidate): void => {
+      // 已有广播名的不覆盖：广播名是设备自报的，比配对名更贴近它此刻的身份。
+      if (candidate.nameInputs.broadcastName.length > 0) return;
+      const pairedName: string | undefined = nameByAddress.get(candidate.address);
+      if (pairedName !== undefined) candidate.nameInputs.pairedName = pairedName;
+    });
+    return list;
+  }
+
   /** 扫描列表：**只在展开时**算，且按 `SCAN_REFRESH_MS` 节流（太勤会让顺序随信号抖动来回跳）。 */
   private refreshScanList(): void {
     if (!this.scanOpen) {
@@ -222,8 +252,8 @@ export struct FieldwatchFindPage {
     const now: number = Date.now();
     if (this.scanning.length > 0 && now - this.scanAt < SCAN_REFRESH_MS) return;
     this.scanAt = now;
-    this.scanning = scanCandidates(fieldwatchApplication.getState().sightings, this.owned, 20,
-      (ids: string[]): SignatureClass => this.categoryOf(ids));
+    this.scanning = this.enrichScanNames(scanCandidates(fieldwatchApplication.getState().sightings, this.owned, 20,
+      (ids: string[]): SignatureClass => this.categoryOf(ids)));
   }
 
   /**
@@ -491,12 +521,17 @@ export struct FieldwatchFindPage {
       SymbolGlyph($r(this.symbolOf(candidate))).fontSize(22)
         .fontColor([candidate.connected ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim])
       Column({ space: 3 }) {
-        Text(this.titleOf(candidate.title)).fontSize(15)
+        Text(this.titleOf(candidate)).fontSize(15)
           .fontColor(FieldwatchPaletteHolder.get().text)
           .maxLines(1).textOverflow({ overflow: TextOverflow.Ellipsis })
         // 副标题只说用户能立刻验证的事：是不是正连着这台手机。
         Text(this.subtitleOf(candidate)).fontSize(12)
           .fontColor(candidate.connected ? FieldwatchPaletteHolder.get().accent : FieldwatchPaletteHolder.get().textDim)
+        // 兜底名时补一句原因，避免用户以为是 bug。只有真兜底才出现。
+        if (this.nameHintOf(candidate).length > 0) {
+          Text(this.nameHintOf(candidate)).fontSize(11)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
+        }
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       if (candidate.alreadyClaimed) {
         Text(fieldwatchText('app.string.fieldwatch_find_claimed')).fontSize(12)
@@ -536,7 +571,7 @@ export struct FieldwatchFindPage {
       SymbolGlyph($r(deviceClassSymbol(device.category))).fontSize(22)
         .fontColor([FieldwatchPaletteHolder.get().textDim])
       Column({ space: 3 }) {
-        Text(this.titleOf(device.displayName)).fontSize(15)
+        Text(this.titleOfOwned(device)).fontSize(15)
           .fontColor(FieldwatchPaletteHolder.get().text).maxLines(1)
         Text(this.lastSeenText(device)).fontSize(12)
           .fontColor(FieldwatchPaletteHolder.get().textDim)
@@ -593,8 +628,43 @@ export struct FieldwatchFindPage {
     return found;
   }
 
-  private titleOf(name: string): ResourceStr {
-    return name.length > 0 ? name : fieldwatchText('app.string.fieldwatch_find_unnamed');
+  /**
+   * 显示名：走命名回退链（P3-1 第 2 项）。
+   *
+   * 原来只有「有名字就显示、没名字显示『未命名设备』」一级回退，
+   * 于是无名设备全是同一个名字，用户无法区分、也无法在系统列表里对上号。
+   * 现在按 配对名 → fleet 名 → CoD → 厂商 → 尾号 逐级回退。
+   */
+  private titleOf(candidate: FindClaimCandidate): ResourceStr {
+    const named: NamedDevice = resolveDeviceName(candidate.nameInputs);
+    if (!named.isFallback()) return named.label;
+    // 兜底：把结构化标记翻成人话（领域层不写中文）。
+    const tail: string = fallbackTail(named.label);
+    if (tail.length > 0) {
+      return fieldwatchText('app.string.fieldwatch_find_unnamed_tail').replace('%1', tail);
+    }
+    return fieldwatchText('app.string.fieldwatch_find_unnamed');
+  }
+
+  /** 已认领档案的显示名：同样走回退链（自定义名即 displayName，其后靠尾号兜底）。 */
+  private titleOfOwned(device: OwnDevice): ResourceStr {
+    const inputs: NameInputs = new NameInputs();
+    inputs.customName = device.displayName;
+    inputs.address = device.virtualAddress;
+    inputs.kind = device.kind;
+    const named: NamedDevice = resolveDeviceName(inputs);
+    if (!named.isFallback()) return named.label;
+    const tail: string = fallbackTail(named.label);
+    if (tail.length > 0) {
+      return fieldwatchText('app.string.fieldwatch_find_unnamed_tail').replace('%1', tail);
+    }
+    return fieldwatchText('app.string.fieldwatch_find_unnamed');
+  }
+
+  /** 兜底名旁边的一句说明，避免用户以为是 bug。 */
+  private nameHintOf(candidate: FindClaimCandidate): string {
+    const named: NamedDevice = resolveDeviceName(candidate.nameInputs);
+    return named.isFallback() ? fieldwatchText('app.string.fieldwatch_find_unnamed_why') : '';
   }
 
   private subtitleOf(candidate: FindClaimCandidate): ResourceStr {

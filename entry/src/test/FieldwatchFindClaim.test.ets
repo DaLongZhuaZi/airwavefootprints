@@ -123,8 +123,10 @@ export default function fieldwatchFindClaimTest() {
       expect(candidates[0].nearLinkDeviceClass).assertEqual(0x000801);
     });
 
-    it('lists nearby named devices for claiming from the scan list', 0, () => {
-      // 只列有名字的：一两百台设备里没名字的那些，用户认不出哪台是自己的。
+    // **口径变更（P3-1 第 2 项）**：原来「没名字的直接不列」，于是广播里不带名字的设备
+    // 在认领列表里根本不出现 —— 用户想找它却找不到，比显示「未命名设备」更糟。
+    // 现在放行，由命名回退链补名（配对名 / fleet / CoD / 厂商 / 尾号）。
+    it('lists nearby devices including unnamed ones for claiming', 0, () => {
       const unnamed: Sighting = sighting(RadioKind.BLE, 'AA:BB:CC:00:00:09', '', -30);
       const weak: Sighting = sighting(RadioKind.BLE, 'AA:BB:CC:00:00:02', '远处的耳机', -80);
       const strong: Sighting = sighting(RadioKind.BLE, 'AA:BB:CC:00:00:01', '手边的耳机', -45);
@@ -132,18 +134,21 @@ export default function fieldwatchFindClaimTest() {
       const nearLink: Sighting = sighting(RadioKind.NEARLINK, 'AA:BB:CC:00:00:04', '星闪耳机', -50);
       const candidates: FindClaimCandidate[] = scanCandidates([unnamed, weak, strong, wifi, nearLink], [], 10,
         (ids: string[]): SignatureClass => ids.length > 0 ? SignatureClass.AUDIO : SignatureClass.OTHER);
-      // 没名字的被滤掉、Wi-Fi 不在此列（它走捷径卡），剩下蓝牙与星闪。
-      expect(candidates.length).assertEqual(3);
-      // 按强度排序：手边的（-45）在远处的（-80）前面。
-      expect(candidates[0].title).assertEqual('手边的耳机');
-      expect(candidates[1].title).assertEqual('星闪耳机');
-      expect(candidates[2].title).assertEqual('远处的耳机');
-      expect(candidates[0].kind).assertEqual(RadioKind.BLE);
-      expect(candidates[1].kind).assertEqual(RadioKind.NEARLINK);
-      expect(candidates[1].key).assertEqual('nearlink:AA:BB:CC:00:00:04');
+      // 无名设备现在**保留**；Wi-Fi 仍不在此列（它走捷径卡）。蓝牙 3 台 + 星闪 1 台 = 4。
+      expect(candidates.length).assertEqual(4);
+      // 按强度排序：-30（无名）> -45（手边）> -50（星闪）> -80（远处）。
+      expect(candidates[0].title).assertEqual('');
+      expect(candidates[1].title).assertEqual('手边的耳机');
+      expect(candidates[2].title).assertEqual('星闪耳机');
+      expect(candidates[3].title).assertEqual('远处的耳机');
+      // 无名设备也带命名原料（地址），否则 UI 连尾号都拼不出来。
+      expect(candidates[0].nameInputs.address.length > 0).assertTrue();
+      expect(candidates[1].kind).assertEqual(RadioKind.BLE);
+      expect(candidates[2].kind).assertEqual(RadioKind.NEARLINK);
+      expect(candidates[2].key).assertEqual('nearlink:AA:BB:CC:00:00:04');
       // 扫描来的地址不作长期锚（星闪没验证同源；蓝牙随机地址也可能轮换）。
-      expect(candidates[0].addressStable).assertFalse();
-      expect(candidates[0].source).assertEqual(FindClaimSource.SCAN);
+      expect(candidates[1].addressStable).assertFalse();
+      expect(candidates[1].source).assertEqual(FindClaimSource.SCAN);
     });
 
     it('carries the broadcast fingerprint captured at claim time', 0, () => {
