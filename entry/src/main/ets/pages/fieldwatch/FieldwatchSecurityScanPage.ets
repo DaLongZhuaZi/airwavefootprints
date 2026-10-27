@@ -61,6 +61,8 @@ export struct FieldwatchSecurityScanPage {
   @State private checklistOpen: boolean = false;
   /** 已忽略的可疑设备 key（只在本次结果页隐藏，不改变判定与审计）。 */
   @State private dismissedSuspects: string[] = [];
+  /** 上一条历史记录（用于「与上次相比」）。 */
+  @State private previousRecord: SecurityScanRecord | undefined = undefined;
   /** 雷达扫动角度（改版设计 4.2：扫描过程的雷达动画）。 */
   @State private sweepAngle: number = 0;
   private sweepTimer: number = -1;
@@ -96,6 +98,8 @@ export struct FieldwatchSecurityScanPage {
   /** 读历史扫描记录；失败不影响主流程。 */
   private async loadHistory(): Promise<void> {
     this.history = await fieldwatchApplication.securityHistoryRecords(10);
+    // 「上次」= 历史里第二条（第一条是刚写完的本次）。
+    this.previousRecord = this.history.length > 1 ? this.history[1] : undefined;
   }
 
   aboutToDisappear(): void {
@@ -491,6 +495,7 @@ export struct FieldwatchSecurityScanPage {
         Text(this.kindsText()).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
         this.buildClasses()
         this.buildComposition()
+        this.buildComparison()
         if (this.summary !== undefined && (this.summary as SecuritySummary).newFaces > 0) {
           Text(this.text('app.string.fieldwatch_security_newfaces').replace('%1', (this.summary as SecuritySummary).newFaces.toString()))
             .fontSize(14).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
@@ -560,6 +565,47 @@ export struct FieldwatchSecurityScanPage {
       }.width('100%').padding(20).borderRadius(18).margin({ left: 20, right: 20 })
       .backgroundColor(FieldwatchPaletteHolder.get().panel)
     }
+  }
+
+  /**
+   * 历史对比（改版设计 4.3）：与上次扫描相比的变化。
+   *
+   * **有变化才显示具体数字，无变化显示「与上次一致」**——
+   * 每次都列一堆 0→0 只会变成噪声。
+   */
+  @Builder
+  private buildComparison() {
+    if (this.summary !== undefined && this.previousRecord !== undefined) {
+      Column({ space: 4 }) {
+        Text($r('app.string.fieldwatch_sec_compare_title')).fontSize(12)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        Text(this.compareText()).fontSize(12)
+          .fontColor(this.compareChanged() ? FieldwatchPaletteHolder.get().accent
+            : FieldwatchPaletteHolder.get().textDim).width('100%')
+      }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+    }
+  }
+
+  private compareChanged(): boolean {
+    const prev: SecurityScanRecord | undefined = this.previousRecord;
+    const cur: SecuritySummary | undefined = this.summary;
+    if (prev === undefined || cur === undefined) return false;
+    const prevSuspect: number = prev.confirmedCount + prev.suspiciousCount;
+    const curSuspect: number = cur.confirmedCount + cur.suspiciousCount;
+    return prevSuspect !== curSuspect || prev.newFaces !== cur.newFaces;
+  }
+
+  private compareText(): string {
+    const prev: SecurityScanRecord | undefined = this.previousRecord;
+    const cur: SecuritySummary | undefined = this.summary;
+    if (prev === undefined || cur === undefined) return '';
+    if (!this.compareChanged()) return this.text('app.string.fieldwatch_sec_compare_same');
+    return this.text('app.string.fieldwatch_sec_compare_line')
+      .replace('%1', (prev.confirmedCount + prev.suspiciousCount).toString())
+      .replace('%2', (cur.confirmedCount + cur.suspiciousCount).toString())
+      .replace('%3', prev.newFaces.toString())
+      .replace('%4', cur.newFaces.toString());
   }
 
   /**

@@ -12187,6 +12187,18 @@
     {
       "name": "fieldwatch_sec_suspect_ratio",
       "value": "Suspect share"
+    },
+    {
+      "name": "fieldwatch_sec_compare_title",
+      "value": "Since last scan"
+    },
+    {
+      "name": "fieldwatch_sec_compare_same",
+      "value": "Same as last time"
+    },
+    {
+      "name": "fieldwatch_sec_compare_line",
+      "value": "Suspects %1 → %2 · New faces %3 → %4"
     }
   ]
 }

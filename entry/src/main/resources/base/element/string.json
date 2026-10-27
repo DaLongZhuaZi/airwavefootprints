@@ -12187,6 +12187,18 @@
     {
       "name": "fieldwatch_sec_suspect_ratio",
       "value": "可疑占比"
+    },
+    {
+      "name": "fieldwatch_sec_compare_title",
+      "value": "与上次相比"
+    },
+    {
+      "name": "fieldwatch_sec_compare_same",
+      "value": "与上次一致"
+    },
+    {
+      "name": "fieldwatch_sec_compare_line",
+      "value": "可疑 %1 → %2 · 新面孔 %3 → %4"
     }
   ]
 }
