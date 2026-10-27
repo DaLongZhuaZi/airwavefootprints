@@ -11887,6 +11887,22 @@
     {
       "name": "fieldwatch_acl_scope_unknown",
       "value": "Cannot determine the current subnet; active scanning is unavailable."
+    },
+    {
+      "name": "fieldwatch_acl_caps_title",
+      "value": "Active capabilities"
+    },
+    {
+      "name": "fieldwatch_acl_caps_hint",
+      "value": "Turned-off capabilities must be re-enabled manually. Passive scanning is unaffected."
+    },
+    {
+      "name": "fieldwatch_acl_enable_all",
+      "value": "Re-enable all active capabilities"
+    },
+    {
+      "name": "fieldwatch_acl_version_line",
+      "value": "ACL table version %1"
     }
   ]
 }

@@ -51,6 +51,7 @@ import { FieldwatchSecurityScanPage } from './FieldwatchSecurityScanPage';
 import { FieldwatchWifiDoctorPage } from './FieldwatchWifiDoctorPage';
 import { FieldwatchDexPage } from './FieldwatchDexPage';
 import { FieldwatchNewFacesPage } from './FieldwatchNewFacesPage';
+import { FieldwatchAclPage } from './FieldwatchAclPage';
 import { ScenePack } from '../../fieldwatch/domain/FieldwatchScenePacks';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 import { FieldwatchFileActionStatus, FieldwatchFileSaveResult } from '../../fieldwatch/platform/FieldwatchCatalogFileGateway';
@@ -671,6 +672,12 @@ struct FieldwatchRootPage {
         },
         onClose: (): void => { this.pathStack.pop(); }
       });
+    } else if (name === FieldwatchRouteName.ACTIVE_ACL) {
+      FieldwatchAclPage({
+        withShell: true,
+        topInset: this.topInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
     } else if (name === FieldwatchRouteName.SIGNATURE_DETAIL) {
       // 横屏右栏的特征详情：与竖屏 sheet 共用同一个内容组件。
       FieldwatchSignatureDetail({
@@ -715,7 +722,7 @@ struct FieldwatchRootPage {
       }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_signatures'), 'sys.symbol.dot_radiowaves_left_and_right', 2))
       TabContent() { FieldwatchReportsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_reports'), 'sys.symbol.doc_text', 3))
       TabContent() { FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_toolbox'), 'sys.symbol.wrench_and_screwdriver', 4))
-      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
+      TabContent() { FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; }, onOpenActiveAcl: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.ACTIVE_ACL, null); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_settings'), 'sys.symbol.gearshape', 5))
     }
     .width('100%').height('100%').backgroundColor(FieldwatchPaletteHolder.get().night).barMode(BarMode.Fixed).barOverlap(true).barFloatingStyle({ adaptToHandedness: true, systemMaterialEffect: { materialType: hdsMaterial.MaterialType.IMMERSIVE, materialLevel: hdsMaterial.MaterialLevel.EXQUISITE }, thermoCtrl: true, barOpacity: 0.94, barBottomMargin: this.bottomInsetVp })
     .onChange((index: number): void => { this.selectedTab = index; })
@@ -890,7 +897,7 @@ struct FieldwatchRootPage {
       }).width('100%').height('100%')
       else if (this.selectedTab === 3) FieldwatchReportsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
       else if (this.selectedTab === 4) FieldwatchToolboxPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 4, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenHunt: (): void => { this.openHunt(); } }).width('100%').height('100%')
-      else FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; } }).width('100%').height('100%')
+      else FieldwatchSettingsPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs(), pageVisible: this.selectedTab === 5, onOpenSignatures: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.SIGNATURE_CATALOG, null); }, onOpenFeedback: (): void => { this.feedbackIssueNumber = 0; this.openFeedback(); }, onReplayOnboarding: (): void => { this.showOnboarding = true; }, onOpenActiveAcl: (): void => { this.pathStack.pushPathByName(FieldwatchRouteName.ACTIVE_ACL, null); } }).width('100%').height('100%')
     }.width('100%').height('100%')
     /**
      * **切换过渡（方向感知）。**
@@ -4583,6 +4590,8 @@ struct FieldwatchSettingsPage {
   @State private sheetDoc: number = 0;
   /** 重看启动引导（设置页入口）。 */
   onReplayOnboarding: () => void = (): void => {};
+  /** 打开主动扫描授权专页（设计文档 7.4）。 */
+  onOpenActiveAcl: () => void = (): void => {};
   @StorageProp('ngf_current_theme') private currentTheme: string = 'auto';
   @State private scanIntensity: string = 'balanced';
   /** 实时页默认形态（日常 / 专业）；与启动引导的「模式选择」是同一项设置。 */
@@ -5238,6 +5247,28 @@ struct FieldwatchSettingsPage {
    * 删掉特征目录时差点让那个面板失去入口。现在把三份文档与「关于」放在一起，
    * 它们本来就是同一类东西（关于这个应用本身）。
    */
+  /**
+   * 主动扫描授权入口（设计文档 7.4：设置页专页）。
+   *
+   * 放在「显示」与「关于」之间：它是**能力级**设置，与外观无关、与条款也无关，
+   * 单独一组最不容易被误解成「界面选项」。
+   */
+  /** 打开主动扫描授权专页（转调外部注入的回调）。 */
+  private openActiveAclPage(): void { this.onOpenActiveAcl(); }
+
+  @Builder private buildSettingsActiveScan() {
+    Column({ space: 8 }) {
+      Text(fieldwatchText('app.string.fieldwatch_acl_settings_title')).fontSize(18)
+        .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText)
+      Text(fieldwatchText('app.string.fieldwatch_acl_intro')).fontSize(13)
+        .fontColor(FieldwatchPaletteHolder.get().textDim)
+      FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_acl_settings_title'),
+        tone: FieldwatchButtonTone.OUTLINE,
+        onTap: (): void => { this.openActiveAclPage(); } })
+    }.width('100%').padding(14).borderRadius(16).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
   @Builder private buildSettingsLegal() {
     Column({ space: 8 }) {
       Text(fieldwatchText('app.string.fieldwatch_settings_legal')).fontSize(18).fontWeight(FontWeight.Medium)
@@ -5336,14 +5367,17 @@ struct FieldwatchSettingsPage {
         Column({ space: 12 }) {
           this.buildSettingsAppearance()
           this.buildSettingsListDisplay()
+          this.buildSettingsActiveScan()
           this.buildSettingsLegal()
         }.layoutWeight(1)
       }.width('100%').alignItems(VerticalAlign.Top)
     } else {
+      this.buildSettingsActiveScan()
       this.buildSettingsScan()
       this.buildSettingsAppearance()
       this.buildSettingsPrivacy()
       this.buildSettingsListDisplay()
+      this.buildSettingsActiveScan()
       this.buildSettingsPermissions()
       this.buildSettingsAlerts()
       this.buildSettingsGuide()

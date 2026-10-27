@@ -39,4 +39,11 @@ export class FieldwatchRouteName {
   static readonly DEX: string = 'fieldwatch.dex';
   /** 新面孔清单。 */
   static readonly NEW_FACES: string = 'fieldwatch.new_faces';
+  /**
+   * 主动扫描授权专页（设计文档 7.4）。
+   *
+   * 独立页面而不是设置页里的一段：它要放 ACL 表（7 项能力 + 开关）、
+   * 审计日志（可查可删）、一键关闭，内容量已经超过「设置项」的量级。
+   */
+  static readonly ACTIVE_ACL: string = 'fieldwatch.active_acl';
 }

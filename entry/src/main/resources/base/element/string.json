@@ -11887,6 +11887,22 @@
     {
       "name": "fieldwatch_acl_scope_unknown",
       "value": "无法确定当前网段，主动扫描不可用。"
+    },
+    {
+      "name": "fieldwatch_acl_caps_title",
+      "value": "主动能力开关"
+    },
+    {
+      "name": "fieldwatch_acl_caps_hint",
+      "value": "关闭后需手动重开。关闭不会影响被动扫描。"
+    },
+    {
+      "name": "fieldwatch_acl_enable_all",
+      "value": "恢复全部主动能力"
+    },
+    {
+      "name": "fieldwatch_acl_version_line",
+      "value": "ACL 表版本 %1"
     }
   ]
 }
