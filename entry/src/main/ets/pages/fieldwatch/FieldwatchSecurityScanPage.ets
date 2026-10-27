@@ -490,6 +490,7 @@ export struct FieldwatchSecurityScanPage {
         }.width('100%')
         Text(this.kindsText()).fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
         this.buildClasses()
+        this.buildComposition()
         if (this.summary !== undefined && (this.summary as SecuritySummary).newFaces > 0) {
           Text(this.text('app.string.fieldwatch_security_newfaces').replace('%1', (this.summary as SecuritySummary).newFaces.toString()))
             .fontSize(14).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
@@ -558,6 +559,58 @@ export struct FieldwatchSecurityScanPage {
         }.width('100%')
       }.width('100%').padding(20).borderRadius(18).margin({ left: 20, right: 20 })
       .backgroundColor(FieldwatchPaletteHolder.get().panel)
+    }
+  }
+
+  /**
+   * 汇总图表（改版设计 4.3）：设备类型构成条 + 可疑占比条。
+   *
+   * 用横向占比条而不是饼图：占比条在窄屏上更好读，也不需要 Canvas。
+   */
+  @Builder
+  private buildComposition() {
+    if (this.summary !== undefined && (this.summary as SecuritySummary).hasDevices()) {
+      Column({ space: 10 }) {
+        Text($r('app.string.fieldwatch_sec_compose_title')).fontSize(13)
+          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+        ForEach(this.classRows(), (item: SecurityClassCount): void => {
+          Column({ space: 3 }) {
+            Row({ space: 8 }) {
+              Text(resolveResourceString(this.getUIContext().getHostContext(), signatureClassLabel(item.category)))
+                .fontSize(12).fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+              Text(item.count.toString()).fontSize(12)
+                .fontColor(FieldwatchPaletteHolder.get().accent)
+            }.width('100%')
+            // 占比条：宽度按该类占总数比例。
+            Row() {
+              Row().height(4).borderRadius(2)
+                .width((item.count / Math.max(1, (this.summary as SecuritySummary).total) * 100).toString() + '%')
+                .backgroundColor(FieldwatchPaletteHolder.get().accent)
+            }.width('100%').height(4).borderRadius(2)
+            .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+          }.width('100%')
+        }, (item: SecurityClassCount): string => String(item.category))
+        // 可疑占比条：可疑数 / 总数。
+        if ((this.summary as SecuritySummary).suspects.length > 0) {
+          Column({ space: 3 }) {
+            Row({ space: 8 }) {
+              Text($r('app.string.fieldwatch_sec_suspect_ratio')).fontSize(12)
+                .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+              Text((this.summary as SecuritySummary).suspects.length.toString() + ' / '
+                + (this.summary as SecuritySummary).total.toString()).fontSize(12)
+                .fontColor(FieldwatchPaletteHolder.get().warn)
+            }.width('100%')
+            Row() {
+              Row().height(4).borderRadius(2)
+                .width(((this.summary as SecuritySummary).suspects.length
+                  / Math.max(1, (this.summary as SecuritySummary).total) * 100).toString() + '%')
+                .backgroundColor(FieldwatchPaletteHolder.get().warn)
+            }.width('100%').height(4).borderRadius(2)
+            .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+          }.width('100%')
+        }
+      }.width('100%').padding(12).borderRadius(10).alignItems(HorizontalAlign.Start)
+      .backgroundColor(FieldwatchPaletteHolder.get().panel2)
     }
   }
 

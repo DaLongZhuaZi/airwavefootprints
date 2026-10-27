@@ -40,6 +40,8 @@ export struct FieldwatchDexPage {
   onClose: () => void = (): void => {};
   /** 打开特征库里的这一条（由根页面压栈）。 */
   onOpenCatalog: (fleetId: string) => void = (fleetId: string): void => {};
+  /** 空态「去扫描发现」：跳到安防扫描页（由根页面注入）。 */
+  onGoScan: () => void = (): void => {};
   /** 去实时页并按该特征筛选（由根页面切换标签页）。 */
   onFindLive: (fleetId: string) => void = (fleetId: string): void => {};
   /** 网格数据源（LazyForEach 用）。 */
@@ -92,6 +94,12 @@ export struct FieldwatchDexPage {
     if (rarity === DexRarity.RARE) return FieldwatchPaletteHolder.get().amber;
     if (rarity === DexRarity.UNCOMMON) return FieldwatchPaletteHolder.get().cyan;
     return FieldwatchPaletteHolder.get().accent;
+  }
+
+  /** 已点亮总数（用于区分「筛选没命中」与「一条都没点亮」）。 */
+  private seenTotal(): number {
+    const summary: DexSummary | undefined = this.summary;
+    return summary === undefined ? 0 : summary.seen;
   }
 
   private rarityKey(rarity: DexRarity): string {
@@ -187,8 +195,20 @@ export struct FieldwatchDexPage {
       // 搜索 + 筛选（改版设计 6.1）。
       this.buildSearchBar()
       if (this.visibleCount === 0) {
-        Text(this.text('app.string.fieldwatch_dex_no_match')).fontSize(13)
-          .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%').padding({ top: 20 })
+        // 区分两种空：**筛选没命中** vs **一条都没点亮**。
+        // 前者是「换个词」，后者要给动作（改版设计 1：空态给动作）。
+        if (this.seenTotal() === 0) {
+          Column({ space: 8 }) {
+            Text(this.text('app.string.fieldwatch_dex_empty_guide')).fontSize(13)
+              .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+            FieldwatchButton({ label: $r('app.string.fieldwatch_dex_go_scan'),
+              tone: FieldwatchButtonTone.PRIMARY, compact: true, fillWidth: false,
+              onTap: (): void => { this.onGoScan(); } })
+          }.width('100%').padding({ top: 20 }).alignItems(HorizontalAlign.Start)
+        } else {
+          Text(this.text('app.string.fieldwatch_dex_no_match')).fontSize(13)
+            .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%').padding({ top: 20 })
+        }
       }
       if (this.summary !== undefined && (this.summary as DexSummary).newToday > 0) {
         Text(this.text('app.string.fieldwatch_dex_new_today').replace('%1', (this.summary as DexSummary).newToday.toString()))

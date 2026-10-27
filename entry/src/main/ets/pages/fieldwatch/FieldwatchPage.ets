@@ -715,6 +715,7 @@ struct FieldwatchRootPage {
         onOpenCatalog: (fleetId: string): void => { this.openSignatureDetail(fleetId); },
         // 「去实时页找它」：回到实时标签。特征库的筛选语义与图鉴的 fleetId 不同源,
         // 强行按 fleetId 设筛选会把用户的现有筛选覆盖掉，所以只做「带他过去」。
+        onGoScan: (): void => { this.pathStack.pop(); this.openSecurity(); },
         onFindLive: (fleetId: string): void => {
           logger.info('FieldwatchDex', '从图鉴跳实时页: fleetId=' + fleetId);
           this.pathStack.pop();

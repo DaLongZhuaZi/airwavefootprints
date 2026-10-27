@@ -12171,6 +12171,22 @@
     {
       "name": "fieldwatch_sec_card_address",
       "value": "地址"
+    },
+    {
+      "name": "fieldwatch_dex_empty_guide",
+      "value": "还没有点亮任何设备。去扫描一次，身边有什么就会记进来。"
+    },
+    {
+      "name": "fieldwatch_dex_go_scan",
+      "value": "去扫描发现"
+    },
+    {
+      "name": "fieldwatch_sec_compose_title",
+      "value": "设备类型构成"
+    },
+    {
+      "name": "fieldwatch_sec_suspect_ratio",
+      "value": "可疑占比"
     }
   ]
 }

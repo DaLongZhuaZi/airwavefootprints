@@ -12171,6 +12171,22 @@
     {
       "name": "fieldwatch_sec_card_address",
       "value": "Address"
+    },
+    {
+      "name": "fieldwatch_dex_empty_guide",
+      "value": "Nothing unlocked yet. Run a scan and whatever is nearby gets recorded."
+    },
+    {
+      "name": "fieldwatch_dex_go_scan",
+      "value": "Go scan"
+    },
+    {
+      "name": "fieldwatch_sec_compose_title",
+      "value": "Device types"
+    },
+    {
+      "name": "fieldwatch_sec_suspect_ratio",
+      "value": "Suspect share"
     }
   ]
 }
