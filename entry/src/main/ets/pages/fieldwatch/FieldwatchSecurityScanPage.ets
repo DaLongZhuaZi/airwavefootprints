@@ -678,11 +678,10 @@ export struct FieldwatchSecurityScanPage {
       } else {
         // 改版设计 4.3：**每台可疑设备一张风险卡片** —— 左侧风险色条 + 名称 + 证据分项 + 处置按钮。
         ForEach(this.visibleSuspects(), (item: SuspectDevice): void => {
-          Row({ space: 0 }) {
-            // 风险等级色条：确认=红，可疑=橙。
-            Column().width(4).height('100%')
-              .backgroundColor(item.verdict === SecurityVerdict.CONFIRMED
-                ? FieldwatchPaletteHolder.get().signalRed : FieldwatchPaletteHolder.get().warn)
+          // **色条用左边框而不是单独的 Column**：
+          // `Column().height('100%')` 在 Row 里会让 Row 撑到父容器高度，
+          // 真机上整张卡片被拉满一屏（实测）。边框跟随内容高度，没有这个问题。
+          Column({ space: 6 }) {
             Column({ space: 6 }) {
               Row({ space: 8 }) {
                 Text(item.label.length > 0 ? item.label : item.address).fontSize(15)
@@ -710,9 +709,13 @@ export struct FieldwatchSecurityScanPage {
                   tone: FieldwatchButtonTone.OUTLINE, compact: true, fillWidth: false,
                   onTap: (): void => { this.dismissSuspect(item.key); } })
               }.width('100%')
-            }.layoutWeight(1).padding(10).alignItems(HorizontalAlign.Start)
-          }.width('100%').borderRadius(10).clip(true)
+            }.width('100%').padding(10).alignItems(HorizontalAlign.Start)
+          }.width('100%').borderRadius(10)
           .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+          // 左侧 4vp 风险色条：确认=红，可疑=橙。
+          .border({ width: { left: 4 },
+            color: { left: item.verdict === SecurityVerdict.CONFIRMED
+              ? FieldwatchPaletteHolder.get().signalRed : FieldwatchPaletteHolder.get().warn } })
         }, (item: SuspectDevice): string => item.key)
       }
     }.width('100%').alignItems(HorizontalAlign.Start)
