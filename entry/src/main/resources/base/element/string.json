@@ -12199,6 +12199,14 @@
     {
       "name": "fieldwatch_sec_compare_line",
       "value": "可疑 %1 → %2 · 新面孔 %3 → %4"
+    },
+    {
+      "name": "fieldwatch_acl_no_open_port",
+      "value": "白名单端口均未开放"
+    },
+    {
+      "name": "fieldwatch_acl_service_answered",
+      "value": "服务发现有应答"
     }
   ]
 }

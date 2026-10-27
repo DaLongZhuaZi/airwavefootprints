@@ -12199,6 +12199,14 @@
     {
       "name": "fieldwatch_sec_compare_line",
       "value": "Suspects %1 → %2 · New faces %3 → %4"
+    },
+    {
+      "name": "fieldwatch_acl_no_open_port",
+      "value": "No whitelisted ports open"
+    },
+    {
+      "name": "fieldwatch_acl_service_answered",
+      "value": "Service discovery answered"
     }
   ]
 }

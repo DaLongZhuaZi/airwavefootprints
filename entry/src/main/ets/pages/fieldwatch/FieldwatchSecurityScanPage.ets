@@ -73,7 +73,8 @@ export struct FieldwatchSecurityScanPage {
   /** 弹窗里的四要素文本行。 */
   @State private consentLines: string[] = [];
   /** 主动扫描结果明细行。 */
-  @State private activeLines: string[] = [];
+  /** 主动扫描的存活主机（改版设计 4.3：主动结果也卡片化，不罗列原始报文）。 */
+  @State private activeHostList: ActiveHost[] = [];
   /** 存活主机数。 */
   @State private activeHosts: number = 0;
   /** 正在跑的扫描器（用于取消）。 */
@@ -812,15 +813,39 @@ export struct FieldwatchSecurityScanPage {
         tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.cancelActiveScan(); } })
     }
     if (this.activePhase === 2) {
-      Column({ space: 6 }) {
+      Column({ space: 8 }) {
         Text($r('app.string.fieldwatch_acl_result_title')).fontSize(15)
           .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
         Text(this.text('app.string.fieldwatch_acl_result_hosts')
           .replace('%1', this.activeHosts.toString()))
           .fontSize(13).fontColor(FieldwatchPaletteHolder.get().accent).width('100%')
-        ForEach(this.activeLines, (line: string): void => {
-          Text(line).fontSize(11).fontColor(FieldwatchPaletteHolder.get().text).width('100%')
-        }, (line: string, index: number): string => index.toString())
+        // 每台主机一张卡：地址 + 开放端口标签 + 服务应答标记。
+        // 不罗列原始报文（设计 4.3 末条：主动结果同样用卡片式）。
+        ForEach(this.activeHostList, (host: ActiveHost): void => {
+          Column({ space: 5 }) {
+            Text(host.address).fontSize(14)
+              .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
+            if (host.openPorts.length > 0) {
+              Row({ space: 6 }) {
+                ForEach(host.openPorts, (port: number): void => {
+                  Text(port.toString()).fontSize(10)
+                    .fontColor(FieldwatchPaletteHolder.get().accent)
+                    .padding({ left: 6, right: 6, top: 2, bottom: 2 })
+                    .borderRadius(4).borderWidth(1)
+                    .borderColor(FieldwatchPaletteHolder.get().accent)
+                }, (port: number): string => host.address + port.toString())
+              }.width('100%')
+            } else {
+              Text($r('app.string.fieldwatch_acl_no_open_port')).fontSize(10)
+                .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+            }
+            if (host.serviceAnswered) {
+              Text($r('app.string.fieldwatch_acl_service_answered')).fontSize(10)
+                .fontColor(FieldwatchPaletteHolder.get().warn).width('100%')
+            }
+          }.width('100%').padding(10).borderRadius(8).alignItems(HorizontalAlign.Start)
+          .backgroundColor(FieldwatchPaletteHolder.get().panel2)
+        }, (host: ActiveHost): string => host.address)
       }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
       .backgroundColor(FieldwatchPaletteHolder.get().panel)
     }
@@ -876,15 +901,7 @@ export struct FieldwatchSecurityScanPage {
     // 上限 254：/24 网段最多 254 个可用主机（已排除本机与网关）。
     const result: ActiveScanResult = await scanner.run(scope, AclSubject.SECURITY_SCAN, 254);
     this.activeHosts = result.hosts.length;
-    const lines: string[] = [];
-    result.hosts.forEach((host: ActiveHost): void => {
-      let line: string = host.address;
-      if (host.openPorts.length > 0) line += ' · 开放 ' + host.openPorts.join('/');
-      if (host.serviceAnswered) line += ' · 服务应答';
-      lines.push(line);
-    });
-    if (result.skippedByScope) lines.push(this.text('app.string.fieldwatch_acl_scope_unknown'));
-    this.activeLines = lines;
+    this.activeHostList = result.hosts;
     this.activePhase = 2;
     this.activeScanner = undefined;
   }
