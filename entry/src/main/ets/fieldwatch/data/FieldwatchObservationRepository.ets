@@ -341,25 +341,54 @@ export class FieldwatchObservationRepository {
   }
 
   /**
-   * 给老库补 `signature_ids` 列。
+   * 表里是否已有该列。
    *
-   * 与 `ensureSitDeviceKeysColumn` 同一个套路：重复加列会抛「duplicate column」，
-   * 那是正常路径，降级成 debug 日志即可。
+   * **先查后加，而不是靠 catch 兜**：重复 `ALTER TABLE ADD COLUMN` 会抛「duplicate column」，
+   * 而 `ngfRdbManager.executeSql` 在抛之前**已经记了一条 E 日志** —— 调用方再降级成 debug
+   * 也盖不住那行噪音（真机日志里每次冷启动都有两条 ALTER 的 E）。
+   * 先 `PRAGMA table_info` 查一下，已存在就整段跳过，失败路径根本不会发生。
    */
-  private async ensureSignatureIdsColumn(): Promise<void> {
+  private async columnExists(table: string, column: string): Promise<boolean> {
     try {
-      await ngfRdbManager.executeSql("ALTER TABLE fieldwatch_observations ADD COLUMN signature_ids TEXT NOT NULL DEFAULT '[]'");
+      const rows: Array<Record<string, string | number | boolean>> =
+        await ngfRdbManager.querySql('PRAGMA table_info(' + table + ')');
+      let exists: boolean = false;
+      rows.forEach((row: Record<string, string | number | boolean>): void => {
+        if (String(row['name'] ?? '') === column) exists = true;
+      });
+      return exists;
     } catch (error) {
-      logger.debug(TAG, 'signature_ids 字段已存在或无需迁移: ' + this.errorMessage(error));
+      // 查不到就当没有：宁可尝试一次 ALTER，也不要因为查询失败而漏掉迁移。
+      logger.debug(TAG, 'PRAGMA table_info 查询失败(' + table + '): ' + this.errorMessage(error));
+      return false;
     }
   }
 
-  private async ensureSitDeviceKeysColumn(): Promise<void> {
+  /** 给老库补 `signature_ids` 列（已存在则跳过，不产生 ALTER 失败日志）。 */
+  private async ensureSignatureIdsColumn(): Promise<void> {
+    if (await this.columnExists('fieldwatch_observations', 'signature_ids')) {
+      logger.debug(TAG, 'signature_ids 列已存在，跳过迁移');
+      return;
+    }
     try {
-      await ngfRdbManager.executeSql('ALTER TABLE fieldwatch_sits ADD COLUMN device_keys TEXT NOT NULL DEFAULT \'[]\'');
+      await ngfRdbManager.executeSql("ALTER TABLE fieldwatch_observations ADD COLUMN signature_ids TEXT NOT NULL DEFAULT '[]'");
+      logger.info(TAG, '已为观测表补 signature_ids 列');
     } catch (error) {
-      // Existing API26 databases already have the column; duplicate-column is harmless.
-      logger.debug(TAG, 'sit 设备快照字段已存在或无需迁移: ' + this.errorMessage(error));
+      logger.debug(TAG, 'signature_ids 字段补列失败: ' + this.errorMessage(error));
+    }
+  }
+
+  /** 给老库补 `device_keys` 列（同上，已存在则跳过）。 */
+  private async ensureSitDeviceKeysColumn(): Promise<void> {
+    if (await this.columnExists('fieldwatch_sits', 'device_keys')) {
+      logger.debug(TAG, 'device_keys 列已存在，跳过迁移');
+      return;
+    }
+    try {
+      await ngfRdbManager.executeSql("ALTER TABLE fieldwatch_sits ADD COLUMN device_keys TEXT NOT NULL DEFAULT '[]'");
+      logger.info(TAG, '已为足迹表补 device_keys 列');
+    } catch (error) {
+      logger.debug(TAG, 'device_keys 字段补列失败: ' + this.errorMessage(error));
     }
   }
 }
