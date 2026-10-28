@@ -840,7 +840,7 @@ struct FieldwatchRootPage {
   @Builder
   private buildPhoneLayout() {
     HdsTabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
-      TabContent() { FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.openChannelAnalysis(0); }, onOpenFind: (): void => { this.openFindPage(); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
+      TabContent() { FieldwatchLivePage({ twoColumn: this.twoColumnTabs(), bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.openChannelAnalysis(0); }, onOpenFind: (): void => { this.openFindPage(); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_live'), 'sys.symbol.scope', 0))
       TabContent() { FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp }) }.tabBar(this.buildTabItem(fieldwatchText('app.string.fieldwatch_tab_filters'), 'sys.symbol.line_3_horizontal', 1))
             // `onEditFleet` 必须传：它的默认值是空函数，漏传就变成「点了没反应」。
       TabContent() { FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, landscape: this.isLandscape,
@@ -1012,7 +1012,7 @@ struct FieldwatchRootPage {
       // 点记录看到的是设置（实测反馈）。**入口与内容必须同时改。**
       // `visible` 必须显式传：它的默认值是 true，漏传时雷达的 16 ms 扫描定时器
       // 会在组件存活期间持续整幅重绘（竖屏 TabContent 路径一直传了，这里此前漏了）。
-      if (this.selectedTab === 0) FieldwatchLivePage({ bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.openChannelAnalysis(0); }, onOpenFind: (): void => { this.openFindPage(); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }).width('100%').height('100%')
+      if (this.selectedTab === 0) FieldwatchLivePage({ twoColumn: this.twoColumnTabs(), bottomInset: this.bottomInsetVp, visible: this.selectedTab === 0, savedLiveMode: this.liveMode, onCreateSignature: (deviceKey: string): void => { this.openSignatureEditor('', deviceKey); }, onStartHunt: (deviceKey: string): void => { this.startHunt(deviceKey); }, onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); }, onOpenWifiAnalysis: (): void => { this.openChannelAnalysis(0); }, onOpenFind: (): void => { this.openFindPage(); }, onOpenFootprints: (): void => { this.switchTab(3); }, onOpenSecurity: (): void => { this.openSecurity(); }, onOpenWifiDoctor: (): void => { this.openWifiDoctor(); }, onOpenDex: (): void => { this.openDex(); }, onOpenNewFaces: (): void => { this.openNewFaces(); } }).width('100%').height('100%')
       else if (this.selectedTab === 1) FieldwatchFiltersPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, twoColumn: this.twoColumnTabs() }).width('100%').height('100%')
       // 同上：`onEditFleet` 漏传会让「新建」「编辑」两个按钮都变成空操作。
       else if (this.selectedTab === 2) FieldwatchSignaturesPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp, embedded: true, twoColumn: this.twoColumnTabs(), landscape: this.isLandscape,
@@ -1116,6 +1116,12 @@ struct FieldwatchLivePage {
   onOpenDex: () => void = (): void => {};
   onOpenNewFaces: () => void = (): void => {};
   /** 日常摘要默认显示，专业雷达与列表保留在一键切换后的完整视图中。 */
+  /**
+   * 平板横屏时是否走双列（由根页面传入 `isLandscape && !subPageOpen`）。
+   *
+   * **出现分栏时自动回到单列**：右栏一开，可用宽度只剩三分之二，双列会挤成两条细缝。
+   */
+  @Prop twoColumn: boolean = false;
   @State private dailyMode: boolean = true;
   @State private safetyCheckActive: boolean = false;
   @State private safetyCheckComplete: boolean = false;
@@ -3716,10 +3722,19 @@ struct FieldwatchLivePage {
     });
   }
 
+  /** 日常页卡片宽度：双列时半宽（留出中间间距），单列时整宽。 */
+  private dailyCardWidth(): string { return this.twoColumn ? '48.5%' : '100%'; }
+
+  /** 底部标签栏预留：横屏是左侧导航栏，底部没有标签栏，预留应为 0。 */
+  private liveTabBarReserve(): number { return this.twoColumn ? 0 : FIELDWATCH_TAB_BAR_RESERVE; }
+
   @Builder
   private buildDailyOverview() {
     Scroll() {
-      Column({ space: 14 }) {
+      // **平板横屏走双列**：卡片用 Flex 换行排布，单张宽度由 `dailyCardWidth()` 决定。
+      // 单列 ↔ 双列切换带 240ms 隐式动画，卡片平滑滑到新位置而不是瞬间重排。
+      Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween,
+        space: { main: LengthMetrics.vp(14), cross: LengthMetrics.vp(14) } }) {
         // ── 今日结论卡（改版设计 2：一屏一结论，数字可点）──
         Column({ space: 8 }) {
           Text(fieldwatchText('app.string.fieldwatch_daily_conclusion_title')).fontSize(15)
@@ -3740,8 +3755,9 @@ struct FieldwatchLivePage {
               value: this.observedCount(RadioKind.WIFI).toString(),
               onTap: (): void => { this.onOpenWifiDoctor(); } })
           }.width('100%')
-        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+        }.width(this.dailyCardWidth()).padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
+        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
 
         // ── 设备趋势卡（改版设计 2：近 7 日每日发现设备数 + 一句话解读）──
         Column({ space: 8 }) {
@@ -3771,8 +3787,9 @@ struct FieldwatchLivePage {
             Text(this.trendInsight()).fontSize(11)
               .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
           }
-        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+        }.width(this.dailyCardWidth()).padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
+        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
 
         if (this.recentDailySightings().length > 0) {
           Column({ space: 8 }) {
@@ -3794,7 +3811,8 @@ struct FieldwatchLivePage {
               .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(8)
               .onClick((): void => { this.onOpenDetail(item.key); })
             }, (item: Sighting): string => item.key)
-          }.width('100%').alignItems(HorizontalAlign.Start)
+          }.width(this.dailyCardWidth()).alignItems(HorizontalAlign.Start)
+          .animation({ duration: 240, curve: Curve.FastOutSlowIn })
         }
 
         Column({ space: 10 }) {
@@ -3825,7 +3843,7 @@ struct FieldwatchLivePage {
             tone: FieldwatchButtonTone.OUTLINE, compact: true,
             onTap: (): void => { this.onOpenFootprints(); } })
         }
-        .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+        .width(this.dailyCardWidth()).padding(14)        .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
         .alignItems(HorizontalAlign.Start)
 
         Column({ space: 10 }) {
@@ -3865,7 +3883,7 @@ struct FieldwatchLivePage {
             })
           }
         }
-        .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+        .width(this.dailyCardWidth()).padding(14)        .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
         .alignItems(HorizontalAlign.Start)
 
         Column({ space: 10 }) {
@@ -3883,7 +3901,7 @@ struct FieldwatchLivePage {
             tone: FieldwatchButtonTone.OUTLINE, compact: true,
             onTap: (): void => { this.onOpenWifiAnalysis(); } })
         }
-        .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+        .width(this.dailyCardWidth()).padding(14)        .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
         .alignItems(HorizontalAlign.Start)
 
         // ── 图鉴进度卡（改版设计 2：等级 + 积分 + 进度）──
@@ -3902,8 +3920,9 @@ struct FieldwatchLivePage {
             Progress({ value: this.dailyDexSeen(), total: this.dailyDexTotal(), type: ProgressType.Linear })
               .width('100%').height(4).color(FieldwatchPaletteHolder.get().accent)
           }
-        }.width('100%').padding(14).borderRadius(12).alignItems(HorizontalAlign.Start)
+        }.width(this.dailyCardWidth()).padding(14).borderRadius(12).alignItems(HorizontalAlign.Start)
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
+        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
         .onClick((): void => { this.onOpenDex(); })
 
         // ── 更多工具（P1/P2 合入的四个页面入口）──
@@ -3946,8 +3965,9 @@ struct FieldwatchLivePage {
             }.layoutWeight(1)
           }.width('100%')
         }
-        .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+        .width(this.dailyCardWidth()).padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)
+        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
 
         // 找东西：整卡可点（不嵌按钮）—— 嵌一个「打开」按钮等于平白多一次点击。
         Column({ space: 8 }) {
@@ -3965,9 +3985,10 @@ struct FieldwatchLivePage {
           Text(fieldwatchText('app.string.fieldwatch_daily_find_hint')).fontSize(13)
             .fontColor(FieldwatchPaletteHolder.get().text).width('100%')
         }
-        .width('100%').padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
+        .width(this.dailyCardWidth()).padding(14).backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)
         .onClick((): void => { this.onOpenFind(); })
+        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
 
         // ── 专业视图折叠区（改版设计 2：专业能力不删，收进折叠区）──
         Column({ space: 8 }) {
@@ -3990,11 +4011,11 @@ struct FieldwatchLivePage {
             FieldwatchButton({ label: fieldwatchText('app.string.fieldwatch_daily_open_radar'),
               tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.openProfessionalRadar(); } })
           }
-        }.width('100%').padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
+        }.width(this.dailyCardWidth()).padding(14).borderRadius(14).alignItems(HorizontalAlign.Start)
         .backgroundColor(FieldwatchPaletteHolder.get().panel)
+        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
       }
-      .width('100%').padding({ left: 16, right: 16, top: 14, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
-      .alignItems(HorizontalAlign.Start)
+      .width('100%').padding({ left: 16, right: 16, top: 14, bottom: this.bottomInset + this.liveTabBarReserve() })
     }
     .width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
     .align(Alignment.TopStart)

@@ -55,7 +55,22 @@ export const CHANGELOG_HEAD: ChangelogEntry[] = [
     ngfText('app.string.fw_cl_111_6'),
     ngfText('app.string.fw_cl_111_7'),
     ngfText('app.string.fw_cl_111_8'),
-    ngfText('app.string.fw_cl_111_9')
+    ngfText('app.string.fw_cl_111_9'),
+    ngfText('app.string.fw_cl_111_10'),
+    ngfText('app.string.fw_cl_111_11'),
+    ngfText('app.string.fw_cl_111_12'),
+    ngfText('app.string.fw_cl_111_13'),
+    ngfText('app.string.fw_cl_111_14'),
+    ngfText('app.string.fw_cl_111_15'),
+    ngfText('app.string.fw_cl_111_16'),
+    ngfText('app.string.fw_cl_111_17'),
+    ngfText('app.string.fw_cl_111_18'),
+    ngfText('app.string.fw_cl_111_19'),
+    ngfText('app.string.fw_cl_111_20'),
+    ngfText('app.string.fw_cl_111_21'),
+    ngfText('app.string.fw_cl_111_22'),
+    ngfText('app.string.fw_cl_111_23'),
+    ngfText('app.string.fw_cl_111_24')
   ]),
   // 手动补录（版本号未变）：当天合入、要告知用户的修复。buildNumber 记 0。
   new ChangelogEntry('1.1.0', 0, '2026-10-21', [

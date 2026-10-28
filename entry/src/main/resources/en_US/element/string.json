@@ -12307,6 +12307,66 @@
     {
       "name": "fieldwatch_security_start_normal",
       "value": "Start scan (30s)"
+    },
+    {
+      "name": "fw_cl_111_10",
+      "value": "Security scan now has two modes: normal (passive only, 30s, not saved to history) and security (60s, optional active probing, saved to history)"
+    },
+    {
+      "name": "fw_cl_111_11",
+      "value": "The Live tab's security-check entry is renamed to security scan throughout"
+    },
+    {
+      "name": "fw_cl_111_12",
+      "value": "The suspicious-device count during a scan is now live, instead of staying at zero until the result page"
+    },
+    {
+      "name": "fw_cl_111_13",
+      "value": "Fixed the \"BLE scan failed\" banner that appeared when starting a 30-second scan"
+    },
+    {
+      "name": "fw_cl_111_14",
+      "value": "Share card relaid out: the hero fills the frame at the source 1:2 ratio, larger type, rounded corners, rarity-graded borders"
+    },
+    {
+      "name": "fw_cl_111_15",
+      "value": "Share card: monospace name for security tiers, de-duplicated vendor wording in the trait line, finder artwork optically centred"
+    },
+    {
+      "name": "fw_cl_111_16",
+      "value": "Fixed share-card generation failing: export size now steps down automatically to a size the device can encode"
+    },
+    {
+      "name": "fw_cl_111_17",
+      "value": "Fixed the repeated \"a continuous task has already been applied for\" (9800005) when going to background"
+    },
+    {
+      "name": "fw_cl_111_18",
+      "value": "Fixed the blank category line and the Invalid resource ID spam in the dex unlock sheet"
+    },
+    {
+      "name": "fw_cl_111_19",
+      "value": "Startup logs no longer show ALTER errors from database migration"
+    },
+    {
+      "name": "fw_cl_111_20",
+      "value": "First run now seeds the signature catalog from the built-in copy instead of falsely reporting a corrupt local file"
+    },
+    {
+      "name": "fw_cl_111_21",
+      "value": "Fixed the duplicate BLE stop warnings when leaving the app"
+    },
+    {
+      "name": "fw_cl_111_22",
+      "value": "Added icons for drone, finder tag and other device types"
+    },
+    {
+      "name": "fw_cl_111_23",
+      "value": "All tool sub-pages use one centred title, toolbox entries share the same left edge, and the settings page drops the active-scan entry (reachable from the toolbox)"
+    },
+    {
+      "name": "fw_cl_111_24",
+      "value": "The signature list now fills to the bottom on tablets; the Live tab uses two-column cards in landscape and falls back to one column when the split pane opens"
     }
   ]
 }
