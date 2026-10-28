@@ -327,7 +327,7 @@ export struct FieldwatchSecurityScanPage {
       this.buildChecklist()
       this.buildReplay()
       this.buildHistory()
-    }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Start)
+    }.width('100%').padding({ top: 12, bottom: 20 }).alignItems(HorizontalAlign.Start)
   }
 
   /**
@@ -392,7 +392,7 @@ export struct FieldwatchSecurityScanPage {
         .width('100%').color(FieldwatchPaletteHolder.get().accent)
       FieldwatchButton({ label: $r('app.string.fieldwatch_sec_cancel_scan'),
         tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.cancelScan(); } })
-    }.width('100%').padding({ top: 40, bottom: 20 }).alignItems(HorizontalAlign.Center)
+    }.width('100%').padding({ top: 20, bottom: 20 }).alignItems(HorizontalAlign.Center)
   }
 
   /**
