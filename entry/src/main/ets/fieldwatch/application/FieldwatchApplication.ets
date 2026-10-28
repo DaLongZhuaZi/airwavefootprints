@@ -46,7 +46,7 @@ import { AclScope, scopeFromLocal } from '../domain/FieldwatchAclScope';
 import { FieldwatchAclAuditRepository } from '../data/FieldwatchAclAuditRepository';
 import { FieldwatchActiveScanner } from '../domain/FieldwatchActiveScanner';
 import { FieldwatchProtocolProber } from '../domain/FieldwatchProtocolProber';
-import { assessSighting, SuspectDevice } from '../domain/FieldwatchSecurityPassive';
+import { assessSighting, SecurityVerdict, SuspectDevice } from '../domain/FieldwatchSecurityPassive';
 import { FieldwatchSecurityHistoryRepository, SecurityScanRecord } from '../data/FieldwatchSecurityHistoryRepository';
 import { checkProgress, decodeChecks, encodeChecks, manualCheckGroups, toggleCheck } from '../domain/FieldwatchSecurityChecklist';
 import { consecutiveDays, dexBadges, DexBadge, dexScore, DexLevel, DexLevelProgress, entryScore, levelProgress } from '../domain/FieldwatchDexBadges';
@@ -386,7 +386,13 @@ export class FieldwatchApplication {
    * 跟随评分取 `antiTrackingReport()` 的最高分：与反跟随面板同一个来源，
    * 不会出现「扫描卡说 80 分、工具箱说 0 分」这种自相矛盾。
    */
-  finishSecurityScan(): SecuritySummary {
+  /**
+   * 结束扫描并产出汇总。
+   *
+   * @param saveHistory 是否落一条历史记录。**普通扫描（仅被动 30s）传 false** ——
+   *        它是「随手看一眼」，不该污染历史列表与「与上次相比」。
+   */
+  finishSecurityScan(saveHistory: boolean = true): SecuritySummary {
     const endedAt: number = Date.now();
     const startedAt: number = this.securityScanStartedAt > 0 ? this.securityScanStartedAt : endedAt;
     let best: number = 0;
@@ -405,11 +411,27 @@ export class FieldwatchApplication {
     attachSuspects(summary, assessed);
     this.lastSecuritySummary = summary;
     // 落一条历史记录（P3-2：汇总之下要能看历史扫描记录）。
-    void this.securityHistory.save(summary);
+    // 普通扫描不落库：它不是一次正式的安防扫描。
+    if (saveHistory) void this.securityHistory.save(summary);
     logger.info(TAG, '安防扫描结束: 设备=' + summary.total.toString() + ' 新面孔=' + summary.newFaces.toString()
       + ' 跟随=' + summary.followScore.toString() + ' 确认=' + summary.confirmedCount.toString()
       + ' 可疑=' + summary.suspiciousCount.toString());
     return summary;
+  }
+
+  /**
+   * 扫描过程中的**实时可疑台数**（只读，不改任何状态）。
+   *
+   * 与 `finishSecurityScan()` 用同一套 `assessSighting` 判定，所以过程计数和最终结果
+   * 必然一致 —— 此前界面上「可疑」一路是 0、结果却有若干台，就是因为过程计数压根没算。
+   */
+  liveSecuritySuspects(): number {
+    let count: number = 0;
+    this.state.sightings.forEach((item: Sighting): void => {
+      const device: SuspectDevice = assessSighting(item, this.hasCameraSignature(item), this.hasMediaService(item));
+      if (device.verdict !== SecurityVerdict.NONE) count += 1;
+    });
+    return count;
   }
 
   /**

@@ -15,7 +15,10 @@ import { SignatureFleet } from './signatures/FieldwatchSignatureModels';
 import { countVerdicts, SuspectDevice, suspectListOf } from './FieldwatchSecurityPassive';
 
 /** 一次安防扫描的时长（文档：60 秒）。 */
+/** 安防扫描时长（可选主动探测，结果记入历史）。 */
 export const SECURITY_SCAN_DURATION_MS: number = 60000;
+/** 普通扫描时长（**仅被动**，结果不记入历史）。 */
+export const PASSIVE_SCAN_DURATION_MS: number = 30000;
 /** 「跟随评分」的嫌疑线，与反跟随引擎的 70 分保持同一口径。 */
 export const SECURITY_FOLLOW_SUSPECT_SCORE: number = 70;
 /** 「跟随评分」的关注线（45），低于它不展示这一项。 */

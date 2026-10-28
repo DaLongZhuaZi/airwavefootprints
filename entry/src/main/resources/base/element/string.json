@@ -9174,7 +9174,7 @@
     },
     {
       "name": "fieldwatch_daily_security_again",
-      "value": "再次检查"
+      "value": "再次扫描"
     },
     {
       "name": "fieldwatch_daily_recent",
@@ -9222,7 +9222,7 @@
     },
     {
       "name": "fieldwatch_daily_security_title",
-      "value": "安全检查"
+      "value": "安防扫描"
     },
     {
       "name": "fieldwatch_daily_security_hint",
@@ -9230,7 +9230,7 @@
     },
     {
       "name": "fieldwatch_daily_security_start",
-      "value": "开始 30 秒检查"
+      "value": "开始 30 秒扫描"
     },
     {
       "name": "fieldwatch_daily_security_running",
@@ -9238,7 +9238,7 @@
     },
     {
       "name": "fieldwatch_daily_security_done",
-      "value": "检查完成"
+      "value": "扫描完成"
     },
     {
       "name": "fieldwatch_daily_security_watch",
@@ -11342,7 +11342,7 @@
     },
     {
       "name": "fieldwatch_daily_more_security",
-      "value": "安防扫描（60 秒）"
+      "value": "安防扫描"
     },
     {
       "name": "fieldwatch_daily_more_wifi",
@@ -12275,6 +12275,38 @@
     {
       "name": "fieldwatch_share_other_device",
       "value": "其他设备"
+    },
+    {
+      "name": "fieldwatch_security_mode_title",
+      "value": "扫描模式"
+    },
+    {
+      "name": "fieldwatch_security_mode_normal",
+      "value": "普通扫描"
+    },
+    {
+      "name": "fieldwatch_security_mode_normal_desc",
+      "value": "仅被动监听 30 秒，看身边有哪些设备在广播"
+    },
+    {
+      "name": "fieldwatch_security_mode_full",
+      "value": "安防扫描"
+    },
+    {
+      "name": "fieldwatch_security_mode_full_desc",
+      "value": "被动 60 秒，可选主动探测；结果记入历史"
+    },
+    {
+      "name": "fieldwatch_security_mode_normal_note",
+      "value": "普通扫描不记入历史，只在本次查看"
+    },
+    {
+      "name": "fieldwatch_security_normal_result_note",
+      "value": "本次是普通扫描，结果未记入历史"
+    },
+    {
+      "name": "fieldwatch_security_start_normal",
+      "value": "开始扫描（30 秒）"
     }
   ]
 }

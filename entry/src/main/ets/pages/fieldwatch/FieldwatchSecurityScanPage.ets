@@ -4,7 +4,7 @@ import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopCh
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { RadioKind, SignatureClass, Sighting } from '../../fieldwatch/domain/FieldwatchModels';
 import { SignatureFleet } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
-import { SECURITY_SCAN_DURATION_MS, SecurityClassCount, SecuritySummary, summaryHeadlineKey } from '../../fieldwatch/domain/FieldwatchSecurityScan';
+import { PASSIVE_SCAN_DURATION_MS, SECURITY_SCAN_DURATION_MS, SecurityClassCount, SecuritySummary, summaryHeadlineKey } from '../../fieldwatch/domain/FieldwatchSecurityScan';
 import { heroClassOf, ShareCardContent, ShareCardMaterial } from '../../fieldwatch/platform/FieldwatchShareCard';
 import {
   capabilityBoundaryKeys, SecurityEvidence, SecurityEvidenceKind, SecurityVerdict, SuspectDevice
@@ -49,7 +49,9 @@ export struct FieldwatchSecurityScanPage {
   onOpenDetail: (deviceKey: string) => void = (deviceKey: string): void => {};
   /** 0 = 未开始，1 = 扫描中，2 = 出结果。 */
   @State private phase: number = 0;
-  @State private remainingSec: number = Math.floor(SECURITY_SCAN_DURATION_MS / 1000);
+  /** 扫描模式：0 = 普通扫描（仅被动 30s，不记历史）；1 = 安防扫描（可选主动 60s，记历史）。 */
+  @State private scanMode: number = 0;
+  @State private remainingSec: number = Math.floor(PASSIVE_SCAN_DURATION_MS / 1000);
   @State private summary: SecuritySummary | undefined = undefined;
   @State private sharing: boolean = false;
   @State private headline: string = '';
@@ -166,10 +168,19 @@ export struct FieldwatchSecurityScanPage {
    * 到点后做一次汇总。这样「点卡到出卡」的时间就是 60 秒 + 绘制时间，
    * 远小于验收要求的 90 秒。
    */
+  /** 当前模式的扫描时长（ms）。 */
+  private scanDurationMs(): number {
+    return this.scanMode === 1 ? SECURITY_SCAN_DURATION_MS : PASSIVE_SCAN_DURATION_MS;
+  }
+
+  /** 当前模式是否允许主动探测附加项（只有安防扫描允许）。 */
+  private allowsActiveProbe(): boolean { return this.scanMode === 1; }
+
   private startScan(): void {
     fieldwatchApplication.beginSecurityScan();
     this.phase = 1;
-    this.remainingSec = Math.floor(SECURITY_SCAN_DURATION_MS / 1000);
+    const durationMs: number = this.scanDurationMs();
+    this.remainingSec = Math.floor(durationMs / 1000);
     this.summary = undefined;
     if (this.timer >= 0) clearInterval(this.timer);
     // 阶段按剩余时间推进：前 1/4 发现、中段分类、后段判定、最后汇总。
@@ -177,12 +188,16 @@ export struct FieldwatchSecurityScanPage {
     this.startSweep();
     this.liveFound = 0;
     this.liveSuspect = 0;
-    const total: number = Math.floor(SECURITY_SCAN_DURATION_MS / 1000);
+    const total: number = Math.floor(durationMs / 1000);
     this.timer = setInterval((): void => {
       this.remainingSec -= 1;
       // 实时计数：只读应用层当前观测，不额外采集（改版设计 4.2 要求「不谎称逐台探测」）。
       const live: number = fieldwatchApplication.getState().sightings.length;
       this.liveFound = live;
+      // **可疑台数也必须实时算**：此前这里从来没更新过，界面一路显示 0，
+      // 而扫描结束却报出多台可疑 —— 过程与结果对不上（真机反馈）。
+      // 用与应用层 `finishSecurityScan()` 同一套判定，过程数与结果数必然一致。
+      this.liveSuspect = fieldwatchApplication.liveSecuritySuspects();
       const elapsed: number = total - this.remainingSec;
       if (elapsed >= total * 0.75) this.scanStage = 3;
       else if (elapsed >= total * 0.5) this.scanStage = 2;
@@ -198,7 +213,8 @@ export struct FieldwatchSecurityScanPage {
   }
 
   private finishScan(): void {
-    const result: SecuritySummary = fieldwatchApplication.finishSecurityScan();
+    // 普通扫描不记入历史；只有安防扫描才落库。
+    const result: SecuritySummary = fieldwatchApplication.finishSecurityScan(this.scanMode === 1);
     // 勾了附加项时，被动结束后接着跑主动，结果分开展示（改版设计 4.1 末条）。
     if (this.activeChecked) {
       void this.startActiveScan();
@@ -398,9 +414,14 @@ export struct FieldwatchSecurityScanPage {
       // 脚注在**开始之前**就要说明，不能让用户以为能查出所有东西。
       Text($r('app.string.fieldwatch_security_footnote')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().warn).textAlign(TextAlign.Center)
-      // 改版设计 4.1：主动扫描是主流程里的一个**勾选项**（默认不勾），放在开始按钮上方。
-      this.buildActiveOption()
-      FieldwatchButton({ label: $r('app.string.fieldwatch_security_start'),
+      // 扫描模式：普通扫描只被动、安防扫描可选主动。
+      this.buildModeSelector()
+      // 改版设计 4.1：主动扫描是**安防扫描**里的一个勾选项（默认不勾）。
+      if (this.allowsActiveProbe()) this.buildActiveOption()
+      FieldwatchButton({
+        label: this.scanMode === 1
+          ? $r('app.string.fieldwatch_security_start')
+          : $r('app.string.fieldwatch_security_start_normal'),
         tone: FieldwatchButtonTone.PRIMARY, onTap: (): void => { this.startScan(); } })
       // 排查清单与历史是**常驻能力**，不该逼用户先等 60 秒扫描才能看到：
       // 真机上从别处返回时会回到这个 idle 页，清单就找不到了。
@@ -408,6 +429,50 @@ export struct FieldwatchSecurityScanPage {
       this.buildReplay()
       this.buildHistory()
     }.width('100%').padding({ top: 12, bottom: 20 }).alignItems(HorizontalAlign.Start)
+  }
+
+  /**
+   * 扫描模式选择：普通扫描（仅被动 30s，不记历史）/ 安防扫描（可选主动 60s，记历史）。
+   *
+   * 为什么放在最上面：模式决定「扫多久、要不要授权主动探测、结果进不进历史」，
+   * 是开始之前必须先定的事，不能藏进设置。
+   */
+  @Builder
+  private buildModeSelector() {
+    Column({ space: 6 }) {
+      Text($r('app.string.fieldwatch_security_mode_title')).fontSize(13)
+        .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
+      this.buildModeOption(0, 'app.string.fieldwatch_security_mode_normal',
+        'app.string.fieldwatch_security_mode_normal_desc')
+      this.buildModeOption(1, 'app.string.fieldwatch_security_mode_full',
+        'app.string.fieldwatch_security_mode_full_desc')
+      if (this.scanMode === 0) {
+        Text($r('app.string.fieldwatch_security_mode_normal_note')).fontSize(11)
+          .fontColor(FieldwatchPaletteHolder.get().warn).width('100%')
+      }
+    }.width('100%').padding(12).borderRadius(12).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
+  }
+
+  @Builder
+  private buildModeOption(mode: number, titleKey: string, descKey: string) {
+    Row({ space: 10 }) {
+      SymbolGlyph($r(this.scanMode === mode ? 'sys.symbol.checkmark_circle_fill' : 'sys.symbol.circle'))
+        .fontSize(20)
+        .fontColor([this.scanMode === mode ? FieldwatchPaletteHolder.get().accent
+          : FieldwatchPaletteHolder.get().outline])
+      Column({ space: 2 }) {
+        Text($r(titleKey)).fontSize(14).fontWeight(FontWeight.Medium)
+          .fontColor(this.scanMode === mode ? FieldwatchPaletteHolder.get().text
+            : FieldwatchPaletteHolder.get().textDim)
+        Text($r(descKey)).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
+      }.layoutWeight(1).alignItems(HorizontalAlign.Start)
+    }.width('100%').padding({ top: 4, bottom: 4 })
+    .onClick((): void => {
+      this.scanMode = mode;
+      // 切回普通扫描要撤销主动探测勾选：普通扫描不允许主动探测。
+      if (mode === 0) this.activeChecked = false;
+    })
   }
 
   /**
@@ -467,8 +532,8 @@ export struct FieldwatchSecurityScanPage {
       }
       Text($r('app.string.fieldwatch_security_scanning')).fontSize(13)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
-      Progress({ value: Math.floor(SECURITY_SCAN_DURATION_MS / 1000) - this.remainingSec,
-        total: Math.floor(SECURITY_SCAN_DURATION_MS / 1000), type: ProgressType.Linear })
+      Progress({ value: Math.floor(this.scanDurationMs() / 1000) - this.remainingSec,
+        total: Math.floor(this.scanDurationMs() / 1000), type: ProgressType.Linear })
         .width('100%').color(FieldwatchPaletteHolder.get().accent)
       FieldwatchButton({ label: $r('app.string.fieldwatch_sec_cancel_scan'),
         tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.cancelScan(); } })
@@ -576,6 +641,11 @@ export struct FieldwatchSecurityScanPage {
   @Builder
   private buildResult() {
     Column({ space: 14 }) {
+      // 普通扫描不落库，必须在结果页说清楚，否则用户会去历史里找。
+      if (this.scanMode === 0) {
+        Text($r('app.string.fieldwatch_security_normal_result_note')).fontSize(11)
+          .fontColor(FieldwatchPaletteHolder.get().warn).width('100%')
+      }
       Text(this.headline).fontSize(24).fontWeight(FontWeight.Bold)
         .fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
       if (this.summary !== undefined && this.summary.hasDevices()) {

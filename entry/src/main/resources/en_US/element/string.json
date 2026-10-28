@@ -9158,7 +9158,7 @@
     },
     {
       "name": "fieldwatch_daily_security_again",
-      "value": "Check Again"
+      "value": "Scan again"
     },
     {
       "name": "fieldwatch_daily_recent",
@@ -9206,7 +9206,7 @@
     },
     {
       "name": "fieldwatch_daily_security_title",
-      "value": "Safety Check"
+      "value": "Security scan"
     },
     {
       "name": "fieldwatch_daily_security_hint",
@@ -9214,7 +9214,7 @@
     },
     {
       "name": "fieldwatch_daily_security_start",
-      "value": "Start 30-Second Check"
+      "value": "Start 30s scan"
     },
     {
       "name": "fieldwatch_daily_security_running",
@@ -9222,7 +9222,7 @@
     },
     {
       "name": "fieldwatch_daily_security_done",
-      "value": "Check Complete"
+      "value": "Scan complete"
     },
     {
       "name": "fieldwatch_daily_security_watch",
@@ -11342,7 +11342,7 @@
     },
     {
       "name": "fieldwatch_daily_more_security",
-      "value": "Security scan (60s)"
+      "value": "Security scan"
     },
     {
       "name": "fieldwatch_daily_more_wifi",
@@ -12275,6 +12275,38 @@
     {
       "name": "fieldwatch_share_other_device",
       "value": "Other device"
+    },
+    {
+      "name": "fieldwatch_security_mode_title",
+      "value": "Scan mode"
+    },
+    {
+      "name": "fieldwatch_security_mode_normal",
+      "value": "Quick scan"
+    },
+    {
+      "name": "fieldwatch_security_mode_normal_desc",
+      "value": "Passive only, 30s — see what is broadcasting nearby"
+    },
+    {
+      "name": "fieldwatch_security_mode_full",
+      "value": "Security scan"
+    },
+    {
+      "name": "fieldwatch_security_mode_full_desc",
+      "value": "Passive 60s with optional active probing; saved to history"
+    },
+    {
+      "name": "fieldwatch_security_mode_normal_note",
+      "value": "Quick scans are not saved to history"
+    },
+    {
+      "name": "fieldwatch_security_normal_result_note",
+      "value": "This was a quick scan; the result was not saved to history"
+    },
+    {
+      "name": "fieldwatch_security_start_normal",
+      "value": "Start scan (30s)"
     }
   ]
 }
