@@ -60,7 +60,22 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
     }
   }
 
+  /**
+   * 停止扫描。
+   *
+   * **只在真的处于扫描中时才调系统停扫接口**：本方法有多处调用点（切后台、组件析构），
+   * 第二次调用时系统侧已经没有在跑的扫描，`stopScan()` 会回 2900099 / -1，
+   * 日志里就是那两条连发的「停止 BLE 扫描失败」（真机复现）。
+   * 守卫让第二次成为空操作 —— 调用点保留，不靠删调用点来消除告警。
+   */
   stop(): void {
+    if (this.state !== ScanState.SCANNING) {
+      // 未在扫描：没有系统资源需要释放，只把本地状态归位，静默返回。
+      logger.debug(TAG, '当前未在扫描，跳过系统停扫');
+      this.state = ScanState.IDLE;
+      this.publishState();
+      return;
+    }
     try {
       const scanner: ble.BleScanner | undefined = this.scanner;
       if (scanner !== undefined) {
