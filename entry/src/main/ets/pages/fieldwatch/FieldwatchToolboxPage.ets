@@ -144,9 +144,15 @@ export struct FieldwatchToolboxPage {
             .fontColor(FieldwatchPaletteHolder.get().textDim).width('100%')
             .padding({ top: 24 })
         } else {
-          ForEach(this.visibleEntries(), (entry: ToolEntry): void => {
-            this.buildEntryRow(entry)
-          }, (entry: ToolEntry): string => entry.route)
+          // 宽屏（横屏 / 折叠屏展开）走双栏：与「筛选」「特征库」页的 twoColumn 一致。
+          // 用 Flex 换行 + 49% 宽度，**不用 margin**（width + margin 会溢出视口）。
+          Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+            ForEach(this.visibleEntries(), (entry: ToolEntry): void => {
+              Column() {
+                this.buildEntryRow(entry)
+              }.width(this.twoColumn ? '49%' : '100%')
+            }, (entry: ToolEntry): string => entry.route)
+          }.width('100%')
         }
       }.width('100%').alignItems(HorizontalAlign.Start)
       .padding({ left: 16, right: 16, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
