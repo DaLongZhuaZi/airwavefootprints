@@ -300,7 +300,10 @@ export class FieldwatchApplication {
     this.loadRadioDb();
     // **日志等级要在一切之前生效**，否则启动阶段那几十条 INFO 已经打出去了。
     this.applyLogLevel(this.state.settings.logLevel);
-    void this.loadBundledCatalog();
+    // **构造期不加载内置目录**：本构造函数在**模块导入时**就执行，那时还没有 Ability 上下文，
+    // `loadStock()` 只会记一条「读取内置 Catalog 失败：没有 Ability 上下文」的 W 然后返回空。
+    // 内置目录统一由 `ensureCatalogLoaded()` 在上下文就绪后加载
+    // （`FieldwatchPage` / `FieldwatchSignaturesPage` 的 aboutToAppear 都已调用）。
   }
 
   /**

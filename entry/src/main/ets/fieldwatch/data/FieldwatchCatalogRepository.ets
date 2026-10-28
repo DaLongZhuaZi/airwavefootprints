@@ -75,6 +75,12 @@ export class FieldwatchCatalogRepository {
 
   /** 读取应用沙箱里的用户目录（含用户新增/编辑与 stock 覆盖结果）。 */
   loadSaved(): SignatureFleet[] {
+    // **构造期上下文还没绑定**：这时沙箱基础目录为空，任何读写都会退化成相对路径、
+    // 一定失败。与其刷一条「沙箱未设置 + readText 失败」的假故障，不如直接跳过；
+    // `ensureCatalogLoaded()` 会在上下文就绪后补读。
+    if (!FileUtils.isSandboxReady()) {
+      return [];
+    }
     const present: boolean = FileUtils.exists(CATALOG_FILE);
     const content: string = present ? FileUtils.readText(CATALOG_FILE) : '';
     // **文件在、但读不出来**：典型情形是构造期沙箱基础目录尚未就绪，
@@ -109,6 +115,9 @@ export class FieldwatchCatalogRepository {
       return [];
     }
     // 走 legacy 迁移分支：文件确实不存在。
+    // **这是首跑的正常状态，不是错误**：本地目录还没有，稍后由 `ensureCatalogLoaded()`
+    // 从内置目录种子化一次；已有本地文件时绝不覆写（保护用户签名）。
+    logger.info(TAG, '首次运行：本地 Catalog 不存在，将从内置目录种子化一次');
     this.savedCorrupt = false;
     const legacy: SignatureFleet[] = this.loadLegacyCatalog();
     if (legacy.length > 0) {

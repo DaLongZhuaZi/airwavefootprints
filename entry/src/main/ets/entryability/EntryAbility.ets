@@ -12,6 +12,7 @@ import { ngfHoldingAwarenessFacade } from 'ngf_framework';
 import { ngfDeviceAdaptationFacade } from 'ngf_framework';
 import { ngfVisualEffectsFacade } from 'ngf_framework';
 import { ngfScreenKeepAwakeFacade } from 'ngf_framework';
+import { FileUtils } from 'ngf_framework';
 import { logger } from 'ngf_framework';
 import { crashAnalytics } from 'ngf_framework';
 import { ngfContinuationManagerFacade } from 'ngf_framework';
@@ -25,6 +26,9 @@ export default class EntryAbility extends UIAbility {
     const abilityContext = this.context as NGFAbilityContextLike;
     setContext(abilityContext);
     uiContextManager.bindAbilityContext(this.context as common.UIAbilityContext);
+    // **沙箱基础目录必须早于任何文件读写**：应用层单例在模块导入时构造（早于本方法），
+    // 那次读取只能跳过；这里设好之后，`ensureCatalogLoaded()` 的补读与后续落盘才有正确根目录。
+    FileUtils.setSandboxBaseDir(this.context.filesDir);
     const bootstrapResult = ngfStarterKernel.bootstrap();
     void ngfScreenKeepAwakeFacade.initialize(this.context as common.UIAbilityContext);
     crashAnalytics.initialize();

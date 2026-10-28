@@ -185,11 +185,19 @@ export class FileUtils {
   static exists(filePath: string): boolean {
     const resolved: string = FileUtils.resolvePath(filePath);
     try {
-      fs.accessSync(resolved);
-      return true;
+      // **必须用 `accessSync` 的返回值**：它返回 boolean，文件不存在时**不抛异常**。
+      // 此前忽略返回值、靠 catch 判 false，结果 `exists()` 恒为 true ——
+      // 于是「文件不存在」被下游误判成「文件存在但读不出（损坏）」，
+      // 首跑时既不种子化、又刷一条 E（真机复现）。
+      return fs.accessSync(resolved);
     } catch {
       return false;
     }
+  }
+
+  /** 沙箱基础目录是否已设置（区分「还没就绪」与「文件真的有问题」）。 */
+  static isSandboxReady(): boolean {
+    return getSandboxBaseDir().length > 0;
   }
 
   static isDirectory(filePath: string): boolean {
