@@ -3589,7 +3589,10 @@ struct FieldwatchLivePage {
     this.safetyRemainingSeconds = 30;
     this.safetyCheckEndsAt = Date.now() + 30000;
     this.safetyCheckActive = true;
-    fieldwatchApplication.startScan();
+    // **这里不能调 startScan()**：应用启动时就已经在持续扫描了，
+    // 再启一次会让系统抛 2902050「Failed to start scan as Ble scan is already
+    // started by the app」，界面上弹一条 BLE 扫描失败横幅（真机反馈）。
+    // 30 秒检查只是「观察一个时间窗」，直接读已经在跑的观测流即可。
   }
 
   private finishSafetyCheck(): void {

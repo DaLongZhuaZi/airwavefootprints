@@ -22,6 +22,16 @@ export class FieldwatchBleScanner implements IFieldwatchRadioScanner {
   retryNow(): void { if (this.observationHandler !== undefined && this.errorHandler !== undefined) this.start(this.observationHandler, this.errorHandler, this.stateHandler); }
 
   start(onObservation: (observation: ScanObservation) => void, onError: (message: string) => void, onStateChange?: (snapshot: RadioSourceSnapshot) => void): void {
+    // **重入保护**：已经在扫描时再 start，会先 stop 再 startScan，
+    // 而系统此刻仍认为扫描未结束 —— 抛 2902050
+    // 「Failed to start scan as Ble scan is already started by the app」。
+    // 已经在扫就只替换回调，不重启系统扫描。
+    if (this.state === ScanState.SCANNING) {
+      this.observationHandler = onObservation;
+      this.errorHandler = onError;
+      this.stateHandler = onStateChange;
+      return;
+    }
     this.stop();
     this.observationHandler = onObservation;
     this.errorHandler = onError;
