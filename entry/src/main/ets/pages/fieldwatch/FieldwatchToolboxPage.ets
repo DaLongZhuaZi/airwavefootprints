@@ -164,7 +164,12 @@ export struct FieldwatchToolboxPage {
             ForEach(this.visibleEntries(), (entry: ToolEntry): void => {
               Column() {
                 this.buildEntryRow(entry)
-              }.width(this.twoColumn ? '49%' : '100%')
+              }
+              .width(this.twoColumn ? '49%' : '100%')
+              // 双列 ↔ 单列切换时，宽度做 240ms 过渡，而不是瞬间跳变。
+              // `.animation()` 是隐式动画：只影响本条链上会变化的属性（width），
+              // 不影响卡片内部的其它状态。
+              .animation({ duration: 240, curve: Curve.FastOutSlowIn })
             }, (entry: ToolEntry): string => entry.route)
           }.width('100%')
         }

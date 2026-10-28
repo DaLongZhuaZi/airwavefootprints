@@ -230,6 +230,10 @@ export struct FieldwatchSignaturesPage {
         .layoutWeight(1)
         .width('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
         .lanes(this.twoColumn ? 2 : 1, 8)
+        // 双列 ↔ 单列切换：`lanes` 本身不可动画，但列表项是同 key 的既有节点，
+        // 加上隐式动画后它们的**位置与宽度**会平滑过渡到新栏位，
+        // 观感上就是「卡片滑到新位置」而不是「整块重排」。
+        .animation({ duration: 240, curve: Curve.FastOutSlowIn })
     .padding({ bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       }
       .width('100%').height('100%')
