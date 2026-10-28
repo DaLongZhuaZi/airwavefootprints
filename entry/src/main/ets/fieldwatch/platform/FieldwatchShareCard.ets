@@ -18,7 +18,7 @@ const CARD_DIR: string = 'fieldwatch/share';
  * 720 宽度在手机上仍然是清晰的一屏，文件体积降到约 1/3。
  */
 export const SHARE_CARD_WIDTH: number = 720;
-export const SHARE_CARD_HEIGHT: number = 1080;
+// 高度不在这里硬编码：由下面的版式常量相加得出（见 SHARE_CARD_HEIGHT 定义处）。
 
 // ── 收藏卡版式常量（文档 §1「卡片语法」）────────────────────────────────
 //
@@ -30,28 +30,38 @@ const BORDER: number = 12;
 const CARD_RADIUS: number = 30;
 /** 内底圆角 = 外圆角 - 边框宽，保证环宽均匀。 */
 const INNER_RADIUS: number = CARD_RADIUS - BORDER;
-/** 主体图展示区：fit 等比放入 696×688，顶部圆角 26、下直角。 */
-const HERO_W: number = 696;
-const HERO_H: number = 688;
-const HERO_RADIUS: number = 26;
-/** 等级带：44 高，紧贴主体图下沿。 */
-const BAND_H: number = 44;
-const BAND_Y: number = BORDER + HERO_H;
+
 /**
- * 下半区节奏：名称 → trait → [脚注] → 分隔线 → 品牌。
+ * 主体图展示区：**与源图同比例 1:2**（源图 1024×2048 → 696×1392）。
  *
- * 全部按固定行距往下排，品牌不再钉在画布底部；trait 与品牌之间补一条细分隔线，
- * 把原本约 150px 的黑空切开（真机出图反馈「下半区空洞」）。
+ * 绘制时按 696/源宽 等比缩放、从 (BORDER,BORDER) 起 1:1 贴合，**既不裁切也不留黑边**。
+ * v2 的 cover / fit 与边缘拉伸填充全部作废：cover 会切掉横宽设备两端，fit 会留底色接缝。
  */
-const NAME_BASELINE: number = BAND_Y + BAND_H + 64;
-const TRAIT_BASELINE: number = NAME_BASELINE + 38;
-/** 强制脚注（琥珀原句，**仅安防卡使用**）。 */
-const FOOTNOTE_BASELINE: number = TRAIT_BASELINE + 56;
-/** 细分隔线：1px #2A3340、长 120px、居中。 */
-const DIVIDER_Y: number = TRAIT_BASELINE + 110;
-const DIVIDER_W: number = 120;
-/** 品牌行基线。 */
-const BRAND_BASELINE: number = DIVIDER_Y + 54;
+const HERO_W: number = 696;
+const HERO_H: number = 1392;
+const HERO_RADIUS: number = 26;
+
+/** 等级带：52 高，紧贴主体图下沿。 */
+const BAND_Y: number = BORDER + HERO_H;
+const BAND_H: number = 52;
+const BAND_BOTTOM: number = BAND_Y + BAND_H;
+
+/**
+ * 下半区节奏：名称 → trait → [脚注] → 品牌。
+ *
+ * 行距固定为「带底 + 84 → + 46 → + 92」，底边距 32；**总高由这些常量相加得出**，
+ * 不硬编码 —— 以后调任何一行都不会把卡片撑破或留出大块空白。
+ */
+const NAME_BASELINE: number = BAND_BOTTOM + 84;
+const TRAIT_BASELINE: number = NAME_BASELINE + 46;
+/** 强制脚注（琥珀原句，**仅安防卡使用**；图鉴卡为空则跳过）。 */
+const FOOTNOTE_BASELINE: number = TRAIT_BASELINE + 46;
+const BRAND_BASELINE: number = TRAIT_BASELINE + 92;
+/** 底边距。 */
+const BOTTOM_PAD: number = 32;
+
+/** 画布高度：由版式常量推出（约 1710），不硬编码。 */
+export const SHARE_CARD_HEIGHT: number = BRAND_BASELINE + BOTTOM_PAD;
 
 /** 卡片内边距（等级带与正文的左右留白）。 */
 const SIDE_PAD: number = 26;
@@ -177,14 +187,6 @@ class HeroBitmap {
   }
 }
 
-/** fit 绘制矩形（含居中偏移）。 */
-class FitRect {
-  public dx: number = 0;
-  public dy: number = 0;
-  public dw: number = 0;
-  public dh: number = 0;
-}
-
 /**
  * 绘制分享卡并落盘。
  *
@@ -298,11 +300,10 @@ export class FieldwatchShareCard {
     ctx.fillRect(BORDER, BORDER, HERO_W, HERO_H);
     if (hero !== undefined) {
       this.clipHeroTop(ctx);
-      const fit: FitRect = this.fitOf(hero.width, hero.height);
-      // **不用 9 参数的 drawImage**：在 PixelMap 上它没有按 (sx,sy,sw,sh,dx,dy,dw,dh)
-      // 缩放，真机出图时主体图被画成左上角一小块、下面整片黑（实测）。
-      // 只用 5 参数重载 + 自己算缩放与居中偏移，行为确定。
-      ctx.drawImage(hero.pixelMap, fit.dx, fit.dy, fit.dw, fit.dh);
+      // 源图与开槽同比例（1:2），按 696/源宽 等比缩放后从 (BORDER,BORDER) 起 1:1 贴合，
+      // 既不裁切也不留边。**不用 9 参数的 drawImage**（在 PixelMap 上不生效）。
+      const scale: number = HERO_W / hero.width;
+      ctx.drawImage(hero.pixelMap, BORDER, BORDER, hero.width * scale, hero.height * scale);
       ctx.restore();
     }
 
@@ -310,7 +311,7 @@ export class FieldwatchShareCard {
     ctx.fillStyle = palette.band;
     ctx.fillRect(BORDER, BAND_Y, HERO_W, BAND_H);
     ctx.fillStyle = palette.bandText;
-    ctx.font = 'bold 24px sans-serif';
+    ctx.font = 'bold 26px sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(content.bandLeft, BORDER + SIDE_PAD, BAND_Y + BAND_H / 2);
@@ -321,21 +322,19 @@ export class FieldwatchShareCard {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#E8EDF2';
-    ctx.font = 'bold 58px sans-serif';
+    ctx.font = 'bold 64px sans-serif';
     ctx.fillText(content.name, SHARE_CARD_WIDTH / 2, NAME_BASELINE);
     ctx.fillStyle = '#C3CAD2';
-    ctx.font = '26px sans-serif';
+    ctx.font = '28px sans-serif';
     ctx.fillText(content.trait, SHARE_CARD_WIDTH / 2, TRAIT_BASELINE);
 
-    // ⑤ 强制脚注（仅安防卡有内容）+ 细分隔线。
+    // ⑤ 强制脚注（仅安防卡有内容；图鉴卡为空则跳过）。
     if (content.footnote.length > 0) {
       ctx.fillStyle = '#FFB020';
       ctx.font = '22px sans-serif';
       this.fillWrapped(ctx, content.footnote, SHARE_CARD_WIDTH / 2, FOOTNOTE_BASELINE,
         SHARE_CARD_WIDTH - BORDER * 2 - SIDE_PAD * 2, 30);
     }
-    ctx.fillStyle = '#2A3340';
-    ctx.fillRect((SHARE_CARD_WIDTH - DIVIDER_W) / 2, DIVIDER_Y, DIVIDER_W, 1);
 
     // ⑥ 品牌行。
     ctx.fillStyle = '#7D8A99';
@@ -403,30 +402,6 @@ export class FieldwatchShareCard {
     ctx.lineTo(right, bottom);
     ctx.closePath();
     ctx.clip();
-  }
-
-  /**
-   * fit 缩放：按 min(可用宽/源宽, 可用高/源高) 等比缩放并**居中**。
-   *
-   * 为什么不是 cover：主体图是竖构图产品照，cover 会为了填满 696×688 把左右裁掉一大块，
-   * 手机这类横宽设备直接被切掉两端（真机出图反馈）。fit 保证整台设备完整入画，
-   * 留边由绘制前铺的卡片底色兜住。
-   */
-  private fitOf(srcW: number, srcH: number): FitRect {
-    const rect: FitRect = new FitRect();
-    if (srcW <= 0 || srcH <= 0) {
-      rect.dx = BORDER;
-      rect.dy = BORDER;
-      rect.dw = HERO_W;
-      rect.dh = HERO_H;
-      return rect;
-    }
-    const scale: number = Math.min(HERO_W / srcW, HERO_H / srcH);
-    rect.dw = srcW * scale;
-    rect.dh = srcH * scale;
-    rect.dx = BORDER + (HERO_W - rect.dw) / 2;
-    rect.dy = BORDER + (HERO_H - rect.dh) / 2;
-    return rect;
   }
 
   /** 按宽度折行绘制；返回实际用掉的行数（调用方据此布局后续元素）。 */
