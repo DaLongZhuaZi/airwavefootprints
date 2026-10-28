@@ -1,4 +1,5 @@
 import { logger } from 'ngf_framework';
+import { ngfImmersiveContentTop } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { FieldwatchOwnDeviceRepository } from '../../fieldwatch/data/FieldwatchOwnDeviceRepository';
 import { OwnDeviceStamp, ownDeviceIdForAddress, ownDevicesToStamp } from '../../fieldwatch/domain/FieldwatchOwnDeviceTracker';
@@ -55,10 +56,33 @@ const SCAN_REFRESH_MS: number = 5000;
  * **点击预算**（文档 §7.1）：认领与进入向导合并为一步 —— 点一台设备即完成认领并进向导，
  * 不给用户「先认领、再使用」的两段式流程。所以本页的认领回调直接交给父层开向导。
  */
+/** 沉浸式底板高度：与其它子页保持一致。 */
+const FIND_UNDERLAY_HEIGHT: number = 168;
+
 @Component
 export struct FieldwatchFindPage {
+  /**
+   * 内容顶部避让。
+   *
+   * 两种形态：
+   * - 作为路由页（hideInlineTitle=true）时，外层是 `HdsNavDestination`，
+   *   标题栏浮在内容上，必须按「底板高度 + 安全区」让开，否则首卡被标题栏盖住；
+   * - 嵌在其它页面里时，沿用原来的 topInset + 12。
+   */
+  private contentTop(): number {
+    if (this.hideInlineTitle) return ngfImmersiveContentTop(FIND_UNDERLAY_HEIGHT, this.topInset);
+    return this.topInset + 12;
+  }
+
   /** 顶部安全区（沉浸式）。 */
   topInset: number = 0;
+  /**
+   * 是否隐藏页内标题。
+   *
+   * 作为独立路由页时由 `HdsNavDestination` 的 titleBar 提供标题与返回，
+   * 页内再画一遍就成了重复标题（两行「找东西」）。
+   */
+  hideInlineTitle: boolean = false;
   /** 底部安全区高度（系统导航条）；与 FieldwatchLayout 的预留常量叠加使用。 */
   @Prop bottomInset: number = 0;
   /**
@@ -357,7 +381,7 @@ export struct FieldwatchFindPage {
   private buildList() {
     Scroll() {
       Column({ space: 14 }) {
-        this.buildTitle()
+        if (!this.hideInlineTitle) this.buildTitle()
         if (this.noticeSaveFailed) this.buildNotice(fieldwatchText('app.string.fieldwatch_find_save_failed'))
         else if (this.noticeRemovedName.length > 0) this.buildNotice($r('app.string.fieldwatch_find_removed', this.noticeRemovedName))
         if (!this.loaded) {
@@ -369,7 +393,7 @@ export struct FieldwatchFindPage {
         }
       }
       .width('100%')
-      .padding({ left: 16, right: 16, top: this.topInset + 12, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
+      .padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       .alignItems(HorizontalAlign.Start)
     }
     // **与工具箱另外两页保持同一套滚动容器写法**（信道 / 反追踪）：

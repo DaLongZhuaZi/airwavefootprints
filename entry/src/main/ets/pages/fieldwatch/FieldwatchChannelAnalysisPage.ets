@@ -257,7 +257,10 @@ export struct FieldwatchChannelAnalysisPage {
           .fontColor(FieldwatchPaletteHolder.get().textDim)
         this.buildChannelSummary()
         this.buildChannelRanking()
-      }.width('100%').padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
+      }
+      // 与其它子页同一套宽度约束：宽屏上不无限拉伸，窄屏上占满。
+      .width('100%').constraintSize({ maxWidth: 560 })
+      .padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
     }.width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
   }
 

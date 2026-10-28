@@ -109,6 +109,7 @@ export struct FieldwatchAntiTrackPage {
         this.buildEvaluatedPanel()
         this.buildAntiTrackLogPanel()
       }.width('100%').alignItems(HorizontalAlign.Start)
+      .width('100%').constraintSize({ maxWidth: 560 })
       .padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
     }.width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
     .align(Alignment.TopStart)
@@ -192,7 +193,8 @@ export struct FieldwatchAntiTrackPage {
         .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
         .alignItems(HorizontalAlign.Start)
       }, (suspect: TrackSuspect): string => suspect.key)
-    }.width('100%').alignItems(HorizontalAlign.Start)
+    }.width('100%').padding(14).borderRadius(12).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
   }
 
   @Builder
@@ -229,7 +231,8 @@ export struct FieldwatchAntiTrackPage {
         }.width('100%').padding(10)
         .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(10)
       }, (suspect: TrackSuspect): string => suspect.key)
-    }.width('100%').alignItems(HorizontalAlign.Start)
+    }.width('100%').padding(14).borderRadius(12).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
   }
 
   /** 面板 5：判定记录。 */
@@ -253,7 +256,8 @@ export struct FieldwatchAntiTrackPage {
         }.width('100%').padding(10)
         .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(10)
       }, (event: AntiTrackEvent): string => event.key + event.at.toString())
-    }.width('100%').alignItems(HorizontalAlign.Start)
+    }.width('100%').padding(14).borderRadius(12).alignItems(HorizontalAlign.Start)
+    .backgroundColor(FieldwatchPaletteHolder.get().panel)
   }
 
   private antiStats(): AntiTrackStats {

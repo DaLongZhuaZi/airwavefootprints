@@ -65,7 +65,6 @@ export struct FieldwatchSecurityScanPage {
   @State private previousRecord: SecurityScanRecord | undefined = undefined;
   /** 雷达扫动角度（改版设计 4.2：扫描过程的雷达动画）。 */
   @State private sweepAngle: number = 0;
-  private sweepTimer: number = -1;
   /** 当前网段范围；undefined 表示尚未读取。 */
   @State private activeScope: AclScope | undefined = undefined;
   /** 授权弹窗是否显示。 */
@@ -270,6 +269,7 @@ export struct FieldwatchSecurityScanPage {
             Column() {
               this.buildConsentSheet()
             }.width('100%').height('100%')
+            .padding({ left: 20, right: 20 })
             .justifyContent(FlexAlign.Center)
             .backgroundColor('#99000000')
             // 弹窗出现动画（改版设计 4.1）：缩放 + 淡入，250ms。
@@ -419,29 +419,41 @@ export struct FieldwatchSecurityScanPage {
       .width(150).height(150)
       .justifyContent(FlexAlign.Start)
       .alignItems(HorizontalAlign.Center)
-      .rotate({ angle: this.sweepAngle, centerX: '50%', centerY: '100%' })
+      // **旋转中心必须是雷达圆心**（50%/50%）：
+      // 写 100% 会绕底边转，臂长 75 扫出的半径变成 150，直接甩到圆外盖住下方文字（真机实测）。
+      .rotate({ angle: this.sweepAngle, centerX: '50%', centerY: '50%' })
       // 中心点。
       Circle().width(8).height(8).fill(FieldwatchPaletteHolder.get().accent)
     }.width(150).height(150)
   }
 
-  /** 启动雷达扫动（扫描开始时调）。 */
+  /**
+   * 启动雷达扫动（扫描开始时调）。
+   *
+   * **不用定时器逐帧改角度**：那样每 40ms 触发一次 animateTo，动画互相打断、
+   * 肉眼是「一顿一顿」的（真机实测）。改成一次性把角度推到 360，
+   * 由 `animation({ iterations: -1 })` 无限循环 —— 全程一个动画实例，连续平滑。
+   */
   private startSweep(): void {
-    this.stopSweep();
     this.sweepAngle = 0;
-    this.sweepTimer = setInterval((): void => {
-      // 每 40ms 转 6°：一圈约 2.4 秒，肉眼是连续扫动而不是跳格。
-      this.getUIContext().animateTo({ duration: 40, curve: Curve.Linear }, (): void => {
-        this.sweepAngle = (this.sweepAngle + 6) % 360;
+    // **必须在组件挂载后触发**：`startScan()` 里刚把 phase 改成扫描中，
+    // 扫描界面这一帧还没建出来，立刻 animateTo 会打在还不存在的节点上。
+    // 推迟一帧再启动无限旋转。
+    setTimeout((): void => {
+      this.getUIContext().animateTo({
+        duration: 2400,
+        curve: Curve.Linear,
+        iterations: -1,
+        playMode: PlayMode.Normal
+      }, (): void => {
+        this.sweepAngle = 360;
       });
-    }, 40);
+    }, 32);
   }
 
-  /** 停止雷达扫动（扫描结束 / 取消 / 离页时调）。 */
+  /** 停止雷达扫动：回到 0°（组件随扫描阶段销毁，无需清理定时器）。 */
   private stopSweep(): void {
-    if (this.sweepTimer < 0) return;
-    clearInterval(this.sweepTimer);
-    this.sweepTimer = -1;
+    this.sweepAngle = 0;
   }
 
   /** 阶段指示条：已完成打勾、当前高亮。 */
@@ -563,7 +575,10 @@ export struct FieldwatchSecurityScanPage {
               onTap: (): void => { this.cancelActiveConsent(); } })
           }.layoutWeight(1)
         }.width('100%')
-      }.width('100%').padding(20).borderRadius(18).margin({ left: 20, right: 20 })
+      }
+      // **不要 width('100%') + 水平 margin**：两者相加会超出视口，弹窗右侧被裁（真机实测）。
+      // 用父容器的左右内边距来留白。
+      .width('100%').padding(20).borderRadius(18)
       .backgroundColor(FieldwatchPaletteHolder.get().panel)
     }
   }

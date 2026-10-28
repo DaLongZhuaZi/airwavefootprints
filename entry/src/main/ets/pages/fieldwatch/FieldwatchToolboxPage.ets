@@ -104,7 +104,6 @@ export struct FieldwatchToolboxPage {
   build() {
     Column() {
       this.buildTitle()
-      this.buildSearch()
       this.buildEntries()
     }.width('100%').height('100%')
   }
@@ -131,13 +130,14 @@ export struct FieldwatchToolboxPage {
         .onChange((value: string): void => { this.keyword = value; this.tick += 1; })
     }.width('100%').height(44).padding({ left: 12, right: 12 })
     .backgroundColor(FieldwatchPaletteHolder.get().panel).borderRadius(12)
-    .margin({ left: 16, right: 16, bottom: 10 })
+    .margin({ bottom: 6 })
   }
 
   @Builder
   private buildEntries() {
     Scroll() {
       Column({ space: 8 }) {
+        this.buildSearch()
         if (this.visibleEntries().length === 0) {
           // 空态给一句话，不留空白页。
           Text(this.text('app.string.fieldwatch_toolbox_no_match')).fontSize(13)
@@ -167,10 +167,11 @@ export struct FieldwatchToolboxPage {
       }.layoutWeight(1).alignItems(HorizontalAlign.Start)
       SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(14)
         .fontColor([FieldwatchPaletteHolder.get().textDim])
-    }.width('100%').padding(14).borderRadius(12)
+    }.width('100%').borderRadius(12)
+    // **二级入口用左内边距缩进，不用 margin**：
+    // `width('100%')` 配水平 margin 会让卡片比视口宽，右侧被裁掉（真机实测）。
+    .padding({ left: entry.secondary ? 34 : 14, right: 14, top: 14, bottom: 14 })
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
-    // 二级入口缩进，让「ACL 专页附属于安防扫描」这层关系看得出来。
-    .margin({ left: entry.secondary ? 20 : 0 })
     .onClick((): void => { this.onOpenTool(entry.route); })
   }
 

@@ -1,9 +1,9 @@
 import { LengthMetrics } from '@kit.ArkUI';
-import { hdsMaterial, HdsNavigation, HdsTabs, HdsTabsController } from '@kit.UIDesignKit';
+import { hdsMaterial, HdsNavDestination, HdsNavigation, HdsTabs, HdsTabsController } from '@kit.UIDesignKit';
 import { common, ConfigurationConstant } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import window from '@ohos.window';
-import { ngfI18nManagerFacade, NGFThemeMode, ngfDeviceAdaptationFacade, NGFDeviceInfo, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfThemeManagerFacade, ngfVisualEffectsFacade, resolveResourceString, uiContextManager, ngfText } from 'ngf_framework';
+import { NGFHdsTitleBarOptionsFactory, ngfI18nManagerFacade, NGFThemeMode, ngfDeviceAdaptationFacade, NGFDeviceInfo, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, NGFMaterialSheetOptions, ngfThemeManagerFacade, ngfVisualEffectsFacade, resolveResourceString, uiContextManager, ngfText } from 'ngf_framework';
 import { FieldwatchApplication, FieldwatchApplicationState, fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { FieldwatchRowMetrics, rowMetricsFor } from '../../fieldwatch/ui/FieldwatchSignalRow';
 import { FieldwatchLiveMode, FieldwatchNavigationTab, FieldwatchRadarPoint, FieldwatchUiState, buildRadarPoints, groupByBrand, planRadarLabels, RadarLabelPlan, sparkRangeOf, SparkRange, formatClockTime, fleetById, liveDecodeLabels, matchedSignatureNames, remainingAttemptSeconds, sparklineCommands, signatureColorAt, signatureColorIndex, sortSightingsForLiveMode, visibleSightingsAfterPause, wifiPhaseNeedsAction, wifiFactValue } from '../../fieldwatch/ui/FieldwatchUiState';
@@ -750,10 +750,36 @@ struct FieldwatchRootPage {
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.FIND) {
-      // 找东西页本身自含认领与向导，这里只给它套一层独立页的壳。
-      Column() {
-        FieldwatchFindPage({ topInset: this.topInsetVp, bottomInset: this.bottomInsetVp })
-      }.width('100%').height('100%')
+      // **必须套 HdsNavDestination**：直接放 Column 里内容会塌成黑屏（真机实测，
+      // 与信道分析/反追踪初版同一个坑）。标题与返回由 titleBar 提供，
+      // 页内标题用 hideInlineTitle 关掉，避免两行「找东西」。
+      HdsNavDestination() {
+        Stack({ alignContent: Alignment.TopStart }) {
+          NGFImmersiveTopChromeUnderlay({
+            spec: NGFImmersiveTopChromePresetFactory.build(FieldwatchPaletteHolder.get().night,
+              FieldwatchPaletteHolder.get().panel, FieldwatchPaletteHolder.get().night,
+              FieldwatchPaletteHolder.get().accent, FieldwatchPaletteHolder.get().accent,
+              168)
+          })
+          FieldwatchFindPage({
+            topInset: this.topInsetVp,
+            bottomInset: this.bottomInsetVp,
+            hideInlineTitle: true
+          })
+        }.width('100%').height('100%')
+      }
+      .titleBar(NGFHdsTitleBarOptionsFactory.build(
+        $r('app.string.fieldwatch_find_title'),
+        $r('app.string.fieldwatch_find_intro'),
+        FieldwatchPaletteHolder.get().night,
+        hdsMaterial.MaterialLevel.GENTLE,
+        true,
+        false
+      ))
+      .onBackPressed((): boolean => { this.pathStack.pop(); return true; })
+      .systemTransition(NavigationSystemTransitionType.SLIDE_RIGHT)
+      .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM],
+        [LayoutSafeAreaEdge.TOP, LayoutSafeAreaEdge.BOTTOM])
     } else if (name === FieldwatchRouteName.ACTIVE_ACL) {
       FieldwatchAclPage({
         withShell: true,

@@ -130,6 +130,7 @@ export struct FieldwatchDexPage {
             this.buildUnlockSheet()
           }
           .width('100%').height('100%')
+          .padding({ left: 24, right: 24 })
           .justifyContent(FlexAlign.Center)
           .backgroundColor('#99000000')
           .onClick((): void => { this.closeUnlock(); })
@@ -402,7 +403,8 @@ export struct FieldwatchDexPage {
         FieldwatchButton({ label: $r('app.string.fieldwatch_dex_unlock_close'),
           tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.closeUnlock(); } })
       }
-      .width('100%').padding(24).borderRadius(20).margin({ left: 24, right: 24 })
+      // 同上：width 100% + 水平 margin 会溢出，边距交给父容器。
+      .width('100%').padding(24).borderRadius(20)
       .backgroundColor(FieldwatchPaletteHolder.get().panel)
       .alignItems(HorizontalAlign.Center)
     }
