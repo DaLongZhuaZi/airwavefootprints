@@ -176,7 +176,9 @@ export struct FieldwatchToolboxPage {
     }.width('100%').borderRadius(12)
     // **二级入口用左内边距缩进，不用 margin**：
     // `width('100%')` 配水平 margin 会让卡片比视口宽，右侧被裁掉（真机实测）。
-    .padding({ left: entry.secondary ? 34 : 14, right: 14, top: 14, bottom: 14 })
+    .padding({ left: (entry.secondary && !this.twoColumn) ? 34 : 14, right: 14, top: 14, bottom: 14 })
+    // 双栏时统一最小高度，避免同一行左右卡片高低不齐（标题换行会撑高）。
+    .constraintSize({ minHeight: this.twoColumn ? 104 : 0 })
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
     .onClick((): void => { this.onOpenTool(entry.route); })
   }
