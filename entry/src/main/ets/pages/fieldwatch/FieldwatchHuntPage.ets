@@ -99,7 +99,11 @@ export struct FieldwatchHuntPage {
   }
 
   aboutToAppear(): void {
-    this.playEnter();
+    // **必须延后一帧再播入场动画**：
+    // 内容先以「右侧 40vp + 全透明」落位，下一帧再动到原位。
+    // 直接在同帧调 animateTo 的话，首帧就已经是终态，用户看不到任何动画
+    // （参照页 `FieldwatchDeviceDetailPage` 的注释与实现完全一致）。
+    setTimeout((): void => { this.playEnter(); }, 0);
     this.directionAssist = fieldwatchApplication.getState().settings.huntDirectionAssist;
     this.syncDirectionSensor();
     this.tickSupported = this.feedback.hapticAvailable();
@@ -452,6 +456,10 @@ export struct FieldwatchHuntPage {
     ))
     // 与设备详情页一致：只向顶部扩展（本页没有底部标签栏，向底部扩展没有意义，
     // 分屏/悬浮窗形态下反而会把按钮压到屏幕边缘外）。
+    // **不接这个回调，顶栏返回箭头和系统侧滑都不会关闭本页** ——
+    // 顶栏箭头只是画出来的，系统手势也不会自动 pop（真机实测：点了没反应）。
+    // 返回 true 表示已处理，不要再走系统默认逻辑。
+    .onBackPressed((): boolean => { this.leaveThenClose(); return true; })
     .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP])
     // 入场/退场自绘（与特征详情页一致，见项目规则 PR-016）：
     // 整页含背景一起位移+淡入淡出。

@@ -74,7 +74,11 @@ export struct FieldwatchAclPage {
   }
 
   aboutToAppear(): void {
-    this.playEnter();
+    // **必须延后一帧再播入场动画**：
+    // 内容先以「右侧 40vp + 全透明」落位，下一帧再动到原位。
+    // 直接在同帧调 animateTo 的话，首帧就已经是终态，用户看不到任何动画
+    // （参照页 `FieldwatchDeviceDetailPage` 的注释与实现完全一致）。
+    setTimeout((): void => { this.playEnter(); }, 0);
     this.reload();
   }
 

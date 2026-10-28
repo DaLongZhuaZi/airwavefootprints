@@ -1,3 +1,4 @@
+import { curves } from '@kit.ArkUI';
 import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, resolveResourceString } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
@@ -76,6 +77,8 @@ export struct FieldwatchDexPage {
   @State private selected: DexEntry | undefined = undefined;
   /** 详情 sheet 是否显示（改版设计 6.1：点格子进详情 sheet）。 */
   @State private showDetail: boolean = false;
+  /** 点亮弹层的星星缩放（0.4 → 1.0，弹入感）。 */
+  @State private unlockStarScale: number = 0.4;
 
   /** 入场：从右侧 40vp 处淡入到位（240ms）。 */
   private playEnter(): void {
@@ -105,7 +108,11 @@ export struct FieldwatchDexPage {
   }
 
   aboutToAppear(): void {
-    this.playEnter();
+    // **必须延后一帧再播入场动画**：
+    // 内容先以「右侧 40vp + 全透明」落位，下一帧再动到原位。
+    // 直接在同帧调 animateTo 的话，首帧就已经是终态，用户看不到任何动画
+    // （参照页 `FieldwatchDeviceDetailPage` 的注释与实现完全一致）。
+    setTimeout((): void => { this.playEnter(); }, 0);
     void this.reload();
   }
 
@@ -119,7 +126,9 @@ export struct FieldwatchDexPage {
     this.loading = false;
     // P3-3：只在**首次点亮**时出一条；已弹过、未点亮的都不会返回。
     // 首次运行会把现状全部标记为已弹，因此老用户升级不会涌出几十个弹层。
-    this.unlock = fieldwatchApplication.nextDexUnlock(entries);
+    const nextUnlock: DexUnlock | undefined = fieldwatchApplication.nextDexUnlock(entries);
+    this.unlock = nextUnlock;
+    if (nextUnlock !== undefined) this.playUnlockAnimation();
   }
 
   private text(key: string): string {
@@ -172,6 +181,10 @@ export struct FieldwatchDexPage {
           .padding({ left: 24, right: 24 })
           .justifyContent(FlexAlign.Center)
           .backgroundColor('#99000000')
+          // 弹层出现动画：缩放 + 淡入，250ms（与安防授权弹窗同一套）。
+          .transition(TransitionEffect.OPACITY
+            .combine(TransitionEffect.scale({ x: 0.92, y: 0.92 }))
+            .animation({ duration: 250, curve: Curve.FastOutSlowIn }))
           .onClick((): void => { this.closeUnlock(); })
         }
       }.width('100%').height('100%')
@@ -192,8 +205,12 @@ export struct FieldwatchDexPage {
       showClose: true
     })
     .onBackPressed((): boolean => {
+      // 详情 sheet 开着时，返回先关 sheet（一级一级退，符合直觉）。
       if (this.selected !== undefined) { this.selected = undefined; return true; }
-      this.onClose();
+      // **必须走 leaveThenClose，不能直接 onClose** —— 直接 pop 会让整页瞬间消失，
+      // 横屏分栏时右栏从半宽突然拉伸到全宽，看起来像「闪一下」（用户反馈：
+      // 设备图鉴缺少离场动画）。
+      this.leaveThenClose();
       return true;
     })
     // 入场/退场自绘（与特征详情页一致）：整页含背景一起位移+淡入淡出。
@@ -419,6 +436,8 @@ export struct FieldwatchDexPage {
       Column({ space: 12 }) {
         SymbolGlyph($r('sys.symbol.star_fill')).fontSize(40)
           .fontColor([FieldwatchPaletteHolder.get().accent])
+          // 点亮过程动画：星星从 0.4 弹到 1.0，配 spring 曲线有「蹦出来」的手感。
+          .scale({ x: this.unlockStarScale, y: this.unlockStarScale })
         Text($r('app.string.fieldwatch_dex_unlock_title')).fontSize(20).fontWeight(FontWeight.Bold)
           .fontColor(FieldwatchPaletteHolder.get().headerText).textAlign(TextAlign.Center)
         Text((this.unlock as DexUnlock).name).fontSize(17).fontWeight(FontWeight.Medium)
@@ -454,10 +473,29 @@ export struct FieldwatchDexPage {
   }
 
   /** 关闭弹层并记为已弹（下次不再弹同一条）。 */
+  /**
+   * 点亮过程动画：星星从 0.4 弹到 1.0。
+   *
+   * 先归零再推进 —— 连续点亮多台时，第二次也能看到同样的弹入效果。
+   */
+  private playUnlockAnimation(): void {
+    this.unlockStarScale = 0.4;
+    setTimeout((): void => {
+      this.getUIContext().animateTo({
+        duration: 420,
+        curve: curves.springMotion(0.42, 0.82)
+      }, (): void => {
+        this.unlockStarScale = 1;
+      });
+    }, 32);
+  }
+
   private closeUnlock(): void {
     const current: DexUnlock | undefined = this.unlock;
     if (current !== undefined) fieldwatchApplication.markDexUnlockAnnounced(current.fleetId);
-    this.unlock = undefined;
+    this.getUIContext().animateTo({ duration: 200, curve: Curve.FastOutSlowIn }, (): void => {
+      this.unlock = undefined;
+    });
   }
 
   /**

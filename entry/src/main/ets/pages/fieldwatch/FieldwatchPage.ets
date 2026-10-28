@@ -54,7 +54,7 @@ import { FieldwatchNewFacesPage } from './FieldwatchNewFacesPage';
 import { FieldwatchAclPage } from './FieldwatchAclPage';
 import { FieldwatchChannelAnalysisPage } from './FieldwatchChannelAnalysisPage';
 import { FieldwatchAntiTrackPage } from './FieldwatchAntiTrackPage';
-import { FieldwatchFindPage } from './FieldwatchFindPage';
+import { FieldwatchFindRoutePage } from './FieldwatchFindRoutePage';
 import { ScenePack } from '../../fieldwatch/domain/FieldwatchScenePacks';
 import { buildPermissionSpecs, FieldwatchCapabilitySnapshot, FieldwatchPermissionKind, FieldwatchPermissionSpec } from '../../fieldwatch/domain/FieldwatchPermissions';
 import { FieldwatchFileActionStatus, FieldwatchFileSaveResult } from '../../fieldwatch/platform/FieldwatchCatalogFileGateway';
@@ -763,36 +763,13 @@ struct FieldwatchRootPage {
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.FIND) {
-      // **必须套 HdsNavDestination**：直接放 Column 里内容会塌成黑屏（真机实测，
-      // 与信道分析/反追踪初版同一个坑）。标题与返回由 titleBar 提供，
-      // 页内标题用 hideInlineTitle 关掉，避免两行「找东西」。
-      HdsNavDestination() {
-        Stack({ alignContent: Alignment.TopStart }) {
-          NGFImmersiveTopChromeUnderlay({
-            spec: NGFImmersiveTopChromePresetFactory.build(FieldwatchPaletteHolder.get().night,
-              FieldwatchPaletteHolder.get().panel, FieldwatchPaletteHolder.get().night,
-              FieldwatchPaletteHolder.get().accent, FieldwatchPaletteHolder.get().accent,
-              168)
-          })
-          FieldwatchFindPage({
-            topInset: this.topInsetVp,
-            bottomInset: this.bottomInsetVp,
-            hideInlineTitle: true
-          })
-        }.width('100%').height('100%')
-      }
-      .titleBar(NGFHdsTitleBarOptionsFactory.build(
-        $r('app.string.fieldwatch_find_title'),
-        $r('app.string.fieldwatch_find_intro'),
-        FieldwatchPaletteHolder.get().night,
-        hdsMaterial.MaterialLevel.GENTLE,
-        true,
-        false
-      ))
-      .onBackPressed((): boolean => { this.pathStack.pop(); return true; })
-      .systemTransition(NavigationSystemTransitionType.SLIDE_RIGHT)
-      .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM],
-        [LayoutSafeAreaEdge.TOP, LayoutSafeAreaEdge.BOTTOM])
+      // 找东西：抽成独立组件，套用与特征详情页一致的分栏 + 自绘动画（PR-016）。
+      // 原先内联在这里用 systemTransition，横屏分栏时转场与其它子页不一致。
+      FieldwatchFindRoutePage({
+        topInset: this.topInsetVp,
+        bottomInset: this.bottomInsetVp,
+        onClose: (): void => { this.pathStack.pop(); }
+      });
     } else if (name === FieldwatchRouteName.ACTIVE_ACL) {
       FieldwatchAclPage({
         withShell: true,

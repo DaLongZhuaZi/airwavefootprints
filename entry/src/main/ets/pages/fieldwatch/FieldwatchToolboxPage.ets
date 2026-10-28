@@ -11,6 +11,7 @@
 
 import { FIELDWATCH_TAB_BAR_RESERVE } from '../../fieldwatch/ui/FieldwatchLayout';
 import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
+import { LengthMetrics } from '@kit.ArkUI';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 
 /** 一条入口。 */
@@ -153,7 +154,13 @@ export struct FieldwatchToolboxPage {
         } else {
           // 宽屏（横屏 / 折叠屏展开）走双栏：与「筛选」「特征库」页的 twoColumn 一致。
           // 用 Flex 换行 + 49% 宽度，**不用 margin**（width + margin 会溢出视口）。
-          Flex({ wrap: FlexWrap.Wrap, justifyContent: FlexAlign.SpaceBetween }) {
+          // **必须给 space**：Flex 换行默认没有行间距，单列时所有卡片会紧贴在一起。
+          // main 是主轴（横向）间隔，cross 是交叉轴（换行）间隔。
+          Flex({
+            wrap: FlexWrap.Wrap,
+            justifyContent: FlexAlign.SpaceBetween,
+            space: { main: LengthMetrics.vp(8), cross: LengthMetrics.vp(8) }
+          }) {
             ForEach(this.visibleEntries(), (entry: ToolEntry): void => {
               Column() {
                 this.buildEntryRow(entry)
