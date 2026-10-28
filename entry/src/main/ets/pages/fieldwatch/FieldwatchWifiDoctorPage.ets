@@ -256,6 +256,10 @@ export struct FieldwatchWifiDoctorPage {
   private buildBody() {
     Scroll() {
       Column({ space: 14 }) {
+        // PAGE_HEADER_INSERTED —— 与寻踪页同一套版式：内容区一个**居中**大标题，无副标题。
+        // 顶栏标题不动，这里只是内容区的视觉锚点。
+        Text($r('app.string.fieldwatch_wifi_doctor_title')).fontSize(26).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).width('100%').textAlign(TextAlign.Center)
         // P3-3：复测提醒放在最上面 —— 用户上次被建议改信道，进来第一眼就该看到。
         this.buildRetestPrompt()
         this.buildHeroCard()
@@ -269,7 +273,7 @@ export struct FieldwatchWifiDoctorPage {
         FieldwatchButton({ label: $r('app.string.fieldwatch_wifi_doctor_export'),
           tone: FieldwatchButtonTone.OUTLINE, onTap: (): void => { this.exportReport(); } })
       }
-      .width('100%').constraintSize({ maxWidth: 560 })
+      .width('100%')
       .padding({ left: 16, right: 16, top: this.contentTop(), bottom: 28 })
     }
     .width('100%').height('100%')

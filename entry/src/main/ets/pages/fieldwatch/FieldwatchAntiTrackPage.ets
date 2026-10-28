@@ -150,13 +150,17 @@ export struct FieldwatchAntiTrackPage {
   private buildAntiTrackTab() {
     Scroll() {
       Column({ space: 12 }) {
+        // PAGE_HEADER_INSERTED —— 与寻踪页同一套版式：内容区一个**居中**大标题，无副标题。
+        // 顶栏标题不动，这里只是内容区的视觉锚点。
+        Text($r('app.string.fieldwatch_toolbox_tab_antitrack')).fontSize(26).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).width('100%').textAlign(TextAlign.Center)
         this.buildAntiTrackOverview()
         this.buildTravelPanel()
         this.buildSuspectPanel()
         this.buildEvaluatedPanel()
         this.buildAntiTrackLogPanel()
       }.width('100%').alignItems(HorizontalAlign.Start)
-      .width('100%').constraintSize({ maxWidth: 560 })
+      .width('100%')
       .padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
     }.width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
     .align(Alignment.TopStart)

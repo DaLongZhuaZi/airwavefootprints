@@ -141,11 +141,15 @@ export struct FieldwatchAclPage {
   private buildBody() {
     Scroll() {
       Column({ space: 14 }) {
+        // PAGE_HEADER_INSERTED —— 与寻踪页同一套版式：内容区一个**居中**大标题，无副标题。
+        // 顶栏标题不动，这里只是内容区的视觉锚点。
+        Text($r('app.string.fieldwatch_acl_settings_title')).fontSize(26).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).width('100%').textAlign(TextAlign.Center)
         this.buildCapabilityTable()
         this.buildDangerZone()
         this.buildAudit()
       }
-      .width('100%').constraintSize({ maxWidth: 560 })
+      .width('100%')
       .padding({ left: 16, right: 16, top: this.contentTop(), bottom: 28 })
     }
     .width('100%').height('100%')

@@ -27,7 +27,15 @@ export function deviceClassSymbol(category: SignatureClass): string {
   if (category === SignatureClass.MESH) return 'sys.symbol.shareplay';
   if (category === SignatureClass.LAW_ENFORCEMENT) return 'sys.symbol.shield_badge_circle_dot';
   if (category === SignatureClass.HACKING) return 'sys.symbol.shield_checkered';
-  return '';
+  // 以下三类此前落到 `return ''`，格子上是空白图标（真机反馈）。
+  // 三个键都已在 SDK 的 sysResource.js symbol 块里核对存在：
+  //   paperplane —— 无人机（没有 drone/propeller 专用符号，纸飞机最接近「小型飞行器」）
+  //   pin        —— 查找器标签（AirTag 这类「找东西」设备，定位针最贴切；没有 tag 符号）
+  //   circle_dashed —— 其他/未知（虚线圆圈是通用的「占位/未知」语义）
+  if (category === SignatureClass.DRONE) return 'sys.symbol.paperplane';
+  if (category === SignatureClass.FINDER) return 'sys.symbol.pin';
+  // **兜底也给一个图标**：未来新增类别不会再出现空白格子。
+  return 'sys.symbol.circle_dashed';
 }
 
 /**

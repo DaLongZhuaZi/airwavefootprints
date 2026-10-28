@@ -259,6 +259,10 @@ export struct FieldwatchChannelAnalysisPage {
   private buildChannelTab() {
     Scroll() {
       Column({ space: 12 }) {
+        // PAGE_HEADER_INSERTED —— 与寻踪页同一套版式：内容区一个**居中**大标题，无副标题。
+        // 顶栏标题不动，这里只是内容区的视觉锚点。
+        Text($r('app.string.fieldwatch_toolbox_tab_channel')).fontSize(26).fontWeight(FontWeight.Bold)
+          .fontColor(FieldwatchPaletteHolder.get().headerText).width('100%').textAlign(TextAlign.Center)
         Row({ space: 8 }) {
           this.buildBandChip(fieldwatchText('app.string.fieldwatch_toolbox_band_24'), WifiBand.BAND_24)
           this.buildBandChip(fieldwatchText('app.string.fieldwatch_toolbox_band_5'), WifiBand.BAND_5)
@@ -306,7 +310,7 @@ export struct FieldwatchChannelAnalysisPage {
         this.buildChannelRanking()
       }
       // 与其它子页同一套宽度约束：宽屏上不无限拉伸，窄屏上占满。
-      .width('100%').constraintSize({ maxWidth: 560 })
+      .width('100%')
       .padding({ left: 16, right: 16, top: this.contentTop(), bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
     }.width('100%').layoutWeight(1).scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
   }

@@ -381,7 +381,7 @@ export struct FieldwatchFindPage {
   private buildList() {
     Scroll() {
       Column({ space: 14 }) {
-        if (!this.hideInlineTitle) this.buildTitle()
+        this.buildTitle()
         if (this.noticeSaveFailed) this.buildNotice(fieldwatchText('app.string.fieldwatch_find_save_failed'))
         else if (this.noticeRemovedName.length > 0) this.buildNotice($r('app.string.fieldwatch_find_removed', this.noticeRemovedName))
         if (!this.loaded) {
@@ -410,14 +410,10 @@ export struct FieldwatchFindPage {
   }
 
   @Builder
+  /** 页内标题：与其余子页/寻踪页同一套版式 —— 内容区一个**居中**大标题，无副标题。 */
   private buildTitle() {
-    Column({ space: 4 }) {
-      Text(fieldwatchText('app.string.fieldwatch_find_title')).fontSize(24).fontWeight(FontWeight.Bold)
-        .fontColor(FieldwatchPaletteHolder.get().text)
-      // 一句人话说清这页干什么，不出现任何术语（文档 §7.5 术语 grep 验收）。
-      Text(fieldwatchText('app.string.fieldwatch_find_intro')).fontSize(13)
-        .fontColor(FieldwatchPaletteHolder.get().textDim)
-    }.width('100%').alignItems(HorizontalAlign.Start)
+    Text(fieldwatchText('app.string.fieldwatch_find_title')).fontSize(26).fontWeight(FontWeight.Bold)
+      .fontColor(FieldwatchPaletteHolder.get().headerText).width('100%').textAlign(TextAlign.Center)
   }
 
   @Builder

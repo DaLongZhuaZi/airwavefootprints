@@ -169,6 +169,17 @@ export struct FieldwatchSignaturesPage {
     return options;
   }
 
+  /**
+   * 底部标签栏预留高度。
+   *
+   * **横屏必须为 0**：横屏是左侧导航栏，屏幕底部没有标签栏，
+   * 仍按竖屏预留 88vp 会在列表底部留出一条纯浪费的空白
+   * （MatePad Mini 横屏实测：179px ≈ 88vp × 2）。
+   */
+  private tabBarReserve(): number {
+    return this.landscape ? 0 : FIELDWATCH_TAB_BAR_RESERVE;
+  }
+
   /** 表头：标题 / 说明 / 版本 / 搜索 / 类别 / 工具条。**始终单列、横跨整宽。** */
   @Builder
   private buildHeader() {
@@ -194,47 +205,49 @@ export struct FieldwatchSignaturesPage {
   @Builder
   private buildBody() {
       Column() {
-        // List + LazyForEach：244 条只构建可视区内的行。
-        // 原实现是 Scroll + ForEach，一次性构建全部行，首屏开销与滚动掉帧都很明显。
-        // **`space` 必须给**：不给的话行与行严丝合缝贴在一起，
-        // 一整列卡片看起来像一块整板，分不出条数（实测反馈）。
-        // **表头必须在 `List` 外面。**
+        // List + LazyForEach：611 条只构建可视区内的行。
         //
-        // 它原本是 `List` 的第一个 `ListItem` —— 一旦开了两列，
-        // `lanes` 会把表头当成普通一项塞进**左列**，
-        // 于是标题、搜索框、类别芯片、工具条全挤在左半边（实测反馈「最诡异」）。
+        // **`List` 直接撑满，表头放进 `ListItemGroup` 的 sticky header。**
+        // 原结构是 `Column { 表头; List.layoutWeight(1) }` —— `layoutWeight` 依赖父级有
+        // 确定高度；平板横屏那条路径上父级高度不确定，列表就只拿到内容高度、下面留出
+        // 一大片空白（MatePad Mini 真机反馈；手机竖屏与强制横屏都复现不出来）。
+        // 改成「List 撑满 + 表头 sticky」后不再依赖父级高度。
         //
-        // 表头是「页面级」信息，不属于列表项；移出去后天然横跨整宽，
-        // 列表照旧可以按需分两列。
-        this.buildHeader()
-        // 只构建可视区内的行；数据源在 refresh() 里整体重载。
+        // 表头仍然**不能**是普通 `ListItem`：开了两列后 `lanes` 会把它塞进左列，
+        // 标题/搜索框/芯片全挤在左半边（实测反馈）。放进 `ListItemGroup` 的 header
+        // 里则天然横跨整宽，列表照旧可以分两列。
         List({ space: 8 }) {
-          LazyForEach(this.fleetSource, (fleet: SignatureFleet): void => {
-            ListItem() { this.buildRow(fleet) }.width('100%')
-          },
-          /**
-           * **key 必须包含所有「运行期会变、且行内会渲染」的状态。**
-           *
-           * LazyForEach 按 key 缓存行：key 不变就**复用旧行、不重建**。
-           * 之前 key 只有 `id-enabled`，于是「已关注」标记与命中次数都永远停在
-           * 首次构建那一刻 —— 表现就是「不改 key 就得重载页面才刷新」（实测反馈）。
-           *
-           * 把命中次数也放进来是**有意的**：它每秒都可能变，
-           * 而 key 变化恰好只在「这一行真的要重画」时发生，比无差别重建省得多。
-           */
-          (fleet: SignatureFleet): string => fleet.id + '-' + fleet.enabled.toString()
-            + '-' + (fieldwatchApplication.isSignatureWatched(fleet.id) ? '1' : '0')
-            + '-' + fieldwatchApplication.countMatches(fleet.id).toString())
-          ListItem().height(32)
+          ListItemGroup({ header: this.buildHeader }) {
+            LazyForEach(this.fleetSource, (fleet: SignatureFleet): void => {
+              ListItem() { this.buildRow(fleet) }.width('100%')
+            },
+            /**
+             * **key 必须包含所有「运行期会变、且行内会渲染」的状态。**
+             *
+             * LazyForEach 按 key 缓存行：key 不变就**复用旧行、不重建**。
+             * 之前 key 只有 `id-enabled`，于是「已关注」标记与命中次数都永远停在
+             * 首次构建那一刻 —— 表现就是「不改 key 就得重载页面才刷新」（实测反馈）。
+             *
+             * 把命中次数也放进来是**有意的**：它每秒都可能变，
+             * 而 key 变化恰好只在「这一行真的要重画」时发生，比无差别重建省得多。
+             */
+            (fleet: SignatureFleet): string => fleet.id + '-' + fleet.enabled.toString()
+              + '-' + (fieldwatchApplication.isSignatureWatched(fleet.id) ? '1' : '0')
+              + '-' + fieldwatchApplication.countMatches(fleet.id).toString())
+            ListItem().height(32)
+          }
         }
-        .layoutWeight(1)
-        .width('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+        .width('100%').height('100%')
+        .scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+        // 底栏预留加在列表内部：视口铺到屏幕底部，最后一行仍能滚到标签栏上方。
+        .padding({ bottom: this.bottomInset + this.tabBarReserve() })
+        // 表头吸顶：滚动时标题/搜索框不跟着走。
+        .sticky(StickyStyle.Header)
         .lanes(this.twoColumn ? 2 : 1, 8)
         // 双列 ↔ 单列切换：`lanes` 本身不可动画，但列表项是同 key 的既有节点，
         // 加上隐式动画后它们的**位置与宽度**会平滑过渡到新栏位，
         // 观感上就是「卡片滑到新位置」而不是「整块重排」。
         .animation({ duration: 240, curve: Curve.FastOutSlowIn })
-    .padding({ bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE })
       }
       .width('100%').height('100%')
   }
@@ -269,6 +282,11 @@ export struct FieldwatchSignaturesPage {
         ))
         .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP])
         .bindSheet($$this.sheetOpen, this.buildDetailSheet(), this.sheetOptions())
+        // **根节点必须给确定高度**：`HdsNavDestination` 默认按内容尺寸收缩，
+        // 而本页正文是 `List` + `layoutWeight(1)` —— 父级高度不确定时，
+        // 列表只拿到内容高度，下面留出一大片空白（真机横屏反馈：特征列表没到底）。
+        // 内嵌分支本来就是 `height('100%')`，这里补齐保持两条路径一致。
+        .width('100%').height('100%')
     }
   }
 

@@ -193,9 +193,10 @@ export struct FieldwatchToolboxPage {
       SymbolGlyph($r('sys.symbol.chevron_right')).fontSize(14)
         .fontColor([FieldwatchPaletteHolder.get().textDim])
     }.width('100%').borderRadius(12)
-    // **二级入口用左内边距缩进，不用 margin**：
-    // `width('100%')` 配水平 margin 会让卡片比视口宽，右侧被裁掉（真机实测）。
-    .padding({ left: (entry.secondary && !this.twoColumn) ? 34 : 14, right: 14, top: 14, bottom: 14 })
+    // **所有入口左内边距一致**：此前「主动扫描授权」按二级入口缩进 34，
+    // 视觉上像是「比别的空出来一截」（真机反馈）。它的从属关系已经由名称与位置表达，
+    // 不需要再靠缩进。
+    .padding({ left: 14, right: 14, top: 14, bottom: 14 })
     // 双栏时统一最小高度，避免同一行左右卡片高低不齐（标题换行会撑高）。
     .constraintSize({ minHeight: this.twoColumn ? 104 : 0 })
     .backgroundColor(FieldwatchPaletteHolder.get().panel)
