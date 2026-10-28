@@ -1,6 +1,6 @@
 import { backgroundTaskManager } from '@kit.BackgroundTasksKit';
 import { notificationManager } from '@kit.NotificationKit';
-import { wantAgent, WantAgent } from '@kit.AbilityKit';
+import { common, wantAgent, WantAgent } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { IBackgroundTaskManager } from '../contracts/IBackgroundTaskManager';
 import { uiContextManager } from '../../platformOhos/UIContextManager';
@@ -41,6 +41,18 @@ class BackgroundTaskManagerFacade implements IBackgroundTaskManager {
   /** 系统要求的通知通道类型；发伴随通知时必须带上。 */
   private slotType: number = 0;
   private running: boolean = false;
+  /**
+   * 首次申请在途时的同一个 Promise。
+   *
+   * `running` 要等 `startBackgroundRunning` 返回后才置 true，中间隔着多个 await；
+   * 两个首次调用同时进来时都会通过 `running` 守卫，于是重复向系统申请，
+   * 系统回 9800005「The application has applied for a continuous task」（真机复现）。
+   * 这里让并发的首次调用复用同一个在途 Promise，第二次不再向系统申请。
+   */
+  private pendingStart: Promise<boolean> | null = null;
+
+  /** 当前是否已持有后台长时任务。 */
+  isContinuousTaskRunning(): boolean { return this.running; }
 
   async startContinuousTask(taskId: string, title: string, content: string): Promise<boolean> {
     const context = uiContextManager.getFullAbilityContext();
@@ -53,6 +65,24 @@ class BackgroundTaskManagerFacade implements IBackgroundTaskManager {
       await this.publishStateNotification(title, content);
       return true;
     }
+    // 首次申请在途：复用同一次申请，不要并发再申请一次。
+    const inFlight: Promise<boolean> | null = this.pendingStart;
+    if (inFlight !== null) {
+      logger.debug(TAG, '首次申请在途，复用同一次申请: ' + taskId);
+      return await inFlight;
+    }
+    const task: Promise<boolean> = this.performStart(context, taskId, title, content);
+    this.pendingStart = task;
+    try {
+      return await task;
+    } finally {
+      this.pendingStart = null;
+    }
+  }
+
+  /** 真正的首次申请（只由 `startContinuousTask` 在拿到在途锁后调用）。 */
+  private async performStart(context: common.UIAbilityContext, taskId: string,
+    title: string, content: string): Promise<boolean> {
     try {
       const wantAgentInfo: wantAgent.WantAgentInfo = {
         wants: [

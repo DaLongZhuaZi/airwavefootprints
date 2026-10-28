@@ -2379,8 +2379,22 @@ export class FieldwatchApplication {
     if (this.state.settings.backgroundScanning) {
       if (this.state.scanState === ScanState.SCANNING) {
         // 用户明确要求后台继续扫描：保持长时任务与伴随通知。
-        // 前台已经持有，这里只是确保（`syncBackgroundTask` 幂等，已在运行就只刷新内容）。
-        await this.syncBackgroundTask();
+        //
+        // **但这里只能「刷新」，不能「首次申请」** —— 首次申请只允许在前台发起。
+        // 此前这里调 `syncBackgroundTask()`，它会在没有任务时发起首次申请；
+        // 而前台 `startScan()` 也是 fire-and-forget 地调它，两者并发时都会通过
+        // facade 的 `running` 守卫，导致重复申请、系统回 9800005（真机复现）。
+        // 现在后台路径先问「是否已经在跑」，没在跑就只记一条警告、不申请。
+        if (ngfBackgroundTaskManager.isContinuousTaskRunning()) {
+          const context = uiContextManager.getFullAbilityContext();
+          if (context !== null) {
+            const title: string = resolveResourceString(context, $r('app.string.fieldwatch_state_notification_title'));
+            const body: string = resolveResourceString(context, $r('app.string.fieldwatch_background_running'));
+            await ngfBackgroundTaskManager.publishStateNotification(title, body);
+          }
+        } else {
+          logger.warn(TAG, '切到后台时未持有长时任务，跳过首次申请（首次申请只允许在前台发起）');
+        }
       }
       return;
     }

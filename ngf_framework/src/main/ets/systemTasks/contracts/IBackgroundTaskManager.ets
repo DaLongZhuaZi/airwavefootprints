@@ -8,4 +8,11 @@ export interface IBackgroundTaskManager {
    */
   publishStateNotification(title: string, content: string): Promise<void>;
   stopContinuousTask(): Promise<boolean>;
+  /**
+   * 当前是否已持有后台长时任务。
+   *
+   * 供调用方区分「已经在跑，只刷新通知」与「需要首次申请」——
+   * 首次申请只允许在前台发起，后台路径必须先问这里。
+   */
+  isContinuousTaskRunning(): boolean;
 }
