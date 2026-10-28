@@ -17,20 +17,21 @@ const CARD_DIR: string = 'fieldwatch/share';
  * ShareKit 走 want 传递时直接 `IPC data is oversized`。
  * 720 宽度在手机上仍然是清晰的一屏，文件体积降到约 1/3。
  */
-/**
- * 导出缩放：**离屏画布有像素上限**，720×1710（123 万像素）会让 `toDataURL` 编码失败
- * （真机实测：只返回 `data:image/png` 14 字符、无数据）。720×1080（78 万）一直是好的。
- *
- * 这里保持**全部版式坐标按 720 宽设计不变**，只在导出时整体缩放 0.85 ——
- * 画布变成 612×1454（89 万像素），布局、比例、字号关系一个像素都不改，
- * 只是输出分辨率略低（分享卡足够清晰）。
- */
-const EXPORT_SCALE: number = 0.85;
-
 /** 设计坐标下的画布宽（所有版式常量都基于它）。 */
 const CARD_W: number = 720;
-/** 导出后的画布宽（实际创建的离屏画布尺寸）。 */
-export const SHARE_CARD_WIDTH: number = Math.round(CARD_W * EXPORT_SCALE);
+
+/**
+ * 导出降级阶梯：从满尺寸开始，失败就换更小的重画。
+ *
+ * 离屏画布的 `toDataURL` 在真机上有可用上限：满尺寸 720×1710 只返回
+ * `data:image/png`（14 字符、无数据）。此前按「面积」推算过 0.85（612×1454）仍然失败，
+ * 说明上限与面积不严格相关，**只能实测**。所以这里逐级降，取第一个真能编码成功的尺寸，
+ * 并把每级结果打进日志 —— 下次看日志就知道这台设备的上限在哪。
+ */
+const EXPORT_SCALES: number[] = [1, 0.85, 0.7, 0.55];
+
+/** 设计坐标下的画布宽（导出满尺寸时即实际像素宽）。 */
+export const SHARE_CARD_WIDTH: number = CARD_W;
 
 // ── 收藏卡版式常量（文档 §1「卡片语法」）────────────────────────────────
 //
@@ -84,8 +85,8 @@ const FINDER_OFFSET_Y: number = 28;
 /** 画布高度：由版式常量推出（约 1710），不硬编码。 */
 /** 设计坐标下的画布高（由版式常量相加得出，不硬编码）。 */
 const CARD_H: number = BRAND_BASELINE + BOTTOM_PAD;
-/** 导出后的画布高。 */
-export const SHARE_CARD_HEIGHT: number = Math.round(CARD_H * EXPORT_SCALE);
+/** 设计坐标下的画布高（导出满尺寸时即实际像素高）。 */
+export const SHARE_CARD_HEIGHT: number = CARD_H;
 
 /** 卡片内边距（等级带与正文的左右留白）。 */
 const SIDE_PAD: number = 26;
@@ -230,26 +231,38 @@ export class FieldwatchShareCard {
       logger.error(TAG, '缺少 Ability 上下文，无法绘制分享卡');
       return '';
     }
-    try {
-      const settings: RenderingContextSettings = new RenderingContextSettings(true);
-      // 构造参数是 (width, height, settings)，**不接受 OffscreenCanvas 实例**。
-      // 上下文自己持有一块离屏画布，画完用 toDataURL 导出即可。
-      const ctx: OffscreenCanvasRenderingContext2D =
-        new OffscreenCanvasRenderingContext2D(SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT, settings);
-      // 主体图必须先解成 PixelMap 再画：draw 是同步的，图片解码是异步的。
-      const hero: HeroBitmap | undefined = await this.loadHero(context, content.heroClass);
-      this.draw(ctx, content, hero);
-      // **走 toDataURL 而不是 PixelMap**：`OffscreenCanvas` 没有直接产出 PixelMap 的接口
-      // （`getPixelMap` 只挂在可见 Canvas 的渲染上下文上），而 `ImageBitmap` 也没有
-      // `createPixelMapSafe`。`toDataURL` 是这套 API 里唯一确定可用的导出路径，
-      // 代价是一次内存拷贝 —— 分享卡只画一次，可以接受。
-      const dataUrl: string = ctx.toDataURL('image/png', 1);
-      const path: string = this.writeDataUrl(context, dataUrl);
-      return path;
-    } catch (error) {
-      logger.error(TAG, '绘制分享卡失败: ' + this.errorMessage(error));
-      return '';
+    // 主体图先解成 PixelMap：draw 是同步的，图片解码是异步的。解一次，各级复用。
+    const hero: HeroBitmap | undefined = await this.loadHero(context, content.heroClass);
+    // **自适应导出**：满尺寸失败就换更小的画布重画，取第一个真能编码成功的尺寸。
+    for (let index: number = 0; index < EXPORT_SCALES.length; index += 1) {
+      const scale: number = EXPORT_SCALES[index];
+      const canvasW: number = Math.round(CARD_W * scale);
+      const canvasH: number = Math.round(CARD_H * scale);
+      try {
+        const settings: RenderingContextSettings = new RenderingContextSettings(true);
+        // 构造参数是 (width, height, settings)，**不接受 OffscreenCanvas 实例**。
+        const ctx: OffscreenCanvasRenderingContext2D =
+          new OffscreenCanvasRenderingContext2D(canvasW, canvasH, settings);
+        this.draw(ctx, content, hero, scale);
+        const dataUrl: string = ctx.toDataURL('image/png', 1);
+        if (dataUrl.indexOf('base64,') >= 0) {
+          if (scale < 1) {
+            logger.warn(TAG, '满尺寸导出不可用，已降级到 ' + canvasW.toString() + 'x' + canvasH.toString());
+          }
+          return this.writeDataUrl(context, dataUrl);
+        }
+        logger.warn(TAG, '导出失败 scale=' + scale.toString() + ' canvas=' + canvasW.toString()
+          + 'x' + canvasH.toString() + ' len=' + dataUrl.length.toString());
+      } catch (error) {
+        logger.error(TAG, '绘制失败 scale=' + scale.toString() + ': ' + this.errorMessage(error));
+      }
     }
+    // **诊断探针**（不产出卡片）：所有尺寸都失败时，再试一次「小画布 + 不画主体图」。
+    // 若这一发能编码成功，说明问题出在 drawImage(PixelMap) 与 toDataURL 的配合上，
+    // 而不是画布尺寸 —— 下一轮就换导出路径（而不是继续降分辨率）。
+    this.probeExportWithoutHero();
+    logger.error(TAG, '分享卡导出失败：所有导出尺寸均无法编码');
+    return '';
   }
 
   /**
@@ -291,10 +304,10 @@ export class FieldwatchShareCard {
    * 不再有雷达、堆叠条、三色块、日期角标、辉光网格。
    */
   private draw(ctx: OffscreenCanvasRenderingContext2D, content: ShareCardContent,
-    hero: HeroBitmap | undefined): void {
+    hero: HeroBitmap | undefined, scale: number): void {
     const palette: CardPalette = paletteOf(content.material);
     // 整体缩放到导出尺寸：之后所有绘制都按 720 宽的设计坐标写，不必逐个换算。
-    ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
+    ctx.scale(scale, scale);
 
     // 先清成透明：外圆角之外的四个角必须透明，不能留一块底色方块。
     ctx.clearRect(0, 0, CARD_W, CARD_H);
@@ -450,6 +463,27 @@ export class FieldwatchShareCard {
     ctx.lineTo(right, bottom);
     ctx.closePath();
     ctx.clip();
+  }
+
+  /**
+   * 导出探针：小画布、只填一块纯色、不画主体图，看 toDataURL 是否还能编码。
+   *
+   * **只打日志，不产出任何文件** —— 用于把「尺寸超限」与「drawImage(PixelMap) 破坏读回」
+   * 两种失败原因区分开。
+   */
+  private probeExportWithoutHero(): void {
+    try {
+      const settings: RenderingContextSettings = new RenderingContextSettings(true);
+      const probe: OffscreenCanvasRenderingContext2D =
+        new OffscreenCanvasRenderingContext2D(64, 64, settings);
+      probe.fillStyle = '#0B0F14';
+      probe.fillRect(0, 0, 64, 64);
+      const solid: string = probe.toDataURL('image/png', 1);
+      logger.warn(TAG, '探针(纯色 64x64) len=' + solid.length.toString()
+        + (solid.indexOf('base64,') >= 0 ? ' 可编码' : ' 仍不可编码'));
+    } catch (error) {
+      logger.error(TAG, '探针失败: ' + this.errorMessage(error));
+    }
   }
 
   /** 按宽度折行绘制；返回实际用掉的行数（调用方据此布局后续元素）。 */
