@@ -2,8 +2,10 @@ import { common } from '@kit.AbilityKit';
 import { fileIo, fileUri } from '@kit.CoreFileKit';
 import { uniformTypeDescriptor } from '@kit.ArkData';
 import { util } from '@kit.ArkTS';
+import { image } from '@kit.ImageKit';
 import { logger, uiContextManager } from 'ngf_framework';
-import { SecurityClassCount, SecuritySummary } from '../domain/FieldwatchSecurityScan';
+import { SecuritySummary } from '../domain/FieldwatchSecurityScan';
+import { foldedSignatureClass, SignatureClass } from '../domain/FieldwatchModels';
 
 const TAG: string = 'FieldwatchShareCard';
 /** 分享卡落盘目录（沙箱内）。 */
@@ -18,30 +20,132 @@ const CARD_DIR: string = 'fieldwatch/share';
 export const SHARE_CARD_WIDTH: number = 720;
 export const SHARE_CARD_HEIGHT: number = 1080;
 
+// ── 收藏卡版式常量（文档 §1「卡片语法」）────────────────────────────────
+//
+// 画布 720×1080，元素自上而下只有 6 样：边框环 / 主体图 / 等级带 / 名称+trait /
+// 脚注 / 品牌行。旧版元素（雷达、堆叠条、三色块、日期角标、辉光网格）全部删除。
+/** 边框环宽度：12px 渐变环，颜色即稀有度 / verdict 材质。 */
+const BORDER: number = 12;
+/** 主体图展示区：cover 裁切 696×688，顶部圆角 26、下直角。 */
+const HERO_W: number = 696;
+const HERO_H: number = 688;
+const HERO_RADIUS: number = 26;
+/** 等级带：44 高，紧贴主体图下沿。 */
+const BAND_H: number = 44;
+const BAND_Y: number = BORDER + HERO_H;
+/** 名称 54 Bold 的基线；trait 紧随其后。 */
+const NAME_BASELINE: number = BAND_Y + BAND_H + 68;
+const TRAIT_BASELINE: number = NAME_BASELINE + 36;
+/** 强制脚注（琥珀原句）。 */
+const FOOTNOTE_BASELINE: number = 928;
+/** 品牌行基线。 */
+const BRAND_BASELINE: number = SHARE_CARD_HEIGHT - 34;
+
+/** 卡片内边距（等级带与正文的左右留白）。 */
+const SIDE_PAD: number = 26;
+
+/** 背景底色：与 App 深色主题同一套色值，避免分享卡和界面像两个产品。 */
+const CARD_BG: string = '#0B0F14';
+
 /**
- * 分享卡绘制所需的全部输入（不含任何文案）。
+ * 卡片材质：决定边框渐变与等级带颜色。
  *
- * **文案不进这个类**：卡片上的每一个字都必须是调用方从资源文件取来的，
+ * 六个取值分别对应「图鉴稀有度四档 + 安防 verdict 三档」里会上卡的组合，
+ * 色值见 {@link paletteOf}（来源：docs/分享卡收藏卡素材说明.md §4）。
+ */
+export enum ShareCardMaterial {
+  /** 极稀有（金）。 */
+  GOLD = 'gold',
+  /** 常见（深钢）。 */
+  STEEL = 'steel',
+  /** 少见（蓝）。 */
+  BLUE = 'blue',
+  /** 稀有（紫）。 */
+  PURPLE = 'purple',
+  /** 安防：确认（红）。 */
+  RED = 'red',
+  /** 安防：可疑（橙）。 */
+  ORANGE = 'orange'
+}
+
+/** 三段纵向渐变（上 → 中 → 下）。等级带取中间色。 */
+class CardPalette {
+  public top: string = '';
+  public mid: string = '';
+  public bottom: string = '';
+  constructor(top: string, mid: string, bottom: string) {
+    this.top = top;
+    this.mid = mid;
+    this.bottom = bottom;
+  }
+}
+
+/**
+ * 材质 → 三段渐变。
+ *
+ * **色值唯一事实源是文档 §4**，代码里不留第二套口径：
+ * 金 / 橙为文档已验证值，深钢 / 蓝 / 紫 / 红为文档拟定值（落码后已回写文档）。
+ */
+function paletteOf(material: ShareCardMaterial): CardPalette {
+  switch (material) {
+    case ShareCardMaterial.GOLD:
+      return new CardPalette('rgb(138,109,27)', 'rgb(245,217,122)', 'rgb(138,109,27)');
+    case ShareCardMaterial.ORANGE:
+      return new CardPalette('rgb(179,74,0)', 'rgb(255,176,102)', 'rgb(179,74,0)');
+    case ShareCardMaterial.BLUE:
+      return new CardPalette('rgb(29,78,216)', 'rgb(127,178,255)', 'rgb(29,78,216)');
+    case ShareCardMaterial.PURPLE:
+      return new CardPalette('rgb(109,40,217)', 'rgb(196,165,255)', 'rgb(109,40,217)');
+    case ShareCardMaterial.RED:
+      return new CardPalette('rgb(185,28,28)', 'rgb(255,138,122)', 'rgb(185,28,28)');
+    default:
+      return new CardPalette('rgb(58,69,82)', 'rgb(138,153,173)', 'rgb(58,69,82)');
+  }
+}
+
+/**
+ * 卡片上的全部文字（不含任何内置文案）。
+ *
+ * **文案不进这个类**：卡片上的每一个字都必须由调用方从资源文件取来，
  * 否则「不出现防偷拍/查摄像头」这条红线就多了一个绕不过去的入口。
  */
 export class ShareCardContent {
-  /** 大标题，如「扫描完成」。 */
-  public title: string = '';
-  /** 一句话结论（由 `summaryHeadlineKey` 选出的资源文案）。 */
-  public headline: string = '';
-  /** 设备总数那行的大数字。 */
-  public totalText: string = '';
-  /** 总数下方的标签，如「台设备正在广播」。 */
-  public totalLabel: string = '';
-  /** 分类 Top（已翻译好的「类别 数量」两段）。 */
-  public classLabels: string[] = [];
-  public classCounts: string[] = [];
-  /** 「新面孔 N 台」这类附加行，已翻译。 */
-  public extraLines: string[] = [];
-  /** 脚注：不广播的设备发现不了（必须存在，见落地文档文案红线）。 */
+  /** 主体图类名（不含 `hero-` 前缀与扩展名），如 `wearable`；未知一律回落 `other`。 */
+  public heroClass: string = 'other';
+  /** 等级带左侧：图鉴为 `x / 611`，安防为扫描日期。 */
+  public bandLeft: string = '';
+  /** 等级带右侧：tier / verdict 词。 */
+  public bandRight: string = '';
+  /** 名称（54 Bold 居中）。 */
+  public name: string = '';
+  /** 一行 trait：类别 · 关键信息。 */
+  public trait: string = '';
+  /** 强制脚注：不广播的设备发现不了（必须存在，见落地文档文案红线）。 */
   public footnote: string = '';
-  /** 品牌行（应用名），画在页脚。 */
+  /** 品牌行。 */
   public brand: string = '';
+  /** 边框与等级带材质。 */
+  public material: ShareCardMaterial = ShareCardMaterial.STEEL;
+}
+
+/** 已解码的主体图与其原始像素尺寸（cover 裁切要按原始比例算）。 */
+class HeroBitmap {
+  public pixelMap: image.PixelMap;
+  public width: number;
+  public height: number;
+  constructor(pixelMap: image.PixelMap, width: number, height: number) {
+    this.pixelMap = pixelMap;
+    this.width = width;
+    this.height = height;
+  }
+}
+
+/** cover 裁切的源矩形。 */
+class CoverRect {
+  public sx: number = 0;
+  public sy: number = 0;
+  public sw: number = 0;
+  public sh: number = 0;
 }
 
 /**
@@ -54,7 +158,7 @@ export class FieldwatchShareCard {
   /**
    * 画一张卡并返回**沙箱内的绝对路径**；失败返回空串。
    *
-   * 注意返回的是路径不是 URI：URI 由 `shareUriOf` 另外转换，
+   * 注意返回的是路径不是 URI：URI 由 `fileUriOf` 另外转换，
    * 因为「存相册」和「分享」两条路要的形态不同。
    */
   async render(content: ShareCardContent): Promise<string> {
@@ -69,7 +173,9 @@ export class FieldwatchShareCard {
       // 上下文自己持有一块离屏画布，画完用 toDataURL 导出即可。
       const ctx: OffscreenCanvasRenderingContext2D =
         new OffscreenCanvasRenderingContext2D(SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT, settings);
-      this.draw(ctx, content);
+      // 主体图必须先解成 PixelMap 再画：draw 是同步的，图片解码是异步的。
+      const hero: HeroBitmap | undefined = await this.loadHero(context, content.heroClass);
+      this.draw(ctx, content, hero);
       // **走 toDataURL 而不是 PixelMap**：`OffscreenCanvas` 没有直接产出 PixelMap 的接口
       // （`getPixelMap` 只挂在可见 Canvas 的渲染上下文上），而 `ImageBitmap` 也没有
       // `createPixelMapSafe`。`toDataURL` 是这套 API 里唯一确定可用的导出路径，
@@ -84,87 +190,153 @@ export class FieldwatchShareCard {
   }
 
   /**
+   * 读 rawfile 主体图并解成 PixelMap。
+   *
+   * 找不到对应类（含未来新增类别）时回落 `hero-other.webp`；
+   * 连兜底图都解不出来时返回 undefined，由绘制层跳过图片区域（不画破图）。
+   */
+  private async loadHero(context: common.UIAbilityContext,
+    heroClass: string): Promise<HeroBitmap | undefined> {
+    const wanted: HeroBitmap | undefined = await this.decodeHero(context, heroClass);
+    if (wanted !== undefined) return wanted;
+    if (heroClass !== 'other') {
+      logger.warn(TAG, '主体图缺失，回落 other: ' + heroClass);
+      return await this.decodeHero(context, 'other');
+    }
+    return undefined;
+  }
+
+  private async decodeHero(context: common.UIAbilityContext,
+    heroClass: string): Promise<HeroBitmap | undefined> {
+    const file: string = 'sharecard/hero-' + heroClass + '.webp';
+    try {
+      const raw: Uint8Array = await context.resourceManager.getRawFileContent(file);
+      const source: image.ImageSource = image.createImageSource(raw.buffer as ArrayBuffer);
+      const pixelMap: image.PixelMap = await source.createPixelMap();
+      const info: image.ImageInfo = await source.getImageInfo();
+      return new HeroBitmap(pixelMap, info.size.width, info.size.height);
+    } catch (error) {
+      logger.warn(TAG, '主体图解码失败 ' + file + ': ' + this.errorMessage(error));
+      return undefined;
+    }
+  }
+
+  /**
    * 画布内容。纯绘制，不做任何 IO，便于将来替换成截图或其它输出。
    *
-   * **所有尺寸都按画布宽度等比换算**（`s(px)` = px * WIDTH / 1080）：
-   * 布局是按 1080 宽设计的，直接改画布尺寸会让文字挤在一起或留白失控。
-   * 想再调总尺寸时只改 `SHARE_CARD_WIDTH` 即可，这里不需要动。
+   * 版式严格按文档 §1：边框环 → 主体图 → 等级带 → 名称/trait → 脚注 → 品牌行，
+   * 不再有雷达、堆叠条、三色块、日期角标、辉光网格。
    */
-  private draw(ctx: OffscreenCanvasRenderingContext2D, content: ShareCardContent): void {
-    const scale: number = SHARE_CARD_WIDTH / 1080;
-    const s = (value: number): number => value * scale;
-    // 底色：与 App 深色主题同一套色值，避免分享卡和界面像两个产品。
-    ctx.fillStyle = '#0B0F14';
+  private draw(ctx: OffscreenCanvasRenderingContext2D, content: ShareCardContent,
+    hero: HeroBitmap | undefined): void {
+    const palette: CardPalette = paletteOf(content.material);
+
+    // ① 边框：整块铺三段纵向渐变，随后用深色底盖住内部，露出的 12px 就是环。
+    const ring: CanvasGradient = ctx.createLinearGradient(0, 0, 0, SHARE_CARD_HEIGHT);
+    ring.addColorStop(0, palette.top);
+    ring.addColorStop(0.5, palette.mid);
+    ring.addColorStop(1, palette.bottom);
+    ctx.fillStyle = ring;
     ctx.fillRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
-    // 顶部柔光：一块低透明度径向渐变，让纯色底不至于死板。
-    const glow: CanvasGradient = ctx.createRadialGradient(SHARE_CARD_WIDTH * 0.5, s(180), s(20),
-      SHARE_CARD_WIDTH * 0.5, s(180), SHARE_CARD_WIDTH * 0.9);
-    glow.addColorStop(0, 'rgba(61,255,154,0.18)');
-    glow.addColorStop(1, 'rgba(11,15,20,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, SHARE_CARD_WIDTH, s(760));
+    ctx.fillStyle = CARD_BG;
+    ctx.fillRect(BORDER, BORDER, SHARE_CARD_WIDTH - BORDER * 2, SHARE_CARD_HEIGHT - BORDER * 2);
 
-    ctx.textAlign = 'center';
-    // 标题
-    ctx.fillStyle = '#3DFF9A';
-    ctx.font = '600 ' + Math.round(s(44)).toString() + 'px sans-serif';
-    ctx.fillText(content.title, SHARE_CARD_WIDTH / 2, s(150));
-
-    // 一句话结论
-    ctx.fillStyle = '#E8EDF2';
-    ctx.font = '700 ' + Math.round(s(68)).toString() + 'px sans-serif';
-    this.fillWrapped(ctx, content.headline, SHARE_CARD_WIDTH / 2, s(260), SHARE_CARD_WIDTH - s(160), s(86));
-
-    // 大数字
-    ctx.fillStyle = '#3DFF9A';
-    ctx.font = '700 ' + Math.round(s(190)).toString() + 'px sans-serif';
-    ctx.fillText(content.totalText, SHARE_CARD_WIDTH / 2, s(600));
-    ctx.fillStyle = '#9AA6B2';
-    ctx.font = '400 ' + Math.round(s(40)).toString() + 'px sans-serif';
-    ctx.fillText(content.totalLabel, SHARE_CARD_WIDTH / 2, s(668));
-
-    // 分类 Top：三行，左标签右数量
-    let y: number = s(800);
-    ctx.font = '400 ' + Math.round(s(44)).toString() + 'px sans-serif';
-    for (let index: number = 0; index < content.classLabels.length; index += 1) {
-      ctx.textAlign = 'left';
-      ctx.fillStyle = '#D5DCE3';
-      ctx.fillText(content.classLabels[index], s(140), y);
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#3DFF9A';
-      const countText: string = index < content.classCounts.length ? content.classCounts[index] : '';
-      ctx.fillText(countText, SHARE_CARD_WIDTH - s(140), y);
-      y += s(78);
+    // ② 主体图：顶部圆角 26、下直角，cover 裁切填满 696×688。
+    if (hero !== undefined) {
+      this.clipHeroTop(ctx);
+      const cover: CoverRect = this.coverOf(hero.width, hero.height, HERO_W, HERO_H);
+      // **不用 9 参数的 drawImage**：在 PixelMap 上它没有按 (sx,sy,sw,sh,dx,dy,dw,dh)
+      // 缩放，真机出图时主体图被画成左上角一小块、下面整片黑（实测）。
+      // 改成「整图按比例放大 + 负偏移」再用裁剪框取景：只用 5 参数重载，行为确定。
+      const scale: number = HERO_W / cover.sw;
+      ctx.drawImage(hero.pixelMap,
+        BORDER - cover.sx * scale,
+        BORDER - cover.sy * scale,
+        hero.width * scale,
+        hero.height * scale);
+      ctx.restore();
     }
 
-    // 附加行（新面孔 / 跟随评分）
+    // ③ 等级带：中间色打底，左编号、右 tier / verdict 词。
+    ctx.fillStyle = palette.mid;
+    ctx.fillRect(BORDER, BAND_Y, HERO_W, BAND_H);
+    ctx.fillStyle = CARD_BG;
+    ctx.font = 'bold 24px sans-serif';
     ctx.textAlign = 'left';
-    ctx.font = '400 ' + Math.round(s(40)).toString() + 'px sans-serif';
-    for (let index: number = 0; index < content.extraLines.length; index += 1) {
-      ctx.fillStyle = '#9AA6B2';
-      ctx.fillText(content.extraLines[index], s(140), y + s(40));
-      y += s(68);
-    }
+    ctx.textBaseline = 'middle';
+    ctx.fillText(content.bandLeft, BORDER + SIDE_PAD, BAND_Y + BAND_H / 2);
+    ctx.textAlign = 'right';
+    ctx.fillText(content.bandRight, BORDER + HERO_W - SIDE_PAD, BAND_Y + BAND_H / 2);
 
-    // 分隔线
-    ctx.strokeStyle = '#2A3340';
-    ctx.lineWidth = Math.max(1, Math.round(s(2)));
-    ctx.beginPath();
-    ctx.moveTo(s(140), SHARE_CARD_HEIGHT - s(200));
-    ctx.lineTo(SHARE_CARD_WIDTH - s(140), SHARE_CARD_HEIGHT - s(200));
-    ctx.stroke();
-
-    // 脚注：**必须存在**（不广播的设备发现不了）。用暖色提醒它是限制而不是装饰。
-    ctx.fillStyle = '#FFB020';
-    ctx.font = '400 ' + Math.round(s(34)).toString() + 'px sans-serif';
+    // ④ 名称 54 Bold 居中 + 一行 trait。
     ctx.textAlign = 'center';
-    this.fillWrapped(ctx, content.footnote, SHARE_CARD_WIDTH / 2, SHARE_CARD_HEIGHT - s(140),
-      SHARE_CARD_WIDTH - s(240), s(46));
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#E8EDF2';
+    ctx.font = 'bold 54px sans-serif';
+    ctx.fillText(content.name, SHARE_CARD_WIDTH / 2, NAME_BASELINE);
+    ctx.fillStyle = '#9AA6B2';
+    ctx.font = '24px sans-serif';
+    ctx.fillText(content.trait, SHARE_CARD_WIDTH / 2, TRAIT_BASELINE);
 
-    // 品牌行
-    ctx.fillStyle = '#5C6875';
-    ctx.font = '400 ' + Math.round(s(30)).toString() + 'px sans-serif';
-    ctx.fillText(content.brand, SHARE_CARD_WIDTH / 2, SHARE_CARD_HEIGHT - s(50));
+    // ⑤ 强制脚注：琥珀原句，折行居中。
+    ctx.fillStyle = '#FFB020';
+    ctx.font = '22px sans-serif';
+    this.fillWrapped(ctx, content.footnote, SHARE_CARD_WIDTH / 2, FOOTNOTE_BASELINE,
+      SHARE_CARD_WIDTH - BORDER * 2 - SIDE_PAD * 2, 30);
+
+    // ⑥ 品牌行。
+    ctx.fillStyle = '#6B7885';
+    ctx.font = '20px sans-serif';
+    ctx.fillText(content.brand, SHARE_CARD_WIDTH / 2, BRAND_BASELINE);
+  }
+
+  /** 主体图顶部圆角裁剪路径（下沿保持直角）。 */
+  private clipHeroTop(ctx: OffscreenCanvasRenderingContext2D): void {
+    const x: number = BORDER;
+    const y: number = BORDER;
+    const right: number = x + HERO_W;
+    const bottom: number = y + HERO_H;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(x, bottom);
+    ctx.lineTo(x, y + HERO_RADIUS);
+    ctx.arcTo(x, y, x + HERO_RADIUS, y, HERO_RADIUS);
+    ctx.lineTo(right - HERO_RADIUS, y);
+    ctx.arcTo(right, y, right, y + HERO_RADIUS, HERO_RADIUS);
+    ctx.lineTo(right, bottom);
+    ctx.closePath();
+    ctx.clip();
+  }
+
+  /**
+   * cover 裁切：把源图按目标宽高比裁一块，**不留黑边**。
+   *
+   * 焦点取画面上半部（文档 §3：裁切焦点约在画面上半部 1/3–1/2 处）——
+   * 主体图是竖构图产品照，设备居中偏上，取中间会把设备头顶切掉。
+   */
+  private coverOf(srcW: number, srcH: number, dstW: number, dstH: number): CoverRect {
+    const rect: CoverRect = new CoverRect();
+    if (srcW <= 0 || srcH <= 0) {
+      rect.sw = srcW;
+      rect.sh = srcH;
+      return rect;
+    }
+    const targetAspect: number = dstW / dstH;
+    const srcAspect: number = srcW / srcH;
+    if (srcAspect > targetAspect) {
+      // 源更宽：左右各裁一刀。
+      rect.sh = srcH;
+      rect.sw = srcH * targetAspect;
+      rect.sx = (srcW - rect.sw) / 2;
+      rect.sy = 0;
+    } else {
+      // 源更高：上下裁，焦点偏上。
+      rect.sw = srcW;
+      rect.sh = srcW / targetAspect;
+      rect.sx = 0;
+      rect.sy = (srcH - rect.sh) * 0.35;
+    }
+    return rect;
   }
 
   /** 按宽度折行绘制；返回实际用掉的行数（调用方据此布局后续元素）。 */
@@ -207,7 +379,7 @@ export class FieldwatchShareCard {
     const bytes: Uint8Array = helper.decodeSync(base64);
     const dir: string = context.filesDir + '/' + CARD_DIR;
     this.ensureDir(dir);
-    const path: string = dir + '/security-card-' + Date.now().toString() + '.png';
+    const path: string = dir + '/share-card-' + Date.now().toString() + '.png';
     const file = fileIo.openSync(path, fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE);
     try {
       fileIo.writeSync(file.fd, bytes.buffer as ArrayBuffer);
@@ -256,36 +428,19 @@ export class FieldwatchShareCard {
 
 export const fieldwatchShareCard: FieldwatchShareCard = new FieldwatchShareCard();
 
+
 /**
- * 分享卡的主路径说明（写在代码里，避免后来者又去查）。
+ * 主体图类名：把 `SignatureClass` 折叠历史别名后转成文件名里的类名。
  *
- * 落地文档 P1-5 原本给的是「若 NGF 门面不支持图片分享，就用存相册兜底」。
- * 实测核实结果：**门面确实不支持**，但 ShareKit 本身支持 ——
- * `SharedRecord.uri` 接受应用文件 URI，配合 `utd: general.png` 与 `label: 'IMAGE'` 即可。
- * 因此本模块选择**把门面补齐**（`ngfSystemShareFacade.shareFile`），
- * 而不是降级到「存相册 + 提示用户自己分享」：
- *   · 存相册要多一次系统授权弹窗，且用户在相册里还要再操作一遍；
- *   · 补齐门面是一处通用能力，将来别人的图片分享也能直接复用。
- * 文档里那条兜底路径**因此不再需要**，不记为待补项。
+ * 文档 §2：`BODYWORN` → `wearable`、`ROUTER` → `isp`（与 `foldedSignatureClass` 一致），
+ * 且 `LAW_ENFORCEMENT` 的文件名是 `hero-law-enforcement.webp`（下划线转连字符）。
  */
-
-/** 分类 Top 的一行，供 UI 组装 `ShareCardContent`。 */
-export class ShareClassRow {
-  public label: string;
-  public count: string;
-  constructor(label: string = '', count: string = '') { this.label = label; this.count = count; }
+export function heroClassOf(value: SignatureClass): string {
+  const folded: SignatureClass = foldedSignatureClass(value);
+  return folded.toString().split('_').join('-');
 }
 
-/** 把汇总里的分类计数拆成两段（标签由 UI 翻译，数量直接转字符串）。 */
-export function shareClassRows(counts: SecurityClassCount[]): ShareClassRow[] {
-  const rows: ShareClassRow[] = [];
-  counts.forEach((item: SecurityClassCount): void => {
-    rows.push(new ShareClassRow(String(item.category), item.count.toString()));
-  });
-  return rows;
-}
-
-/** 供单测用：汇总里是否满足「值得说一句」的条件。 */
+/** 有设备才值得出卡：空扫描不发分享卡。 */
 export function shareCardWorthPosting(summary: SecuritySummary): boolean {
   return summary.hasDevices();
 }

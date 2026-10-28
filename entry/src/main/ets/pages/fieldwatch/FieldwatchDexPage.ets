@@ -9,7 +9,7 @@ import { signatureClassLabel } from '../../fieldwatch/ui/FieldwatchClassLabels';
 import { DexEntryDataSource } from '../../fieldwatch/ui/FieldwatchDexDataSource';
 import { DexBadge, DexLevelProgress } from '../../fieldwatch/domain/FieldwatchDexBadges';
 import { DexUnlock } from '../../fieldwatch/domain/FieldwatchDexUnlock';
-import { ShareCardContent } from '../../fieldwatch/platform/FieldwatchShareCard';
+import { heroClassOf, ShareCardContent, ShareCardMaterial } from '../../fieldwatch/platform/FieldwatchShareCard';
 import { FieldwatchPaletteHolder } from '../../fieldwatch/ui/FieldwatchPalette';
 import { deviceClassSymbol } from '../../fieldwatch/ui/FieldwatchDeviceTypeIcon';
 import { FieldwatchButton, FieldwatchButtonTone } from '../../fieldwatch/ui/FieldwatchButton';
@@ -512,23 +512,46 @@ export struct FieldwatchDexPage {
   /**
    * 分享卡（P3-3 第 2 项）：**复用现有 ShareCard 能力**，不新增分享渠道。
    */
+  /** 按 fleetId 找图鉴条目（分享卡要拿它的类别与稀有度）。 */
+  private entryOf(fleetId: string): DexEntry | undefined {
+    for (let index: number = 0; index < this.entries.length; index += 1) {
+      if (this.entries[index].fleetId === fleetId) return this.entries[index];
+    }
+    return undefined;
+  }
+
+  /** 稀有度 → 卡片材质（边框渐变与等级带颜色）。 */
+  private materialOfRarity(rarity: DexRarity): ShareCardMaterial {
+    if (rarity === DexRarity.EPIC) return ShareCardMaterial.GOLD;
+    if (rarity === DexRarity.RARE) return ShareCardMaterial.PURPLE;
+    if (rarity === DexRarity.UNCOMMON) return ShareCardMaterial.BLUE;
+    return ShareCardMaterial.STEEL;
+  }
+
   private async shareUnlock(): Promise<void> {
     const current: DexUnlock | undefined = this.unlock;
     if (current === undefined || this.sharing) return;
     this.sharing = true;
     const content: ShareCardContent = new ShareCardContent();
-    content.title = this.text('app.string.fieldwatch_dex_unlock_share_title');
-    content.headline = this.text('app.string.fieldwatch_dex_unlock_share_headline')
-      .replace('%1', current.name);
-    const lines: string[] = [];
-    lines.push(this.text('app.string.fieldwatch_dex_level_line')
-      .replace('%1', this.text(current.levelAfterKey))
-      .replace('%2', current.scoreAfter.toString()));
-    // 分享卡用 extraLines 承载附加行（ShareCardContent 没有 lines 字段）。
-    content.extraLines = lines;
+    const seen: number = this.summary === undefined ? 0 : (this.summary as DexSummary).seen;
+    const total: number = this.summary === undefined ? 0 : (this.summary as DexSummary).total;
+    // 收藏卡语法（文档 §1）：主体图 + 等级带（左 x/611、右 tier 词）+ 名称 + trait + 脚注 + 品牌。
+    const entry: DexEntry | undefined = this.entryOf(current.fleetId);
+    content.heroClass = entry === undefined ? 'other' : heroClassOf(entry.category);
+    content.bandLeft = seen.toString() + ' / ' + total.toString();
+    content.bandRight = this.text(current.rarityKey);
+    content.name = current.name;
+    content.trait = this.text(current.categoryKey) + ' · '
+      + this.text('app.string.fieldwatch_dex_level_line')
+        .replace('%1', this.text(current.levelAfterKey))
+        .replace('%2', current.scoreAfter.toString());
     content.footnote = this.text('app.string.fieldwatch_dex_subtitle')
-      .replace('%1', (this.summary === undefined ? 0 : (this.summary as DexSummary).seen).toString())
-      .replace('%2', (this.summary === undefined ? 0 : (this.summary as DexSummary).total).toString());
+      .replace('%1', seen.toString())
+      .replace('%2', total.toString());
+    content.brand = this.text('app.string.fieldwatch_share_brand');
+    content.material = entry === undefined
+      ? ShareCardMaterial.STEEL
+      : this.materialOfRarity(entry.rarity);
     const ok: boolean = await fieldwatchApplication.shareSecurityCard(content);
     this.sharing = false;
     if (ok) this.closeUnlock();

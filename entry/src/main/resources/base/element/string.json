@@ -12263,6 +12263,10 @@
     {
       "name": "fieldwatch_dex_find_live_none",
       "value": "当前没有观测到这个型号的设备"
+    },
+    {
+      "name": "fieldwatch_share_brand",
+      "value": "Fieldwatch · 电波足迹 本机生成 · 未联网"
     }
   ]
 }

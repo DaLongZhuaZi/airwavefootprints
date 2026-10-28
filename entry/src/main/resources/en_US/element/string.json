@@ -12263,6 +12263,10 @@
     {
       "name": "fieldwatch_dex_find_live_none",
       "value": "No device of this model is being observed right now"
+    },
+    {
+      "name": "fieldwatch_share_brand",
+      "value": "Fieldwatch · generated on-device · offline"
     }
   ]
 }

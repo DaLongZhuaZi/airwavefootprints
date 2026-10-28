@@ -3,8 +3,9 @@ import { hdsMaterial, HdsNavDestination } from '@kit.UIDesignKit';
 import { ngfImmersiveContentTop, NGFHdsTitleBarOptionsFactory, NGFImmersiveTopChromePresetFactory, NGFImmersiveTopChromeUnderlay, resolveResourceString } from 'ngf_framework';
 import { fieldwatchApplication } from '../../fieldwatch/application/FieldwatchApplication';
 import { RadioKind, SignatureClass, Sighting } from '../../fieldwatch/domain/FieldwatchModels';
+import { SignatureFleet } from '../../fieldwatch/domain/signatures/FieldwatchSignatureModels';
 import { SECURITY_SCAN_DURATION_MS, SecurityClassCount, SecuritySummary, summaryHeadlineKey } from '../../fieldwatch/domain/FieldwatchSecurityScan';
-import { ShareCardContent } from '../../fieldwatch/platform/FieldwatchShareCard';
+import { heroClassOf, ShareCardContent, ShareCardMaterial } from '../../fieldwatch/platform/FieldwatchShareCard';
 import {
   capabilityBoundaryKeys, SecurityEvidence, SecurityEvidenceKind, SecurityVerdict, SuspectDevice
 } from '../../fieldwatch/domain/FieldwatchSecurityPassive';
@@ -209,32 +210,64 @@ export struct FieldwatchSecurityScanPage {
     void this.loadHistory();
   }
 
-  /** 组装分享卡内容：**所有文案都在这里从资源取**，绘制层不接受裸文案。 */
+  /**
+   * 组装分享卡内容：**所有文案都在这里从资源取**，绘制层不接受裸文案。
+   *
+   * **当前是单设备卡**（只讲一台可疑设备，总结数字不上卡）。该语义仍待用户最终确认，
+   * 若改回扫描总结卡，只需换这里取数的对象，渲染器不用动。
+   */
   private buildCardContent(): ShareCardContent {
     const content: ShareCardContent = new ShareCardContent();
-    content.title = this.text('app.string.fieldwatch_security_summary_title');
-    content.headline = this.headline;
-    const summary: SecuritySummary | undefined = this.summary;
-    content.totalText = summary === undefined ? '0' : summary.total.toString();
-    content.totalLabel = this.text('app.string.fieldwatch_security_total_label');
-    const classes: string[] = [];
-    const counts: string[] = [];
-    if (summary !== undefined) {
-      summary.topClasses.forEach((item: SecurityClassCount): void => {
-        classes.push(resolveResourceString(this.getUIContext().getHostContext(), signatureClassLabel(item.category)));
-        counts.push(item.count.toString());
-      });
-      const extra: string[] = [];
-      if (summary.newFaces > 0) extra.push(this.text('app.string.fieldwatch_security_newfaces').replace('%1', summary.newFaces.toString()));
-      if (summary.showsFollow()) extra.push(this.text('app.string.fieldwatch_security_follow').replace('%1', summary.followScore.toString()));
-      content.extraLines = extra;
-    }
-    content.classLabels = classes;
-    content.classCounts = counts;
+    const suspects: SuspectDevice[] = this.visibleSuspects();
+    const device: SuspectDevice | undefined = suspects.length > 0 ? suspects[0] : undefined;
+    content.heroClass = this.heroClassOf(device);
+    content.bandLeft = this.scanDateText();
+    content.bandRight = device === undefined ? '' : this.verdictText(device);
+    content.name = device === undefined
+      ? this.headline
+      : (device.label.length > 0 ? device.label : device.address);
+    content.trait = this.cardTraitOf(device);
     // 脚注**强制存在**：这是文案红线的一部分，不是可选装饰。
     content.footnote = this.text('app.string.fieldwatch_security_footnote');
-    content.brand = 'Fieldwatch · 电波足迹';
+    content.brand = this.text('app.string.fieldwatch_share_brand');
+    content.material = device === undefined
+      ? ShareCardMaterial.STEEL
+      : (device.verdict === SecurityVerdict.CONFIRMED ? ShareCardMaterial.RED : ShareCardMaterial.ORANGE);
     return content;
+  }
+
+  /** 主体图类名：按可疑设备命中的特征类别取图，取不到回落 other。 */
+  private heroClassOf(device: SuspectDevice | undefined): string {
+    if (device === undefined) return 'other';
+    const sightings: Sighting[] = fieldwatchApplication.getState().sightings;
+    const fleets: SignatureFleet[] = fieldwatchApplication.getState().signatures;
+    for (let index: number = 0; index < sightings.length; index += 1) {
+      const item: Sighting = sightings[index];
+      if (item.key !== device.key || item.signatureIds.length === 0) continue;
+      const wanted: string = item.signatureIds[0];
+      for (let fleetIndex: number = 0; fleetIndex < fleets.length; fleetIndex += 1) {
+        if (fleets[fleetIndex].id === wanted) return heroClassOf(fleets[fleetIndex].category);
+      }
+      return 'other';
+    }
+    return 'other';
+  }
+
+  /** 等级带左侧的扫描日期（YYYY-MM-DD）。 */
+  private scanDateText(): string {
+    const summary: SecuritySummary | undefined = this.summary;
+    const at: number = (summary === undefined || summary.endedAt <= 0) ? Date.now() : summary.endedAt;
+    const date: Date = new Date(at);
+    const month: string = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day: string = date.getDate().toString().padStart(2, '0');
+    return date.getFullYear().toString() + '-' + month + '-' + day;
+  }
+
+  /** 一行 trait：优先用第一条证据（已经是人话资源文案）。 */
+  private cardTraitOf(device: SuspectDevice | undefined): string {
+    if (device === undefined) return this.headline;
+    if (device.evidence.length === 0) return this.verdictText(device);
+    return this.evidenceText(device.evidence[0]);
   }
 
   private async share(): Promise<void> {

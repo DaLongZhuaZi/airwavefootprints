@@ -571,7 +571,8 @@ export class FieldwatchApplication {
       return false;
     }
     const uri: string = this.shareCard.fileUriOf(path);
-    ngfSystemShareFacade.shareFile(uri, this.shareCard.pngUtd(), content.title, 'IMAGE');
+    // 收藏卡语法里没有独立的 title 字段：名称即分享主题（用户转发时看到的那一行）。
+    ngfSystemShareFacade.shareFile(uri, this.shareCard.pngUtd(), content.name, 'IMAGE');
     return true;
   }
 
