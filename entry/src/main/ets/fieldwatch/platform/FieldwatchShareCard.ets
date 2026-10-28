@@ -17,8 +17,20 @@ const CARD_DIR: string = 'fieldwatch/share';
  * ShareKit 走 want 传递时直接 `IPC data is oversized`。
  * 720 宽度在手机上仍然是清晰的一屏，文件体积降到约 1/3。
  */
-export const SHARE_CARD_WIDTH: number = 720;
-// 高度不在这里硬编码：由下面的版式常量相加得出（见 SHARE_CARD_HEIGHT 定义处）。
+/**
+ * 导出缩放：**离屏画布有像素上限**，720×1710（123 万像素）会让 `toDataURL` 编码失败
+ * （真机实测：只返回 `data:image/png` 14 字符、无数据）。720×1080（78 万）一直是好的。
+ *
+ * 这里保持**全部版式坐标按 720 宽设计不变**，只在导出时整体缩放 0.85 ——
+ * 画布变成 612×1454（89 万像素），布局、比例、字号关系一个像素都不改，
+ * 只是输出分辨率略低（分享卡足够清晰）。
+ */
+const EXPORT_SCALE: number = 0.85;
+
+/** 设计坐标下的画布宽（所有版式常量都基于它）。 */
+const CARD_W: number = 720;
+/** 导出后的画布宽（实际创建的离屏画布尺寸）。 */
+export const SHARE_CARD_WIDTH: number = Math.round(CARD_W * EXPORT_SCALE);
 
 // ── 收藏卡版式常量（文档 §1「卡片语法」）────────────────────────────────
 //
@@ -70,7 +82,10 @@ const BOTTOM_PAD: number = 32;
 const FINDER_OFFSET_Y: number = 28;
 
 /** 画布高度：由版式常量推出（约 1710），不硬编码。 */
-export const SHARE_CARD_HEIGHT: number = BRAND_BASELINE + BOTTOM_PAD;
+/** 设计坐标下的画布高（由版式常量相加得出，不硬编码）。 */
+const CARD_H: number = BRAND_BASELINE + BOTTOM_PAD;
+/** 导出后的画布高。 */
+export const SHARE_CARD_HEIGHT: number = Math.round(CARD_H * EXPORT_SCALE);
 
 /** 卡片内边距（等级带与正文的左右留白）。 */
 const SIDE_PAD: number = 26;
@@ -278,30 +293,32 @@ export class FieldwatchShareCard {
   private draw(ctx: OffscreenCanvasRenderingContext2D, content: ShareCardContent,
     hero: HeroBitmap | undefined): void {
     const palette: CardPalette = paletteOf(content.material);
+    // 整体缩放到导出尺寸：之后所有绘制都按 720 宽的设计坐标写，不必逐个换算。
+    ctx.scale(EXPORT_SCALE, EXPORT_SCALE);
 
     // 先清成透明：外圆角之外的四个角必须透明，不能留一块底色方块。
-    ctx.clearRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
+    ctx.clearRect(0, 0, CARD_W, CARD_H);
 
     // ① 边框环：外圆角矩形填渐变，再叠一个内圆角矩形填底色，露出的 12px 就是环。
     const ring: CanvasGradient = palette.diagonal
-      ? ctx.createLinearGradient(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT)
-      : ctx.createLinearGradient(0, 0, 0, SHARE_CARD_HEIGHT);
+      ? ctx.createLinearGradient(0, 0, CARD_W, CARD_H)
+      : ctx.createLinearGradient(0, 0, 0, CARD_H);
     ring.addColorStop(0, palette.top);
     ring.addColorStop(0.5, palette.mid);
     ring.addColorStop(1, palette.bottom);
-    this.fillRoundedGradient(ctx, 0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT, CARD_RADIUS, ring);
-    this.fillRoundedColor(ctx, BORDER, BORDER, SHARE_CARD_WIDTH - BORDER * 2,
-      SHARE_CARD_HEIGHT - BORDER * 2, INNER_RADIUS, CARD_BG);
+    this.fillRoundedGradient(ctx, 0, 0, CARD_W, CARD_H, CARD_RADIUS, ring);
+    this.fillRoundedColor(ctx, BORDER, BORDER, CARD_W - BORDER * 2,
+      CARD_H - BORDER * 2, INNER_RADIUS, CARD_BG);
 
     // 分级装饰（文档 §4）：常见素环 / 少见斜向 / 稀有内圈细线 / 极稀有双环。
     if (palette.outerRing) {
-      this.strokeRounded(ctx, 5, 5, SHARE_CARD_WIDTH - 10, SHARE_CARD_HEIGHT - 10,
+      this.strokeRounded(ctx, 5, 5, CARD_W - 10, CARD_H - 10,
         CARD_RADIUS - 5, palette.mid, 2);
     }
     if (palette.innerLine) {
       const inset: number = BORDER + 3;
-      this.strokeRounded(ctx, inset, inset, SHARE_CARD_WIDTH - inset * 2,
-        SHARE_CARD_HEIGHT - inset * 2, INNER_RADIUS - 3, 'rgba(196,165,255,0.45)', 1);
+      this.strokeRounded(ctx, inset, inset, CARD_W - inset * 2,
+        CARD_H - inset * 2, INNER_RADIUS - 3, 'rgba(196,165,255,0.45)', 1);
     }
 
     // ② 主体图：先铺底色再 fit 画图，留边就是卡片底色。
@@ -349,23 +366,23 @@ export class FieldwatchShareCard {
     ctx.font = this.usesMonospaceName(content.material)
       ? 'bold 64px monospace, sans-serif'
       : 'bold 64px sans-serif';
-    ctx.fillText(content.name, SHARE_CARD_WIDTH / 2, NAME_BASELINE);
+    ctx.fillText(content.name, CARD_W / 2, NAME_BASELINE);
     ctx.fillStyle = '#C3CAD2';
     ctx.font = '28px sans-serif';
-    ctx.fillText(content.trait, SHARE_CARD_WIDTH / 2, TRAIT_BASELINE);
+    ctx.fillText(content.trait, CARD_W / 2, TRAIT_BASELINE);
 
     // ⑤ 强制脚注（仅安防卡有内容；图鉴卡为空则跳过）。
     if (content.footnote.length > 0) {
       ctx.fillStyle = '#FFB020';
       ctx.font = '22px sans-serif';
-      this.fillWrapped(ctx, content.footnote, SHARE_CARD_WIDTH / 2, FOOTNOTE_BASELINE,
-        SHARE_CARD_WIDTH - BORDER * 2 - SIDE_PAD * 2, 30);
+      this.fillWrapped(ctx, content.footnote, CARD_W / 2, FOOTNOTE_BASELINE,
+        CARD_W - BORDER * 2 - SIDE_PAD * 2, 30);
     }
 
     // ⑥ 品牌行。
     ctx.fillStyle = '#7D8A99';
     ctx.font = '22px sans-serif';
-    ctx.fillText(content.brand, SHARE_CARD_WIDTH / 2, BRAND_BASELINE);
+    ctx.fillText(content.brand, CARD_W / 2, BRAND_BASELINE);
   }
 
   /** 安防档（可疑 / 确认）的名称用等宽字体，图鉴卡保持默认。 */
@@ -467,7 +484,9 @@ export class FieldwatchShareCard {
     const marker: string = 'base64,';
     const at: number = dataUrl.indexOf(marker);
     if (at < 0) {
-      logger.error(TAG, '分享卡导出失败：toDataURL 未返回 base64');
+      // 带上长度：若仍失败，日志能直接区分「空串」和「只有 MIME 前缀」。
+      logger.error(TAG, '分享卡导出失败：toDataURL 未返回 base64, len=' + dataUrl.length
+        + ', canvas=' + SHARE_CARD_WIDTH.toString() + 'x' + SHARE_CARD_HEIGHT.toString());
       return '';
     }
     const base64: string = dataUrl.substring(at + marker.length);
