@@ -692,11 +692,11 @@ struct FieldwatchRootPage {
       FieldwatchSecurityScanPage({
         withShell: true,
         topInset: this.topInsetVp,
-        // 风险卡片「查看详情」跳设备详情：先弹掉扫描页再压栈，避免返回时来回。
-        onOpenDetail: (deviceKey: string): void => {
-          this.pathStack.pop();
-          this.openDeviceDetail(deviceKey);
-        },
+        // 风险卡片「查看详情」跳设备详情。
+        // **不要先 pop 再 push**：pop 的移除会作用在刚 push 的新页面上，
+        // 结果等于没跳（真机实测：点「查看详情」页面纹丝不动）。
+        // 直接 push 即可，返回时回到扫描结果页 —— 这正是用户想要的。
+        onOpenDetail: (deviceKey: string): void => { this.openDeviceDetail(deviceKey); },
         onClose: (): void => { this.pathStack.pop(); }
       });
     } else if (name === FieldwatchRouteName.WIFI_DOCTOR) {
