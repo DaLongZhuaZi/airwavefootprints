@@ -266,12 +266,25 @@ struct FieldwatchRootPage {
     // **凡是「从列表点进去看/改一条」的页面都走右栏**：
     // 详情、特征编辑器、搜寻。它们与左侧列表是主从关系，
     // 全屏会丢掉「我还在这一列里」的上下文（实测反馈）。
+    //
+    // **工具类子页同样走右栏**（2026-10-28 补齐）：横屏时左侧保留「我进来的地方」
+    // （工具箱 / 实时页 / 图鉴），右侧才是当前工具，切走再回来不用重新找入口。
+    // 这批路由此前漏登记，导致它们在横屏下整屏铺开、与既有详情页观感不一致。
     return top === FieldwatchRouteName.DEVICE_DETAIL
       || top === FieldwatchRouteName.SIGNATURE_DETAIL
       || top === FieldwatchRouteName.SIGNATURE_EDITOR
       || top === FieldwatchRouteName.WATCHLIST
       || top === FieldwatchRouteName.HUNT
-      || top === FieldwatchRouteName.FEEDBACK;
+      || top === FieldwatchRouteName.FEEDBACK
+      // ── 工具类子页 ──
+      || top === FieldwatchRouteName.SECURITY
+      || top === FieldwatchRouteName.WIFI_DOCTOR
+      || top === FieldwatchRouteName.DEX
+      || top === FieldwatchRouteName.NEW_FACES
+      || top === FieldwatchRouteName.CHANNEL_ANALYSIS
+      || top === FieldwatchRouteName.ANTI_TRACK
+      || top === FieldwatchRouteName.FIND
+      || top === FieldwatchRouteName.ACTIVE_ACL;
   }
 
   private openSubPage(name: string, param: string): void {

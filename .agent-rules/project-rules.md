@@ -186,3 +186,49 @@
 **验证**：改动了上述任何文件或路径时，交付前自查：① 是否新增了字符级拼串；② 是否在 `hits()` 里对 context 或规则常量重新归一化；③ 是否在 builder 里对目录/观测数组做线性扫描；④ 新增的高频写入是否批量。
 **更新时间**：2026-10-17
 
+
+### PR-016 新增子页必须同时具备横屏右栏分栏与自绘入场/退场动画
+
+**状态**：active
+**范围**：`entry/src/main/ets/pages/fieldwatch/` 下所有通过 `pathStack.pushPathByName` 打开的子页，以及 `FieldwatchPage.topRouteUsesSplit()` 白名单。
+**指令**：
+
+1. **每个新子页必须在 `topRouteUsesSplit()` 白名单里登记**。漏登记时该页在横屏会整屏铺开，
+   而既有详情页是「左列表 + 右详情」，同一个 App 出现两套观感。
+2. **打开方法必须同时设 `subPageOpen = true` 再 push**（或走 `openSubPage()`），
+   顺序不能反：先立分栏边界再压栈，否则详情会先以全屏出现再被推向右。
+3. **子页根节点（`HdsNavDestination`）必须自绘入场/退场动画**，照抄
+   `FieldwatchDeviceDetailPage` 的 `enterShift` / `enterAlpha` / `leaving` 三件套：
+   - `@State enterShift = 40`、`@State enterAlpha = 0`、`leaving = false`
+   - 根节点 `.translate({ x: this.enterShift }).opacity(this.enterAlpha)`
+   - `aboutToAppear()` 调 `playEnter()`（240ms FastOutSlowIn → 0 / 1）
+   - 返回与 `onBackPressed` 走 `leaveThenClose()`（200ms，**出栈挂在 `onFinish`**）
+   - **不要用 `.systemTransition(SLIDE_RIGHT)` 替代**
+4. **动画必须加在 `HdsNavDestination` 根节点上**，不能只加在内层内容上。
+   退出时 `pop()` 会让 `subPageOpen` 变 false、模式从 Split 翻回 Stack，右栏从约 33% 拉伸到 100%；
+   若只有内容淡出，根节点的不透明背景仍在，用户看到的是「一整块实心空白面板在拉伸」。
+5. **位移用 vp 不用百分比**：百分比随容器宽度变化，分栏收起时位移量跟着放大，读作「被拉伸」。
+6. **作为 Tab 页内容传给子组件的布局开关必须是 `@Prop`**（如 `twoColumn`）。
+   普通字段只在首次渲染取值，父组件在「进子页/出子页」时翻转它，子页收不到更新 ——
+   横屏分栏时左侧窄栏会一直保持双列，卡片被挤成「信道分/析」这种断行。
+
+**来源**：2026-10-28 用户反馈「刚刚新建的几乎所有页面都缺少正确的横屏分栏设计和相应的动画设计，
+必须严格按照已有的特征详情页面进行重新设计」，点名 9 个页面：
+新面孔、WiFi 体检、信道分析、设备图鉴、安防扫描、找东西、主动扫描授权、寻踪、反追踪。
+
+**证据**：核查确认 `topRouteUsesSplit()` 当时只登记了 6 个既有路由（详情、特征编辑器、搜寻、
+监控名单、反馈），上述 9 个新路由全部不在名单内 —— 横屏下它们整屏铺开而非进入右栏；
+同时这 9 个页面用的是 `.systemTransition(SLIDE_RIGHT)`，与参照页的自绘动画不一致。
+补齐白名单 + `twoColumn` 改 `@Prop` + 批量套用参照页动画后，真机横屏截图确认：
+左侧 Rail + 工具箱单列 + 右侧子页，与既有详情页分栏行为一致。
+
+**验证**：新增或改动子页后，交付前自查：
+① 路由名是否已加入 `topRouteUsesSplit()`；
+② 打开方法是否先 `subPageOpen = true`；
+③ 根节点是否有 `translate` + `opacity` 且 `playEnter()` / `leaveThenClose()` 成对；
+④ 是否残留 `.systemTransition`；
+⑤ 布局开关是否 `@Prop`。
+横屏验证方法：临时在 `aboutToAppear` 插 `window.setPreferredOrientation(LANDSCAPE)`，
+打包后截图确认「左栏保留入口 + 右栏显示子页」，验完**必须删除临时代码并重新打包确认**。
+
+**更新时间**：2026-10-28

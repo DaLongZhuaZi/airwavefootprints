@@ -14,6 +14,13 @@ import { fieldwatchText } from '../../fieldwatch/ui/FieldwatchResText';
 
 @Component
 export struct FieldwatchHuntPage {
+  /**
+   * 入场动画状态（与特征详情页 `FieldwatchDeviceDetailPage` 一致，见项目规则 PR-016）。
+   */
+  @State private enterShift: number = 40;
+  @State private enterAlpha: number = 0;
+  private leaving: boolean = false;
+
   onClose: () => void = (): void => {};
   @State private targetLabel: string = '';
   @State private cue: HuntCue = HuntCue.WAITING;
@@ -69,7 +76,30 @@ export struct FieldwatchHuntPage {
   private rotationRate: number = 0;
   private lastDirectionSampleAt: number = 0;
 
+  /** 入场：从右侧 40vp 处淡入到位（240ms）。 */
+  private playEnter(): void {
+    this.getUIContext().animateTo({ duration: 240, curve: Curve.FastOutSlowIn }, (): void => {
+      this.enterShift = 0;
+      this.enterAlpha = 1;
+    });
+  }
+
+  /** 退场：反向滑出后再关闭（出栈挂在 onFinish，不猜时间）。 */
+  private leaveThenClose(): void {
+    if (this.leaving) return;
+    this.leaving = true;
+    this.getUIContext().animateTo({
+      duration: 200,
+      curve: Curve.FastOutSlowIn,
+      onFinish: (): void => { this.onClose(); }
+    }, (): void => {
+      this.enterShift = 40;
+      this.enterAlpha = 0;
+    });
+  }
+
   aboutToAppear(): void {
+    this.playEnter();
     this.directionAssist = fieldwatchApplication.getState().settings.huntDirectionAssist;
     this.syncDirectionSensor();
     this.tickSupported = this.feedback.hapticAvailable();
@@ -423,13 +453,12 @@ export struct FieldwatchHuntPage {
     // 与设备详情页一致：只向顶部扩展（本页没有底部标签栏，向底部扩展没有意义，
     // 分屏/悬浮窗形态下反而会把按钮压到屏幕边缘外）。
     .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP])
-    // 工具箱中的「信号追踪」进入独立 Hunt 页时，整页跟随导航滑入；
-    // 返回时淡出，避免内容瞬间替换造成页面跳变。
-    .transition(TransitionEffect.asymmetric(
-      TransitionEffect.opacity(0).combine(TransitionEffect.translate({ x: '24%' }))
-        .animation({ duration: 260, curve: Curve.FastOutSlowIn }),
-      TransitionEffect.opacity(0).animation({ duration: 170, curve: Curve.FastOutSlowIn })
-    ))
+    // 入场/退场自绘（与特征详情页一致，见项目规则 PR-016）：
+    // 整页含背景一起位移+淡入淡出。
+    // **位移用 vp 不用百分比** —— 百分比随容器宽度变化，横屏分栏收起时位移量会放大，
+    // 读作「面板被拉伸」；且必须加在 HdsNavDestination 根节点上，否则背景不跟着淡出。
+    .translate({ x: this.enterShift })
+    .opacity(this.enterAlpha)
   }
 
   @Builder

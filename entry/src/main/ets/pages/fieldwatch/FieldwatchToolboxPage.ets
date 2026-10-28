@@ -89,7 +89,14 @@ export struct FieldwatchToolboxPage {
   topInset: number = 0;
   /** 底部安全区高度；与 FIELDWATCH_TAB_BAR_RESERVE 叠加。 */
   @Prop bottomInset: number = 0;
-  twoColumn: boolean = false;
+  /**
+   * 是否双栏。
+   *
+   * **必须是 @Prop**：普通字段只在首次渲染时取值，父组件在「进子页 / 出子页」
+   * 时把 twoColumn 从 true 翻成 false，本页收不到更新 —— 横屏分栏时左侧窄栏
+   * 会一直保持双列，卡片被挤成「信道分/析」这种断行（真机实测）。
+   */
+  @Prop twoColumn: boolean = false;
   /** 本页当前是否可见（保留该属性以兼容既有调用点）。 */
   @Prop pageVisible: boolean = true;
   /** 打开某个工具页（由根页面注入，按路由名压栈）。 */

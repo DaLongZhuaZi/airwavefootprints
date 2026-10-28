@@ -32,6 +32,17 @@ const SECURITY_UNDERLAY_HEIGHT: number = 168;
 export struct FieldwatchSecurityScanPage {
   withShell: boolean = true;
   topInset: number = 0;
+  /**
+   * 入场动画状态（与特征详情页 `FieldwatchDeviceDetailPage` 完全一致）。
+   *
+   * 位移用 vp 而不是百分比：百分比会随容器宽度变化，横屏分栏收起时
+   * 容器变全宽、位移量跟着放大，看起来像「被拉伸」。
+   */
+  @State private enterShift: number = 40;
+  @State private enterAlpha: number = 0;
+  /** 是否正在退场，防重复触发。 */
+  private leaving: boolean = false;
+
   onClose: () => void = (): void => {};
   /** 打开某台可疑设备的详情页（由根页面注入）。 */
   onOpenDetail: (deviceKey: string) => void = (deviceKey: string): void => {};
@@ -80,7 +91,35 @@ export struct FieldwatchSecurityScanPage {
   private activeScanner: FieldwatchActiveScanner | undefined = undefined;
   private timer: number = -1;
 
+  /** 入场：从右侧 40vp 处淡入到位（240ms）。 */
+  private playEnter(): void {
+    this.getUIContext().animateTo({ duration: 240, curve: Curve.FastOutSlowIn }, (): void => {
+      this.enterShift = 0;
+      this.enterAlpha = 1;
+    });
+  }
+
+  /**
+   * 退场：反向滑出后再关闭。
+   *
+   * **出栈挂在动画 `onFinish` 上，不用 `setTimeout` 猜时间** ——
+   * 猜时间会留一个空档：动画没走完就 pop，用户会看到「分栏收起时面板被拉伸」。
+   */
+  private leaveThenClose(): void {
+    if (this.leaving) return;
+    this.leaving = true;
+    this.getUIContext().animateTo({
+      duration: 200,
+      curve: Curve.FastOutSlowIn,
+      onFinish: (): void => { this.onClose(); }
+    }, (): void => {
+      this.enterShift = 40;
+      this.enterAlpha = 0;
+    });
+  }
+
   aboutToAppear(): void {
+    this.playEnter();
     // 重进页面时恢复上一次结果：用户从分享卡返回不该丢掉刚扫完的东西。
     const previous: SecuritySummary | undefined = fieldwatchApplication.recentSecuritySummary();
     if (previous !== undefined) {
@@ -288,8 +327,12 @@ export struct FieldwatchSecurityScanPage {
         false
       ))
       .hideTitleBar(!this.withShell)
-      .onBackPressed((): boolean => { this.onClose(); return true; })
-      .systemTransition(NavigationSystemTransitionType.SLIDE_RIGHT)
+      .onBackPressed((): boolean => { this.leaveThenClose(); return true; })
+      // 入场/退场自绘（与特征详情页一致）：整页含背景一起位移+淡入淡出。
+    // **不能只给内层内容做动画** —— 分栏收起时右栏从 33% 拉伸到 100%，
+    // 根节点的不透明背景仍在，会看到一整块实心空白面板在拉伸。
+    .translate({ x: this.enterShift })
+    .opacity(this.enterAlpha)
       .ignoreLayoutSafeArea([LayoutSafeAreaType.SYSTEM], [LayoutSafeAreaEdge.TOP, LayoutSafeAreaEdge.BOTTOM])
   }
 
