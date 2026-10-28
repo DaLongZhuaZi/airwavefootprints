@@ -512,6 +512,54 @@ export struct FieldwatchDexPage {
   /**
    * 分享卡（P3-3 第 2 项）：**复用现有 ShareCard 能力**，不新增分享渠道。
    */
+  /**
+   * 图鉴卡的 trait：类别 · 点亮日期。
+   *
+   * `categoryKey` 是资源键；资源缺失（老数据 / 新类别）时 `text()` 可能回传空串甚至键名本身，
+   * 直接拼就会出「 · 10-28」这种空段。这里逐段判空，缺哪段省哪段。
+   */
+  private dexTraitOf(current: DexUnlock, entry: DexEntry | undefined): string {
+    const parts: string[] = [];
+    // 类别一定有一段（兜底「其他设备」），不会出现「 · 日期」这种空段。
+    parts.push(this.dexCategoryText(current.categoryKey, entry));
+    const date: string = this.dexUnlockDate(entry);
+    if (date.length > 0) {
+      // 日期前面必须带含义：模型里只有「最近一次见到」，所以写「最近出现」。
+      parts.push(this.text('app.string.fieldwatch_share_trait_date').replace('%1', date));
+    }
+    return parts.join(' · ');
+  }
+
+  /**
+   * 类别文案：真实中文类名 → 资源键解析值 → 「其他设备」。
+   *
+   * **绝不把裸英文类名（如 other / law-enforcement）输出给用户**：
+   * `signatureClassLabel` 返回的就是已解析的中文类名，优先用它；
+   * 它若为空或回退成枚举值本身，说明没有可用文案，直接兜底「其他设备」。
+   */
+  private dexCategoryText(categoryKey: string, entry: DexEntry | undefined): string {
+    if (entry !== undefined) {
+      const real: string = signatureClassLabel(entry.category).trim();
+      if (real.length > 0 && real !== entry.category) return real;
+    }
+    const fromKey: string = this.text(categoryKey).trim();
+    if (fromKey.length > 0 && fromKey !== categoryKey) return fromKey;
+    return this.text('app.string.fieldwatch_share_other_device');
+  }
+
+  /**
+   * 点亮日期（MM-DD）。
+   *
+   * 数据模型只存了「最近一次点亮」（`lastSeenAt`），没有首次点亮时间；
+   * 这里用最近点亮日期，与图鉴格子上的日期口径一致。
+   */
+  private dexUnlockDate(entry: DexEntry | undefined): string {
+    if (entry === undefined || !(entry.lastSeenAt > 0)) return '';
+    const date: Date = new Date(entry.lastSeenAt);
+    return (date.getMonth() + 1).toString().padStart(2, '0') + '-'
+      + date.getDate().toString().padStart(2, '0');
+  }
+
   /** 按 fleetId 找图鉴条目（分享卡要拿它的类别与稀有度）。 */
   private entryOf(fleetId: string): DexEntry | undefined {
     for (let index: number = 0; index < this.entries.length; index += 1) {
@@ -541,13 +589,11 @@ export struct FieldwatchDexPage {
     content.bandLeft = seen.toString() + ' / ' + total.toString();
     content.bandRight = this.text(current.rarityKey);
     content.name = current.name;
-    content.trait = this.text(current.categoryKey) + ' · '
-      + this.text('app.string.fieldwatch_dex_level_line')
-        .replace('%1', this.text(current.levelAfterKey))
-        .replace('%2', current.scoreAfter.toString());
-    content.footnote = this.text('app.string.fieldwatch_dex_subtitle')
-      .replace('%1', seen.toString())
-      .replace('%2', total.toString());
+    // trait = 类别 · 点亮日期（等级与分数不再进 trait，它们属于弹层信息）。
+    content.trait = this.dexTraitOf(current, entry);
+    // **图鉴卡不设脚注**：等级带左侧已经是「x / 611」，脚注再重复一遍是废话。
+    // 安防卡的强制句不受影响（在安防页那边设置）。
+    content.footnote = '';
     content.brand = this.text('app.string.fieldwatch_share_brand');
     content.material = entry === undefined
       ? ShareCardMaterial.STEEL

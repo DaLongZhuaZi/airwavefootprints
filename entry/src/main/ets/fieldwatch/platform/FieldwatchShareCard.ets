@@ -26,20 +26,32 @@ export const SHARE_CARD_HEIGHT: number = 1080;
 // 脚注 / 品牌行。旧版元素（雷达、堆叠条、三色块、日期角标、辉光网格）全部删除。
 /** 边框环宽度：12px 渐变环，颜色即稀有度 / verdict 材质。 */
 const BORDER: number = 12;
-/** 主体图展示区：cover 裁切 696×688，顶部圆角 26、下直角。 */
+/** 外圆角：卡片四角圆角，导出 PNG 后四角透明。 */
+const CARD_RADIUS: number = 30;
+/** 内底圆角 = 外圆角 - 边框宽，保证环宽均匀。 */
+const INNER_RADIUS: number = CARD_RADIUS - BORDER;
+/** 主体图展示区：fit 等比放入 696×688，顶部圆角 26、下直角。 */
 const HERO_W: number = 696;
 const HERO_H: number = 688;
 const HERO_RADIUS: number = 26;
 /** 等级带：44 高，紧贴主体图下沿。 */
 const BAND_H: number = 44;
 const BAND_Y: number = BORDER + HERO_H;
-/** 名称 54 Bold 的基线；trait 紧随其后。 */
-const NAME_BASELINE: number = BAND_Y + BAND_H + 68;
-const TRAIT_BASELINE: number = NAME_BASELINE + 36;
-/** 强制脚注（琥珀原句）。 */
-const FOOTNOTE_BASELINE: number = 928;
+/**
+ * 下半区节奏：名称 → trait → [脚注] → 分隔线 → 品牌。
+ *
+ * 全部按固定行距往下排，品牌不再钉在画布底部；trait 与品牌之间补一条细分隔线，
+ * 把原本约 150px 的黑空切开（真机出图反馈「下半区空洞」）。
+ */
+const NAME_BASELINE: number = BAND_Y + BAND_H + 64;
+const TRAIT_BASELINE: number = NAME_BASELINE + 38;
+/** 强制脚注（琥珀原句，**仅安防卡使用**）。 */
+const FOOTNOTE_BASELINE: number = TRAIT_BASELINE + 56;
+/** 细分隔线：1px #2A3340、长 120px、居中。 */
+const DIVIDER_Y: number = TRAIT_BASELINE + 110;
+const DIVIDER_W: number = 120;
 /** 品牌行基线。 */
-const BRAND_BASELINE: number = SHARE_CARD_HEIGHT - 34;
+const BRAND_BASELINE: number = DIVIDER_Y + 54;
 
 /** 卡片内边距（等级带与正文的左右留白）。 */
 const SIDE_PAD: number = 26;
@@ -51,16 +63,16 @@ const CARD_BG: string = '#0B0F14';
  * 卡片材质：决定边框渐变与等级带颜色。
  *
  * 六个取值分别对应「图鉴稀有度四档 + 安防 verdict 三档」里会上卡的组合，
- * 色值见 {@link paletteOf}（来源：docs/分享卡收藏卡素材说明.md §4）。
+ * 色值与分级装饰见 {@link paletteOf}（来源：docs/分享卡收藏卡素材说明.md §4）。
  */
 export enum ShareCardMaterial {
-  /** 极稀有（金）。 */
+  /** 极稀有（金）：双环。 */
   GOLD = 'gold',
-  /** 常见（深钢）。 */
+  /** 常见（深钢）：素环。 */
   STEEL = 'steel',
-  /** 少见（蓝）。 */
+  /** 少见（蓝）：斜向渐变。 */
   BLUE = 'blue',
-  /** 稀有（紫）。 */
+  /** 稀有（紫）：主环 + 内圈细线。 */
   PURPLE = 'purple',
   /** 安防：确认（红）。 */
   RED = 'red',
@@ -68,47 +80,72 @@ export enum ShareCardMaterial {
   ORANGE = 'orange'
 }
 
-/** 三段纵向渐变（上 → 中 → 下）。等级带取中间色。 */
+/**
+ * 三段渐变（边框用） + 等级带底色/文字色 + 分级装饰开关。
+ *
+ * **等级带不取渐变中间色**：中间色偏浅，白字读不清、深字也发灰。
+ * 改成「饱和主色打底 + 与之对比度足够的文字色」，见文档 §4。
+ */
 class CardPalette {
   public top: string = '';
   public mid: string = '';
   public bottom: string = '';
-  constructor(top: string, mid: string, bottom: string) {
+  /** 等级带底色（饱和主色）。 */
+  public band: string = '';
+  /** 等级带文字色。 */
+  public bandText: string = '';
+  /** 渐变方向是否斜向（左上 → 右下）；false 为纵向。 */
+  public diagonal: boolean = false;
+  /** 是否在外侧压一条细亮线（极稀有的双环）。 */
+  public outerRing: boolean = false;
+  /** 是否在主环内侧压一条 1px 细线（稀有）。 */
+  public innerLine: boolean = false;
+  constructor(top: string, mid: string, bottom: string, band: string, bandText: string) {
     this.top = top;
     this.mid = mid;
     this.bottom = bottom;
+    this.band = band;
+    this.bandText = bandText;
   }
 }
 
 /**
- * 材质 → 三段渐变。
+ * 材质 → 渐变 / 带色 / 分级装饰。
  *
- * **色值唯一事实源是文档 §4**，代码里不留第二套口径：
- * 金 / 橙为文档已验证值，深钢 / 蓝 / 紫 / 红为文档拟定值（落码后已回写文档）。
+ * **色值唯一事实源在代码**（本函数），文档 §4 只作说明，改色必须改这里。
+ * 分级（文档 §4）：常见素环、少见斜向、稀有内圈细线、极稀有双环。
  */
 function paletteOf(material: ShareCardMaterial): CardPalette {
+  let palette: CardPalette;
   switch (material) {
     case ShareCardMaterial.GOLD:
-      return new CardPalette('rgb(138,109,27)', 'rgb(245,217,122)', 'rgb(138,109,27)');
+      palette = new CardPalette('rgb(138,109,27)', 'rgb(245,217,122)', 'rgb(138,109,27)',
+        'rgb(201,162,39)', 'rgb(26,20,0)');
+      palette.outerRing = true;
+      return palette;
     case ShareCardMaterial.ORANGE:
-      return new CardPalette('rgb(179,74,0)', 'rgb(255,176,102)', 'rgb(179,74,0)');
+      return new CardPalette('rgb(179,74,0)', 'rgb(255,176,102)', 'rgb(179,74,0)',
+        'rgb(232,106,23)', 'rgb(26,15,0)');
     case ShareCardMaterial.BLUE:
-      return new CardPalette('rgb(29,78,216)', 'rgb(127,178,255)', 'rgb(29,78,216)');
+      palette = new CardPalette('rgb(29,78,216)', 'rgb(127,178,255)', 'rgb(29,78,216)',
+        'rgb(29,78,216)', 'rgb(242,245,248)');
+      palette.diagonal = true;
+      return palette;
     case ShareCardMaterial.PURPLE:
-      return new CardPalette('rgb(109,40,217)', 'rgb(196,165,255)', 'rgb(109,40,217)');
+      palette = new CardPalette('rgb(109,40,217)', 'rgb(196,165,255)', 'rgb(109,40,217)',
+        'rgb(109,40,217)', 'rgb(242,245,248)');
+      palette.innerLine = true;
+      return palette;
     case ShareCardMaterial.RED:
-      return new CardPalette('rgb(185,28,28)', 'rgb(255,138,122)', 'rgb(185,28,28)');
+      return new CardPalette('rgb(185,28,28)', 'rgb(255,138,122)', 'rgb(185,28,28)',
+        'rgb(185,28,28)', 'rgb(242,245,248)');
     default:
-      return new CardPalette('rgb(58,69,82)', 'rgb(138,153,173)', 'rgb(58,69,82)');
+      // 常见（钢）：素环，上下色值由 (58,69,82) 提亮到 (90,105,125)，带色同步协调。
+      return new CardPalette('rgb(90,105,125)', 'rgb(138,153,173)', 'rgb(90,105,125)',
+        'rgb(110,127,150)', 'rgb(242,245,248)');
   }
 }
 
-/**
- * 卡片上的全部文字（不含任何内置文案）。
- *
- * **文案不进这个类**：卡片上的每一个字都必须由调用方从资源文件取来，
- * 否则「不出现防偷拍/查摄像头」这条红线就多了一个绕不过去的入口。
- */
 export class ShareCardContent {
   /** 主体图类名（不含 `hero-` 前缀与扩展名），如 `wearable`；未知一律回落 `other`。 */
   public heroClass: string = 'other';
@@ -140,12 +177,12 @@ class HeroBitmap {
   }
 }
 
-/** cover 裁切的源矩形。 */
-class CoverRect {
-  public sx: number = 0;
-  public sy: number = 0;
-  public sw: number = 0;
-  public sh: number = 0;
+/** fit 绘制矩形（含居中偏移）。 */
+class FitRect {
+  public dx: number = 0;
+  public dy: number = 0;
+  public dw: number = 0;
+  public dh: number = 0;
 }
 
 /**
@@ -231,36 +268,48 @@ export class FieldwatchShareCard {
     hero: HeroBitmap | undefined): void {
     const palette: CardPalette = paletteOf(content.material);
 
-    // ① 边框：整块铺三段纵向渐变，随后用深色底盖住内部，露出的 12px 就是环。
-    const ring: CanvasGradient = ctx.createLinearGradient(0, 0, 0, SHARE_CARD_HEIGHT);
+    // 先清成透明：外圆角之外的四个角必须透明，不能留一块底色方块。
+    ctx.clearRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
+
+    // ① 边框环：外圆角矩形填渐变，再叠一个内圆角矩形填底色，露出的 12px 就是环。
+    const ring: CanvasGradient = palette.diagonal
+      ? ctx.createLinearGradient(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT)
+      : ctx.createLinearGradient(0, 0, 0, SHARE_CARD_HEIGHT);
     ring.addColorStop(0, palette.top);
     ring.addColorStop(0.5, palette.mid);
     ring.addColorStop(1, palette.bottom);
-    ctx.fillStyle = ring;
-    ctx.fillRect(0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT);
-    ctx.fillStyle = CARD_BG;
-    ctx.fillRect(BORDER, BORDER, SHARE_CARD_WIDTH - BORDER * 2, SHARE_CARD_HEIGHT - BORDER * 2);
+    this.fillRoundedGradient(ctx, 0, 0, SHARE_CARD_WIDTH, SHARE_CARD_HEIGHT, CARD_RADIUS, ring);
+    this.fillRoundedColor(ctx, BORDER, BORDER, SHARE_CARD_WIDTH - BORDER * 2,
+      SHARE_CARD_HEIGHT - BORDER * 2, INNER_RADIUS, CARD_BG);
 
-    // ② 主体图：顶部圆角 26、下直角，cover 裁切填满 696×688。
+    // 分级装饰（文档 §4）：常见素环 / 少见斜向 / 稀有内圈细线 / 极稀有双环。
+    if (palette.outerRing) {
+      this.strokeRounded(ctx, 5, 5, SHARE_CARD_WIDTH - 10, SHARE_CARD_HEIGHT - 10,
+        CARD_RADIUS - 5, palette.mid, 2);
+    }
+    if (palette.innerLine) {
+      const inset: number = BORDER + 3;
+      this.strokeRounded(ctx, inset, inset, SHARE_CARD_WIDTH - inset * 2,
+        SHARE_CARD_HEIGHT - inset * 2, INNER_RADIUS - 3, 'rgba(196,165,255,0.45)', 1);
+    }
+
+    // ② 主体图：先铺底色再 fit 画图，留边就是卡片底色。
+    ctx.fillStyle = CARD_BG;
+    ctx.fillRect(BORDER, BORDER, HERO_W, HERO_H);
     if (hero !== undefined) {
       this.clipHeroTop(ctx);
-      const cover: CoverRect = this.coverOf(hero.width, hero.height, HERO_W, HERO_H);
+      const fit: FitRect = this.fitOf(hero.width, hero.height);
       // **不用 9 参数的 drawImage**：在 PixelMap 上它没有按 (sx,sy,sw,sh,dx,dy,dw,dh)
       // 缩放，真机出图时主体图被画成左上角一小块、下面整片黑（实测）。
-      // 改成「整图按比例放大 + 负偏移」再用裁剪框取景：只用 5 参数重载，行为确定。
-      const scale: number = HERO_W / cover.sw;
-      ctx.drawImage(hero.pixelMap,
-        BORDER - cover.sx * scale,
-        BORDER - cover.sy * scale,
-        hero.width * scale,
-        hero.height * scale);
+      // 只用 5 参数重载 + 自己算缩放与居中偏移，行为确定。
+      ctx.drawImage(hero.pixelMap, fit.dx, fit.dy, fit.dw, fit.dh);
       ctx.restore();
     }
 
-    // ③ 等级带：中间色打底，左编号、右 tier / verdict 词。
-    ctx.fillStyle = palette.mid;
+    // ③ 等级带：饱和主色打底 + 对应文字色，左编号、右 tier / verdict 词。
+    ctx.fillStyle = palette.band;
     ctx.fillRect(BORDER, BAND_Y, HERO_W, BAND_H);
-    ctx.fillStyle = CARD_BG;
+    ctx.fillStyle = palette.bandText;
     ctx.font = 'bold 24px sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -268,26 +317,74 @@ export class FieldwatchShareCard {
     ctx.textAlign = 'right';
     ctx.fillText(content.bandRight, BORDER + HERO_W - SIDE_PAD, BAND_Y + BAND_H / 2);
 
-    // ④ 名称 54 Bold 居中 + 一行 trait。
+    // ④ 名称 58 Bold 居中 + 一行 trait。
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#E8EDF2';
-    ctx.font = 'bold 54px sans-serif';
+    ctx.font = 'bold 58px sans-serif';
     ctx.fillText(content.name, SHARE_CARD_WIDTH / 2, NAME_BASELINE);
-    ctx.fillStyle = '#9AA6B2';
-    ctx.font = '24px sans-serif';
+    ctx.fillStyle = '#C3CAD2';
+    ctx.font = '26px sans-serif';
     ctx.fillText(content.trait, SHARE_CARD_WIDTH / 2, TRAIT_BASELINE);
 
-    // ⑤ 强制脚注：琥珀原句，折行居中。
-    ctx.fillStyle = '#FFB020';
-    ctx.font = '22px sans-serif';
-    this.fillWrapped(ctx, content.footnote, SHARE_CARD_WIDTH / 2, FOOTNOTE_BASELINE,
-      SHARE_CARD_WIDTH - BORDER * 2 - SIDE_PAD * 2, 30);
+    // ⑤ 强制脚注（仅安防卡有内容）+ 细分隔线。
+    if (content.footnote.length > 0) {
+      ctx.fillStyle = '#FFB020';
+      ctx.font = '22px sans-serif';
+      this.fillWrapped(ctx, content.footnote, SHARE_CARD_WIDTH / 2, FOOTNOTE_BASELINE,
+        SHARE_CARD_WIDTH - BORDER * 2 - SIDE_PAD * 2, 30);
+    }
+    ctx.fillStyle = '#2A3340';
+    ctx.fillRect((SHARE_CARD_WIDTH - DIVIDER_W) / 2, DIVIDER_Y, DIVIDER_W, 1);
 
     // ⑥ 品牌行。
-    ctx.fillStyle = '#6B7885';
-    ctx.font = '20px sans-serif';
+    ctx.fillStyle = '#7D8A99';
+    ctx.font = '22px sans-serif';
     ctx.fillText(content.brand, SHARE_CARD_WIDTH / 2, BRAND_BASELINE);
+  }
+
+  /** 圆角矩形路径（顺时针，四角同半径）。 */
+  private roundRectPath(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number,
+    w: number, h: number, r: number): void {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  private fillRoundedColor(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number,
+    w: number, h: number, r: number, color: string): void {
+    ctx.save();
+    this.roundRectPath(ctx, x, y, w, h, r);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  private fillRoundedGradient(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number,
+    w: number, h: number, r: number, gradient: CanvasGradient): void {
+    ctx.save();
+    this.roundRectPath(ctx, x, y, w, h, r);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  private strokeRounded(ctx: OffscreenCanvasRenderingContext2D, x: number, y: number,
+    w: number, h: number, r: number, color: string, lineWidth: number): void {
+    ctx.save();
+    this.roundRectPath(ctx, x, y, w, h, r);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.stroke();
+    ctx.restore();
   }
 
   /** 主体图顶部圆角裁剪路径（下沿保持直角）。 */
@@ -309,33 +406,26 @@ export class FieldwatchShareCard {
   }
 
   /**
-   * cover 裁切：把源图按目标宽高比裁一块，**不留黑边**。
+   * fit 缩放：按 min(可用宽/源宽, 可用高/源高) 等比缩放并**居中**。
    *
-   * 焦点取画面上半部（文档 §3：裁切焦点约在画面上半部 1/3–1/2 处）——
-   * 主体图是竖构图产品照，设备居中偏上，取中间会把设备头顶切掉。
+   * 为什么不是 cover：主体图是竖构图产品照，cover 会为了填满 696×688 把左右裁掉一大块，
+   * 手机这类横宽设备直接被切掉两端（真机出图反馈）。fit 保证整台设备完整入画，
+   * 留边由绘制前铺的卡片底色兜住。
    */
-  private coverOf(srcW: number, srcH: number, dstW: number, dstH: number): CoverRect {
-    const rect: CoverRect = new CoverRect();
+  private fitOf(srcW: number, srcH: number): FitRect {
+    const rect: FitRect = new FitRect();
     if (srcW <= 0 || srcH <= 0) {
-      rect.sw = srcW;
-      rect.sh = srcH;
+      rect.dx = BORDER;
+      rect.dy = BORDER;
+      rect.dw = HERO_W;
+      rect.dh = HERO_H;
       return rect;
     }
-    const targetAspect: number = dstW / dstH;
-    const srcAspect: number = srcW / srcH;
-    if (srcAspect > targetAspect) {
-      // 源更宽：左右各裁一刀。
-      rect.sh = srcH;
-      rect.sw = srcH * targetAspect;
-      rect.sx = (srcW - rect.sw) / 2;
-      rect.sy = 0;
-    } else {
-      // 源更高：上下裁，焦点偏上。
-      rect.sw = srcW;
-      rect.sh = srcW / targetAspect;
-      rect.sx = 0;
-      rect.sy = (srcH - rect.sh) * 0.35;
-    }
+    const scale: number = Math.min(HERO_W / srcW, HERO_H / srcH);
+    rect.dw = srcW * scale;
+    rect.dh = srcH * scale;
+    rect.dx = BORDER + (HERO_W - rect.dw) / 2;
+    rect.dy = BORDER + (HERO_H - rect.dh) / 2;
     return rect;
   }
 

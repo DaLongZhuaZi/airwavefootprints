@@ -12267,6 +12267,14 @@
     {
       "name": "fieldwatch_share_brand",
       "value": "Fieldwatch · generated on-device · offline"
+    },
+    {
+      "name": "fieldwatch_share_trait_date",
+      "value": "last seen %1"
+    },
+    {
+      "name": "fieldwatch_share_other_device",
+      "value": "Other device"
     }
   ]
 }

@@ -12267,6 +12267,14 @@
     {
       "name": "fieldwatch_share_brand",
       "value": "Fieldwatch · 电波足迹 本机生成 · 未联网"
+    },
+    {
+      "name": "fieldwatch_share_trait_date",
+      "value": "最近出现 %1"
+    },
+    {
+      "name": "fieldwatch_share_other_device",
+      "value": "其他设备"
     }
   ]
 }
