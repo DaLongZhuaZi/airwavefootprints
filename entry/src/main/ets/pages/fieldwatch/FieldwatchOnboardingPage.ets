@@ -556,6 +556,16 @@ export struct FieldwatchOnboardingPage {
    * 「开启提醒」写 true 并申请系统通知；「先不用」保持 false。
    * 不提供「默认帮你开」的路径 —— 那正是文档明确否决的「静默改默认值」。
    */
+  /** 一条机制说明：图标 + 一句话。 */
+  @Builder private buildExplainLine(symbol: string, key: string) {
+    Row({ space: 8 }) {
+      SymbolGlyph($r(symbol)).fontSize(13)
+        .fontColor([FieldwatchPaletteHolder.get().textDim])
+      Text($r(key)).fontSize(11).fontColor(FieldwatchPaletteHolder.get().textDim)
+        .layoutWeight(1)
+    }.width('100%').alignItems(VerticalAlign.Top)
+  }
+
   @Builder private buildAlertsAsk() {
     Column({ space: 12 }) {
       Text($r('app.string.fieldwatch_onb_alerts_ask')).fontSize(16).fontWeight(FontWeight.Medium)
@@ -564,13 +574,26 @@ export struct FieldwatchOnboardingPage {
       Text($r('app.string.fieldwatch_onb_alerts_hint')).fontSize(12)
         .fontColor(FieldwatchPaletteHolder.get().textDim)
         .width('100%').textAlign(TextAlign.Start)
+      // 机制说明：把「什么时候会响、什么时候不会、为什么头几天偏少」一次说清，
+      // 不让用户靠猜。这一段是这次反馈要求补的。
+      Column({ space: 6 }) {
+        this.buildExplainLine('sys.symbol.bell', 'app.string.fieldwatch_onb_alerts_mech_when')
+        this.buildExplainLine('sys.symbol.moon', 'app.string.fieldwatch_onb_alerts_mech_quiet')
+        this.buildExplainLine('sys.symbol.chart_bar', 'app.string.fieldwatch_onb_alerts_mech_data')
+      }.width('100%').padding({ top: 4 })
+      .alignItems(HorizontalAlign.Start)
       // 跟随提醒与关注提醒**一起问**（落地文档 P1-6 要求）。
       // 它不依赖系统通知权限是否已给：开关本身可以开，
       // 真正发通知时若权限缺失会被系统静默丢掉，这一点在设置页有说明。
       Row({ space: 8 }) {
         Column({ space: 2 }) {
+          // **这里不能加 layoutWeight**：它在 Column 里是垂直权重，
+          // 会把这一行文字撑到整屏高（真机实测：一个开关占满全屏）。
+          // 横向占满由外层 Column 的 layoutWeight(1) 负责。
           Text($r('app.string.fieldwatch_onb_antitrack_ask')).fontSize(14)
-            .fontColor(FieldwatchPaletteHolder.get().text).layoutWeight(1)
+            .fontColor(FieldwatchPaletteHolder.get().text)
+          Text($r('app.string.fieldwatch_onb_antitrack_hint')).fontSize(11)
+            .fontColor(FieldwatchPaletteHolder.get().textDim)
         }.layoutWeight(1).alignItems(HorizontalAlign.Start)
         Toggle({ type: ToggleType.Switch, isOn: this.antiTrackAlerts })
           .onChange((value: boolean): void => {

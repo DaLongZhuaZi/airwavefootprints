@@ -12207,6 +12207,58 @@
     {
       "name": "fieldwatch_acl_service_answered",
       "value": "Service discovery answered"
+    },
+    {
+      "name": "fieldwatch_onb_alerts_mech_when",
+      "value": "Fires in only two cases: an unseen device appears, or a device you follow reappears. No scheduled pushes."
+    },
+    {
+      "name": "fieldwatch_onb_alerts_mech_quiet",
+      "value": "One alert per device per short window, no repeat spam. Turning it off stops alerts immediately."
+    },
+    {
+      "name": "fieldwatch_onb_alerts_mech_data",
+      "value": "Judgments use locally accumulated history, so alerts are sparse in the first few days and get more accurate over time."
+    },
+    {
+      "name": "fieldwatch_onb_antitrack_hint",
+      "value": "Only devices that keep following you across multiple locations trigger an alert; a one-off shared route does not."
+    },
+    {
+      "name": "fw_cl_111_1",
+      "value": "Live tab is now six cards: today's summary, 7-day trend, nearby Wi-Fi, dex progress, more tools — with the pro radar folded away"
+    },
+    {
+      "name": "fw_cl_111_2",
+      "value": "Toolbox split into three standalone pages (channel analysis, anti-track, find-it); the toolbox is now an entry hub with search"
+    },
+    {
+      "name": "fw_cl_111_3",
+      "value": "Wi-Fi checkup no longer mixes bands: a 5G connection is judged on 5G data. New current-network card, and 'open channel analysis' lands on the same band"
+    },
+    {
+      "name": "fw_cl_111_4",
+      "value": "Active probing in security scan is now an opt-in add-on with an explicit consent sheet; the scan shows stages and live counts and can be cancelled"
+    },
+    {
+      "name": "fw_cl_111_5",
+      "value": "Security results use one risk card per suspicious device, plus a type breakdown and a since-last-scan comparison"
+    },
+    {
+      "name": "fw_cl_111_6",
+      "value": "Device dex: per-category icons, occurrence count and unlock date on each cell, plus search and filters"
+    },
+    {
+      "name": "fw_cl_111_7",
+      "value": "New faces: each row shows first-seen time, signal strength and a risk hint, with view-details and block actions, grouped by today/this week"
+    },
+    {
+      "name": "fw_cl_111_8",
+      "value": "In landscape every tool sub-page now splits into 'entry list on the left, content on the right', with slide-and-fade enter/exit animations"
+    },
+    {
+      "name": "fw_cl_111_9",
+      "value": "Onboarding 'should we remind you' step: fixed the toggle filling the whole screen, and explained when and how often alerts fire"
     }
   ]
 }
