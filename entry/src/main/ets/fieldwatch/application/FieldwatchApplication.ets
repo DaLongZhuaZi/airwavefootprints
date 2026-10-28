@@ -541,8 +541,9 @@ export class FieldwatchApplication {
     const unlock: DexUnlock = new DexUnlock();
     unlock.fleetId = target.fleetId;
     unlock.name = target.name;
-    // 复用现有类别标签（它返回的就是资源键，不是文案）。
-    unlock.categoryKey = signatureClassLabel(target.category);
+    // `signatureClassLabel()` 返回的是**已解析文案**（内部走过 `$r`），不是资源键；
+    // 因此下游必须直接当文案用，不能再喂给 `$r` / `text()`。
+    unlock.categoryText = signatureClassLabel(target.category);
     unlock.rarityKey = dexRarityKey(target.rarity);
     // 积分变化：点亮后 vs 点亮前（把这一条当成未点亮来算差）。
     const after: number = dexScore(entries);

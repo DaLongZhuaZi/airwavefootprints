@@ -13,8 +13,14 @@ import { DexEntry } from './FieldwatchDex';
 export class DexUnlock {
   public fleetId: string = '';
   public name: string = '';
-  /** 类别资源键。 */
-  public categoryKey: string = '';
+  /**
+   * 类别**文案**（已解析好的中文），不是资源键。
+   *
+   * 赋值来自 `signatureClassLabel()`，它内部已经做过 `$r` 解析；
+   * 调用方**不得**再把它喂给 `$r` / `text()` —— 那会变成 `$r('监控')` 这类非法键，
+   * 运行时刷 `Invalid resource ID: 0` 且渲染为空（真机复现）。
+   */
+  public categoryText: string = '';
   /** 稀有度资源键。 */
   public rarityKey: string = '';
   /** 点亮前的积分与点亮后的积分（弹层要展示「进度变化」）。 */

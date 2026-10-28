@@ -143,6 +143,9 @@ export struct FieldwatchDexPage {
   }
 
   private text(key: string): string {
+    // **空键直接兜底，不要走 `$r`** —— `$r('')` 本身就会刷一条运行时 E 日志。
+    // 其余坏键靠「不把已解析文案当键喂进来」根治，不指望 catch 消日志。
+    if (key.length === 0) return '';
     return resolveResourceString(this.getUIContext().getHostContext(), $r(key));
   }
 
@@ -455,7 +458,9 @@ export struct FieldwatchDexPage {
           .fontColor(FieldwatchPaletteHolder.get().text).textAlign(TextAlign.Center)
           .maxLines(2).textOverflow({ overflow: TextOverflow.Ellipsis })
         Row({ space: 8 }) {
-          Text(this.text((this.unlock as DexUnlock).categoryKey)).fontSize(12)
+          // **直接当文案用，不要再过 text()**：categoryText 已经解析过，
+          // 再 $r 一次会变成非法键，运行时刷 Invalid resource ID: 0 且这里渲染为空。
+          Text((this.unlock as DexUnlock).categoryText).fontSize(12)
             .fontColor(FieldwatchPaletteHolder.get().textDim)
           Text('·').fontSize(12).fontColor(FieldwatchPaletteHolder.get().textDim)
           Text(this.text((this.unlock as DexUnlock).rarityKey)).fontSize(12)
@@ -515,13 +520,13 @@ export struct FieldwatchDexPage {
   /**
    * 图鉴卡的 trait：类别 · 点亮日期。
    *
-   * `categoryKey` 是资源键；资源缺失（老数据 / 新类别）时 `text()` 可能回传空串甚至键名本身，
-   * 直接拼就会出「 · 10-28」这种空段。这里逐段判空，缺哪段省哪段。
+   * `categoryText` 是**已解析文案**（不是资源键）；为空时按「其他设备」兜底，
+   * 保证不会出现「 · 10-28」这种空段。
    */
   private dexTraitOf(current: DexUnlock, entry: DexEntry | undefined): string {
     const parts: string[] = [];
     // 类别一定有一段（兜底「其他设备」），不会出现「 · 日期」这种空段。
-    parts.push(this.dexCategoryText(current.categoryKey, entry));
+    parts.push(this.dexCategoryText(current.categoryText, entry));
     const date: string = this.dexUnlockDate(entry);
     if (date.length > 0) {
       // 日期前面必须带含义：模型里只有「最近一次见到」，所以写「最近出现」。
@@ -537,13 +542,14 @@ export struct FieldwatchDexPage {
    * `signatureClassLabel` 返回的就是已解析的中文类名，优先用它；
    * 它若为空或回退成枚举值本身，说明没有可用文案，直接兜底「其他设备」。
    */
-  private dexCategoryText(categoryKey: string, entry: DexEntry | undefined): string {
+  private dexCategoryText(categoryText: string, entry: DexEntry | undefined): string {
     if (entry !== undefined) {
       const real: string = signatureClassLabel(entry.category).trim();
       if (real.length > 0 && real !== entry.category) return real;
     }
-    const fromKey: string = this.text(categoryKey).trim();
-    if (fromKey.length > 0 && fromKey !== categoryKey) return fromKey;
+    // `categoryText` 已经是解析好的文案，**不能再过 `text()`**（那会变成非法资源键）。
+    const fromText: string = categoryText.trim();
+    if (fromText.length > 0) return fromText;
     return this.text('app.string.fieldwatch_share_other_device');
   }
 
