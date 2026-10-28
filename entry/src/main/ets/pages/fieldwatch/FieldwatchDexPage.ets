@@ -95,12 +95,23 @@ export struct FieldwatchDexPage {
    * 猜时间会留一个空档：动画没走完就 pop，用户会看到「分栏收起时面板被拉伸」。
    */
   private leaveThenClose(): void {
+    this.leaveThen((): void => { this.onClose(); });
+  }
+
+  /**
+   * 退场后执行指定动作（而不是只会关闭）。
+   *
+   * 「去实时页找它」这类**带去向的按钮**必须走这里：
+   * 先播完退场动画再跳转，否则页面「啪」地消失、目标页又没变化，
+   * 用户看到的就是「点了没反应」（真机实测反馈）。
+   */
+  private leaveThen(action: () => void): void {
     if (this.leaving) return;
     this.leaving = true;
     this.getUIContext().animateTo({
       duration: 200,
       curve: Curve.FastOutSlowIn,
-      onFinish: (): void => { this.onClose(); }
+      onFinish: (): void => { action(); }
     }, (): void => {
       this.enterShift = 40;
       this.enterAlpha = 0;
@@ -684,7 +695,7 @@ export struct FieldwatchDexPage {
       }
       FieldwatchButton({ label: $r('app.string.fieldwatch_dex_find_live'),
         tone: FieldwatchButtonTone.OUTLINE, compact: true,
-        onTap: (): void => { this.onFindLive(entry.fleetId); } })
+        onTap: (): void => { this.leaveThen((): void => { this.onFindLive(entry.fleetId); }); } })
       if (entry.seen) {
         Text(this.text('app.string.fieldwatch_dex_seen_times').replace('%1', entry.sightings.toString()))
           .fontSize(13).fontColor(FieldwatchPaletteHolder.get().textDim)

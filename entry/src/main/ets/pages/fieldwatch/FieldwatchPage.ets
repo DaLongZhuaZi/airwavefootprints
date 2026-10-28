@@ -549,6 +549,20 @@ struct FieldwatchRootPage {
   }
 
   /** 打开设备图鉴（P2-11）。 */
+  /**
+   * 找一台当前观测里命中该特征库条目的设备。
+   *
+   * 图鉴的 `fleetId` 与观测的 `signatureIds` 同源（都是特征库 id），
+   * 所以直接按包含关系匹配即可。
+   */
+  private findSightingOfFleet(fleetId: string): Sighting | undefined {
+    const all: Sighting[] = fieldwatchApplication.getState().sightings;
+    for (let index: number = 0; index < all.length; index += 1) {
+      if (all[index].signatureIds.indexOf(fleetId) >= 0) return all[index];
+    }
+    return undefined;
+  }
+
   private openDex(): void {
     this.subPageOpen = true;
     this.pathStack.pushPathByName(FieldwatchRouteName.DEX, null);
@@ -730,9 +744,24 @@ struct FieldwatchRootPage {
         // 强行按 fleetId 设筛选会把用户的现有筛选覆盖掉，所以只做「带他过去」。
         onGoScan: (): void => { this.pathStack.pop(); this.openSecurity(); },
         onFindLive: (fleetId: string): void => {
-          logger.info('FieldwatchDex', '从图鉴跳实时页: fleetId=' + fleetId);
-          this.pathStack.pop();
+          // **「去实时页找它」必须真的把人带到那台设备上**，不能只切标签。
+          // 原来只做 `pop + switchTab(0)`：用户本来就在实时页，等于什么都没发生，
+          // 表现是「图鉴页消失了，然后没有任何变化」（真机反馈）。
           this.switchTab(0);
+          const current: Sighting | undefined = this.findSightingOfFleet(fleetId);
+          this.pathStack.pop();
+          if (current !== undefined) {
+            // 同一帧里 pop + push 会被 pop 的移除动作吃掉新页（踩过），
+            // 所以把压栈推迟到下一帧。
+            const key: string = current.key;
+            setTimeout((): void => { this.openDeviceDetail(key); }, 0);
+          } else {
+            // 当前没有这个型号的观测：如实说明，而不是留一个「什么也没发生」。
+            this.getUIContext().getPromptAction().showToast({
+              message: fieldwatchText('app.string.fieldwatch_dex_find_live_none'),
+              duration: 2200
+            });
+          }
         },
         onClose: (): void => { this.pathStack.pop(); }
       });
