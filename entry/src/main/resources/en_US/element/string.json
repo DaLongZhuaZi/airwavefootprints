@@ -11386,7 +11386,7 @@
     },
     {
       "name": "fieldwatch_security_evidence_vendor",
-      "value": "Vendor matched a camera vendor"
+      "value": "Matched a camera vendor"
     },
     {
       "name": "fieldwatch_security_evidence_name",

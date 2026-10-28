@@ -60,6 +60,15 @@ const BRAND_BASELINE: number = TRAIT_BASELINE + 92;
 /** 底边距。 */
 const BOTTOM_PAD: number = 32;
 
+/**
+ * finder 主体图的垂直微调（仅这一张）。
+ *
+ * finder 源图主体略偏上，直接贴合时视觉重心靠顶。这里只对 finder 下移一点，
+ * 顶边空隙用「源图顶部极薄切片纵向拉伸」补齐 —— 源图顶部是深色纹理底，接缝不可见。
+ * **不改 hero 区尺寸与比例，也不重出任何源图。**
+ */
+const FINDER_OFFSET_Y: number = 28;
+
 /** 画布高度：由版式常量推出（约 1710），不硬编码。 */
 export const SHARE_CARD_HEIGHT: number = BRAND_BASELINE + BOTTOM_PAD;
 
@@ -303,7 +312,20 @@ export class FieldwatchShareCard {
       // 源图与开槽同比例（1:2），按 696/源宽 等比缩放后从 (BORDER,BORDER) 起 1:1 贴合，
       // 既不裁切也不留边。**不用 9 参数的 drawImage**（在 PixelMap 上不生效）。
       const scale: number = HERO_W / hero.width;
-      ctx.drawImage(hero.pixelMap, BORDER, BORDER, hero.width * scale, hero.height * scale);
+      const drawH: number = hero.height * scale;
+      // finder 主体略偏上：仅这一张下移，顶边空隙用边缘拉伸补齐。
+      const shift: number = content.heroClass === 'finder' ? FINDER_OFFSET_Y : 0;
+      if (shift > 0) {
+        // 把源图顶部极薄的一条切片纵向拉伸填满空隙（顶部是深色纹理底，接缝不可见）。
+        // 只在裁剪框内生效，不影响下方正常贴图。
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(BORDER, BORDER, HERO_W, shift);
+        ctx.clip();
+        ctx.drawImage(hero.pixelMap, BORDER, BORDER, HERO_W, drawH * 12);
+        ctx.restore();
+      }
+      ctx.drawImage(hero.pixelMap, BORDER, BORDER + shift, HERO_W, drawH);
       ctx.restore();
     }
 
@@ -322,7 +344,11 @@ export class FieldwatchShareCard {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
     ctx.fillStyle = '#E8EDF2';
-    ctx.font = 'bold 64px sans-serif';
+    // 安防档（可疑 / 确认）的名称用等宽字体：设备地址/编号读起来更整齐；
+    // 图鉴卡保持原字体。等宽不可用时回落 sans-serif，名称不会因此画不出来。
+    ctx.font = this.usesMonospaceName(content.material)
+      ? 'bold 64px monospace, sans-serif'
+      : 'bold 64px sans-serif';
     ctx.fillText(content.name, SHARE_CARD_WIDTH / 2, NAME_BASELINE);
     ctx.fillStyle = '#C3CAD2';
     ctx.font = '28px sans-serif';
@@ -340,6 +366,11 @@ export class FieldwatchShareCard {
     ctx.fillStyle = '#7D8A99';
     ctx.font = '22px sans-serif';
     ctx.fillText(content.brand, SHARE_CARD_WIDTH / 2, BRAND_BASELINE);
+  }
+
+  /** 安防档（可疑 / 确认）的名称用等宽字体，图鉴卡保持默认。 */
+  private usesMonospaceName(material: ShareCardMaterial): boolean {
+    return material === ShareCardMaterial.ORANGE || material === ShareCardMaterial.RED;
   }
 
   /** 圆角矩形路径（顺时针，四角同半径）。 */
