@@ -4481,6 +4481,12 @@ struct FieldwatchReportsPage {
    */
   @Prop twoColumn: boolean = false;
   @State private activeName: string = '';
+  /** 重命名会话：底部 sheet 是否展开。 */
+  @State private renameSitOpen: boolean = false;
+  /** 正在重命名的会话 id（空串 = 无）。 */
+  @State private renameSitId: string = '';
+  /** 重命名草稿。**必须在输入时写进 @State**，否则保存时拿不到用户输入。 */
+  @State private renameSitDraft: string = '';
   @State private savedSits: SitSummary[] = [];
   @State private observationCount: number = 0;
   @State private locatedCount: number = 0;
@@ -4588,15 +4594,62 @@ struct FieldwatchReportsPage {
     const date: Date = new Date();
     return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
   }
+  /**
+   * 打开「重命名会话」输入面板。
+   *
+   * **不能再用 `showAlertDialog`**：它没有输入框，只能显示一段文本 + 「取消 / 保存」两个按钮，
+   * 用户**根本没有地方改名字** —— 而「保存」此前执行的是 `item.name + '*'`，
+   * 等于每点一次就在原名后面挂一个星号（真机反馈「重命名无法编辑」）。
+   * 改用底部 sheet + `TextInput`，与设备详情页改自定义名是同一套交互。
+   */
   private promptRenameSit(item: SitSummary): void {
-    this.getUIContext().showAlertDialog({
-      title: this.label('app.string.fieldwatch_reports_rename_sit'),
-      message: item.name,
-      primaryButton: { value: this.label('app.string.fieldwatch_filter_cancel'), action: (): void => {} },
-      secondaryButton: { value: this.label('app.string.fieldwatch_filter_save'), action: (): void => {
-        void fieldwatchApplication.renameSit(item.id, item.name + '*').then((ok: boolean): void => { if (ok) this.refresh(); });
-      } }
-    });
+    this.renameSitId = item.id;
+    this.renameSitDraft = item.name;
+    this.renameSitOpen = true;
+  }
+
+  /** 提交重命名。空名字直接放弃：改成空名会让这条会话在列表里变成一个没法点的空行。 */
+  private commitRenameSit(): void {
+    const id: string = this.renameSitId;
+    const name: string = this.renameSitDraft.trim();
+    this.renameSitOpen = false;
+    if (id.length === 0 || name.length === 0) return;
+    void fieldwatchApplication.renameSit(id, name).then((ok: boolean): void => { if (ok) this.refresh(); });
+  }
+
+  @Builder
+  private buildRenameSitSheet() {
+    Column({ space: 12 }) {
+      Text(this.label('app.string.fieldwatch_reports_rename_sit')).fontSize(18)
+        .fontWeight(FontWeight.Medium).fontColor(FieldwatchPaletteHolder.get().headerText).width('100%')
+      TextInput({ text: this.renameSitDraft,
+        placeholder: this.label('app.string.fieldwatch_reports_rename_placeholder') })
+        .fontSize(14).height(40)
+        .onChange((value: string): void => { this.renameSitDraft = value; })
+      Row({ space: 10 }) {
+        Column() {
+          FieldwatchButton({ label: this.label('app.string.fieldwatch_filter_cancel'),
+            tone: FieldwatchButtonTone.OUTLINE, fillWidth: true,
+            onTap: (): void => { this.renameSitOpen = false; } })
+        }.layoutWeight(1)
+        Column() {
+          FieldwatchButton({ label: this.label('app.string.fieldwatch_filter_save'),
+            tone: FieldwatchButtonTone.PRIMARY, fillWidth: true,
+            onTap: (): void => { this.commitRenameSit(); } })
+        }.layoutWeight(1)
+      }.width('100%')
+    }.width('100%').padding({ left: 20, right: 20, top: 8, bottom: 20 })
+    .alignItems(HorizontalAlign.Start)
+  }
+
+  private renameSheetOptions(): NGFMaterialSheetOptions {
+    const options: NGFMaterialSheetOptions = new NGFMaterialSheetOptions(
+      ngfVisualEffectsFacade.buildSystemMaterialForSheet(),
+      ngfVisualEffectsFacade.shouldUseSystemMaterialSurface());
+    // `detents` 的类型是固定两元素元组 `[SheetSize, SheetSize]`，只给一个会编译失败。
+    // 这里是几行输入的小面板，两档都给 MEDIUM，避免用户随手拉成整屏。
+    options.detents = [SheetSize.MEDIUM, SheetSize.MEDIUM];
+    return options;
   }
   private confirmDeleteSit(item: SitSummary): void {
     this.getUIContext().showAlertDialog({
@@ -4888,7 +4941,11 @@ struct FieldwatchReportsPage {
       this.buildCatalog()
       this.buildLog()
     }
-  }.width('100%').padding({ left: 12, right: 12, top: this.topInset + 8, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE }) }.width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring) }
+  }.width('100%').padding({ left: 12, right: 12, top: this.topInset + 8, bottom: this.bottomInset + FIELDWATCH_TAB_BAR_RESERVE }) }
+    .width('100%').height('100%').scrollBar(BarState.Off).edgeEffect(EdgeEffect.Spring)
+    // 重命名会话的输入面板挂在这里（本页此前没有别的 bindSheet）。
+    .bindSheet($$this.renameSitOpen, this.buildRenameSitSheet(), this.renameSheetOptions())
+  }
 }
 
 @Component

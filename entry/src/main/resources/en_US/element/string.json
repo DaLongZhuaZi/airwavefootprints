@@ -12367,6 +12367,14 @@
     {
       "name": "fw_cl_111_24",
       "value": "The signature list now fills to the bottom on tablets; the Live tab uses two-column cards in landscape and falls back to one column when the split pane opens"
+    },
+    {
+      "name": "fieldwatch_reports_rename_placeholder",
+      "value": "Enter a new session name"
+    },
+    {
+      "name": "fw_cl_111_25",
+      "value": "Fixed the reports tab session rename having no input field, which only appended an asterisk to the old name"
     }
   ]
 }

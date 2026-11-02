@@ -70,7 +70,8 @@ export const CHANGELOG_HEAD: ChangelogEntry[] = [
     ngfText('app.string.fw_cl_111_21'),
     ngfText('app.string.fw_cl_111_22'),
     ngfText('app.string.fw_cl_111_23'),
-    ngfText('app.string.fw_cl_111_24')
+    ngfText('app.string.fw_cl_111_24'),
+    ngfText('app.string.fw_cl_111_25')
   ]),
   // 手动补录（版本号未变）：当天合入、要告知用户的修复。buildNumber 记 0。
   new ChangelogEntry('1.1.0', 0, '2026-10-21', [
